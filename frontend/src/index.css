@@ -1,0 +1,9 @@
+/* PreInstalled tailwind Libraries */
+@import "tailwindcss";
+
+@layer components {
+  /* Continue the vanilla CSS code below */
+  .btn {
+    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+  }
+}
