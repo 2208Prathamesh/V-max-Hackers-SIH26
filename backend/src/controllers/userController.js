@@ -4,7 +4,7 @@ const DEMO_USER_ID = "6a8d33ee091ba198bd2c4ec9";
 // GET /api/users/profile
 export const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id)
+        const user = await User.findById(DEMO_USER_ID)
             .select("-passwordHash");
 
         if (!user) {
