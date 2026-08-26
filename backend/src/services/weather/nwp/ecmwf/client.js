@@ -1,8 +1,8 @@
 // src/services/weather/nwp/ecmwf/client.js
 
-const BASE_URL =
-    "https://data.ecmwf.int/forecasts";
+const BASE_URL ="https://data.ecmwf.int/forecasts";
 
+let cachedECMWFRun = null;
 
 function buildForecastUrl(
     date,
@@ -52,46 +52,74 @@ function findMessage(index, param) {
 }
 
 
-async function fetchRange(
-    url,
-    offset,
-    length
-) {
+async function fetchRange(url, offset, length) {
     const start = Number(offset);
-    const end =
-        start +
-        Number(length) -
-        1;
+    const end = start + Number(length) - 1;
 
-    const response = await fetch(url, {
-        headers: {
-            Range: `bytes=${start}-${end}`,
-            "Accept-Encoding": "identity"
+    const maxRetries = 4;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const response = await fetch(url, {
+            headers: {
+                Range: `bytes=${start}-${end}`,
+                "Accept-Encoding": "identity"
+            }
+        });
+
+        if (response.ok) {
+            const contentRange =
+                response.headers.get("content-range");
+
+            if (!contentRange) {
+                throw new Error(
+                    "ECMWF server did not return Content-Range. " +
+                    "Range requests may not be supported."
+                );
+            }
+
+            return Buffer.from(
+                await response.arrayBuffer()
+            );
         }
-    });
 
-    if (!response.ok) {
+        if (
+            response.status === 429 &&
+            attempt < maxRetries
+        ) {
+            const retryAfter =
+                response.headers.get("retry-after");
+
+            const retrySeconds =
+                retryAfter
+                    ? Number(retryAfter)
+                    : Math.pow(2, attempt + 1);
+
+            console.log(
+                `ECMWF rate limited. ` +
+                `Retrying in ${retrySeconds}s...`
+            );
+
+            await new Promise(resolve =>
+                setTimeout(
+                    resolve,
+                    retrySeconds * 1000
+                )
+            );
+
+            continue;
+        }
+
         throw new Error(
             `ECMWF range request failed: ` +
-            `${response.status} ${response.statusText}`
+            `${response.status} ` +
+            `${response.statusText}`
         );
     }
 
-    const contentRange =
-        response.headers.get("content-range");
-
-    if (!contentRange) {
-        throw new Error(
-            "ECMWF server did not return Content-Range. " +
-            "Range requests may not be supported."
-        );
-    }
-
-    return Buffer.from(
-        await response.arrayBuffer()
+    throw new Error(
+        "ECMWF range request failed after retries"
     );
 }
-
 
 async function getECMWFForecast(
     date,
@@ -121,6 +149,71 @@ async function getECMWFForecast(
     );
 }
 
+async function findLatestECMWFRun() {
+    const cycles = ["18", "12", "06", "00"];
+
+    const now = new Date();
+
+    // Start with today and search backwards.
+    for (let daysBack = 0; daysBack < 3; daysBack++) {
+        const date = new Date(now);
+
+        date.setUTCDate(
+            date.getUTCDate() - daysBack
+        );
+
+        const dateString =
+            date.toISOString().slice(0, 10)
+                .replaceAll("-", "");
+
+        for (const cycle of cycles) {
+
+            const indexUrl =
+                buildIndexUrl(
+                    dateString,
+                    cycle,
+                    "0"
+                );
+
+            try {
+                const response =
+                    await fetch(indexUrl, {
+                        method: "GET"
+                    });
+
+                if (!response.ok) {
+                    continue;
+                }
+
+                const indexText =
+                    await response.text();
+
+                if (!indexText.trim()) {
+                    continue;
+                }
+
+                console.log(
+                    `Latest ECMWF run found: ` +
+                    `${dateString} ${cycle}Z`
+                );
+
+                return {
+                    date: dateString,
+                    cycle,
+                    indexText
+                };
+
+            } catch {
+                // Try the next cycle/run.
+                continue;
+            }
+        }
+    }
+
+    throw new Error(
+        "Could not find a recent ECMWF forecast run"
+    );
+}
 
 async function getECMWFIndex(
     date,
@@ -149,49 +242,42 @@ async function getECMWFIndex(
 }
 
 
-async function getECMWFMessages(
-    date,
-    cycle = "12",
-    step = "0"
-) {
+async function getECMWFMessages() {
+    const latestRun = await findLatestECMWFRun();
+
+    const {
+        date,
+        cycle
+    } = latestRun;
+
+    const cacheKey = `${date}-${cycle}`;
+
+    // Reuse already downloaded fields for this ECMWF run
+    if (
+        cachedECMWFRun &&
+        cachedECMWFRun.key === cacheKey
+    ) {
+        console.log(
+            `Using cached ECMWF run: ${date} ${cycle}Z`
+        );
+
+        return cachedECMWFRun.data;
+    }
+
     const gribUrl =
         buildForecastUrl(
             date,
             cycle,
-            step
+            "0"
         );
-
-    const indexUrl =
-        buildIndexUrl(
-            date,
-            cycle,
-            step
-        );
-
-    console.log(
-        "ECMWF INDEX:",
-        indexUrl
-    );
-
-    const indexResponse =
-        await fetch(indexUrl);
-
-    if (!indexResponse.ok) {
-        throw new Error(
-            `ECMWF index error: ` +
-            `${indexResponse.status} ` +
-            `${indexResponse.statusText}`
-        );
-    }
-
-    const indexText =
-        await indexResponse.text();
 
     const index =
-        parseIndex(indexText);
+        parseIndex(
+            latestRun.indexText
+        );
 
     console.log(
-        `ECMWF index records: ${index.length}`
+        `Downloading ECMWF run: ${date} ${cycle}Z`
     );
 
     const requiredParams = [
@@ -205,7 +291,6 @@ async function getECMWFMessages(
     const messages = {};
 
     for (const param of requiredParams) {
-
         const entry =
             findMessage(
                 index,
@@ -213,11 +298,9 @@ async function getECMWFMessages(
             );
 
         if (!entry) {
-            console.warn(
+            throw new Error(
                 `ECMWF parameter not found: ${param}`
             );
-
-            continue;
         }
 
         const offset =
@@ -248,14 +331,33 @@ async function getECMWFMessages(
             buffer,
             index: entry
         };
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 1000)
+        );
     }
 
-    return messages;
-}
+    const result = {
+        date,
+        cycle,
+        messages
+    };
 
+    cachedECMWFRun = {
+        key: cacheKey,
+        data: result
+    };
+
+    console.log(
+        `ECMWF run cached: ${cacheKey}`
+    );
+
+    return result;
+}
 
 export {
     getECMWFForecast,
     getECMWFIndex,
-    getECMWFMessages
+    getECMWFMessages,
+    findLatestECMWFRun
 };

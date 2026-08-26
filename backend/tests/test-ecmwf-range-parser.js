@@ -11,12 +11,14 @@ import {
 } from "../src/services/weather/nwp/ecmwf/normalizer.js";
 
 
-const messages =
-    await getECMWFMessages(
-        "20260825",
-        "12",
-        "0"
-    );
+const result =
+    await getECMWFMessages();
+
+const {
+    date,
+    cycle,
+    messages
+} = result;
 
 
 function parseMessage(param) {
@@ -33,7 +35,9 @@ function parseMessage(param) {
             new Uint8Array(item.buffer)
         );
 
-    if (factory.availableMessages.length === 0) {
+    if (
+        factory.availableMessages.length === 0
+    ) {
         throw new Error(
             `No GRIB message found for ${param}`
         );
@@ -48,11 +52,20 @@ function parseMessage(param) {
 const normalized =
     normalizeECMWF(
         {
-            temperature: parseMessage("2t"),
-            dewPoint: parseMessage("2d"),
-            uWind: parseMessage("10u"),
-            vWind: parseMessage("10v"),
-            pressure: parseMessage("msl")
+            temperature:
+                parseMessage("2t"),
+
+            dewPoint:
+                parseMessage("2d"),
+
+            uWind:
+                parseMessage("10u"),
+
+            vWind:
+                parseMessage("10v"),
+
+            pressure:
+                parseMessage("msl")
         },
         {
             latitude: 18.51957,
@@ -62,7 +75,11 @@ const normalized =
 
 
 console.log(
-    "\n========== ECMWF RANGE RESULT ==========\n"
+    "\n========== ECMWF RESULT ==========\n"
+);
+
+console.log(
+    `Run: ${date} ${cycle}Z\n`
 );
 
 console.log(
@@ -74,5 +91,5 @@ console.log(
 );
 
 console.log(
-    "\n=========================================\n"
+    "\n==================================\n"
 );
