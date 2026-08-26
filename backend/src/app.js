@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -20,7 +21,16 @@ import {
 
 const app = express()
 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173'
+  })
+)
 app.use(express.json())
+
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: 'WeatherGPT API is running' })
+})
 
 // General API rate limiting
 app.use('/api', apiLimiter)

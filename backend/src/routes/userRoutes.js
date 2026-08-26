@@ -1,15 +1,18 @@
-import express from "express";
+import express from 'express'
 
 import {
-    getProfile,
-    updateProfile,
-    deleteAccount
-} from "../controllers/userController.js";
+  getProfile,
+  updateProfile,
+  deleteAccount
+} from '../controllers/userController.js'
+import authMiddleware from '../middleware/authMiddleware.js'
 
-const router = express.Router();
+const router = express.Router()
 
-router.get("/me", getProfile);
-router.patch("/me", updateProfile);
-router.delete("/me", deleteAccount);
+router.use(authMiddleware)
 
-export default router;
+router.get('/me', getProfile)
+router.patch('/me', updateProfile)
+router.delete('/me', deleteAccount)
+
+export default router

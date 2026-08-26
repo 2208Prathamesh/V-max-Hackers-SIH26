@@ -21,7 +21,7 @@ const register = async ({ name, email, password }) => {
   const user = await User.create({
     name,
     email: email.toLowerCase(),
-    password: hashedPassword
+    passwordHash: hashedPassword
   })
 
   const token = generateToken(user._id)
@@ -42,7 +42,7 @@ const register = async ({ name, email, password }) => {
 const login = async (email, password) => {
   const user = await User.findOne({
     email: email.toLowerCase()
-  }).select('+password')
+  }).select('+passwordHash')
 
   if (!user) {
     const error = new Error('Invalid email or password')
@@ -50,7 +50,7 @@ const login = async (email, password) => {
     throw error
   }
 
-  const isMatch = await comparePassword(password, user.password)
+  const isMatch = await comparePassword(password, user.passwordHash)
 
   if (!isMatch) {
     const error = new Error('Invalid email or password')
@@ -130,7 +130,7 @@ const resetPassword = async (token, password) => {
  * Change password
  */
 const changePassword = async (userId, currentPassword, newPassword) => {
-  const user = await User.findById(userId).select('+password')
+  const user = await User.findById(userId).select('+passwordHash')
 
   if (!user) {
     const error = new Error('User not found')
@@ -138,7 +138,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
     throw error
   }
 
-  const isMatch = await comparePassword(currentPassword, user.password)
+  const isMatch = await comparePassword(currentPassword, user.passwordHash)
 
   if (!isMatch) {
     const error = new Error('Current password is incorrect')
@@ -146,7 +146,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
     throw error
   }
 
-  user.password = await hashPassword(newPassword)
+  user.passwordHash = await hashPassword(newPassword)
 
   await user.save()
 

@@ -1,5 +1,6 @@
 import SavedLocation from '../models/SavedLocation.js'
 import { successResponse } from '../utils/response.js'
+import weatherService from '../services/weather/weatherService.js'
 
 /**
  * Get all saved locations
@@ -13,11 +14,115 @@ const getLocations = async (req, res, next) => {
       createdAt: -1
     })
 
+    const enrichedLocations = await Promise.all(
+      locations.map(async location => {
+        try {
+          const [weatherData, forecastData] = await Promise.all([
+            weatherService.getWeather(
+              location.latitude,
+              location.longitude
+            ),
+            weatherService.getForecast(
+              location.latitude,
+              location.longitude,
+              3
+            )
+          ])
+
+          const current = weatherData?.forecast?.current
+          const forecast =
+            forecastData?.models?.openMeteo?.daily || []
+
+          return {
+            ...location.toObject(),
+
+            id: location._id,
+
+            region: location.state,
+
+            lat: location.latitude,
+            lng: location.longitude,
+
+            // Current weather
+            condition:
+              current?.weatherDescription ||
+              current?.condition ||
+              'Unknown',
+
+            tempC: current?.temperature ?? null,
+
+            feelsLikeC:
+              current?.apparentTemperature ?? null,
+
+            humidity:
+              current?.humidity ?? null,
+
+            windSpeedKmh:
+              current?.windSpeed ?? null,
+
+            windDirection:
+              current?.windDirection ?? '',
+
+            updatedTime: new Date().toLocaleTimeString([], {
+              hour: 'numeric',
+              minute: '2-digit'
+            }),
+
+            // 3-day forecast
+            forecast3Day: forecast.slice(0, 3).map(day => ({
+              day: day.date
+                ? new Date(day.date).toLocaleDateString([], {
+                    weekday: 'short'
+                  })
+                : '--',
+
+              condition:
+                day.weatherDescription ||
+                day.condition ||
+                'Unknown',
+
+              temp:
+                day.temperature ??
+                day.temperatureMax ??
+                null
+            }))
+          }
+        } catch (weatherError) {
+          // Don't make the entire saved-locations request fail
+          // if one weather provider/location is temporarily unavailable.
+          console.error(
+            `Weather enrichment failed for ${location.city}:`,
+            weatherError.message
+          )
+
+          return {
+            ...location.toObject(),
+
+            id: location._id,
+
+            region: location.state,
+
+            lat: location.latitude,
+            lng: location.longitude,
+
+            condition: 'Weather unavailable',
+            tempC: null,
+            feelsLikeC: null,
+            humidity: null,
+            windSpeedKmh: null,
+            windDirection: '',
+            updatedTime: null,
+            forecast3Day: []
+          }
+        }
+      })
+    )
+
     return successResponse(
       res,
       200,
       'Locations retrieved successfully',
-      locations
+      enrichedLocations
     )
   } catch (error) {
     next(error)
