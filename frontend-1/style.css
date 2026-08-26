@@ -1,0 +1,761 @@
+/* ==========================================================================
+   WeatherGPT — Pixel Perfect Single Screen (No-Scroll) Stylesheet
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design System & CSS Variables
+   -------------------------------------------------------------------------- */
+:root {
+  /* Brand Palette */
+  --primary-blue: #2563eb;
+  --primary-blue-hover: #1d4ed8;
+  --primary-blue-active: #1e40af;
+  --primary-blue-soft: #eff6ff;
+  --primary-glow: rgba(37, 99, 235, 0.2);
+
+  /* Neutrals & Dark Tones */
+  --neutral-900: #0f172a;
+  --neutral-800: #1e293b;
+  --neutral-700: #334155;
+  --neutral-600: #475569;
+  --neutral-500: #64748b;
+  --neutral-400: #94a3b8;
+  --neutral-300: #cbd5e1;
+  --neutral-200: #e2e8f0;
+  --neutral-100: #f1f5f9;
+  --neutral-50: #f8fafc;
+  --white: #ffffff;
+
+  /* Feedback Colors */
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 16px 40px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-icon: 0 4px 10px rgba(0, 0, 0, 0.08);
+  --shadow-btn: 0 4px 14px rgba(37, 99, 235, 0.3);
+  --shadow-btn-hover: 0 8px 20px rgba(37, 99, 235, 0.4);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+
+  /* Radii */
+  --radius-card: 24px;
+  --radius-inner: 20px;
+  --radius-input: 10px;
+  --radius-btn: 10px;
+  --radius-social: 9px;
+  --radius-badge: 10px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. Global Resets & Baseline (Strictly No Page Scroll)
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: var(--font-family);
+  background-color: #eaf0f6;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.5) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(224, 231, 255, 0.5) 0px, transparent 50%);
+  color: var(--neutral-800);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --------------------------------------------------------------------------
+   3. Main Page Layout & Card Container (Fits 100% in viewport)
+   -------------------------------------------------------------------------- */
+.page-wrapper {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px;
+  box-sizing: border-box;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 960px;
+  height: calc(100vh - 32px);
+  max-height: 680px;
+  min-height: 560px;
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   4. Left Hero Showcase Panel
+   -------------------------------------------------------------------------- */
+.hero-panel {
+  width: 48%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #2563eb;
+}
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  z-index: 1;
+  transform: scale(1.02);
+  transition: transform 6s ease-out;
+}
+
+.hero-panel:hover .hero-backdrop {
+  transform: scale(1.06);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    180deg,
+    rgba(37, 99, 235, 0.95) 0%,
+    rgba(49, 115, 240, 0.86) 28%,
+    rgba(37, 99, 235, 0.5) 58%,
+    rgba(15, 23, 42, 0.72) 100%
+  );
+  backdrop-filter: saturate(110%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  padding: clamp(20px, 2.8vh, 32px) clamp(20px, 2.5vw, 32px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  color: var(--white);
+  box-sizing: border-box;
+}
+
+/* Brand Header */
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo-icon {
+  width: clamp(34px, 4.2vh, 40px);
+  height: clamp(34px, 4.2vh, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.15));
+  animation: floatBrand 4s ease-in-out infinite alternate;
+}
+
+@keyframes floatBrand {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-3px); }
+}
+
+.weather-brand-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.brand-name {
+  font-size: clamp(20px, 2.4vh, 23px);
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--white);
+  line-height: 1;
+}
+
+/* Hero Intro */
+.hero-intro {
+  margin: clamp(8px, 1.2vh, 16px) 0;
+}
+
+.hero-title {
+  font-size: clamp(22px, 2.8vh, 28px);
+  font-weight: 700;
+  line-height: 1.16;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+
+.hero-description {
+  margin-top: clamp(4px, 0.8vh, 8px);
+  font-size: clamp(12px, 1.4vh, 13px);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 400;
+}
+
+/* Features List */
+.features-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+  margin-bottom: clamp(8px, 1.2vh, 16px);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform var(--transition-fast);
+}
+
+.feature-item:hover {
+  transform: translateX(4px);
+}
+
+.feature-icon-wrapper {
+  width: clamp(34px, 4.2vh, 38px);
+  height: clamp(34px, 4.2vh, 38px);
+  min-width: clamp(34px, 4.2vh, 38px);
+  background: var(--white);
+  border-radius: var(--radius-badge);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-icon);
+  transition: transform var(--transition-bounce), box-shadow var(--transition-fast);
+}
+
+.feature-item:hover .feature-icon-wrapper {
+  transform: scale(1.06);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
+}
+
+.feature-icon {
+  width: clamp(16px, 2.2vh, 19px);
+  height: clamp(16px, 2.2vh, 19px);
+}
+
+.feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.feature-title {
+  font-size: clamp(13px, 1.6vh, 14px);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.feature-desc {
+  font-size: clamp(11px, 1.3vh, 12px);
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Frosted Glass Quote Card */
+.quote-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: clamp(8px, 1.2vh, 12px) 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.quote-card:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.quote-icon-container {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.quote-svg {
+  width: 15px;
+  height: 15px;
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+.quote-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quote-text {
+  font-size: clamp(11px, 1.3vh, 12px);
+  line-height: 1.35;
+  color: var(--white);
+  font-weight: 400;
+}
+
+.quote-author {
+  font-size: clamp(10px, 1.2vh, 11px);
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   5. Right Authentication Panel
+   -------------------------------------------------------------------------- */
+.auth-panel {
+  width: 52%;
+  height: 100%;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(20px, 3vh, 36px) clamp(24px, 3vw, 40px);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.auth-card-inner {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Header */
+.auth-header {
+  margin-bottom: clamp(12px, 2vh, 20px);
+}
+
+.auth-title {
+  font-size: clamp(24px, 3.2vh, 28px);
+  font-weight: 800;
+  color: var(--neutral-900);
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.auth-subtitle {
+  margin-top: 4px;
+  font-size: clamp(12.5px, 1.5vh, 13.5px);
+  color: var(--neutral-500);
+  font-weight: 400;
+}
+
+/* Form Styles */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 14px);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: clamp(12px, 1.4vh, 13px);
+  font-weight: 600;
+  color: var(--neutral-800);
+  margin-bottom: 5px;
+  display: block;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon.left-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--neutral-400);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.input-icon.left-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.form-input {
+  width: 100%;
+  height: clamp(38px, 4.8vh, 44px);
+  padding: 0 14px 0 38px;
+  border: 1.5px solid var(--neutral-200);
+  border-radius: var(--radius-input);
+  background: var(--white);
+  font-family: inherit;
+  font-size: clamp(12.5px, 1.5vh, 13.5px);
+  color: var(--neutral-900);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.form-input::placeholder {
+  color: var(--neutral-400);
+  font-weight: 400;
+}
+
+.form-input:hover {
+  border-color: var(--neutral-300);
+}
+
+.form-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.input-wrapper:focus-within .input-icon.left-icon {
+  color: var(--primary-blue);
+}
+
+/* Password Input & Toggle */
+.form-input.password-input {
+  padding-right: 38px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-400);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.password-toggle-btn:hover {
+  color: var(--neutral-700);
+  background-color: var(--neutral-100);
+}
+
+.eye-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Error and Feedback Styles */
+.form-group.has-error .form-input {
+  border-color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+.form-group.has-error .input-icon.left-icon {
+  color: var(--color-error);
+}
+
+.field-feedback {
+  font-size: 11px;
+  color: var(--color-error);
+  margin-top: 3px;
+  display: none;
+  font-weight: 500;
+}
+
+.form-group.has-error .field-feedback {
+  display: block;
+}
+
+/* Auxiliary / Forgot Password */
+.form-auxiliary {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
+.forgot-password-link {
+  font-size: clamp(11.5px, 1.4vh, 12.5px);
+  font-weight: 600;
+  color: var(--primary-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.forgot-password-link:hover {
+  color: var(--primary-blue-hover);
+  text-decoration: underline;
+}
+
+/* Primary Submit Button */
+.submit-btn {
+  width: 100%;
+  height: clamp(38px, 4.8vh, 44px);
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-btn);
+  font-family: inherit;
+  font-size: clamp(13px, 1.6vh, 14.5px);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.submit-btn:hover {
+  background-color: var(--primary-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-btn-hover);
+}
+
+.submit-btn:active {
+  background-color: var(--primary-blue-active);
+  transform: translateY(0);
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* Divider */
+.divider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: clamp(10px, 1.8vh, 18px) 0 clamp(8px, 1.4vh, 14px) 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--neutral-200);
+}
+
+.divider-text {
+  font-size: clamp(11px, 1.3vh, 12px);
+  color: var(--neutral-500);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Social Buttons Grid */
+.social-login-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.social-btn {
+  height: clamp(34px, 4.2vh, 38px);
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-social);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: clamp(11.5px, 1.4vh, 12.5px);
+  font-weight: 600;
+  color: var(--neutral-800);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.social-btn:hover {
+  background-color: var(--neutral-50);
+  border-color: var(--neutral-300);
+  transform: translateY(-1px);
+}
+
+.social-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Sign Up Prompt */
+.signup-prompt {
+  margin-top: clamp(10px, 1.8vh, 18px);
+  text-align: center;
+  font-size: clamp(12px, 1.4vh, 13px);
+  color: var(--neutral-500);
+}
+
+.signup-link {
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 3px;
+  transition: color var(--transition-fast);
+}
+
+.signup-link:hover {
+  color: var(--primary-blue-hover);
+  text-decoration: underline;
+}
+
+/* Security Trust Badge */
+.security-badge {
+  margin-top: clamp(8px, 1.6vh, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: clamp(11px, 1.3vh, 12px);
+  color: var(--neutral-500);
+  font-weight: 400;
+}
+
+.security-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--neutral-500);
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   6. Toast Notifications System
+   -------------------------------------------------------------------------- */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 260px;
+  max-width: 360px;
+  padding: 10px 14px;
+  background: var(--neutral-900);
+  color: var(--white);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.25);
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast.toast-success {
+  background: #065f46;
+  border-left: 3.5px solid #10b981;
+}
+
+.toast.toast-info {
+  background: #1e3a8a;
+  border-left: 3.5px solid #3b82f6;
+}
+
+.toast.toast-error {
+  background: #991b1b;
+  border-left: 3.5px solid #ef4444;
+}
+
+.toast.toast-exit {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Responsive Layout (Mobile / Small Height Screens)
+   -------------------------------------------------------------------------- */
+@media (max-width: 820px) {
+  html, body {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .page-wrapper {
+    height: auto;
+    min-height: 100vh;
+    padding: 16px 12px;
+  }
+
+  .auth-card {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    min-height: auto;
+    max-width: 480px;
+  }
+
+  .hero-panel {
+    width: 100%;
+    min-height: 380px;
+  }
+
+  .auth-panel {
+    width: 100%;
+    padding: 24px 20px;
+  }
+}
