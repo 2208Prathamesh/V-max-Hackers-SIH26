@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherGPT — Saved Locations</title>
+  <meta name="description" content="Quickly access real-time weather updates, multi-day forecasts and metrics for all your saved cities and regions on WeatherGPT.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="saved-locations.css">
+</head>
+<body>
+  <div class="app-layout">
+    
+    <!-- ================= 1. LEFT SIDEBAR ================= -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-top">
+        <!-- Brand Logo -->
+        <a href="dashboard.html" class="sidebar-brand">
+          <div class="brand-logo-icon">
+            <svg class="weather-brand-svg" viewBox="0 0 48 48" fill="none">
+              <defs>
+                <radialGradient id="slSunGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(30 18) rotate(90) scale(14)">
+                  <stop stop-color="#FFDF00"/>
+                  <stop offset="0.7" stop-color="#F59E0B"/>
+                  <stop offset="1" stop-color="#EA580C"/>
+                </radialGradient>
+                <linearGradient id="slCloudGrad" x1="12" y1="18" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#FFFFFF"/>
+                  <stop offset="1" stop-color="#DCEAFE"/>
+                </linearGradient>
+              </defs>
+              <circle cx="30" cy="18" r="9" fill="url(#slSunGlow)"/>
+              <path d="M30 5V8M30 28V31M43 18H40M20 18H17M39.2 8.8L37.1 10.9M22.9 25.1L20.8 27.2M39.2 27.2L37.1 25.1M22.9 8.8L20.8 10.9" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+              <path d="M16 38H34C37.3137 38 40 35.3137 40 32C40 28.6863 37.3137 26 34 26C33.82 26 33.642 26.0079 33.466 26.0234C32.4107 20.3117 27.4475 16 21.5 16C14.5964 16 9 21.5964 9 28.5C9 29.2778 9.0709 30.0392 9.2066 30.777C7.3248 31.8601 6 33.7845 6 36C6 39.3137 8.68629 42 12 42H16C16 42 16 38 16 38Z" fill="url(#slCloudGrad)"/>
+            </svg>
+          </div>
+          <span class="brand-title">WeatherGPT</span>
+        </a>
+
+        <!-- Main Navigation Links -->
+        <nav class="sidebar-nav">
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="dashboard.html" class="nav-link" id="navDashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="chat.html" class="nav-link" id="navChat">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+                <span>Chat</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="alerts.html" class="nav-link" id="navAlerts">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span>Alerts</span>
+                <span class="sidebar-badge-red">3</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="map.html" class="nav-link" id="navMap">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                  <line x1="8" y1="2" x2="8" y2="18"/>
+                  <line x1="16" y1="6" x2="16" y2="22"/>
+                </svg>
+                <span>Weather Map</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="forecast.html" class="nav-link" id="navForecast">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Forecast</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="history.html" class="nav-link" id="navHistory">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>History</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="saved-locations.html" class="nav-link active" id="navSaved">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>Saved Locations</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="settings.html" class="nav-link" id="navSettings">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Recent Conversations History in Sidebar -->
+        <div class="sidebar-recent-convo">
+          <span class="recent-heading">Recent Conversations</span>
+          <ul class="recent-list">
+            <li class="recent-item">
+              <span class="recent-query">Will it rain tomorrow in Pune?</span>
+              <span class="recent-meta-time">10:21 AM</span>
+            </li>
+            <li class="recent-item">
+              <span class="recent-query">Weather this weekend in Mumbai</span>
+              <span class="recent-meta-time">Yesterday</span>
+            </li>
+            <li class="recent-item">
+              <span class="recent-query">Cyclone update in Bay of Bengal</span>
+              <span class="recent-meta-time">2 days ago</span>
+            </li>
+            <li class="recent-item">
+              <span class="recent-query">Air quality in Delhi</span>
+              <span class="recent-meta-time">2 days ago</span>
+            </li>
+          </ul>
+          <a href="chat.html" class="sidebar-view-all" id="sidebarViewAllLink">
+            <span>View all</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Sidebar Bottom Area -->
+      <div class="sidebar-bottom">
+        <!-- Go Premium Card -->
+        <div class="go-premium-card">
+          <div class="premium-header">
+            <span class="crown-icon">👑</span>
+            <span class="premium-title">Go Premium</span>
+          </div>
+          <p class="premium-desc">Save unlimited locations, get advanced alerts and ad-free experience.</p>
+          <button type="button" class="upgrade-btn" id="upgradeBtn">Upgrade Now</button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="sidebar-user-card" id="sidebarUserCard">
+          <img src="assets/user-avatar.jpg" alt="Sid Patil" class="user-avatar-small">
+          <div class="user-info-text">
+            <h4 class="user-name">Sid Patil</h4>
+            <span class="user-email">sidpatil@gmail.com</span>
+          </div>
+          <svg class="user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= 2. CENTER SAVED LOCATIONS STREAM ================= -->
+    <main class="saved-main">
+      
+      <!-- Top Navigation Header -->
+      <header class="saved-header-bar">
+        <div class="header-left-col">
+          <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open navigation">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="saved-title-wrap">
+            <h1 class="saved-page-title">Saved Locations</h1>
+            <p class="saved-page-subtitle">Quickly access weather updates for your saved locations</p>
+          </div>
+        </div>
+
+        <div class="header-right-col">
+          <!-- View Toggle Buttons (Grid / List) -->
+          <div class="view-mode-toggle">
+            <button type="button" class="view-toggle-btn" id="viewGridBtn" title="Grid View">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </button>
+            <button type="button" class="view-toggle-btn active-toggle" id="viewListBtn" title="List View">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- + Add Location Primary Button -->
+          <button type="button" class="add-loc-primary-btn" id="headerAddLocBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Add Location</span>
+          </button>
+
+          <!-- Language Selector -->
+          <button type="button" class="header-pill-btn" id="savedLangBtn">
+            <svg class="globe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span>English</span>
+            <svg class="chevron-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          <!-- Notification Bell -->
+          <button type="button" class="header-circle-btn" id="savedNotifBtn" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+
+          <!-- User Profile Circle SP -->
+          <div class="user-badge-pill" id="userBadgePill">
+            <span class="user-initials">SP</span>
+            <svg class="chevron-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      <!-- Scrollable Saved Locations Body -->
+      <div class="saved-scroll-body">
+        
+        <!-- Section Controls Row -->
+        <div class="saved-subbar-row">
+          <h2 class="my-locations-heading">My Locations <span class="locations-counter">(5)</span></h2>
+          <div class="sort-by-wrapper">
+            <span class="sort-lbl">Sort by:</span>
+            <div class="sort-dropdown-wrap">
+              <select class="sort-dropdown" id="savedSortSelect">
+                <option value="updated" selected>Last Updated</option>
+                <option value="name">City Name</option>
+                <option value="temp-high">Temperature (High to Low)</option>
+                <option value="temp-low">Temperature (Low to High)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Saved Locations Feed List -->
+        <div class="saved-cards-container" id="savedCardsContainer">
+          
+          <!-- ============ 1. Pune, Maharashtra ============ -->
+          <article class="saved-loc-card" data-city="Pune" data-temp="27">
+            <!-- Col 1: City & Country -->
+            <div class="card-cell city-meta-cell">
+              <div class="city-title-row">
+                <span class="blue-bullet-dot"></span>
+                <h3 class="city-name-txt">Pune, Maharashtra</h3>
+              </div>
+              <span class="country-txt">India</span>
+              <span class="last-updated-txt">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Updated 10:21 AM
+              </span>
+            </div>
+
+            <!-- Col 2: Big Temp & Icon -->
+            <div class="card-cell temp-art-cell">
+              <div class="cell-art-box">
+                <svg viewBox="0 0 36 36" class="loc-weather-svg"><circle cx="22" cy="14" r="7" fill="#F59E0B"/><path d="M11 26h18a6 6 0 0 0 0-12 7.5 7.5 0 0 0-14.4 2.7A5.25 5.25 0 0 0 11 26z" fill="#93C5FD"/></svg>
+              </div>
+              <div class="cell-temp-group">
+                <span class="loc-big-temp">27<span class="deg-sym">°C</span></span>
+                <span class="loc-condition-txt">Partly Cloudy</span>
+              </div>
+            </div>
+
+            <!-- Col 3: Feels Like / Humidity / Wind -->
+            <div class="card-cell metrics-summary-cell">
+              <div class="loc-metric-line">
+                <span class="l-lbl">Feels like</span>
+                <span class="l-val">30°C</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Humidity</span>
+                <span class="l-val">72%</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Wind</span>
+                <span class="l-val">16 km/h SW</span>
+              </div>
+            </div>
+
+            <!-- Col 4: 3-Day Forecast -->
+            <div class="card-cell mini-forecast-cell">
+              <div class="mini-day-col">
+                <span class="m-day">Wed</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#93C5FD"/><line x1="8" y1="16" x2="7" y2="19" stroke="#2563EB" stroke-width="2"/><line x1="12" y1="16" x2="11" y2="19" stroke="#2563EB" stroke-width="2"/></svg>
+                <span class="m-temp">31°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Thu</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#93C5FD"/><line x1="8" y1="16" x2="7" y2="19" stroke="#2563EB" stroke-width="2"/><line x1="12" y1="16" x2="11" y2="19" stroke="#2563EB" stroke-width="2"/></svg>
+                <span class="m-temp">30°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Fri</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">29°</span>
+              </div>
+            </div>
+
+            <!-- Col 5: Menu Action -->
+            <div class="card-cell action-menu-cell">
+              <button type="button" class="loc-options-btn" aria-label="Location options">⋮</button>
+            </div>
+          </article>
+
+          <!-- ============ 2. Mumbai, Maharashtra ============ -->
+          <article class="saved-loc-card" data-city="Mumbai" data-temp="28">
+            <div class="card-cell city-meta-cell">
+              <div class="city-title-row">
+                <span class="blue-bullet-dot"></span>
+                <h3 class="city-name-txt">Mumbai, Maharashtra</h3>
+              </div>
+              <span class="country-txt">India</span>
+              <span class="last-updated-txt">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Updated 9:45 AM
+              </span>
+            </div>
+
+            <div class="card-cell temp-art-cell">
+              <div class="cell-art-box">
+                <svg viewBox="0 0 36 36" class="loc-weather-svg">
+                  <path d="M10 24h18a6 6 0 0 0 0-12 7.5 7.5 0 0 0-14.4 2.7A5.25 5.25 0 0 0 10 24z" fill="#64748B"/>
+                  <line x1="12" y1="26" x2="10" y2="31" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="18" y1="26" x2="16" y2="31" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="24" y1="26" x2="22" y2="31" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="cell-temp-group">
+                <span class="loc-big-temp">28<span class="deg-sym">°C</span></span>
+                <span class="loc-condition-txt">Light Rain</span>
+              </div>
+            </div>
+
+            <div class="card-cell metrics-summary-cell">
+              <div class="loc-metric-line">
+                <span class="l-lbl">Feels like</span>
+                <span class="l-val">31°C</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Humidity</span>
+                <span class="l-val">80%</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Wind</span>
+                <span class="l-val">20 km/h W</span>
+              </div>
+            </div>
+
+            <div class="card-cell mini-forecast-cell">
+              <div class="mini-day-col">
+                <span class="m-day">Wed</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#93C5FD"/><line x1="8" y1="16" x2="7" y2="19" stroke="#2563EB" stroke-width="2"/><line x1="12" y1="16" x2="11" y2="19" stroke="#2563EB" stroke-width="2"/></svg>
+                <span class="m-temp">30°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Thu</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="16" cy="9" r="4" fill="#F59E0B"/><path d="M7 17h9a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 7 17z" fill="#CBD5E1"/></svg>
+                <span class="m-temp">31°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Fri</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#64748B"/><line x1="8" y1="16" x2="7" y2="19" stroke="#2563EB" stroke-width="2"/><line x1="12" y1="16" x2="11" y2="19" stroke="#2563EB" stroke-width="2"/></svg>
+                <span class="m-temp">29°</span>
+              </div>
+            </div>
+
+            <div class="card-cell action-menu-cell">
+              <button type="button" class="loc-options-btn" aria-label="Location options">⋮</button>
+            </div>
+          </article>
+
+          <!-- ============ 3. New Delhi, Delhi ============ -->
+          <article class="saved-loc-card" data-city="New Delhi" data-temp="32">
+            <div class="card-cell city-meta-cell">
+              <div class="city-title-row">
+                <span class="blue-bullet-dot"></span>
+                <h3 class="city-name-txt">New Delhi, Delhi</h3>
+              </div>
+              <span class="country-txt">India</span>
+              <span class="last-updated-txt">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Updated 8:30 AM
+              </span>
+            </div>
+
+            <div class="card-cell temp-art-cell">
+              <div class="cell-art-box">
+                <svg viewBox="0 0 36 36" class="loc-weather-svg">
+                  <circle cx="18" cy="18" r="9" fill="#F59E0B"/>
+                  <line x1="18" y1="3" x2="18" y2="6" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="18" y1="30" x2="18" y2="33" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="3" y1="18" x2="6" y2="18" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="30" y1="18" x2="33" y2="18" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="7.4" y1="7.4" x2="9.5" y2="9.5" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="26.5" y1="26.5" x2="28.6" y2="28.6" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="7.4" y1="28.6" x2="9.5" y2="26.5" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="26.5" y1="9.5" x2="28.6" y2="7.4" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="cell-temp-group">
+                <span class="loc-big-temp">32<span class="deg-sym">°C</span></span>
+                <span class="loc-condition-txt">Sunny</span>
+              </div>
+            </div>
+
+            <div class="card-cell metrics-summary-cell">
+              <div class="loc-metric-line">
+                <span class="l-lbl">Feels like</span>
+                <span class="l-val">34°C</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Humidity</span>
+                <span class="l-val">45%</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Wind</span>
+                <span class="l-val">12 km/h N</span>
+              </div>
+            </div>
+
+            <div class="card-cell mini-forecast-cell">
+              <div class="mini-day-col">
+                <span class="m-day">Wed</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">33°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Thu</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">34°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Fri</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">32°</span>
+              </div>
+            </div>
+
+            <div class="card-cell action-menu-cell">
+              <button type="button" class="loc-options-btn" aria-label="Location options">⋮</button>
+            </div>
+          </article>
+
+          <!-- ============ 4. Bengaluru, Karnataka ============ -->
+          <article class="saved-loc-card" data-city="Bengaluru" data-temp="24">
+            <div class="card-cell city-meta-cell">
+              <div class="city-title-row">
+                <span class="blue-bullet-dot"></span>
+                <h3 class="city-name-txt">Bengaluru, Karnataka</h3>
+              </div>
+              <span class="country-txt">India</span>
+              <span class="last-updated-txt">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Updated Yesterday, 8:15 PM
+              </span>
+            </div>
+
+            <div class="card-cell temp-art-cell">
+              <div class="cell-art-box">
+                <svg viewBox="0 0 36 36" class="loc-weather-svg">
+                  <path d="M10 24h18a6 6 0 0 0 0-12 7.5 7.5 0 0 0-14.4 2.7A5.25 5.25 0 0 0 10 24z" fill="#94A3B8"/>
+                </svg>
+              </div>
+              <div class="cell-temp-group">
+                <span class="loc-big-temp">24<span class="deg-sym">°C</span></span>
+                <span class="loc-condition-txt">Cloudy</span>
+              </div>
+            </div>
+
+            <div class="card-cell metrics-summary-cell">
+              <div class="loc-metric-line">
+                <span class="l-lbl">Feels like</span>
+                <span class="l-val">25°C</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Humidity</span>
+                <span class="l-val">65%</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Wind</span>
+                <span class="l-val">10 km/h NE</span>
+              </div>
+            </div>
+
+            <div class="card-cell mini-forecast-cell">
+              <div class="mini-day-col">
+                <span class="m-day">Wed</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="16" cy="9" r="4" fill="#F59E0B"/><path d="M7 17h9a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 7 17z" fill="#CBD5E1"/></svg>
+                <span class="m-temp">26°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Thu</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#CBD5E1"/></svg>
+                <span class="m-temp">25°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Fri</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="16" cy="9" r="4" fill="#F59E0B"/><path d="M7 17h9a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 7 17z" fill="#CBD5E1"/></svg>
+                <span class="m-temp">24°</span>
+              </div>
+            </div>
+
+            <div class="card-cell action-menu-cell">
+              <button type="button" class="loc-options-btn" aria-label="Location options">⋮</button>
+            </div>
+          </article>
+
+          <!-- ============ 5. Jaipur, Rajasthan ============ -->
+          <article class="saved-loc-card" data-city="Jaipur" data-temp="35">
+            <div class="card-cell city-meta-cell">
+              <div class="city-title-row">
+                <span class="blue-bullet-dot"></span>
+                <h3 class="city-name-txt">Jaipur, Rajasthan</h3>
+              </div>
+              <span class="country-txt">India</span>
+              <span class="last-updated-txt">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Updated Yesterday, 6:40 PM
+              </span>
+            </div>
+
+            <div class="card-cell temp-art-cell">
+              <div class="cell-art-box">
+                <svg viewBox="0 0 36 36" class="loc-weather-svg">
+                  <circle cx="18" cy="18" r="9" fill="#F59E0B"/>
+                  <line x1="18" y1="3" x2="18" y2="6" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="18" y1="30" x2="18" y2="33" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="3" y1="18" x2="6" y2="18" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="30" y1="18" x2="33" y2="18" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="7.4" y1="7.4" x2="9.5" y2="9.5" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="26.5" y1="26.5" x2="28.6" y2="28.6" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="7.4" y1="28.6" x2="9.5" y2="26.5" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="26.5" y1="9.5" x2="28.6" y2="7.4" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="cell-temp-group">
+                <span class="loc-big-temp">35<span class="deg-sym">°C</span></span>
+                <span class="loc-condition-txt">Sunny</span>
+              </div>
+            </div>
+
+            <div class="card-cell metrics-summary-cell">
+              <div class="loc-metric-line">
+                <span class="l-lbl">Feels like</span>
+                <span class="l-val">37°C</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Humidity</span>
+                <span class="l-val">28%</span>
+              </div>
+              <div class="loc-metric-line">
+                <span class="l-lbl">Wind</span>
+                <span class="l-val">14 km/h W</span>
+              </div>
+            </div>
+
+            <div class="card-cell mini-forecast-cell">
+              <div class="mini-day-col">
+                <span class="m-day">Wed</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">36°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Thu</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">37°</span>
+              </div>
+              <div class="mini-day-col">
+                <span class="m-day">Fri</span>
+                <svg viewBox="0 0 24 24" class="m-icon"><circle cx="12" cy="12" r="5" fill="#F59E0B"/><line x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="22" stroke="#F59E0B" stroke-width="2"/><line x1="2" y1="12" x2="4" y2="12" stroke="#F59E0B" stroke-width="2"/><line x1="20" y1="12" x2="22" y2="12" stroke="#F59E0B" stroke-width="2"/></svg>
+                <span class="m-temp">36°</span>
+              </div>
+            </div>
+
+            <div class="card-cell action-menu-cell">
+              <button type="button" class="loc-options-btn" aria-label="Location options">⋮</button>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Bottom "+ Add New Location" Card -->
+        <div class="add-new-location-card" id="bottomAddNewLocCard">
+          <div class="add-new-title-row">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span class="add-new-title-txt">Add New Location</span>
+          </div>
+          <p class="add-new-desc">Search and save any city to get real-time weather updates</p>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ================= 3. RIGHT SIDEBAR WIDGETS ================= -->
+    <aside class="saved-widgets-panel">
+      
+      <!-- Card 1: Location Map -->
+      <article class="s-widget-card location-map-card">
+        <div class="s-widget-header">
+          <h3 class="s-widget-title">Location Map</h3>
+          <a href="#full-map" class="s-widget-link" id="viewFullMapLink">View full map</a>
+        </div>
+
+        <div class="map-preview-box">
+          <img src="assets/saved-locations-map.jpg" alt="Saved Locations Map" class="saved-map-img">
+          <div class="map-info-circle" title="Interactive Map">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: Weather Summary -->
+      <article class="s-widget-card weather-summary-card">
+        <div class="s-widget-header">
+          <div class="sum-title-col">
+            <h3 class="s-widget-title">Weather Summary</h3>
+            <span class="s-widget-sub">Across your locations</span>
+          </div>
+        </div>
+
+        <div class="summary-stats-stack">
+          <!-- Warmest -->
+          <div class="sum-stat-row">
+            <div class="sum-stat-col-left">
+              <span class="sum-prop-title">Warmest Location</span>
+              <span class="sum-prop-city">Jaipur</span>
+            </div>
+            <span class="sum-prop-val orange-temp">35°C</span>
+          </div>
+
+          <!-- Coolest -->
+          <div class="sum-stat-row">
+            <div class="sum-stat-col-left">
+              <span class="sum-prop-title">Coolest Location</span>
+              <span class="sum-prop-city">Bengaluru</span>
+            </div>
+            <span class="sum-prop-val blue-temp">24°C</span>
+          </div>
+
+          <!-- Rainy -->
+          <div class="sum-stat-row">
+            <div class="sum-stat-col-left">
+              <span class="sum-prop-title">Rainy Location</span>
+              <span class="sum-prop-city">Mumbai</span>
+            </div>
+            <span class="sum-prop-val blue-temp">28°C</span>
+          </div>
+        </div>
+
+        <a href="#detailed-summary" class="s-link-arrow" id="viewDetailedSumLink">
+          <span>View detailed summary</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </article>
+
+      <!-- Card 3: Tips -->
+      <article class="s-widget-card tips-card">
+        <div class="s-widget-header">
+          <div class="tips-header-left">
+            <svg class="bulb-icon" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2">
+              <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>
+            </svg>
+            <h3 class="s-widget-title">Tips</h3>
+          </div>
+        </div>
+        <p class="tips-sub-text">Get personalized tips for your saved locations</p>
+
+        <div class="tip-banner-box">
+          <div class="tip-icon-round">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563EB" stroke-width="2">
+              <path d="M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7"/>
+            </svg>
+          </div>
+          <p class="tip-message-text">Carry an umbrella in Mumbai, light rain expected today.</p>
+        </div>
+
+        <a href="#all-tips" class="s-link-arrow" id="viewAllTipsLink">
+          <span>View all tips</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </article>
+
+    </aside>
+
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="saved-locations.js"></script>
+</body>
+</html>

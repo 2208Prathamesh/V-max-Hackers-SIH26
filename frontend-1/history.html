@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherGPT — Conversation History</title>
+  <meta name="description" content="View, search and manage your past weather inquiries, forecast analyses and severe meteorological discussions with WeatherGPT.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="history.css">
+</head>
+<body>
+  <div class="app-layout">
+    
+    <!-- ================= 1. LEFT SIDEBAR ================= -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-top">
+        <!-- Brand Logo -->
+        <div class="brand-row">
+          <a href="dashboard.html" class="sidebar-brand">
+            <div class="brand-logo-icon">
+              <svg class="weather-brand-svg" viewBox="0 0 48 48" fill="none">
+                <defs>
+                  <radialGradient id="histSunGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(30 18) rotate(90) scale(14)">
+                    <stop stop-color="#FFDF00"/>
+                    <stop offset="0.7" stop-color="#F59E0B"/>
+                    <stop offset="1" stop-color="#EA580C"/>
+                  </radialGradient>
+                  <linearGradient id="histCloudGrad" x1="12" y1="18" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FFFFFF"/>
+                    <stop offset="1" stop-color="#DCEAFE"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="30" cy="18" r="9" fill="url(#histSunGlow)"/>
+                <path d="M30 5V8M30 28V31M43 18H40M20 18H17M39.2 8.8L37.1 10.9M22.9 25.1L20.8 27.2M39.2 27.2L37.1 25.1M22.9 8.8L20.8 10.9" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+                <path d="M16 38H34C37.3137 38 40 35.3137 40 32C40 28.6863 37.3137 26 34 26C33.82 26 33.642 26.0079 33.466 26.0234C32.4107 20.3117 27.4475 16 21.5 16C14.5964 16 9 21.5964 9 28.5C9 29.2778 9.0709 30.0392 9.2066 30.777C7.3248 31.8601 6 33.7845 6 36C6 39.3137 8.68629 42 12 42H16C16 42 16 38 16 38Z" fill="url(#histCloudGrad)"/>
+              </svg>
+            </div>
+            <span class="brand-title">WeatherGPT</span>
+          </a>
+          <button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Main Navigation Links -->
+        <nav class="sidebar-nav">
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="dashboard.html" class="nav-link" id="navDashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="chat.html" class="nav-link" id="navChat">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+                <span>Chat</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="alerts.html" class="nav-link" id="navAlerts">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span>Alerts</span>
+                <span class="sidebar-badge-red">3</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="map.html" class="nav-link" id="navMap">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                  <line x1="8" y1="2" x2="8" y2="18"/>
+                  <line x1="16" y1="6" x2="16" y2="22"/>
+                </svg>
+                <span>Weather Map</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="forecast.html" class="nav-link" id="navForecast">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Forecast</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="history.html" class="nav-link active" id="navHistory">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>History</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="saved-locations.html" class="nav-link" id="navSaved">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>Saved Locations</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="settings.html" class="nav-link" id="navSettings">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Sidebar Bottom Area -->
+      <div class="sidebar-bottom">
+        <!-- Go Premium Card -->
+        <div class="go-premium-card">
+          <div class="premium-header">
+            <span class="crown-icon">👑</span>
+            <span class="premium-title">Go Premium</span>
+          </div>
+          <p class="premium-desc">Unlock advanced features, longer history, custom alerts and more.</p>
+          <button type="button" class="upgrade-btn" id="upgradeBtn">Upgrade Now</button>
+        </div>
+
+        <!-- New to WeatherGPT Card -->
+        <div class="new-account-card">
+          <span class="new-account-txt">New to WeatherGPT?</span>
+          <a href="index.html" class="create-account-btn" id="createAccountBtn">Create Account</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= 2. CENTER HISTORY STREAM ================= -->
+    <main class="history-main">
+      
+      <!-- Top Navigation Header -->
+      <header class="history-header-bar">
+        <div class="header-left-col">
+          <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open navigation">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="history-title-wrap">
+            <div class="history-title-row">
+              <svg class="clock-title-svg" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <h1 class="history-page-title">History</h1>
+            </div>
+            <p class="history-page-subtitle">View and manage your past conversations with WeatherGPT</p>
+          </div>
+        </div>
+
+        <div class="header-right-col">
+          <!-- Language Selector -->
+          <button type="button" class="header-pill-btn" id="historyLangBtn">
+            <svg class="globe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span>English</span>
+            <svg class="chevron-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          <!-- Notification Bell -->
+          <button type="button" class="header-circle-btn" id="historyNotifBtn" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+
+          <!-- Login Blue Button -->
+          <a href="index.html" class="header-login-btn" id="headerLoginBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Login</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Scrollable History Stream Body -->
+      <div class="history-scroll-body">
+        
+        <!-- Search & Action Toolbar -->
+        <div class="history-toolbar-row">
+          <!-- Search input -->
+          <div class="history-search-wrap">
+            <input type="text" class="history-search-input" id="historySearchInput" placeholder="Search conversations...">
+            <svg class="search-icon-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+
+          <!-- Date Dropdown Button -->
+          <button type="button" class="toolbar-date-btn" id="toolbarDateBtn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>Date</span>
+            <svg class="chevron-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <!-- New Chat Blue Button -->
+          <a href="chat.html" class="toolbar-new-chat-btn" id="toolbarNewChatBtn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>New Chat</span>
+          </a>
+        </div>
+
+        <!-- Filter Sub-Tabs -->
+        <nav class="history-filter-tabs" aria-label="Conversation time filters">
+          <button type="button" class="h-tab-btn active-h-tab" data-period="all">All Conversations</button>
+          <button type="button" class="h-tab-btn" data-period="today">Today</button>
+          <button type="button" class="h-tab-btn" data-period="yesterday">Yesterday</button>
+          <button type="button" class="h-tab-btn" data-period="this-week">This Week</button>
+          <button type="button" class="h-tab-btn" data-period="this-month">This Month</button>
+          <button type="button" class="h-tab-btn" data-period="custom">Custom</button>
+        </nav>
+
+        <!-- ============ Conversations Group 1: Today – 21 May 2025 ============ -->
+        <section class="history-group-section" data-group="today">
+          <h3 class="group-date-heading">Today <span class="sub-date">– 21 May 2025</span></h3>
+          <div class="conversations-feed-box">
+            
+            <!-- Item 1.1 -->
+            <article class="convo-item-row" data-type="general" data-title="Will it rain tomorrow in Pune?">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-blue-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                    <path d="M14 28h20a8 8 0 0 0 0-16 10 10 0 0 0-19.2 3.6A7 7 0 0 0 14 28z" fill="#64748B"/>
+                    <path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#93C5FD"/>
+                    <line x1="8" y1="16" x2="7" y2="19" stroke="#2563EB" stroke-width="1.8"/>
+                    <line x1="12" y1="16" x2="11" y2="19" stroke="#2563EB" stroke-width="1.8"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Will it rain tomorrow in Pune?</h4>
+                  <p class="convo-snippet">You asked about the rain probability for tomorrow in Pune...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">10:21 AM</span>
+                <span class="convo-tag tag-general">General Query</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+            <!-- Item 1.2 -->
+            <article class="convo-item-row" data-type="alert" data-title="Weather alert for Maharashtra">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-red-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Weather alert for Maharashtra</h4>
+                  <p class="convo-snippet">You asked about current weather alerts in Maharashtra...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">9:05 AM</span>
+                <span class="convo-tag tag-alert">Alert</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+            <!-- Item 1.3 -->
+            <article class="convo-item-row" data-type="forecast" data-title="Weekend weather in Lonavala">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-yellow-soft">
+                  <svg viewBox="0 0 24 24" class="sun-cloud-sm">
+                    <circle cx="16" cy="9" r="4" fill="#F59E0B"/>
+                    <path d="M7 17h9a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 7 17z" fill="#FDE047"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Weekend weather in Lonavala</h4>
+                  <p class="convo-snippet">You asked about the weather conditions for this weekend...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">8:15 AM</span>
+                <span class="convo-tag tag-forecast">Forecast</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+          </div>
+        </section>
+
+        <!-- ============ Conversations Group 2: Yesterday – 20 May 2025 ============ -->
+        <section class="history-group-section" data-group="yesterday">
+          <h3 class="group-date-heading">Yesterday <span class="sub-date">– 20 May 2025</span></h3>
+          <div class="conversations-feed-box">
+            
+            <!-- Item 2.1 -->
+            <article class="convo-item-row" data-type="air-quality" data-title="Air quality in Delhi">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-green-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                    <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Air quality in Delhi</h4>
+                  <p class="convo-snippet">You asked about the current air quality index in Delhi...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">4:30 PM</span>
+                <span class="convo-tag tag-air">Air Quality</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+            <!-- Item 2.2 -->
+            <article class="convo-item-row" data-type="alert" data-title="Cyclone update in Bay of Bengal">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-purple-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3.5 5.5"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Cyclone update in Bay of Bengal</h4>
+                  <p class="convo-snippet">You asked about the latest cyclone updates in Bay of Bengal...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">11:10 AM</span>
+                <span class="convo-tag tag-alert">Alert</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+            <!-- Item 2.3 -->
+            <article class="convo-item-row" data-type="general" data-title="Best time to visit Himachal Pradesh">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-blue-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Best time to visit Himachal Pradesh</h4>
+                  <p class="convo-snippet">You asked about the best time to visit Himachal Pradesh...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">9:40 AM</span>
+                <span class="convo-tag tag-general">General Query</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+          </div>
+        </section>
+
+        <!-- ============ Conversations Group 3: 19 May 2025 ============ -->
+        <section class="history-group-section" data-group="older">
+          <h3 class="group-date-heading">19 May <span class="sub-date">2025</span></h3>
+          <div class="conversations-feed-box">
+            
+            <!-- Item 3.1 -->
+            <article class="convo-item-row" data-type="forecast" data-title="Tomorrow's temperature in Nagpur">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-red-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2">
+                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Tomorrow's temperature in Nagpur</h4>
+                  <p class="convo-snippet">You asked about the temperature forecast for Nagpur tomorrow...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">6:20 PM</span>
+                <span class="convo-tag tag-forecast">Forecast</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+            <!-- Item 3.2 -->
+            <article class="convo-item-row" data-type="general" data-title="Is it safe to travel to Kerala now?">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-green-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">Is it safe to travel to Kerala now?</h4>
+                  <p class="convo-snippet">You asked about the safety and weather conditions in Kerala...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">3:40 PM</span>
+                <span class="convo-tag tag-general">General Query</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+            <!-- Item 3.3 -->
+            <article class="convo-item-row" data-type="forecast" data-title="How much rainfall Mumbai will get this week?">
+              <div class="convo-item-left">
+                <div class="convo-icon-box bg-blue-soft">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                    <path d="M6 14h10a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.8A3.5 3.5 0 0 0 6 14z" fill="#93C5FD"/>
+                    <line x1="8" y1="16" x2="7" y2="19" stroke="#2563EB" stroke-width="2"/>
+                    <line x1="12" y1="16" x2="11" y2="19" stroke="#2563EB" stroke-width="2"/>
+                    <line x1="16" y1="16" x2="15" y2="19" stroke="#2563EB" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="convo-text-group">
+                  <h4 class="convo-title">How much rainfall Mumbai will get this week?</h4>
+                  <p class="convo-snippet">You asked about the total rainfall prediction in Mumbai this week...</p>
+                </div>
+              </div>
+              <div class="convo-item-right">
+                <span class="convo-time">10:15 AM</span>
+                <span class="convo-tag tag-forecast">Forecast</span>
+                <button type="button" class="convo-menu-btn" aria-label="Conversation options">⋮</button>
+              </div>
+            </article>
+
+          </div>
+        </section>
+
+        <!-- No More Conversations Footer -->
+        <footer class="history-end-footer">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>No more conversations to load</span>
+        </footer>
+
+      </div>
+    </main>
+
+    <!-- ================= 3. RIGHT SIDEBAR FILTERS & SUMMARY ================= -->
+    <aside class="history-widgets-panel">
+      
+      <!-- Card 1: Filters -->
+      <article class="h-widget-card filters-widget">
+        <div class="h-widget-header">
+          <h3 class="h-widget-title">Filters</h3>
+          <button type="button" class="clear-all-link" id="clearAllFiltersBtn">Clear All</button>
+        </div>
+
+        <!-- Date Range -->
+        <div class="h-filter-group">
+          <label class="h-filter-lbl">Date Range</label>
+          <div class="h-select-wrapper">
+            <svg class="h-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <select class="h-custom-select" id="dateRangeSelect">
+              <option value="all" selected>All Time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="last7">Last 7 Days</option>
+              <option value="last30">Last 30 Days</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conversation Type Checkboxes -->
+        <div class="h-filter-group">
+          <label class="h-filter-lbl">Conversation Type</label>
+          <div class="h-checkbox-list">
+            <label class="h-chk-item">
+              <input type="checkbox" checked class="h-chk" id="chkGenQueries">
+              <span class="chk-lbl-text">General Queries</span>
+            </label>
+            <label class="h-chk-item">
+              <input type="checkbox" checked class="h-chk" id="chkWeatherForecast">
+              <span class="chk-lbl-text">Weather Forecast</span>
+            </label>
+            <label class="h-chk-item">
+              <input type="checkbox" checked class="h-chk" id="chkAlertsWarnings">
+              <span class="chk-lbl-text">Alerts & Warnings</span>
+            </label>
+            <label class="h-chk-item">
+              <input type="checkbox" class="h-chk" id="chkAirQuality">
+              <span class="chk-lbl-text">Air Quality</span>
+            </label>
+            <label class="h-chk-item">
+              <input type="checkbox" class="h-chk" id="chkTravel">
+              <span class="chk-lbl-text">Travel & Activities</span>
+            </label>
+            <label class="h-chk-item">
+              <input type="checkbox" class="h-chk" id="chkOther">
+              <span class="chk-lbl-text">Other</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Sort By -->
+        <div class="h-filter-group">
+          <label class="h-filter-lbl">Sort By</label>
+          <div class="h-select-wrapper">
+            <select class="h-custom-select" id="sortBySelect">
+              <option value="recent" selected>Most Recent</option>
+              <option value="oldest">Oldest First</option>
+              <option value="longest">Longest Conversation</option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: History Summary -->
+      <article class="h-widget-card summary-widget">
+        <div class="h-widget-header">
+          <div class="summary-title-wrap">
+            <svg class="purple-bar-icon" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <h3 class="h-widget-title">History Summary</h3>
+          </div>
+        </div>
+
+        <div class="summary-metrics-rows">
+          <div class="sum-row">
+            <span class="sum-lbl">Total Conversations</span>
+            <span class="sum-val">48</span>
+          </div>
+          <div class="sum-row">
+            <span class="sum-lbl">This Week</span>
+            <span class="sum-val">12</span>
+          </div>
+          <div class="sum-row">
+            <span class="sum-lbl">This Month</span>
+            <span class="sum-val">28</span>
+          </div>
+          <div class="sum-row">
+            <span class="sum-lbl">Total Messages</span>
+            <span class="sum-val">156</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3: Storage Usage -->
+      <article class="h-widget-card storage-widget">
+        <div class="h-widget-header">
+          <div class="summary-title-wrap">
+            <svg class="cloud-storage-icon" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+            <h3 class="h-widget-title">Storage Usage</h3>
+          </div>
+        </div>
+
+        <p class="storage-desc">You've used 45% of your history storage.</p>
+        
+        <div class="storage-bar-track-wrap">
+          <div class="storage-bar-track">
+            <div class="storage-bar-fill" style="width: 45%;"></div>
+          </div>
+          <span class="storage-pct">45%</span>
+        </div>
+
+        <button type="button" class="storage-upgrade-btn" id="storageUpgradeBtn">Upgrade for More</button>
+      </article>
+
+    </aside>
+
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="history.js"></script>
+</body>
+</html>
