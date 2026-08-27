@@ -1,79 +1,44 @@
-# WeatherGPT Backend Service
+# WeatherGPT Backend Service – Problem Statement ID: 26068
 
-An industry-grade Express.js & MongoDB backend service powering **WeatherGPT** — featuring multi-model Numerical Weather Prediction (ECMWF, NOAA GFS, Open-Meteo), AI-assisted conversational weather forecasting, and real-time geographic alerts.
-
----
-
-## 🏛️ Architecture & Directory Structure
-
-```
-backend/
-├── src/
-│   ├── config/
-│   │   ├── env.js                      # Centralized environment variable manager & defaults
-│   │   ├── db.js                       # MongoDB connection orchestrator & graceful lifecycle
-│   │   └── constants.js                # Enums, severe alert types, units, and cache TTLs
-│   ├── controllers/
-│   │   ├── alertController.js          # Public alert feeds & read confirmations
-│   │   ├── authController.js           # Registration, login, logout, password resets
-│   │   ├── conversationController.js   # Chat sessions & thread management
-│   │   ├── locationController.js       # Saved locations CRUD with live weather enrichment
-│   │   ├── messageController.js        # WeatherGPT messages & AI responses
-│   │   ├── notificationController.js   # Notification queries & read state management
-│   │   ├── settingsController.js       # User preferences (units, theme, notifications)
-│   │   ├── userController.js           # Profile updates & cascading account deletion
-│   │   └── weatherController.js        # Multi-model weather, geocoding & hourly forecasts
-│   ├── middleware/
-│   │   ├── authMiddleware.js           # JWT Bearer token authentication
-│   │   ├── errorMiddleware.js          # Central error envelope handler
-│   │   ├── rateLimitMiddleware.js      # Endpoint & auth rate limiters
-│   │   └── validationMiddleware.js     # Joi payload & query validation
-│   ├── models/
-│   │   ├── Alert.js                    # Severe weather alert schema & geospatial indexes
-│   │   ├── Conversation.js             # Chat threads schema
-│   │   ├── Message.js                  # Message entities with weather metadata
-│   │   ├── Notification.js             # Alert & forecast notifications
-│   │   ├── SavedLocation.js            # User favorite & saved coordinates
-│   │   ├── User.js                     # User account & credential hash
-│   │   └── UserPreferences.js          # Measurement units & UI theme preferences
-│   ├── routes/                         # Express API route declarations
-│   ├── services/
-│   │   ├── alertService.js             # Alert retrieval & filtering
-│   │   ├── authService.js              # Authentication logic & password hashing
-│   │   ├── chatService.js              # WeatherGPT entity extraction & response generation
-│   │   ├── locationService.js          # Location management
-│   │   ├── notificationService.js      # Notification dispatch & read tracking
-│   │   └── weather/                    # NWP & Open-Meteo data integration
-│   │       ├── normalizers/            # Data payload standardizers
-│   │       ├── nwp/ecmwf/              # Direct ECMWF GRIB2 range parser & caching
-│   │       ├── nwp/noaaGfs/            # NOAA GFS client
-│   │       ├── openMeteo/              # Open-Meteo forecast, air quality, flood, marine
-│   │       └── weatherService.js       # Weather aggregation engine with inflight deduplication
-│   ├── utils/
-│   │   ├── generateToken.js            # JWT signing helper
-│   │   ├── password.js                 # Bcrypt hashing & verification
-│   │   └── response.js                 # Standardized JSON response envelopes
-│   ├── validators/                     # Joi validation schemas
-│   ├── app.js                          # Express app configuration & middleware pipeline
-│   └── server.js                       # Server bootstrapper & graceful shutdown handler
-├── package.json
-└── .env
-```
+An industry-grade Express.js & MongoDB backend service powering **WeatherGPT: Conversational AI for Weather Forecasting, Alerts, and Climate Information**.
 
 ---
 
-## ⚙️ Environment Variables
+## 🏛️ Comprehensive API & Services Integration
 
-Create a `.env` file in `backend/` or root:
-
-| Variable | Type | Default | Description |
+| No. | API / Service | Purpose | Implemented Endpoints / Modules |
 | :--- | :--- | :--- | :--- |
-| `PORT` | `number` | `5000` | HTTP server port |
-| `NODE_ENV` | `string` | `development` | Environment (`development`, `production`, `test`) |
-| `MONGO_URI` | `string` | `mongodb://localhost:27017/weathergpt` | MongoDB connection URI |
-| `JWT_SECRET` | `string` | `dev_secret_key...` | Secret key for JWT signing |
-| `JWT_EXPIRES_IN` | `string` | `7d` | JWT expiration duration |
-| `FRONTEND_URL` | `string` | `http://localhost:5173` | CORS allowed client origin |
+| **1** | **Open-Meteo Weather API** | Current, hourly & daily weather, soil moisture, evapotranspiration | `GET /api/weather/current`, `GET /api/weather/forecast`, `GET /api/weather/hourly` |
+| **2** | **Open-Meteo Geocoding** | City name → Latitude/Longitude worldwide | `services/weather/openMeteo/geocoding.js` |
+| **3** | **IMD Official Warnings** | Red/Orange/Yellow/Green alerts & district warnings | `GET /api/imd/warnings`, `GET /api/imd/warnings/district`, `GET /api/imd/bulletin` |
+| **4** | **Historical Climate Analysis** | 20-year climate trends, anomalies & warming shift | `GET /api/climate/history`, `GET /api/climate/trends` |
+| **5 & 6** | **NOAA GFS & ECMWF NWP** | Multi-model comparison & confidence score | `GET /api/weather/compare?city=Pune` |
+| **7** | **MOSDAC / ISRO Satellite** | INSAT-3D/3DR imagery feeds & cyclone tracking | `GET /api/satellite/layers`, `GET /api/satellite/cyclone-tracks` |
+| **8** | **Google Gemini AI** | Grounded intent parsing, multilingual answers & tool calling | `services/ai/geminiService.js`, `POST /api/messages` |
+| **9 & 10** | **Voice (Whisper & Piper)** | Whisper Speech-to-Text & Piper Text-to-Speech audio | `POST /api/voice/transcribe`, `POST /api/voice/synthesize` |
+| **11** | **MapLibre + OSM GIS** | Interactive weather, alert, & flood risk GeoJSON layers | `GET /api/maps/layers/weather`, `GET /api/maps/layers/alerts`, `GET /api/maps/layers/flood-risk` |
+| **12** | **Agro & Disaster Advisory** | Soil moisture agro advice & disaster safety checklists | `GET /api/advisories/agriculture`, `GET /api/advisories/disaster` |
+
+---
+
+## ⚙️ Environment Configuration
+
+Create or update `.env` in `backend/`:
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb://localhost:27017/weathergpt
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
+FRONTEND_URL=http://localhost:5173
+
+# AI & Official Services (Optional: graceful offline fallbacks built-in)
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-1.5-flash
+IMD_API_KEY=your_imd_key
+MOSDAC_API_KEY=your_mosdac_key
+```
 
 ---
 
@@ -83,49 +48,54 @@ Create a `.env` file in `backend/` or root:
 # 1. Install dependencies
 npm install
 
-# 2. Seed database with demo accounts & sample locations
+# 2. Seed database with demo accounts, locations, and alerts
 npm run seed:fresh
 
 # 3. Start development server with hot-reload
 npm run dev
 
-# 4. Execute test suites
+# 4. Run automated test suite (87 tests across 17 suites)
 npm test
 ```
 
 ---
 
-## 📡 Core API Endpoints
+## 📡 Complete REST API Reference
 
-### 🔐 Authentication (`/api/auth`)
-- `POST /api/auth/register` - Create a new user account
-- `POST /api/auth/login` - Authenticate user & retrieve JWT
-- `GET /api/auth/me` - Fetch authenticated user profile
+### 🤖 WeatherGPT AI Chat (`/api/messages` & `/api/conversations`)
+- `POST /api/conversations` - Create new conversation thread
+- `GET /api/conversations` - Retrieve all user conversations
+- `POST /api/messages` - Send user message and get grounded Gemini AI weather response
+- `GET /api/messages/:conversationId` - Fetch conversation message history
 
-### 🌦️ Weather Intelligence (`/api/weather`)
-- `GET /api/weather/current?city=Pune` - Live multi-model weather for city or lat/lon
-- `GET /api/weather/forecast?latitude=18.52&longitude=73.85&days=7` - Multi-model forecast (ECMWF, GFS, Open-Meteo)
-- `GET /api/weather/hourly?city=Mumbai&hours=24` - 24-48 hour hourly forecast
+### 🌦️ Multi-Model Weather & NWP (`/api/weather`)
+- `GET /api/weather/current?city=Pune` - Live weather metrics
+- `GET /api/weather/forecast?latitude=18.52&longitude=73.85&days=7` - Multi-day forecast
+- `GET /api/weather/hourly?city=Mumbai&hours=24` - 24-48 hour hourly forecasts
+- `GET /api/weather/compare?city=Pune` - NWP multi-model comparison (GFS vs ECMWF) with confidence score
 
-### 💬 WeatherGPT Chatbot (`/api/messages` & `/api/conversations`)
-- `POST /api/conversations` - Start new conversation thread
-- `GET /api/conversations` - List all user conversations
-- `POST /api/messages` - Send query to WeatherGPT and receive AI weather answer
-- `GET /api/messages/:conversationId` - Retrieve thread messages
+### 🚨 IMD Official Warnings (`/api/imd`)
+- `GET /api/imd/warnings` - Active national and state-level weather alerts
+- `GET /api/imd/warnings/district?name=Pune` - District alert status (Red, Orange, Yellow, Green)
+- `GET /api/imd/bulletin` - Synoptic weather bulletin and nowcasts
 
-### 📍 Locations (`/api/locations`)
-- `GET /api/locations` - List saved locations enriched with live weather
-- `POST /api/locations` - Save new geographic coordinate
-- `PATCH /api/locations/:id/favorite` - Toggle favorite location
-- `DELETE /api/locations/:id` - Remove saved location
+### 📈 Climate & 20-Year Historical Analysis (`/api/climate`)
+- `GET /api/climate/history?city=Pune&startDate=2023-01-01&endDate=2023-12-31` - Historical weather archive
+- `GET /api/climate/trends?city=Pune` - 20-year climate shift, temperature anomalies, and rainfall change
 
-### ⚠️ Alerts (`/api/alerts`)
-- `GET /api/alerts` - List all regional severe weather alerts
-- `GET /api/alerts/active` - Filter currently active alerts
-- `PATCH /api/alerts/:id/read` - Mark alert notification as read
+### 🌾 Agriculture & Disaster Decision Support (`/api/advisories`)
+- `GET /api/advisories/agriculture?city=Pune&crop=cotton` - Soil moisture & crop management advisory
+- `GET /api/advisories/disaster?city=Mumbai` - Emergency safety checklist & disaster hotlines
 
-### ⚙️ Preferences & Profile (`/api/settings` & `/api/users`)
-- `GET /api/settings` - Retrieve user unit & display preferences
-- `PUT /api/settings` - Update preferences (Celsius/Fahrenheit, metric/imperial, theme)
-- `PATCH /api/users/me` - Update profile details
-- `DELETE /api/users/me` - Cascading account and data deletion
+### 🗺️ MapLibre / OpenStreetMap GIS GeoJSON (`/api/maps`)
+- `GET /api/maps/layers/weather?layer=temperature|precipitation|wind|clouds` - GeoJSON weather points
+- `GET /api/maps/layers/alerts` - GeoJSON active alert zones
+- `GET /api/maps/layers/flood-risk` - GeoJSON flood vulnerability zones
+
+### 🎙️ Voice Assistance (`/api/voice`)
+- `POST /api/voice/transcribe` - Whisper speech-to-text transcription
+- `POST /api/voice/synthesize` - Piper text-to-speech audio synthesis profile
+
+### 🛰️ Satellite & WMO WIS 2.0 (`/api/satellite`)
+- `GET /api/satellite/layers` - INSAT-3D/3DR satellite imagery products
+- `GET /api/satellite/cyclone-tracks` - Active cyclone trajectories and wind radiuses

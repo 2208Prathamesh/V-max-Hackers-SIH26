@@ -1,40 +1,41 @@
-import weatherService from '../services/weather/weatherService.js'
-import { searchLocation } from '../services/weather/openMeteo/geocoding.js'
-import { successResponse } from '../utils/response.js'
+import weatherService from '../services/weather/weatherService.js';
+import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
+import { compareNWPModels } from '../services/weather/nwp/modelComparisonService.js';
+import { successResponse } from '../utils/response.js';
 
 /**
  * Helper to resolve coordinates from query (either city name or lat/lon)
  */
 const resolveCoordinates = async (query) => {
-  const { city, latitude, longitude } = query
+  const { city, latitude, longitude } = query;
 
-  let lat = latitude !== undefined && latitude !== '' ? Number(latitude) : undefined
-  let lon = longitude !== undefined && longitude !== '' ? Number(longitude) : undefined
+  let lat = latitude !== undefined && latitude !== '' ? Number(latitude) : undefined;
+  let lon = longitude !== undefined && longitude !== '' ? Number(longitude) : undefined;
 
   if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
-    return { latitude: lat, longitude: lon, cityName: city || null }
+    return { latitude: lat, longitude: lon, cityName: city || null };
   }
 
   if (city && city.trim()) {
-    const geoData = await searchLocation(city.trim())
+    const geoData = await searchLocation(city.trim());
     if (!geoData?.results || geoData.results.length === 0) {
-      const error = new Error(`Location not found: "${city}"`)
-      error.statusCode = 404
-      throw error
+      const error = new Error(`Location not found: "${city}"`);
+      error.statusCode = 404;
+      throw error;
     }
 
-    const firstMatch = geoData.results[0]
+    const firstMatch = geoData.results[0];
     return {
       latitude: firstMatch.latitude,
       longitude: firstMatch.longitude,
       cityName: `${firstMatch.name}${firstMatch.admin1 ? ', ' + firstMatch.admin1 : ''}, ${firstMatch.country}`
-    }
+    };
   }
 
-  const error = new Error('City name or latitude and longitude are required')
-  error.statusCode = 400
-  throw error
-}
+  const error = new Error('City name or latitude and longitude are required');
+  error.statusCode = 400;
+  throw error;
+};
 
 /**
  * Get current weather
@@ -42,18 +43,18 @@ const resolveCoordinates = async (query) => {
  */
 const getCurrentWeather = async (req, res, next) => {
   try {
-    const { latitude, longitude, cityName } = await resolveCoordinates(req.query)
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query);
 
-    const weather = await weatherService.getWeather(latitude, longitude)
+    const weather = await weatherService.getWeather(latitude, longitude);
     if (cityName) {
-      weather.resolvedCity = cityName
+      weather.resolvedCity = cityName;
     }
 
-    return successResponse(res, weather, 'Current weather retrieved successfully', 200)
+    return successResponse(res, weather, 'Current weather retrieved successfully', 200);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Get weather forecast
@@ -61,27 +62,27 @@ const getCurrentWeather = async (req, res, next) => {
  */
 const getForecast = async (req, res, next) => {
   try {
-    const { days = 7 } = req.query
-    const numberOfDays = Number(days)
+    const { days = 7 } = req.query;
+    const numberOfDays = Number(days);
 
     if (Number.isNaN(numberOfDays) || numberOfDays < 1 || numberOfDays > 14) {
       return res.status(400).json({
         success: false,
         message: 'Days must be a number between 1 and 14'
-      })
+      });
     }
 
-    const { latitude, longitude, cityName } = await resolveCoordinates(req.query)
-    const forecast = await weatherService.getForecast(latitude, longitude, numberOfDays)
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query);
+    const forecast = await weatherService.getForecast(latitude, longitude, numberOfDays);
     if (cityName) {
-      forecast.resolvedCity = cityName
+      forecast.resolvedCity = cityName;
     }
 
-    return successResponse(res, forecast, 'Weather forecast retrieved successfully', 200)
+    return successResponse(res, forecast, 'Weather forecast retrieved successfully', 200);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Get hourly weather forecast
@@ -89,31 +90,49 @@ const getForecast = async (req, res, next) => {
  */
 const getHourlyForecast = async (req, res, next) => {
   try {
-    const { hours = 24 } = req.query
-    const numberOfHours = Number(hours)
+    const { hours = 24 } = req.query;
+    const numberOfHours = Number(hours);
 
     if (Number.isNaN(numberOfHours) || numberOfHours < 1 || numberOfHours > 48) {
       return res.status(400).json({
         success: false,
         message: 'Hours must be a number between 1 and 48'
-      })
+      });
     }
 
-    const { latitude, longitude, cityName } = await resolveCoordinates(req.query)
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query);
     const forecast = await weatherService.getHourlyForecast({
       latitude,
       longitude,
       hours: numberOfHours
-    })
+    });
     if (cityName) {
-      forecast.resolvedCity = cityName
+      forecast.resolvedCity = cityName;
     }
 
-    return successResponse(res, forecast, 'Hourly forecast retrieved successfully', 200)
+    return successResponse(res, forecast, 'Hourly forecast retrieved successfully', 200);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
-export { getCurrentWeather, getForecast, getHourlyForecast }
-export default { getCurrentWeather, getForecast, getHourlyForecast }
+/**
+ * Compare NWP Models (ECMWF vs NOAA GFS vs Open-Meteo)
+ * GET /api/weather/compare?city=Pune or ?latitude=18.52&longitude=73.85
+ */
+const compareModels = async (req, res, next) => {
+  try {
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query);
+    const comparison = await compareNWPModels(latitude, longitude);
+    if (cityName) {
+      comparison.resolvedCity = cityName;
+    }
+
+    return successResponse(res, comparison, 'NWP multi-model comparison completed successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getCurrentWeather, getForecast, getHourlyForecast, compareModels };
+export default { getCurrentWeather, getForecast, getHourlyForecast, compareModels };

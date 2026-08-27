@@ -1,17 +1,16 @@
-import express from 'express'
-
+import express from 'express';
 import {
   getCurrentWeather,
   getForecast,
-  getHourlyForecast
-} from '../controllers/weatherController.js'
+  getHourlyForecast,
+  compareModels
+} from '../controllers/weatherController.js';
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/current', getCurrentWeather)
+router.get('/current', getCurrentWeather);
+router.get('/forecast', getForecast);
+router.get('/hourly', getHourlyForecast);
+router.get('/compare', compareModels);
 
-router.get('/forecast', getForecast)
-
-router.get('/hourly', getHourlyForecast)
-
-export default router
+export default router;

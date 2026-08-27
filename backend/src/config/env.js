@@ -13,8 +13,20 @@ export const env = {
   JWT_SECRET: process.env.JWT_SECRET || 'dev_secret_key_change_in_production',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  
+  // AI / LLM
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+
+  // Official Meteorological & Satellite APIs
+  IMD_API_KEY: process.env.IMD_API_KEY || '',
+  MOSDAC_API_KEY: process.env.MOSDAC_API_KEY || '',
+
+  // Rate Limiting
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+  
+  // Environment Flags
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
   IS_DEVELOPMENT: (process.env.NODE_ENV || 'development') === 'development',
   IS_TEST: process.env.NODE_ENV === 'test'

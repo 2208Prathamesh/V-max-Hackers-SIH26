@@ -1,0 +1,66 @@
+import { getHistoricalWeather, getClimateTrends } from '../services/weather/historicalService.js';
+import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
+import { successResponse } from '../utils/response.js';
+
+/**
+ * Helper to resolve coordinates
+ */
+async function resolveCoords(req) {
+  const { city, latitude, longitude } = req.query;
+
+  if (latitude && longitude && !Number.isNaN(Number(latitude)) && !Number.isNaN(Number(longitude))) {
+    return { lat: Number(latitude), lon: Number(longitude), cityName: city || null };
+  }
+
+  if (city && city.trim()) {
+    const geo = await searchLocation(city.trim());
+    if (geo?.results && geo.results.length > 0) {
+      const match = geo.results[0];
+      return {
+        lat: match.latitude,
+        lon: match.longitude,
+        cityName: `${match.name}, ${match.country}`
+      };
+    }
+  }
+
+  // Default to Pune
+  return { lat: 18.5204, lon: 73.8567, cityName: 'Pune, India' };
+}
+
+/**
+ * Get historical weather range
+ */
+export const getHistory = async (req, res, next) => {
+  try {
+    const { lat, lon, cityName } = await resolveCoords(req);
+    const startDate = req.query.startDate || '2023-01-01';
+    const endDate = req.query.endDate || '2023-12-31';
+
+    const history = await getHistoricalWeather(lat, lon, startDate, endDate);
+    return successResponse(res, { cityName, ...history }, 'Historical weather retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get 20-year climate trends and anomalies
+ */
+export const getTrends = async (req, res, next) => {
+  try {
+    const { lat, lon, cityName } = await resolveCoords(req);
+    const startYear = req.query.startYear ? parseInt(req.query.startYear, 10) : undefined;
+    const endYear = req.query.endYear ? parseInt(req.query.endYear, 10) : undefined;
+
+    const trends = await getClimateTrends(lat, lon, startYear, endYear);
+    return successResponse(res, { cityName, ...trends }, 'Climate trends and anomalies calculated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default {
+  getHistory,
+  getTrends
+};

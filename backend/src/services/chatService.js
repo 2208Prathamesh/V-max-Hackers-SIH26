@@ -1,13 +1,11 @@
 import weatherService from './weather/weatherService.js';
 import { searchLocation } from './weather/openMeteo/geocoding.js';
+import imdService from './imd/imdService.js';
+import advisoryService from './advisory/advisoryService.js';
+import { generateGeminiWeatherResponse } from './ai/geminiService.js';
 
 /**
  * Extract a candidate city/location name from user query
- * Examples:
- * - "What is the current weather in Mumbai?" -> "Mumbai"
- * - "Will it rain in Delhi tomorrow?" -> "Delhi"
- * - "Temperature for Pune" -> "Pune"
- * - "Tokyo weather" -> "Tokyo"
  * @param {string} text - User message input
  * @returns {string|null} - Extracted candidate location
  */
@@ -50,7 +48,17 @@ function extractLocationQuery(text) {
 }
 
 /**
- * Generate WeatherGPT response dynamically based on live NWP and Open-Meteo data
+ * Detect language from query
+ */
+function detectLanguage(text) {
+  const t = (text || '').toLowerCase();
+  if (t.includes('काय') || t.includes('आहे') || t.includes('पुण्यात') || t.includes('मुंबईत')) return 'mr';
+  if (t.includes('kaisa') || t.includes('hogi') || t.includes('mausam') || t.includes('baarish') || t.includes('kya')) return 'hi';
+  return 'en';
+}
+
+/**
+ * Generate WeatherGPT response dynamically based on live NWP, Open-Meteo, IMD and Gemini AI
  * @param {object} param0
  * @param {string} param0.conversationId - Conversation ID
  * @param {string} param0.userId - User ID
@@ -60,6 +68,7 @@ function extractLocationQuery(text) {
 const generateResponse = async ({ conversationId, userId, message }) => {
   const text = (message || '').trim();
   const lowerText = text.toLowerCase();
+  const detectedLang = detectLanguage(text);
 
   let response = {
     content: '',
@@ -80,7 +89,15 @@ const generateResponse = async ({ conversationId, userId, message }) => {
     lowerText.includes('cold') ||
     lowerText.includes('climate') ||
     lowerText.includes('aqi') ||
-    lowerText.includes('air quality');
+    lowerText.includes('air quality') ||
+    lowerText.includes('alert') ||
+    lowerText.includes('warning') ||
+    lowerText.includes('crop') ||
+    lowerText.includes('farming') ||
+    lowerText.includes('mausam') ||
+    lowerText.includes('baarish') ||
+    lowerText.includes('हवामान') ||
+    lowerText.includes('पाऊस');
 
   if (isWeatherQuestion) {
     const locationCandidate = extractLocationQuery(text);
@@ -92,31 +109,34 @@ const generateResponse = async ({ conversationId, userId, message }) => {
         if (geoResult?.results && geoResult.results.length > 0) {
           const match = geoResult.results[0];
           const locationName = `${match.name}${match.admin1 ? ', ' + match.admin1 : ''}, ${match.country}`;
-          
-          const weatherData = await weatherService.getWeather(match.latitude, match.longitude);
+
+          // Fetch verified live meteorological datasets concurrently
+          const [weatherData, imdWarning, agroAdvisory] = await Promise.all([
+            weatherService.getWeather(match.latitude, match.longitude),
+            imdService.getDistrictWarning(match.name).catch(() => null),
+            lowerText.includes('crop') || lowerText.includes('farm')
+              ? advisoryService.getAgricultureAdvisory(match.latitude, match.longitude).catch(() => null)
+              : null
+          ]);
+
           const current = weatherData?.forecast?.current;
           const daily = weatherData?.forecast?.daily || [];
-          const todayDaily = daily[0] || {};
 
-          const temp = current?.temperature ?? 'N/A';
-          const humidity = current?.humidity ?? 'N/A';
-          const wind = current?.windSpeed ?? 'N/A';
-          const rainProb = todayDaily?.precipitationProbability ?? current?.precipitation ?? 0;
-
-          let answer = `Currently in ${locationName}, the temperature is ${temp}°C with relative humidity at ${humidity}% and wind speed around ${wind} km/h.`;
-
-          if (lowerText.includes('rain') || lowerText.includes('rainy')) {
-            if (rainProb > 40) {
-              answer += ` 🌧️ Rain is likely with a ${rainProb}% precipitation probability.`;
-            } else {
-              answer += ` ☀️ Little to no rain expected (${rainProb}% chance).`;
-            }
-          } else if (todayDaily?.maxTemperature !== undefined && todayDaily?.minTemperature !== undefined) {
-            answer += ` Today's forecast ranges from ${todayDaily.minTemperature}°C to ${todayDaily.maxTemperature}°C.`;
-          }
+          // Grounded AI reasoning
+          const aiText = await generateGeminiWeatherResponse({
+            userMessage: text,
+            groundedContext: {
+              location: locationName,
+              currentWeather: current,
+              forecastDaily: daily,
+              imdWarning,
+              agroAdvisory
+            },
+            language: detectedLang
+          });
 
           response = {
-            content: answer,
+            content: aiText,
             messageType: 'weather',
             metadata: {
               location: locationName,
@@ -124,7 +144,9 @@ const generateResponse = async ({ conversationId, userId, message }) => {
               longitude: match.longitude,
               current,
               daily: daily.slice(0, 5),
-              airQuality: weatherData.airQuality
+              airQuality: weatherData.airQuality,
+              imdWarning,
+              agroAdvisory
             }
           };
         } else {
@@ -139,7 +161,7 @@ const generateResponse = async ({ conversationId, userId, message }) => {
     }
   } else {
     response.content =
-      'Hello! I am WeatherGPT. Ask me anything about current weather conditions, multi-day forecasts, rainfall chances, wind speeds, or air quality for any city in the world.';
+      'Hello! I am WeatherGPT. Ask me anything about current weather conditions, multi-day forecasts, rainfall chances, wind speeds, agricultural crop advisories, or air quality for any city in the world.';
   }
 
   return response;

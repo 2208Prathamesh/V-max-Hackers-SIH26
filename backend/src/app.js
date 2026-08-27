@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import env from './config/env.js';
 
+// Core routes
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js';
@@ -11,6 +12,14 @@ import alertRoutes from './routes/alertRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import weatherRoutes from './routes/weatherRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+
+// Extended weather intelligence & GIS routes
+import imdRoutes from './routes/imdRoutes.js';
+import climateRoutes from './routes/climateRoutes.js';
+import advisoryRoutes from './routes/advisoryRoutes.js';
+import mapRoutes from './routes/mapRoutes.js';
+import voiceRoutes from './routes/voiceRoutes.js';
+import satelliteRoutes from './routes/satelliteRoutes.js';
 
 import errorMiddleware from './middleware/errorMiddleware.js';
 
@@ -39,6 +48,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     success: true,
     message: 'WeatherGPT API is running',
+    version: '2.0.0',
     timestamp: new Date().toISOString(),
     env: env.NODE_ENV
   });
@@ -51,6 +61,12 @@ app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/imd', imdRoutes);
+app.use('/api/climate', climateRoutes);
+app.use('/api/advisories', advisoryRoutes);
+app.use('/api/maps', mapRoutes);
+app.use('/api/voice', voiceRoutes);
+app.use('/api/satellite', satelliteRoutes);
 
 // Protected Routes
 app.use('/api/users', userRoutes);
