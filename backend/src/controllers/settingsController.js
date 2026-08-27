@@ -1,36 +1,41 @@
-import UserPreferences from '../models/UserPreferences.js'
-import authService from '../services/authService.js'
-import { successResponse } from '../utils/response.js'
+import UserPreferences from '../models/UserPreferences.js';
+import authService from '../services/authService.js';
+import { successResponse, errorResponse } from '../utils/response.js';
 
 /**
- * Get user settings
+ * Get current user settings and preferences
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const getSettings = async (req, res, next) => {
   try {
     let settings = await UserPreferences.findOne({
       userId: req.user._id
-    })
+    });
 
-    // Create default settings if they don't exist
     if (!settings) {
       settings = await UserPreferences.create({
         userId: req.user._id
-      })
+      });
     }
 
     return successResponse(
       res,
-      200,
+      settings,
       'Settings retrieved successfully',
-      settings
-    )
+      200
+    );
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
- * Update user settings
+ * Update user preferences and settings
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const updateSettings = async (req, res, next) => {
   try {
@@ -41,36 +46,31 @@ const updateSettings = async (req, res, next) => {
       'precipitationUnit',
       'appearance',
       'language'
-    ]
+    ];
 
-    const updateData = {}
+    const updateData = {};
 
-    // Update normal preference fields
-    allowedFields.forEach(field => {
+    allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        updateData[field] = req.body[field]
+        updateData[field] = req.body[field];
       }
-    })
+    });
 
-    // Update notification preferences
     if (req.body.notifications) {
       const { weatherAlerts, dailyForecast, weeklySummary, breakingNews } =
-        req.body.notifications
+        req.body.notifications;
 
       if (weatherAlerts !== undefined) {
-        updateData['notifications.weatherAlerts'] = weatherAlerts
+        updateData['notifications.weatherAlerts'] = weatherAlerts;
       }
-
       if (dailyForecast !== undefined) {
-        updateData['notifications.dailyForecast'] = dailyForecast
+        updateData['notifications.dailyForecast'] = dailyForecast;
       }
-
       if (weeklySummary !== undefined) {
-        updateData['notifications.weeklySummary'] = weeklySummary
+        updateData['notifications.weeklySummary'] = weeklySummary;
       }
-
       if (breakingNews !== undefined) {
-        updateData['notifications.breakingNews'] = breakingNews
+        updateData['notifications.breakingNews'] = breakingNews;
       }
     }
 
@@ -82,54 +82,57 @@ const updateSettings = async (req, res, next) => {
         $set: updateData
       },
       {
-        new: true,
+        returnDocument: 'after',
         upsert: true,
         runValidators: true,
         setDefaultsOnInsert: true
       }
-    )
+    );
 
-    return successResponse(res, 200, 'Settings updated successfully', settings)
+    return successResponse(res, settings, 'Settings updated successfully', 200);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Change user password
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const changePassword = async (req, res, next) => {
   try {
-    const { currentPassword, newPassword, confirmPassword } = req.body
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message:
-          'Current password, new password and confirm password are required'
-      })
+        message: 'Current password, new password and confirm password are required'
+      });
     }
 
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         success: false,
         message: 'New passwords do not match'
-      })
+      });
     }
 
     if (newPassword.length < 8) {
       return res.status(400).json({
         success: false,
         message: 'New password must be at least 8 characters long'
-      })
+      });
     }
 
-    await authService.changePassword(req.user._id, currentPassword, newPassword)
+    await authService.changePassword(req.user._id, currentPassword, newPassword);
 
-    return successResponse(res, 200, 'Password changed successfully')
+    return successResponse(res, null, 'Password changed successfully', 200);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
-export { getSettings, updateSettings, changePassword }
+export { getSettings, updateSettings, changePassword };
+export default { getSettings, updateSettings, changePassword };

@@ -1,0 +1,6 @@
+{
+  "name": "weathergpt-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Comprehensive industry-grade test suite for WeatherGPT"
+}

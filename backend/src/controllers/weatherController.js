@@ -1,40 +1,55 @@
 import weatherService from '../services/weather/weatherService.js'
+import { searchLocation } from '../services/weather/openMeteo/geocoding.js'
 import { successResponse } from '../utils/response.js'
 
 /**
+ * Helper to resolve coordinates from query (either city name or lat/lon)
+ */
+const resolveCoordinates = async (query) => {
+  const { city, latitude, longitude } = query
+
+  let lat = latitude !== undefined && latitude !== '' ? Number(latitude) : undefined
+  let lon = longitude !== undefined && longitude !== '' ? Number(longitude) : undefined
+
+  if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
+    return { latitude: lat, longitude: lon, cityName: city || null }
+  }
+
+  if (city && city.trim()) {
+    const geoData = await searchLocation(city.trim())
+    if (!geoData?.results || geoData.results.length === 0) {
+      const error = new Error(`Location not found: "${city}"`)
+      error.statusCode = 404
+      throw error
+    }
+
+    const firstMatch = geoData.results[0]
+    return {
+      latitude: firstMatch.latitude,
+      longitude: firstMatch.longitude,
+      cityName: `${firstMatch.name}${firstMatch.admin1 ? ', ' + firstMatch.admin1 : ''}, ${firstMatch.country}`
+    }
+  }
+
+  const error = new Error('City name or latitude and longitude are required')
+  error.statusCode = 400
+  throw error
+}
+
+/**
  * Get current weather
- *
- * GET /api/weather/current?city=Pune
+ * GET /api/weather/current?city=Pune or ?latitude=18.52&longitude=73.85
  */
 const getCurrentWeather = async (req, res, next) => {
   try {
-    const { city, latitude, longitude } = req.query
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query)
 
-    const lat = latitude !== undefined ? Number(latitude) : undefined
-
-    const lon = longitude !== undefined ? Number(longitude) : undefined
-
-    if (
-      !city &&
-      (lat === undefined ||
-        lon === undefined ||
-        Number.isNaN(lat) ||
-        Number.isNaN(lon))
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'City or latitude and longitude are required'
-      })
+    const weather = await weatherService.getWeather(latitude, longitude)
+    if (cityName) {
+      weather.resolvedCity = cityName
     }
 
-    const weather = await weatherService.getWeather(lat, lon)
-
-    return successResponse(
-      res,
-      weather,
-      'Current weather retrieved successfully',
-      200
-    )
+    return successResponse(res, weather, 'Current weather retrieved successfully', 200)
   } catch (error) {
     next(error)
   }
@@ -42,47 +57,27 @@ const getCurrentWeather = async (req, res, next) => {
 
 /**
  * Get weather forecast
- *
  * GET /api/weather/forecast?city=Pune&days=7
  */
 const getForecast = async (req, res, next) => {
   try {
-    const { city, latitude, longitude, days = 7 } = req.query
-
-    const lat = latitude !== undefined ? Number(latitude) : undefined
-
-    const lon = longitude !== undefined ? Number(longitude) : undefined
-
-    if (
-      !city &&
-      (lat === undefined ||
-        lon === undefined ||
-        Number.isNaN(lat) ||
-        Number.isNaN(lon))
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'City or latitude and longitude are required'
-      })
-    }
-
+    const { days = 7 } = req.query
     const numberOfDays = Number(days)
 
-    if (Number.isNaN(numberOfDays) || numberOfDays < 1 || numberOfDays > 7) {
+    if (Number.isNaN(numberOfDays) || numberOfDays < 1 || numberOfDays > 14) {
       return res.status(400).json({
         success: false,
-        message: 'Days must be between 1 and 7'
+        message: 'Days must be a number between 1 and 14'
       })
     }
 
-    const forecast = await weatherService.getForecast(lat, lon, numberOfDays)
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query)
+    const forecast = await weatherService.getForecast(latitude, longitude, numberOfDays)
+    if (cityName) {
+      forecast.resolvedCity = cityName
+    }
 
-    return successResponse(
-      res,
-      forecast,
-      'Weather forecast retrieved successfully',
-      200
-    )
+    return successResponse(res, forecast, 'Weather forecast retrieved successfully', 200)
   } catch (error) {
     next(error)
   }
@@ -90,58 +85,35 @@ const getForecast = async (req, res, next) => {
 
 /**
  * Get hourly weather forecast
- *
- * GET /api/weather/hourly?city=Pune
+ * GET /api/weather/hourly?city=Pune&hours=24
  */
 const getHourlyForecast = async (req, res, next) => {
   try {
-    const { city, latitude, longitude, hours = 24 } = req.query
-
-    const lat = latitude !== undefined ? Number(latitude) : undefined
-
-    const lon = longitude !== undefined ? Number(longitude) : undefined
-
-    if (
-      !city &&
-      (lat === undefined ||
-        lon === undefined ||
-        Number.isNaN(lat) ||
-        Number.isNaN(lon))
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'City or latitude and longitude are required'
-      })
-    }
-
+    const { hours = 24 } = req.query
     const numberOfHours = Number(hours)
 
-    if (
-      Number.isNaN(numberOfHours) ||
-      numberOfHours < 1 ||
-      numberOfHours > 48
-    ) {
+    if (Number.isNaN(numberOfHours) || numberOfHours < 1 || numberOfHours > 48) {
       return res.status(400).json({
         success: false,
-        message: 'Hours must be between 1 and 48'
+        message: 'Hours must be a number between 1 and 48'
       })
     }
 
+    const { latitude, longitude, cityName } = await resolveCoordinates(req.query)
     const forecast = await weatherService.getHourlyForecast({
-      latitude: lat,
-      longitude: lon,
+      latitude,
+      longitude,
       hours: numberOfHours
     })
+    if (cityName) {
+      forecast.resolvedCity = cityName
+    }
 
-    return successResponse(
-      res,
-      forecast,
-      'Hourly forecast retrieved successfully',
-      200
-    )
+    return successResponse(res, forecast, 'Hourly forecast retrieved successfully', 200)
   } catch (error) {
     next(error)
   }
 }
 
 export { getCurrentWeather, getForecast, getHourlyForecast }
+export default { getCurrentWeather, getForecast, getHourlyForecast }

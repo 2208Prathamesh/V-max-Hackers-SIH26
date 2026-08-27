@@ -1,11 +1,15 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
+/**
+ * WeatherGPT Message Schema
+ */
 const messageSchema = new mongoose.Schema(
   {
     conversationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Conversation',
-      required: true
+      required: true,
+      index: true
     },
 
     sender: {
@@ -37,6 +41,10 @@ const messageSchema = new mongoose.Schema(
       updatedAt: false
     }
   }
-)
+);
 
-export default mongoose.model('Message', messageSchema)
+messageSchema.index({ conversationId: 1, createdAt: 1 });
+
+const Message = mongoose.model('Message', messageSchema);
+
+export default Message;

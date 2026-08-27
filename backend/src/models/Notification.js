@@ -1,16 +1,21 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import { NOTIFICATION_TYPES } from '../config/constants.js';
 
+/**
+ * User Notification Schema
+ */
 const notificationSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      index: true
     },
 
     type: {
       type: String,
-      enum: ['weather_alert', 'forecast', 'system', 'reminder', 'general'],
+      enum: NOTIFICATION_TYPES,
       required: true,
       default: 'general'
     },
@@ -36,7 +41,8 @@ const notificationSchema = new mongoose.Schema(
 
     isRead: {
       type: Boolean,
-      default: false
+      default: false,
+      index: true
     }
   },
   {
@@ -45,6 +51,10 @@ const notificationSchema = new mongoose.Schema(
       updatedAt: false
     }
   }
-)
+);
 
-export default mongoose.model('Notification', notificationSchema)
+notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+
+const Notification = mongoose.model('Notification', notificationSchema);
+
+export default Notification;

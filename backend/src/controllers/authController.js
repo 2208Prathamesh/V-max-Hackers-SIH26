@@ -1,5 +1,5 @@
 import authService from '../services/authService.js'
-import { successResponse, errorResponse } from '../utils/response.js'
+import { successResponse } from '../utils/response.js'
 
 /**
  * Register a new user
@@ -7,8 +7,7 @@ import { successResponse, errorResponse } from '../utils/response.js'
 const register = async (req, res, next) => {
   try {
     const user = await authService.register(req.body)
-
-    return successResponse(res, 201, 'User registered successfully', user)
+    return successResponse(res, user, 'User registered successfully', 201)
   } catch (error) {
     next(error)
   }
@@ -20,10 +19,8 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
-
     const result = await authService.login(email, password)
-
-    return successResponse(res, 200, 'Login successful', result)
+    return successResponse(res, result, 'Login successful', 200)
   } catch (error) {
     next(error)
   }
@@ -34,13 +31,8 @@ const login = async (req, res, next) => {
  */
 const logout = async (req, res, next) => {
   try {
-    // If JWT is stateless, logout is normally handled
-    // on the client by removing the token.
-    // If using refresh tokens, invalidate them here.
-
     await authService.logout(req.user?._id)
-
-    return successResponse(res, 200, 'Logout successful')
+    return successResponse(res, null, 'Logout successful', 200)
   } catch (error) {
     next(error)
   }
@@ -52,13 +44,7 @@ const logout = async (req, res, next) => {
 const getCurrentUser = async (req, res, next) => {
   try {
     const user = await authService.getCurrentUser(req.user._id)
-
-    return successResponse(
-      res,
-      200,
-      'Current user retrieved successfully',
-      user
-    )
+    return successResponse(res, user, 'Current user retrieved successfully', 200)
   } catch (error) {
     next(error)
   }
@@ -70,14 +56,12 @@ const getCurrentUser = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body
-
     await authService.forgotPassword(email)
-
-    // Avoid revealing whether an email exists
     return successResponse(
       res,
-      200,
-      'If the email exists, a password reset link has been sent'
+      null,
+      'If the email exists, a password reset link has been sent',
+      200
     )
   } catch (error) {
     next(error)
@@ -91,16 +75,23 @@ const resetPassword = async (req, res, next) => {
   try {
     const { token } = req.params
     const { password } = req.body
-
     await authService.resetPassword(token, password)
-
-    return successResponse(res, 200, 'Password reset successfully')
+    return successResponse(res, null, 'Password reset successfully', 200)
   } catch (error) {
     next(error)
   }
 }
 
 export {
+  register,
+  login,
+  logout,
+  getCurrentUser,
+  forgotPassword,
+  resetPassword
+}
+
+export default {
   register,
   login,
   logout,

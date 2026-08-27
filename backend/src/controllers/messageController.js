@@ -8,9 +8,8 @@ import { successResponse } from '../utils/response.js'
  */
 const sendMessage = async (req, res, next) => {
   try {
-    const { conversationId, content } = req.body
+    const { conversationId, content, messageType } = req.body
 
-    // Validate content
     if (!content || !content.trim()) {
       return res.status(400).json({
         success: false,
@@ -36,7 +35,7 @@ const sendMessage = async (req, res, next) => {
       conversationId,
       sender: 'user',
       content: content.trim(),
-      messageType: 'text'
+      messageType: messageType || 'text'
     })
 
     // Generate WeatherGPT response
@@ -59,10 +58,12 @@ const sendMessage = async (req, res, next) => {
     conversation.updatedAt = new Date()
     await conversation.save()
 
-    return successResponse(res, 201, 'Message sent successfully', {
-      userMessage,
-      aiMessage
-    })
+    return successResponse(
+      res,
+      { userMessage, aiMessage },
+      'Message sent successfully',
+      201
+    )
   } catch (error) {
     next(error)
   }
@@ -94,9 +95,9 @@ const getMessages = async (req, res, next) => {
 
     return successResponse(
       res,
-      200,
+      messages,
       'Messages retrieved successfully',
-      messages
+      200
     )
   } catch (error) {
     next(error)
@@ -110,7 +111,6 @@ const deleteMessage = async (req, res, next) => {
   try {
     const { id } = req.params
 
-    // Find message
     const message = await Message.findById(id)
 
     if (!message) {
@@ -135,10 +135,11 @@ const deleteMessage = async (req, res, next) => {
 
     await Message.findByIdAndDelete(id)
 
-    return successResponse(res, 200, 'Message deleted successfully')
+    return successResponse(res, null, 'Message deleted successfully', 200)
   } catch (error) {
     next(error)
   }
 }
 
 export { sendMessage, getMessages, deleteMessage }
+export default { sendMessage, getMessages, deleteMessage }

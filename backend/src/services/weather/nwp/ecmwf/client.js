@@ -3,6 +3,7 @@
 const BASE_URL ="https://data.ecmwf.int/forecasts";
 
 let cachedECMWFRun = null;
+let inflightECMWFPromise = null;
 
 function buildForecastUrl(
     date,
@@ -243,116 +244,128 @@ async function getECMWFIndex(
 
 
 async function getECMWFMessages() {
-    const latestRun = await findLatestECMWFRun();
-
-    const {
-        date,
-        cycle
-    } = latestRun;
-
-    const cacheKey = `${date}-${cycle}`;
-
-    // Reuse already downloaded fields for this ECMWF run
-    if (
-        cachedECMWFRun &&
-        cachedECMWFRun.key === cacheKey
-    ) {
-        console.log(
-            `Using cached ECMWF run: ${date} ${cycle}Z`
-        );
-
-        return cachedECMWFRun.data;
+    if (inflightECMWFPromise) {
+        return await inflightECMWFPromise;
     }
 
-    const gribUrl =
-        buildForecastUrl(
-            date,
-            cycle,
-            "0"
-        );
+    inflightECMWFPromise = (async () => {
+        try {
+            const latestRun = await findLatestECMWFRun();
 
-    const index =
-        parseIndex(
-            latestRun.indexText
-        );
+            const {
+                date,
+                cycle
+            } = latestRun;
 
-    console.log(
-        `Downloading ECMWF run: ${date} ${cycle}Z`
-    );
+            const cacheKey = `${date}-${cycle}`;
 
-    const requiredParams = [
-        "2t",
-        "2d",
-        "10u",
-        "10v",
-        "msl"
-    ];
+            // Reuse already downloaded fields for this ECMWF run
+            if (
+                cachedECMWFRun &&
+                cachedECMWFRun.key === cacheKey
+            ) {
+                console.log(
+                    `Using cached ECMWF run: ${date} ${cycle}Z`
+                );
 
-    const messages = {};
+                return cachedECMWFRun.data;
+            }
 
-    for (const param of requiredParams) {
-        const entry =
-            findMessage(
-                index,
-                param
+            const gribUrl =
+                buildForecastUrl(
+                    date,
+                    cycle,
+                    "0"
+                );
+
+            const index =
+                parseIndex(
+                    latestRun.indexText
+                );
+
+            console.log(
+                `Downloading ECMWF run: ${date} ${cycle}Z`
             );
 
-        if (!entry) {
-            throw new Error(
-                `ECMWF parameter not found: ${param}`
+            const requiredParams = [
+                "2t",
+                "2d",
+                "10u",
+                "10v",
+                "msl"
+            ];
+
+            const messages = {};
+
+            for (const param of requiredParams) {
+                const entry =
+                    findMessage(
+                        index,
+                        param
+                    );
+
+                if (!entry) {
+                    throw new Error(
+                        `ECMWF parameter not found: ${param}`
+                    );
+                }
+
+                const offset =
+                    Number(entry._offset);
+
+                const length =
+                    Number(entry._length);
+
+                console.log(
+                    `${param}: ` +
+                    `offset=${offset}, ` +
+                    `length=${length}`
+                );
+
+                const buffer =
+                    await fetchRange(
+                        gribUrl,
+                        offset,
+                        length
+                    );
+
+                console.log(
+                    `${param}: fetched ` +
+                    `${(buffer.length / 1024).toFixed(1)} KB`
+                );
+
+                messages[param] = {
+                    buffer,
+                    index: entry
+                };
+
+                await new Promise(resolve =>
+                    setTimeout(resolve, 1000)
+                );
+            }
+
+            const result = {
+                date,
+                cycle,
+                messages
+            };
+
+            cachedECMWFRun = {
+                key: cacheKey,
+                data: result
+            };
+
+            console.log(
+                `ECMWF run cached: ${cacheKey}`
             );
+
+            return result;
+        } finally {
+            inflightECMWFPromise = null;
         }
+    })();
 
-        const offset =
-            Number(entry._offset);
-
-        const length =
-            Number(entry._length);
-
-        console.log(
-            `${param}: ` +
-            `offset=${offset}, ` +
-            `length=${length}`
-        );
-
-        const buffer =
-            await fetchRange(
-                gribUrl,
-                offset,
-                length
-            );
-
-        console.log(
-            `${param}: fetched ` +
-            `${(buffer.length / 1024).toFixed(1)} KB`
-        );
-
-        messages[param] = {
-            buffer,
-            index: entry
-        };
-
-        await new Promise(resolve =>
-            setTimeout(resolve, 1000)
-        );
-    }
-
-    const result = {
-        date,
-        cycle,
-        messages
-    };
-
-    cachedECMWFRun = {
-        key: cacheKey,
-        data: result
-    };
-
-    console.log(
-        `ECMWF run cached: ${cacheKey}`
-    );
-
-    return result;
+    return await inflightECMWFPromise;
 }
 
 export {

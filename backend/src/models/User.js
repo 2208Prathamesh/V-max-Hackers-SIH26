@@ -1,11 +1,15 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
+/**
+ * User Schema
+ */
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 100
     },
 
     email: {
@@ -13,7 +17,8 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      trim: true
+      trim: true,
+      index: true
     },
 
     passwordHash: {
@@ -45,8 +50,10 @@ const userSchema = new mongoose.Schema(
   {
     timestamps: true
   }
-)
+);
 
-const User = mongoose.model('User', userSchema)
+userSchema.index({ createdAt: -1 });
 
-export default User
+const User = mongoose.model('User', userSchema);
+
+export default User;

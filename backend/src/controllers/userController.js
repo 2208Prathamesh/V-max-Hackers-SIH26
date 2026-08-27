@@ -1,57 +1,53 @@
 import User from '../models/User.js'
+import UserPreferences from '../models/UserPreferences.js'
+import SavedLocation from '../models/SavedLocation.js'
+import Conversation from '../models/Conversation.js'
+import Message from '../models/Message.js'
+import Notification from '../models/Notification.js'
+import { successResponse } from '../utils/response.js'
 
-// GET /api/users/profile
-export const getProfile = async (req, res) => {
+// GET /api/users/me
+export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select('-passwordHash')
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: 'User not found'
       })
     }
 
-    res.status(200).json({
-      user
-    })
+    return successResponse(res, user, 'Profile retrieved successfully', 200)
   } catch (error) {
-    res.status(500).json({
-      message: 'Failed to get profile',
-      error: error.message
-    })
+    next(error)
   }
 }
 
-// PUT /api/users/profile
-export const updateProfile = async (req, res) => {
+// PATCH /api/users/me
+export const updateProfile = async (req, res, next) => {
   try {
-    const { name, language, timezone } = req.body
+    const { name, language, timezone, profileImage } = req.body
 
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user._id)
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: 'User not found'
       })
     }
 
-    if (name !== undefined) {
-      user.name = name
-    }
-
-    if (language !== undefined) {
-      user.language = language
-    }
-
-    if (timezone !== undefined) {
-      user.timezone = timezone
-    }
+    if (name !== undefined) user.name = name.trim()
+    if (language !== undefined) user.language = language
+    if (timezone !== undefined) user.timezone = timezone
+    if (profileImage !== undefined) user.profileImage = profileImage
 
     await user.save()
 
-    res.status(200).json({
-      message: 'Profile updated successfully',
-      user: {
+    return successResponse(
+      res,
+      {
         id: user._id,
         name: user.name,
         email: user.email,
@@ -59,70 +55,86 @@ export const updateProfile = async (req, res) => {
         language: user.language,
         timezone: user.timezone,
         isVerified: user.isVerified
-      }
-    })
+      },
+      'Profile updated successfully',
+      200
+    )
   } catch (error) {
-    res.status(500).json({
-      message: 'Failed to update profile',
-      error: error.message
-    })
+    next(error)
   }
 }
 
 // POST /api/users/profile/image
-export const uploadProfileImage = async (req, res) => {
+export const uploadProfileImage = async (req, res, next) => {
   try {
-    if (!req.file) {
+    const profileImagePath = req.file ? req.file.path : req.body?.profileImage
+
+    if (!profileImagePath) {
       return res.status(400).json({
-        message: 'No image uploaded'
+        success: false,
+        message: 'No image uploaded or provided'
       })
     }
 
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user._id)
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: 'User not found'
       })
     }
 
-    // req.file.path depends on the storage configuration
-    user.profileImage = req.file.path
-
+    user.profileImage = profileImagePath
     await user.save()
 
-    res.status(200).json({
-      message: 'Profile image uploaded successfully',
-      profileImage: user.profileImage
-    })
+    return successResponse(
+      res,
+      { profileImage: user.profileImage },
+      'Profile image updated successfully',
+      200
+    )
   } catch (error) {
-    res.status(500).json({
-      message: 'Failed to upload profile image',
-      error: error.message
-    })
+    next(error)
   }
 }
 
-// DELETE /api/users/account
-export const deleteAccount = async (req, res) => {
+// DELETE /api/users/me
+export const deleteAccount = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id)
+    const userId = req.user._id
+
+    const user = await User.findById(userId)
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: 'User not found'
       })
     }
 
-    await User.findByIdAndDelete(req.user.id)
+    // Cascading deletion of user's conversations and messages
+    const userConversations = await Conversation.find({ userId }).select('_id')
+    const convIds = userConversations.map(c => c._id)
 
-    res.status(200).json({
-      message: 'Account deleted successfully'
-    })
+    await Promise.all([
+      User.findByIdAndDelete(userId),
+      UserPreferences.deleteMany({ userId }),
+      SavedLocation.deleteMany({ userId }),
+      Conversation.deleteMany({ userId }),
+      Message.deleteMany({ conversationId: { $in: convIds } }),
+      Notification.deleteMany({ userId })
+    ])
+
+    return successResponse(res, null, 'Account deleted successfully', 200)
   } catch (error) {
-    res.status(500).json({
-      message: 'Failed to delete account',
-      error: error.message
-    })
+    next(error)
   }
+}
+
+export default {
+  getProfile,
+  updateProfile,
+  uploadProfileImage,
+  deleteAccount
 }
