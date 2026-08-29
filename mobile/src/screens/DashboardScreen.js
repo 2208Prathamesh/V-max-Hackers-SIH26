@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,32 +7,103 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions
-} from 'react-native';
-import { getColors } from '../theme/colors';
-import { alertsData, recentConversationsData } from '../data/mockData';
+} from 'react-native'
+import { getColors } from '../theme/colors'
+import { alertsData, recentConversationsData } from '../data/mockData'
+import { api } from '../services/api'
 
-export function DashboardScreen({
+export function DashboardScreen ({
   isDark = false,
   unit = 'C',
-  onNavigate
+  onNavigate,
+  backendReady = false
 }) {
-  const c = getColors(isDark);
-  const { width } = useWindowDimensions();
-  const isWide = width > 768;
-  const [searchQuery, setSearchQuery] = useState('');
+  const c = getColors(isDark)
+  const { width } = useWindowDimensions()
+  const isWide = width > 768
+  const [searchQuery, setSearchQuery] = useState('')
+  const [liveWeather, setLiveWeather] = useState(null)
+  const [liveForecast, setLiveForecast] = useState(null)
+  const [loadingLiveData, setLoadingLiveData] = useState(false)
 
-  const formatTemperature = (tempC) => {
-    if (unit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°`;
+  useEffect(() => {
+    if (!backendReady) return
+
+    let isMounted = true
+    setLoadingLiveData(true)
+
+    Promise.all([
+      api.weather({ latitude: 18.5204, longitude: 73.8567, city: 'Pune' }),
+      api.forecast({
+        latitude: 18.5204,
+        longitude: 73.8567,
+        city: 'Pune',
+        days: 3
+      })
+    ])
+      .then(([weather, forecast]) => {
+        if (!isMounted) return
+        setLiveWeather(weather)
+        setLiveForecast(forecast)
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLiveWeather(null)
+        setLiveForecast(null)
+      })
+      .finally(() => {
+        if (isMounted) setLoadingLiveData(false)
+      })
+
+    return () => {
+      isMounted = false
     }
-    return `${tempC}°`;
-  };
+  }, [backendReady])
+
+  const currentWeather = liveWeather?.forecast?.current || {}
+  const hourlyWeather = liveForecast?.models?.openMeteo?.hourly || []
+  const weatherTemp = currentWeather.temperature ?? 28
+  const feelsLikeTemp = currentWeather.apparentTemperature ?? 30
+  const humidity = currentWeather.humidity ?? 72
+  const wind = currentWeather.windSpeed ?? 14
+  const pressure = currentWeather.pressure ?? 1008
+  const visibility = 8
+
+  const hourlyForecastCards =
+    hourlyWeather.length > 0
+      ? hourlyWeather.slice(0, 7).map((hour, idx) => ({
+          time: new Date(hour.time).toLocaleTimeString([], {
+            hour: 'numeric'
+          }),
+          temp: Math.round(hour.temperature ?? 28),
+          chance: `${Math.max(
+            0,
+            Math.min(100, hour.precipitationProbability ?? 50)
+          )}%`,
+          icon: hour.precipitationProbability > 50 ? '🌧️' : '⛅'
+        }))
+      : [
+          { time: 'Now', temp: 28, chance: '65%', icon: '⛅' },
+          { time: '9 AM', temp: 29, chance: '60%', icon: '🌧️' },
+          { time: '10 AM', temp: 30, chance: '70%', icon: '🌧️' },
+          { time: '11 AM', temp: 31, chance: '80%', icon: '🌧️' },
+          { time: '12 PM', temp: 31, chance: '70%', icon: '☁️' },
+          { time: '1 PM', temp: 30, chance: '60%', icon: '☁️' },
+          { time: '2 PM', temp: 29, chance: '40%', icon: '☁️' }
+        ]
+
+  const formatTemperature = tempC => {
+    if (unit === 'F') {
+      return `${Math.round((tempC * 9) / 5 + 32)}°`
+    }
+    return `${tempC}°`
+  }
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
-      onNavigate('chat');
+      onNavigate('chat')
     }
-  };
+  }
 
   return (
     <ScrollView
@@ -41,16 +112,26 @@ export function DashboardScreen({
       showsVerticalScrollIndicator={false}
     >
       {/* Top Search Bar & Query Chips */}
-      <View style={[styles.searchSection, { backgroundColor: c.card, borderColor: c.border }]}>
-        <View style={[styles.searchInputWrapper, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+      <View
+        style={[
+          styles.searchSection,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
+        <View
+          style={[
+            styles.searchInputWrapper,
+            { backgroundColor: c.cardAlt, borderColor: c.border }
+          ]}
+        >
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearchSubmit}
-            placeholder="Ask WeatherGPT anything..."
+            placeholder='Ask WeatherGPT anything...'
             placeholderTextColor={c.muted}
             style={[styles.searchInput, { color: c.ink }]}
-            returnKeyType="search"
+            returnKeyType='search'
           />
           <Pressable style={styles.searchIconBtn}>
             <Text style={[styles.searchIconText, { color: c.blue }]}>🎙️</Text>
@@ -78,9 +159,14 @@ export function DashboardScreen({
             <Pressable
               key={chip}
               onPress={() => onNavigate('chat')}
-              style={[styles.chip, { backgroundColor: c.cardAlt, borderColor: c.border }]}
+              style={[
+                styles.chip,
+                { backgroundColor: c.cardAlt, borderColor: c.border }
+              ]}
             >
-              <Text style={[styles.chipText, { color: c.inkSecondary }]}>{chip}</Text>
+              <Text style={[styles.chipText, { color: c.inkSecondary }]}>
+                {chip}
+              </Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -91,7 +177,15 @@ export function DashboardScreen({
         {/* Left Column on Desktop / First on Mobile */}
         <View style={[styles.col, isWide && styles.colLeft]}>
           {/* Weather Hero Card matching Screenshot 1 */}
-          <View style={[styles.heroCard, { backgroundColor: isDark ? '#173059' : '#D6EBFF', borderColor: c.border }]}>
+          <View
+            style={[
+              styles.heroCard,
+              {
+                backgroundColor: isDark ? '#173059' : '#D6EBFF',
+                borderColor: c.border
+              }
+            ]}
+          >
             <View style={styles.heroHeader}>
               <View style={styles.heroLocationRow}>
                 <Text style={styles.heroPin}>📍</Text>
@@ -100,20 +194,25 @@ export function DashboardScreen({
                 </Text>
               </View>
               <Text style={[styles.heroTimeText, { color: c.muted }]}>
-                Today, 21 May 2025 | 8:30 AM
+                {loadingLiveData
+                  ? 'Syncing live data...'
+                  : 'Today, live weather overview'}
               </Text>
             </View>
 
             <View style={styles.heroCenterRow}>
               <View>
                 <Text style={[styles.heroBigTemp, { color: c.ink }]}>
-                  28<Text style={styles.heroDegree}>°C</Text>
+                  {Math.round(weatherTemp)}
+                  <Text style={styles.heroDegree}>°{unit}</Text>
                 </Text>
                 <Text style={[styles.heroFeelsLike, { color: c.muted }]}>
-                  Feels like {formatTemperature(30)}
+                  Feels like {formatTemperature(feelsLikeTemp)}
                 </Text>
                 <Text style={[styles.heroCondition, { color: c.ink }]}>
-                  Partly Cloudy
+                  {currentWeather.precipitation > 0
+                    ? 'Rain nearby'
+                    : 'Partly Cloudy'}
                 </Text>
               </View>
 
@@ -127,35 +226,68 @@ export function DashboardScreen({
 
             {/* 4 Bottom Metric Pills */}
             <View style={styles.heroMetricsGrid}>
-              <View style={[styles.heroMetricPill, { backgroundColor: c.card }]}>
+              <View
+                style={[styles.heroMetricPill, { backgroundColor: c.card }]}
+              >
                 <Text style={styles.heroMetricIcon}>💧</Text>
-                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>Humidity</Text>
-                <Text style={[styles.heroMetricVal, { color: c.ink }]}>72%</Text>
+                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>
+                  Humidity
+                </Text>
+                <Text style={[styles.heroMetricVal, { color: c.ink }]}>
+                  {humidity}%
+                </Text>
               </View>
-              <View style={[styles.heroMetricPill, { backgroundColor: c.card }]}>
+              <View
+                style={[styles.heroMetricPill, { backgroundColor: c.card }]}
+              >
                 <Text style={styles.heroMetricIcon}>💨</Text>
-                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>Wind</Text>
-                <Text style={[styles.heroMetricVal, { color: c.ink }]}>14 km/h</Text>
+                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>
+                  Wind
+                </Text>
+                <Text style={[styles.heroMetricVal, { color: c.ink }]}>
+                  {wind} km/h
+                </Text>
               </View>
-              <View style={[styles.heroMetricPill, { backgroundColor: c.card }]}>
+              <View
+                style={[styles.heroMetricPill, { backgroundColor: c.card }]}
+              >
                 <Text style={styles.heroMetricIcon}>⏲️</Text>
-                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>Pressure</Text>
-                <Text style={[styles.heroMetricVal, { color: c.ink }]}>1008 hPa</Text>
+                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>
+                  Pressure
+                </Text>
+                <Text style={[styles.heroMetricVal, { color: c.ink }]}>
+                  {pressure} hPa
+                </Text>
               </View>
-              <View style={[styles.heroMetricPill, { backgroundColor: c.card }]}>
+              <View
+                style={[styles.heroMetricPill, { backgroundColor: c.card }]}
+              >
                 <Text style={styles.heroMetricIcon}>👁️</Text>
-                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>Visibility</Text>
-                <Text style={[styles.heroMetricVal, { color: c.ink }]}>8 km</Text>
+                <Text style={[styles.heroMetricLabel, { color: c.muted }]}>
+                  Visibility
+                </Text>
+                <Text style={[styles.heroMetricVal, { color: c.ink }]}>
+                  {visibility} km
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Today's Forecast (Hourly) */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Today's Forecast</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Today's Forecast
+              </Text>
               <Pressable onPress={() => onNavigate('forecast')}>
-                <Text style={[styles.cardAction, { color: c.blue }]}>View Full Forecast</Text>
+                <Text style={[styles.cardAction, { color: c.blue }]}>
+                  View Full Forecast
+                </Text>
               </Pressable>
             </View>
 
@@ -164,26 +296,25 @@ export function DashboardScreen({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.hourlyScroll}
             >
-              {[
-                { time: 'Now', temp: 28, chance: '65%', icon: '⛅' },
-                { time: '9 AM', temp: 29, chance: '60%', icon: '🌧️' },
-                { time: '10 AM', temp: 30, chance: '70%', icon: '🌧️' },
-                { time: '11 AM', temp: 31, chance: '80%', icon: '🌧️' },
-                { time: '12 PM', temp: 31, chance: '70%', icon: '☁️' },
-                { time: '1 PM', temp: 30, chance: '60%', icon: '☁️' },
-                { time: '2 PM', temp: 29, chance: '40%', icon: '☁️' }
-              ].map((hour, idx) => (
+              {hourlyForecastCards.map((hour, idx) => (
                 <View
-                  key={hour.time}
+                  key={`${hour.time}-${idx}`}
                   style={[
                     styles.hourCard,
                     { backgroundColor: c.cardAlt, borderColor: c.border },
-                    idx === 0 && { borderColor: c.blue, backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF' }
+                    idx === 0 && {
+                      borderColor: c.blue,
+                      backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF'
+                    }
                   ]}
                 >
-                  <Text style={[styles.hourTime, { color: c.muted }]}>{hour.time}</Text>
+                  <Text style={[styles.hourTime, { color: c.muted }]}>
+                    {hour.time}
+                  </Text>
                   <Text style={styles.hourIcon}>{hour.icon}</Text>
-                  <Text style={[styles.hourTemp, { color: c.ink }]}>{hour.temp}°</Text>
+                  <Text style={[styles.hourTemp, { color: c.ink }]}>
+                    {hour.temp}°
+                  </Text>
                   <Text style={styles.hourChance}>💧 {hour.chance}</Text>
                 </View>
               ))}
@@ -191,11 +322,20 @@ export function DashboardScreen({
           </View>
 
           {/* Recent Conversations */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Recent Conversations</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Recent Conversations
+              </Text>
               <Pressable onPress={() => onNavigate('history')}>
-                <Text style={[styles.cardAction, { color: c.blue }]}>View All</Text>
+                <Text style={[styles.cardAction, { color: c.blue }]}>
+                  View All
+                </Text>
               </Pressable>
             </View>
 
@@ -207,14 +347,21 @@ export function DashboardScreen({
                   style={[
                     styles.convRow,
                     { borderBottomColor: c.borderLight },
-                    idx === recentConversationsData.length - 1 && { borderBottomWidth: 0 }
+                    idx === recentConversationsData.length - 1 && {
+                      borderBottomWidth: 0
+                    }
                   ]}
                 >
                   <Text style={styles.convIcon}>💬</Text>
-                  <Text style={[styles.convTitle, { color: c.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.convTitle, { color: c.ink }]}
+                    numberOfLines={1}
+                  >
                     {conv.title}
                   </Text>
-                  <Text style={[styles.convTime, { color: c.muted }]}>{conv.time}</Text>
+                  <Text style={[styles.convTime, { color: c.muted }]}>
+                    {conv.time}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -224,33 +371,61 @@ export function DashboardScreen({
         {/* Right Column on Desktop / Second on Mobile */}
         <View style={[styles.col, isWide && styles.colRight]}>
           {/* Active Alerts Card matching Screenshot 1 */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Active Alerts</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Active Alerts
+              </Text>
               <Pressable onPress={() => onNavigate('alerts')}>
-                <Text style={[styles.cardAction, { color: c.blue }]}>View All</Text>
+                <Text style={[styles.cardAction, { color: c.blue }]}>
+                  View All
+                </Text>
               </Pressable>
             </View>
 
             <View style={styles.alertsList}>
               {/* Featured Severe Alert */}
-              <View style={[styles.featuredAlert, { backgroundColor: isDark ? '#3D1C1B' : '#FFF1F0', borderColor: '#FCA5A5' }]}>
+              <View
+                style={[
+                  styles.featuredAlert,
+                  {
+                    backgroundColor: isDark ? '#3D1C1B' : '#FFF1F0',
+                    borderColor: '#FCA5A5'
+                  }
+                ]}
+              >
                 <View style={styles.alertHeaderRow}>
                   <Text style={styles.alertWarningIcon}>⚠️</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.featuredAlertTitle}>Heavy Rainfall Warning</Text>
-                    <Text style={[styles.alertLocationText, { color: c.ink }]}>Pune, Maharashtra</Text>
-                    <Text style={[styles.alertDateText, { color: c.muted }]}>21 May 2025 • 8:20 AM</Text>
+                    <Text style={styles.featuredAlertTitle}>
+                      Heavy Rainfall Warning
+                    </Text>
+                    <Text style={[styles.alertLocationText, { color: c.ink }]}>
+                      Pune, Maharashtra
+                    </Text>
+                    <Text style={[styles.alertDateText, { color: c.muted }]}>
+                      21 May 2025 • 8:20 AM
+                    </Text>
                   </View>
                 </View>
-                <Text style={[styles.alertDetailText, { color: c.inkSecondary }]}>
-                  Heavy rainfall expected in the next 24 hours. Avoid low lying areas.
+                <Text
+                  style={[styles.alertDetailText, { color: c.inkSecondary }]}
+                >
+                  Heavy rainfall expected in the next 24 hours. Avoid low lying
+                  areas.
                 </Text>
                 <Pressable
                   onPress={() => onNavigate('alerts')}
                   style={styles.viewDetailsButton}
                 >
-                  <Text style={styles.viewDetailsButtonText}>View Details →</Text>
+                  <Text style={styles.viewDetailsButtonText}>
+                    View Details →
+                  </Text>
                 </Pressable>
               </View>
 
@@ -259,73 +434,144 @@ export function DashboardScreen({
                 <Pressable
                   key={alt.id}
                   onPress={() => onNavigate('alerts')}
-                  style={[styles.smallAlertRow, { borderTopColor: c.borderLight }]}
+                  style={[
+                    styles.smallAlertRow,
+                    { borderTopColor: c.borderLight }
+                  ]}
                 >
                   <Text style={styles.alertWarningIconSmall}>⚠️</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.smallAlertTitle, { color: c.ink }]}>{alt.title}</Text>
-                    <Text style={[styles.smallAlertSub, { color: c.muted }]}>{alt.location}</Text>
-                    <Text style={[styles.smallAlertTime, { color: c.mutedLight }]}>{alt.time}</Text>
+                    <Text style={[styles.smallAlertTitle, { color: c.ink }]}>
+                      {alt.title}
+                    </Text>
+                    <Text style={[styles.smallAlertSub, { color: c.muted }]}>
+                      {alt.location}
+                    </Text>
+                    <Text
+                      style={[styles.smallAlertTime, { color: c.mutedLight }]}
+                    >
+                      {alt.time}
+                    </Text>
                   </View>
-                  <Text style={[styles.chevronArrow, { color: c.muted }]}>›</Text>
+                  <Text style={[styles.chevronArrow, { color: c.muted }]}>
+                    ›
+                  </Text>
                 </Pressable>
               ))}
             </View>
           </View>
 
           {/* Quick Actions Grid */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink, marginBottom: 12 }]}>Quick Actions</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text
+              style={[styles.cardTitle, { color: c.ink, marginBottom: 12 }]}
+            >
+              Quick Actions
+            </Text>
             <View style={styles.quickActionsGrid}>
               <Pressable
                 onPress={() => onNavigate('forecast')}
-                style={[styles.quickCard, { backgroundColor: isDark ? '#1C2E4A' : '#EFF6FF' }]}
+                style={[
+                  styles.quickCard,
+                  { backgroundColor: isDark ? '#1C2E4A' : '#EFF6FF' }
+                ]}
               >
                 <Text style={styles.quickCardIcon}>📅</Text>
-                <Text style={[styles.quickCardLabel, { color: c.ink }]}>Weather Forecast</Text>
+                <Text style={[styles.quickCardLabel, { color: c.ink }]}>
+                  Weather Forecast
+                </Text>
               </Pressable>
 
               <Pressable
                 onPress={() => onNavigate('weather-map')}
-                style={[styles.quickCard, { backgroundColor: isDark ? '#14382A' : '#ECFDF5' }]}
+                style={[
+                  styles.quickCard,
+                  { backgroundColor: isDark ? '#14382A' : '#ECFDF5' }
+                ]}
               >
                 <Text style={styles.quickCardIcon}>🗺️</Text>
-                <Text style={[styles.quickCardLabel, { color: c.ink }]}>Weather Map</Text>
+                <Text style={[styles.quickCardLabel, { color: c.ink }]}>
+                  Weather Map
+                </Text>
               </Pressable>
 
               <Pressable
                 onPress={() => onNavigate('alerts')}
-                style={[styles.quickCard, { backgroundColor: isDark ? '#3D1C1B' : '#FEF2F2' }]}
+                style={[
+                  styles.quickCard,
+                  { backgroundColor: isDark ? '#3D1C1B' : '#FEF2F2' }
+                ]}
               >
                 <Text style={styles.quickCardIcon}>⚠️</Text>
-                <Text style={[styles.quickCardLabel, { color: c.ink }]}>Alerts</Text>
+                <Text style={[styles.quickCardLabel, { color: c.ink }]}>
+                  Alerts
+                </Text>
               </Pressable>
 
               <Pressable
                 onPress={() => onNavigate('weather-map')}
-                style={[styles.quickCard, { backgroundColor: isDark ? '#2E1A47' : '#F5F3FF' }]}
+                style={[
+                  styles.quickCard,
+                  { backgroundColor: isDark ? '#2E1A47' : '#F5F3FF' }
+                ]}
               >
                 <Text style={styles.quickCardIcon}>💨</Text>
-                <Text style={[styles.quickCardLabel, { color: c.ink }]}>Air Quality</Text>
+                <Text style={[styles.quickCardLabel, { color: c.ink }]}>
+                  Air Quality
+                </Text>
               </Pressable>
             </View>
           </View>
 
           {/* Saved Locations */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Saved Locations</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Saved Locations
+              </Text>
               <Pressable onPress={() => onNavigate('saved-locations')}>
-                <Text style={[styles.cardAction, { color: c.blue }]}>View All</Text>
+                <Text style={[styles.cardAction, { color: c.blue }]}>
+                  View All
+                </Text>
               </Pressable>
             </View>
 
             <View style={styles.savedLocationsList}>
               {[
-                { name: 'Pune, Maharashtra', sub: 'Current Location', temp: '28°C', icon: '⛅' },
-                { name: 'Mumbai, Maharashtra', sub: '180 km away', temp: '29°C', icon: '🌧️' },
-                { name: 'Nagpur, Maharashtra', sub: '520 km away', temp: '32°C', icon: '☀️' },
-                { name: 'Delhi, India', sub: '1200 km away', temp: '34°C', icon: '☀️' }
+                {
+                  name: 'Pune, Maharashtra',
+                  sub: 'Current Location',
+                  temp: '28°C',
+                  icon: '⛅'
+                },
+                {
+                  name: 'Mumbai, Maharashtra',
+                  sub: '180 km away',
+                  temp: '29°C',
+                  icon: '🌧️'
+                },
+                {
+                  name: 'Nagpur, Maharashtra',
+                  sub: '520 km away',
+                  temp: '32°C',
+                  icon: '☀️'
+                },
+                {
+                  name: 'Delhi, India',
+                  sub: '1200 km away',
+                  temp: '34°C',
+                  icon: '☀️'
+                }
               ].map((loc, idx) => (
                 <Pressable
                   key={loc.name}
@@ -336,12 +582,20 @@ export function DashboardScreen({
                     idx === 3 && { borderBottomWidth: 0 }
                   ]}
                 >
-                  <Text style={[styles.savedPinIcon, { color: c.blue }]}>📍</Text>
+                  <Text style={[styles.savedPinIcon, { color: c.blue }]}>
+                    📍
+                  </Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.savedLocName, { color: c.ink }]}>{loc.name}</Text>
-                    <Text style={[styles.savedLocSub, { color: c.muted }]}>{loc.sub}</Text>
+                    <Text style={[styles.savedLocName, { color: c.ink }]}>
+                      {loc.name}
+                    </Text>
+                    <Text style={[styles.savedLocSub, { color: c.muted }]}>
+                      {loc.sub}
+                    </Text>
                   </View>
-                  <Text style={[styles.savedLocTemp, { color: c.ink }]}>{loc.temp}</Text>
+                  <Text style={[styles.savedLocTemp, { color: c.ink }]}>
+                    {loc.temp}
+                  </Text>
                   <Text style={styles.savedLocIcon}>{loc.icon}</Text>
                 </Pressable>
               ))}
@@ -351,19 +605,32 @@ export function DashboardScreen({
       </View>
 
       {/* "Did you know?" Green Ecological Tip Card */}
-      <View style={[styles.tipBanner, { backgroundColor: isDark ? '#143828' : '#ECFDF5', borderColor: isDark ? '#1C543D' : '#A7F3D0' }]}>
+      <View
+        style={[
+          styles.tipBanner,
+          {
+            backgroundColor: isDark ? '#143828' : '#ECFDF5',
+            borderColor: isDark ? '#1C543D' : '#A7F3D0'
+          }
+        ]}
+      >
         <Text style={styles.tipLeafIcon}>🍃</Text>
         <View style={styles.tipCopy}>
-          <Text style={[styles.tipTitle, { color: isDark ? '#A7F3D0' : '#065F46' }]}>
+          <Text
+            style={[styles.tipTitle, { color: isDark ? '#A7F3D0' : '#065F46' }]}
+          >
             Did you know?
           </Text>
-          <Text style={[styles.tipText, { color: isDark ? '#D1FAE5' : '#047857' }]}>
-            Trees can reduce the surrounding air temperature by up to 5°C. Plant more trees and stay cool! 🌳
+          <Text
+            style={[styles.tipText, { color: isDark ? '#D1FAE5' : '#047857' }]}
+          >
+            Trees can reduce the surrounding air temperature by up to 5°C. Plant
+            more trees and stay cool! 🌳
           </Text>
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -753,4 +1020,4 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 2
   }
-});
+})

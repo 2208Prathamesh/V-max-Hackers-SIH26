@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,10 +7,11 @@ import {
   ScrollView,
   ImageBackground,
   useWindowDimensions
-} from 'react-native';
-import { Switch } from '../components/Switch';
-import { getColors } from '../theme/colors';
-import { allCityDatabase } from '../data/mockData';
+} from 'react-native'
+import { Switch } from '../components/Switch'
+import { getColors } from '../theme/colors'
+import { allCityDatabase } from '../data/mockData'
+import { api } from '../services/api'
 
 const TABS = [
   { id: 'live', label: 'Live Map' },
@@ -20,7 +21,7 @@ const TABS = [
   { id: 'clouds', label: 'Clouds' },
   { id: 'pressure', label: 'Pressure' },
   { id: 'air', label: 'Air Quality' }
-];
+]
 
 const TIMELINE_STEPS = [
   { label: '8:00 AM', sub: '-4h' },
@@ -30,25 +31,49 @@ const TIMELINE_STEPS = [
   { label: '4:00 PM', sub: '+5h' },
   { label: '7:00 PM', sub: '+8h' },
   { label: '10:00 PM', sub: '+11h' }
-];
+]
 
-export function WeatherMapScreen({
+export function WeatherMapScreen ({
   isDark = false,
   unit = 'C',
-  onNotification
+  onNotification,
+  backendReady = false
 }) {
-  const c = getColors(isDark);
-  const { width } = useWindowDimensions();
-  const isWide = width > 768;
+  const c = getColors(isDark)
+  const { width } = useWindowDimensions()
+  const isWide = width > 768
 
-  const [activeTab, setActiveTab] = useState('live');
-  const [selectedCity, setSelectedCity] = useState(allCityDatabase[0]); // Pune by default
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [timelineIndex, setTimelineIndex] = useState(2); // 'Now'
-  const [autoUpdate, setAutoUpdate] = useState(true);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [selectedCountry, setSelectedCountry] = useState('India');
-  const [isFavorite, setIsFavorite] = useState(true);
+  const [activeTab, setActiveTab] = useState('live')
+  const [selectedCity, setSelectedCity] = useState(allCityDatabase[0]) // Pune by default
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [timelineIndex, setTimelineIndex] = useState(2) // 'Now'
+  const [autoUpdate, setAutoUpdate] = useState(true)
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [selectedCountry, setSelectedCountry] = useState('India')
+  const [isFavorite, setIsFavorite] = useState(true)
+  const [liveCitySummary, setLiveCitySummary] = useState(null)
+
+  useEffect(() => {
+    if (!backendReady) return
+
+    let isMounted = true
+    api
+      .weather({ latitude: 18.5204, longitude: 73.8567, city: 'Pune' })
+      .then(result => {
+        if (!isMounted) return
+        if (result?.forecast?.current) {
+          setLiveCitySummary(result.forecast.current)
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLiveCitySummary(null)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [backendReady])
 
   // Map layer switches
   const [layers, setLayers] = useState({
@@ -60,37 +85,39 @@ export function WeatherMapScreen({
     airQuality: false,
     lightning: false,
     cycloneTracks: false
-  });
+  })
 
-  const toggleLayer = (key) => {
-    setLayers(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const toggleLayer = key => {
+    setLayers(prev => ({ ...prev, [key]: !prev[key] }))
+  }
 
   // Timeline auto-play timer
   useEffect(() => {
-    let timer;
+    let timer
     if (isPlaying) {
       timer = setInterval(() => {
-        setTimelineIndex(prev => (prev + 1) % TIMELINE_STEPS.length);
-      }, 1400);
+        setTimelineIndex(prev => (prev + 1) % TIMELINE_STEPS.length)
+      }, 1400)
     }
-    return () => clearInterval(timer);
-  }, [isPlaying]);
+    return () => clearInterval(timer)
+  }, [isPlaying])
 
-  const handleCitySelect = (city) => {
-    setSelectedCity(city);
-    setIsFavorite(city.isFavorite || false);
+  const handleCitySelect = city => {
+    setSelectedCity(city)
+    setIsFavorite(city.isFavorite || false)
     if (onNotification) {
-      onNotification(`Weather radar focused on ${city.city}`);
+      onNotification(`Weather radar focused on ${city.city}`)
     }
-  };
+  }
 
-  const formatTemperature = (tempC) => {
+  const formatTemperature = tempC => {
     if (unit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°`;
+      return `${Math.round((tempC * 9) / 5 + 32)}°`
     }
-    return `${tempC}°`;
-  };
+    return `${tempC}°`
+  }
+
+  const currentWeatherValue = liveCitySummary?.temperature ?? selectedCity.tempC
 
   return (
     <ScrollView
@@ -105,7 +132,7 @@ export function WeatherMapScreen({
         contentContainerStyle={styles.tabsRow}
       >
         {TABS.map(tab => {
-          const isActive = activeTab === tab.id;
+          const isActive = activeTab === tab.id
           return (
             <Pressable
               key={tab.id}
@@ -125,7 +152,7 @@ export function WeatherMapScreen({
                 {tab.label}
               </Text>
             </Pressable>
-          );
+          )
         })}
       </ScrollView>
 
@@ -191,7 +218,7 @@ export function WeatherMapScreen({
 
               {/* Interactive City Weather Markers over India */}
               {allCityDatabase.map(pin => {
-                const isSelected = selectedCity.id === pin.id;
+                const isSelected = selectedCity.id === pin.id
                 return (
                   <Pressable
                     key={pin.id}
@@ -201,8 +228,12 @@ export function WeatherMapScreen({
                       {
                         top: pin.coordinates.top,
                         left: pin.coordinates.left,
-                        backgroundColor: isSelected ? '#2563EB' : 'rgba(15, 23, 42, 0.85)',
-                        borderColor: isSelected ? '#93C5FD' : 'rgba(255, 255, 255, 0.25)',
+                        backgroundColor: isSelected
+                          ? '#2563EB'
+                          : 'rgba(15, 23, 42, 0.85)',
+                        borderColor: isSelected
+                          ? '#93C5FD'
+                          : 'rgba(255, 255, 255, 0.25)',
                         transform: [{ scale: isSelected ? 1.15 : 1 }]
                       }
                     ]}
@@ -218,40 +249,44 @@ export function WeatherMapScreen({
                       {formatTemperature(pin.tempC)}
                     </Text>
                   </Pressable>
-                );
+                )
               })}
 
               {/* Floating Map Controls - Top Left */}
               <View style={styles.topLeftControls}>
                 <Pressable
-                  onPress={() => setZoomLevel(prev => Math.min(prev + 0.15, 1.6))}
+                  onPress={() =>
+                    setZoomLevel(prev => Math.min(prev + 0.15, 1.6))
+                  }
                   style={styles.mapCtrlBtn}
-                  accessibilityLabel="Zoom in"
+                  accessibilityLabel='Zoom in'
                 >
                   <Text style={styles.mapCtrlText}>+</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => setZoomLevel(prev => Math.max(prev - 0.15, 0.85))}
+                  onPress={() =>
+                    setZoomLevel(prev => Math.max(prev - 0.15, 0.85))
+                  }
                   style={styles.mapCtrlBtn}
-                  accessibilityLabel="Zoom out"
+                  accessibilityLabel='Zoom out'
                 >
                   <Text style={styles.mapCtrlText}>−</Text>
                 </Pressable>
                 <View style={styles.ctrlDivider} />
                 <Pressable
                   onPress={() => {
-                    const pune = allCityDatabase.find(c => c.id === 'pune');
-                    if (pune) handleCitySelect(pune);
+                    const pune = allCityDatabase.find(c => c.id === 'pune')
+                    if (pune) handleCitySelect(pune)
                   }}
                   style={styles.mapCtrlBtn}
-                  accessibilityLabel="Center on My Location"
+                  accessibilityLabel='Center on My Location'
                 >
                   <Text style={styles.mapCtrlIcon}>⌖</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => toggleLayer('rainfall')}
                   style={styles.mapCtrlBtn}
-                  accessibilityLabel="Toggle radar layers"
+                  accessibilityLabel='Toggle radar layers'
                 >
                   <Text style={styles.mapCtrlIcon}>⊞</Text>
                 </Pressable>
@@ -265,7 +300,7 @@ export function WeatherMapScreen({
                 </View>
                 <Pressable
                   onPress={() => {
-                    setZoomLevel(zoomLevel === 1 ? 1.3 : 1);
+                    setZoomLevel(zoomLevel === 1 ? 1.3 : 1)
                   }}
                   style={styles.mapCtrlBtn}
                 >
@@ -276,8 +311,8 @@ export function WeatherMapScreen({
               {/* Bottom Left "My Location" button */}
               <Pressable
                 onPress={() => {
-                  const pune = allCityDatabase.find(c => c.id === 'pune');
-                  if (pune) handleCitySelect(pune);
+                  const pune = allCityDatabase.find(c => c.id === 'pune')
+                  if (pune) handleCitySelect(pune)
                 }}
                 style={styles.myLocationPill}
               >
@@ -290,14 +325,33 @@ export function WeatherMapScreen({
                 <Text style={styles.legendTitle}>Rainfall (mm)</Text>
                 <View style={styles.legendScaleRow}>
                   <View style={styles.legendGradientBar}>
-                    <View style={[styles.gradStep, { backgroundColor: '#8B5CF6' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: '#EF4444' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: '#F97316' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: '#FBBF24' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: '#22C55E' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: '#06B6D4' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: '#3B82F6' }]} />
-                    <View style={[styles.gradStep, { backgroundColor: 'rgba(59, 130, 246, 0.4)' }]} />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#8B5CF6' }]}
+                    />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#EF4444' }]}
+                    />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#F97316' }]}
+                    />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#FBBF24' }]}
+                    />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#22C55E' }]}
+                    />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#06B6D4' }]}
+                    />
+                    <View
+                      style={[styles.gradStep, { backgroundColor: '#3B82F6' }]}
+                    />
+                    <View
+                      style={[
+                        styles.gradStep,
+                        { backgroundColor: 'rgba(59, 130, 246, 0.4)' }
+                      ]}
+                    />
                   </View>
                   <View style={styles.legendValuesCol}>
                     <Text style={styles.legendValueText}>200+</Text>
@@ -317,13 +371,20 @@ export function WeatherMapScreen({
           </View>
 
           {/* Map Timeline Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.timelineHeaderRow}>
               <Text style={[styles.timelineHeading, { color: c.ink }]}>
                 Map Timeline (Rainfall)
               </Text>
               <View style={styles.autoUpdateRow}>
-                <Text style={[styles.autoUpdateText, { color: c.muted }]}>Auto Update</Text>
+                <Text style={[styles.autoUpdateText, { color: c.muted }]}>
+                  Auto Update
+                </Text>
                 <Switch checked={autoUpdate} onChange={setAutoUpdate} />
                 <Text style={[styles.infoIcon, { color: c.muted }]}>ⓘ</Text>
               </View>
@@ -334,9 +395,13 @@ export function WeatherMapScreen({
               <Pressable
                 onPress={() => setIsPlaying(!isPlaying)}
                 style={styles.playButton}
-                accessibilityLabel={isPlaying ? 'Pause timeline' : 'Play timeline'}
+                accessibilityLabel={
+                  isPlaying ? 'Pause timeline' : 'Play timeline'
+                }
               >
-                <Text style={styles.playButtonIcon}>{isPlaying ? '❚❚' : '▶'}</Text>
+                <Text style={styles.playButtonIcon}>
+                  {isPlaying ? '❚❚' : '▶'}
+                </Text>
               </Pressable>
 
               <ScrollView
@@ -345,47 +410,59 @@ export function WeatherMapScreen({
                 contentContainerStyle={styles.timelineStepsContainer}
               >
                 {TIMELINE_STEPS.map((step, idx) => {
-                  const isSelected = timelineIndex === idx;
+                  const isSelected = timelineIndex === idx
                   return (
                     <Pressable
                       key={idx}
                       onPress={() => {
-                        setTimelineIndex(idx);
-                        setIsPlaying(false);
+                        setTimelineIndex(idx)
+                        setIsPlaying(false)
                       }}
                       style={styles.timelineStepButton}
                     >
                       <View
                         style={[
                           styles.timelineDot,
-                          isSelected ? styles.timelineDotActive : { backgroundColor: c.border }
+                          isSelected
+                            ? styles.timelineDotActive
+                            : { backgroundColor: c.border }
                         ]}
                       />
                       <View
                         style={[
                           styles.stepBadge,
                           step.isCurrent && styles.nowBadge,
-                          isSelected && !step.isCurrent && { backgroundColor: c.blueLight }
+                          isSelected &&
+                            !step.isCurrent && { backgroundColor: c.blueLight }
                         ]}
                       >
                         <Text
                           style={[
                             styles.stepLabel,
-                            { color: step.isCurrent ? '#FFFFFF' : isSelected ? c.blue : c.muted },
-                            (isSelected || step.isCurrent) && styles.stepLabelActive
+                            {
+                              color: step.isCurrent
+                                ? '#FFFFFF'
+                                : isSelected
+                                ? c.blue
+                                : c.muted
+                            },
+                            (isSelected || step.isCurrent) &&
+                              styles.stepLabelActive
                           ]}
                         >
                           {step.label}
                         </Text>
                       </View>
                     </Pressable>
-                  );
+                  )
                 })}
               </ScrollView>
             </View>
 
             {/* Footer info */}
-            <View style={[styles.timelineFooter, { borderTopColor: c.borderLight }]}>
+            <View
+              style={[styles.timelineFooter, { borderTopColor: c.borderLight }]}
+            >
               <View style={styles.sourceRow}>
                 <Text style={[styles.sourceIcon, { color: c.muted }]}>🛡️</Text>
                 <Text style={[styles.sourceText, { color: c.muted }]}>
@@ -398,10 +475,12 @@ export function WeatherMapScreen({
                 </Text>
                 <Pressable
                   onPress={() => {
-                    if (onNotification) onNotification('Radar data refreshed');
+                    if (onNotification) onNotification('Radar data refreshed')
                   }}
                 >
-                  <Text style={[styles.refreshIcon, { color: c.blue }]}>🔄</Text>
+                  <Text style={[styles.refreshIcon, { color: c.blue }]}>
+                    🔄
+                  </Text>
                 </Pressable>
               </View>
             </View>
@@ -411,7 +490,12 @@ export function WeatherMapScreen({
         {/* Right Column: Selected Location, Map Layers, Quick Locations */}
         <View style={[styles.col, isWide && styles.colRight]}>
           {/* Selected Location Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.selectedLocHeader}>
               <View style={styles.selectedLocTitleRow}>
                 <Text style={styles.selectedLocPin}>📍</Text>
@@ -421,13 +505,22 @@ export function WeatherMapScreen({
               </View>
               <Pressable
                 onPress={() => {
-                  setIsFavorite(!isFavorite);
+                  setIsFavorite(!isFavorite)
                   if (onNotification) {
-                    onNotification(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+                    onNotification(
+                      isFavorite
+                        ? 'Removed from favorites'
+                        : 'Added to favorites'
+                    )
                   }
                 }}
               >
-                <Text style={[styles.favStar, { color: isFavorite ? '#F59E0B' : c.muted }]}>
+                <Text
+                  style={[
+                    styles.favStar,
+                    { color: isFavorite ? '#F59E0B' : c.muted }
+                  ]}
+                >
                   {isFavorite ? '★' : '☆'}
                 </Text>
               </Pressable>
@@ -438,11 +531,21 @@ export function WeatherMapScreen({
             </Text>
 
             {/* Big Temp & Condition Row */}
-            <View style={[styles.tempConditionRow, { borderTopColor: c.borderLight, borderBottomColor: c.borderLight }]}>
+            <View
+              style={[
+                styles.tempConditionRow,
+                {
+                  borderTopColor: c.borderLight,
+                  borderBottomColor: c.borderLight
+                }
+              ]}
+            >
               <View>
                 <Text style={[styles.bigTempText, { color: c.ink }]}>
                   {formatTemperature(selectedCity.tempC)}
-                  <Text style={styles.celsiusText}>{unit === 'F' ? 'F' : 'C'}</Text>
+                  <Text style={styles.celsiusText}>
+                    {unit === 'F' ? 'F' : 'C'}
+                  </Text>
                 </Text>
                 <Text style={[styles.conditionText, { color: c.muted }]}>
                   {selectedCity.condition}
@@ -457,25 +560,33 @@ export function WeatherMapScreen({
             {/* 2x2 Metric Grid */}
             <View style={styles.metricsGrid}>
               <View style={[styles.metricTile, { backgroundColor: c.cardAlt }]}>
-                <Text style={[styles.metricTileLabel, { color: c.muted }]}>Feels like</Text>
+                <Text style={[styles.metricTileLabel, { color: c.muted }]}>
+                  Feels like
+                </Text>
                 <Text style={[styles.metricTileValue, { color: c.ink }]}>
                   {formatTemperature(selectedCity.feelsLikeC)}
                 </Text>
               </View>
               <View style={[styles.metricTile, { backgroundColor: c.cardAlt }]}>
-                <Text style={[styles.metricTileLabel, { color: c.muted }]}>Humidity</Text>
+                <Text style={[styles.metricTileLabel, { color: c.muted }]}>
+                  Humidity
+                </Text>
                 <Text style={[styles.metricTileValue, { color: c.ink }]}>
                   {selectedCity.humidity}%
                 </Text>
               </View>
               <View style={[styles.metricTile, { backgroundColor: c.cardAlt }]}>
-                <Text style={[styles.metricTileLabel, { color: c.muted }]}>Wind</Text>
+                <Text style={[styles.metricTileLabel, { color: c.muted }]}>
+                  Wind
+                </Text>
                 <Text style={[styles.metricTileValue, { color: c.ink }]}>
                   {selectedCity.windSpeedKmh} km/h {selectedCity.windDirection}
                 </Text>
               </View>
               <View style={[styles.metricTile, { backgroundColor: c.cardAlt }]}>
-                <Text style={[styles.metricTileLabel, { color: c.muted }]}>Pressure</Text>
+                <Text style={[styles.metricTileLabel, { color: c.muted }]}>
+                  Pressure
+                </Text>
                 <Text style={[styles.metricTileValue, { color: c.ink }]}>
                   {selectedCity.pressureHpa} hPa
                 </Text>
@@ -491,7 +602,12 @@ export function WeatherMapScreen({
           </View>
 
           {/* Map Layers Toggle Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <Text style={[styles.cardTitle, { color: c.ink }]}>Map Layers</Text>
             <View style={styles.layersList}>
               {[
@@ -507,7 +623,9 @@ export function WeatherMapScreen({
                 <View key={layer.key} style={styles.layerRow}>
                   <View style={styles.layerRowLeft}>
                     <Text style={styles.layerIcon}>{layer.icon}</Text>
-                    <Text style={[styles.layerLabel, { color: c.inkSecondary }]}>
+                    <Text
+                      style={[styles.layerLabel, { color: c.inkSecondary }]}
+                    >
                       {layer.label}
                     </Text>
                   </View>
@@ -521,15 +639,25 @@ export function WeatherMapScreen({
           </View>
 
           {/* Quick Locations Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.quickLocationsHeader}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Quick Locations</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Quick Locations
+              </Text>
               <Pressable
                 onPress={() => {
-                  if (onNotification) onNotification('All quick locations active');
+                  if (onNotification)
+                    onNotification('All quick locations active')
                 }}
               >
-                <Text style={[styles.viewAllText, { color: c.blue }]}>View all</Text>
+                <Text style={[styles.viewAllText, { color: c.blue }]}>
+                  View all
+                </Text>
               </Pressable>
             </View>
 
@@ -540,8 +668,8 @@ export function WeatherMapScreen({
                 { id: 'delhi', name: 'New Delhi, Delhi', star: false },
                 { id: 'chennai', name: 'Chennai, Tamil Nadu', star: false }
               ].map(item => {
-                const isCurrent = selectedCity.id === item.id;
-                const cityData = allCityDatabase.find(c => c.id === item.id);
+                const isCurrent = selectedCity.id === item.id
+                const cityData = allCityDatabase.find(c => c.id === item.id)
                 return (
                   <Pressable
                     key={item.id}
@@ -553,7 +681,14 @@ export function WeatherMapScreen({
                     ]}
                   >
                     <View style={styles.quickLocLeft}>
-                      <Text style={[styles.quickLocPin, isCurrent && { color: c.blue }]}>📍</Text>
+                      <Text
+                        style={[
+                          styles.quickLocPin,
+                          isCurrent && { color: c.blue }
+                        ]}
+                      >
+                        📍
+                      </Text>
                       <Text
                         style={[
                           styles.quickLocName,
@@ -564,18 +699,23 @@ export function WeatherMapScreen({
                         {item.name}
                       </Text>
                     </View>
-                    <Text style={[styles.quickLocStar, { color: item.star ? '#F59E0B' : c.mutedLight }]}>
+                    <Text
+                      style={[
+                        styles.quickLocStar,
+                        { color: item.star ? '#F59E0B' : c.mutedLight }
+                      ]}
+                    >
                       {item.star ? '★' : '☆'}
                     </Text>
                   </Pressable>
-                );
+                )
               })}
             </View>
           </View>
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -1114,4 +1254,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75
   }
-});
+})

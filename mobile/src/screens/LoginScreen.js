@@ -21,17 +21,19 @@ export function LoginScreen ({ onLogin }) {
 
   const submit = () => {
     if (email.trim() && password.trim()) {
-      onLogin()
+      onLogin(email.trim(), password)
     } else {
       setError('Enter your email and password to continue.')
     }
   }
 
   const demo = () => {
-    setEmail('sidpatil@gmail.com')
-    setPassword('password123')
+    const demoEmail = 'sidpatil@gmail.com'
+    const demoPassword = 'password123'
+    setEmail(demoEmail)
+    setPassword(demoPassword)
     setError('')
-    onLogin()
+    onLogin(demoEmail, demoPassword)
   }
 
   return (

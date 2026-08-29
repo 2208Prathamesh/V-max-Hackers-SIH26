@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,11 +7,19 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions
-} from 'react-native';
-import { getColors } from '../theme/colors';
-import { groupedHistoryData } from '../data/mockData';
+} from 'react-native'
+import { getColors } from '../theme/colors'
+import { groupedHistoryData } from '../data/mockData'
+import { api } from '../services/api'
 
-const TABS = ['All Conversations', 'Today', 'Yesterday', 'This Week', 'This Month', 'Custom'];
+const TABS = [
+  'All Conversations',
+  'Today',
+  'Yesterday',
+  'This Week',
+  'This Month',
+  'Custom'
+]
 const CONV_TYPES = [
   'General Queries',
   'Weather Forecast',
@@ -19,49 +27,101 @@ const CONV_TYPES = [
   'Air Quality',
   'Travel & Activities',
   'Other'
-];
+]
 
-export function HistoryScreen({ isDark = false, onNavigate }) {
-  const c = getColors(isDark);
-  const { width } = useWindowDimensions();
-  const isWide = width > 768;
+export function HistoryScreen ({
+  isDark = false,
+  onNavigate,
+  backendReady = false
+}) {
+  const c = getColors(isDark)
+  const { width } = useWindowDimensions()
+  const isWide = width > 768
 
-  const [activeTab, setActiveTab] = useState('All Conversations');
-  const [search, setSearch] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState(['General Queries', 'Weather Forecast', 'Alerts & Warnings']);
-  const [sortBy, setSortBy] = useState('Most Recent');
+  const [activeTab, setActiveTab] = useState('All Conversations')
+  const [liveHistory, setLiveHistory] = useState([])
 
-  const toggleType = (type) => {
+  useEffect(() => {
+    if (!backendReady) return
+
+    let isMounted = true
+    api
+      .conversations()
+      .then(result => {
+        if (!isMounted) return
+        if (Array.isArray(result) && result.length > 0) {
+          setLiveHistory(
+            result.map(item => ({
+              id: item._id || item.id,
+              title: item.title || 'Weather query',
+              time: new Date(item.updatedAt || Date.now()).toLocaleTimeString(
+                [],
+                {
+                  hour: 'numeric',
+                  minute: '2-digit'
+                }
+              ),
+              desc: item.category || 'Weather discussion',
+              tag: item.category || 'General Queries',
+              tagType: 'query',
+              icon: '💬'
+            }))
+          )
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLiveHistory([])
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [backendReady])
+
+  const historyData =
+    liveHistory.length > 0
+      ? [{ group: 'Recent', items: liveHistory }]
+      : groupedHistoryData
+  const [search, setSearch] = useState('')
+  const [selectedTypes, setSelectedTypes] = useState([
+    'General Queries',
+    'Weather Forecast',
+    'Alerts & Warnings'
+  ])
+  const [sortBy, setSortBy] = useState('Most Recent')
+
+  const toggleType = type => {
     setSelectedTypes(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
-  };
+    )
+  }
 
-  const getTagStyle = (tagType) => {
+  const getTagStyle = tagType => {
     switch (tagType) {
       case 'alert':
         return {
           bg: isDark ? '#3D1C1B' : '#FEF2F2',
           text: '#EF4444'
-        };
+        }
       case 'forecast':
         return {
           bg: isDark ? '#362413' : '#FFFBEB',
           text: '#D97706'
-        };
+        }
       case 'air':
         return {
           bg: isDark ? '#14382A' : '#ECFDF5',
           text: '#10B981'
-        };
+        }
       case 'query':
       default:
         return {
           bg: isDark ? '#1C2E4A' : '#EFF6FF',
           text: '#2563EB'
-        };
+        }
     }
-  };
+  }
 
   return (
     <ScrollView
@@ -70,20 +130,35 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
       showsVerticalScrollIndicator={false}
     >
       {/* Top Search & Actions Header */}
-      <View style={[styles.topSearchBar, { backgroundColor: c.card, borderColor: c.border }]}>
-        <View style={[styles.searchBox, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+      <View
+        style={[
+          styles.topSearchBar,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
+        <View
+          style={[
+            styles.searchBox,
+            { backgroundColor: c.cardAlt, borderColor: c.border }
+          ]}
+        >
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Search conversations..."
+            placeholder='Search conversations...'
             placeholderTextColor={c.muted}
             style={[styles.searchInput, { color: c.ink }]}
           />
         </View>
 
         <View style={styles.topActionsRow}>
-          <View style={[styles.dateDropdown, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.dateDropdown,
+              { backgroundColor: c.cardAlt, borderColor: c.border }
+            ]}
+          >
             <Text style={styles.dateIcon}>📅</Text>
             <Text style={[styles.dateText, { color: c.ink }]}>Date</Text>
             <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
@@ -105,7 +180,7 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
         contentContainerStyle={styles.tabsRow}
       >
         {TABS.map(tab => {
-          const isActive = activeTab === tab;
+          const isActive = activeTab === tab
           return (
             <Pressable
               key={tab}
@@ -125,7 +200,7 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
                 {tab}
               </Text>
             </Pressable>
-          );
+          )
         })}
       </ScrollView>
 
@@ -133,12 +208,19 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
       <View style={[styles.mainGrid, isWide && styles.mainGridWide]}>
         {/* Left Column: Grouped Conversation Threads */}
         <View style={[styles.col, isWide && styles.colLeft]}>
-          {groupedHistoryData.map(group => (
+          {historyData.map(group => (
             <View key={group.group} style={styles.groupBlock}>
-              <Text style={[styles.groupHeader, { color: c.ink }]}>{group.group}</Text>
-              <View style={[styles.groupCard, { backgroundColor: c.card, borderColor: c.border }]}>
+              <Text style={[styles.groupHeader, { color: c.ink }]}>
+                {group.group}
+              </Text>
+              <View
+                style={[
+                  styles.groupCard,
+                  { backgroundColor: c.card, borderColor: c.border }
+                ]}
+              >
                 {group.items.map((item, idx) => {
-                  const tagColors = getTagStyle(item.tagType);
+                  const tagColors = getTagStyle(item.tagType)
                   return (
                     <Pressable
                       key={item.id}
@@ -146,33 +228,59 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
                       style={({ pressed }) => [
                         styles.historyItemRow,
                         { borderBottomColor: c.borderLight },
-                        idx === group.items.length - 1 && { borderBottomWidth: 0 },
+                        idx === group.items.length - 1 && {
+                          borderBottomWidth: 0
+                        },
                         pressed && styles.pressed
                       ]}
                     >
-                      <View style={[styles.itemIconBadge, { backgroundColor: c.cardAlt }]}>
+                      <View
+                        style={[
+                          styles.itemIconBadge,
+                          { backgroundColor: c.cardAlt }
+                        ]}
+                      >
                         <Text style={styles.itemIconText}>{item.icon}</Text>
                       </View>
 
                       <View style={styles.itemCopy}>
                         <View style={styles.itemTopRow}>
-                          <Text style={[styles.itemTitle, { color: c.ink }]} numberOfLines={1}>
+                          <Text
+                            style={[styles.itemTitle, { color: c.ink }]}
+                            numberOfLines={1}
+                          >
                             {item.title}
                           </Text>
-                          <Text style={[styles.itemTime, { color: c.muted }]}>{item.time}</Text>
+                          <Text style={[styles.itemTime, { color: c.muted }]}>
+                            {item.time}
+                          </Text>
                         </View>
-                        <Text style={[styles.itemDesc, { color: c.muted }]} numberOfLines={2}>
+                        <Text
+                          style={[styles.itemDesc, { color: c.muted }]}
+                          numberOfLines={2}
+                        >
                           {item.desc}
                         </Text>
                       </View>
 
-                      <View style={[styles.tagBadge, { backgroundColor: tagColors.bg }]}>
-                        <Text style={[styles.tagText, { color: tagColors.text }]}>{item.tag}</Text>
+                      <View
+                        style={[
+                          styles.tagBadge,
+                          { backgroundColor: tagColors.bg }
+                        ]}
+                      >
+                        <Text
+                          style={[styles.tagText, { color: tagColors.text }]}
+                        >
+                          {item.tag}
+                        </Text>
                       </View>
 
-                      <Text style={[styles.moreMenu, { color: c.muted }]}>⋮</Text>
+                      <Text style={[styles.moreMenu, { color: c.muted }]}>
+                        ⋮
+                      </Text>
                     </Pressable>
-                  );
+                  )
                 })}
               </View>
             </View>
@@ -190,27 +298,48 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
         {/* Right Column: Filters, History Summary, Storage Usage */}
         <View style={[styles.col, isWide && styles.colRight]}>
           {/* Filters Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
               <Text style={[styles.cardTitle, { color: c.ink }]}>Filters</Text>
               <Pressable onPress={() => setSelectedTypes([])}>
-                <Text style={[styles.clearAllText, { color: c.blue }]}>Clear All</Text>
+                <Text style={[styles.clearAllText, { color: c.blue }]}>
+                  Clear All
+                </Text>
               </Pressable>
             </View>
 
-            <Text style={[styles.filterSubheader, { color: c.muted }]}>Date Range</Text>
-            <View style={[styles.dropdownSelect, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+            <Text style={[styles.filterSubheader, { color: c.muted }]}>
+              Date Range
+            </Text>
+            <View
+              style={[
+                styles.dropdownSelect,
+                { backgroundColor: c.cardAlt, borderColor: c.border }
+              ]}
+            >
               <Text style={styles.dateIcon}>📅</Text>
-              <Text style={[styles.dropdownText, { color: c.ink }]}>All Time</Text>
+              <Text style={[styles.dropdownText, { color: c.ink }]}>
+                All Time
+              </Text>
               <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
             </View>
 
-            <Text style={[styles.filterSubheader, { color: c.muted, marginTop: 10 }]}>
+            <Text
+              style={[
+                styles.filterSubheader,
+                { color: c.muted, marginTop: 10 }
+              ]}
+            >
               Conversation Type
             </Text>
             <View style={styles.typesList}>
               {CONV_TYPES.map(type => {
-                const isChecked = selectedTypes.includes(type);
+                const isChecked = selectedTypes.includes(type)
                 return (
                   <Pressable
                     key={type}
@@ -226,52 +355,98 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
                     >
                       {isChecked && <Text style={styles.checkIcon}>✓</Text>}
                     </View>
-                    <Text style={[styles.checkboxLabel, { color: c.inkSecondary }]}>{type}</Text>
+                    <Text
+                      style={[styles.checkboxLabel, { color: c.inkSecondary }]}
+                    >
+                      {type}
+                    </Text>
                   </Pressable>
-                );
+                )
               })}
             </View>
 
-            <Text style={[styles.filterSubheader, { color: c.muted, marginTop: 10 }]}>
+            <Text
+              style={[
+                styles.filterSubheader,
+                { color: c.muted, marginTop: 10 }
+              ]}
+            >
               Sort By
             </Text>
-            <View style={[styles.dropdownSelect, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-              <Text style={[styles.dropdownText, { color: c.ink }]}>{sortBy}</Text>
+            <View
+              style={[
+                styles.dropdownSelect,
+                { backgroundColor: c.cardAlt, borderColor: c.border }
+              ]}
+            >
+              <Text style={[styles.dropdownText, { color: c.ink }]}>
+                {sortBy}
+              </Text>
               <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
             </View>
           </View>
 
           {/* History Summary Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.summaryTitleRow}>
               <Text style={styles.summaryIcon}>📊</Text>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>History Summary</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                History Summary
+              </Text>
             </View>
             <View style={styles.summaryStatsList}>
               <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>Total Conversations</Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>48</Text>
+                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
+                  Total Conversations
+                </Text>
+                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
+                  48
+                </Text>
               </View>
               <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>This Week</Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>12</Text>
+                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
+                  This Week
+                </Text>
+                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
+                  12
+                </Text>
               </View>
               <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>This Month</Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>28</Text>
+                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
+                  This Month
+                </Text>
+                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
+                  28
+                </Text>
               </View>
               <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>Total Messages</Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>156</Text>
+                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
+                  Total Messages
+                </Text>
+                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
+                  156
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Storage Usage Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.summaryTitleRow}>
               <Text style={styles.summaryIcon}>☁️</Text>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Storage Usage</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Storage Usage
+              </Text>
             </View>
             <Text style={[styles.storageText, { color: c.muted }]}>
               You've used 45% of your history storage.
@@ -284,13 +459,15 @@ export function HistoryScreen({ isDark = false, onNavigate }) {
             <Text style={[styles.percentLabel, { color: c.muted }]}>45%</Text>
 
             <Pressable style={[styles.upgradeMoreBtn, { borderColor: c.blue }]}>
-              <Text style={[styles.upgradeMoreText, { color: c.blue }]}>Upgrade for More</Text>
+              <Text style={[styles.upgradeMoreText, { color: c.blue }]}>
+                Upgrade for More
+              </Text>
             </Pressable>
           </View>
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -587,4 +764,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75
   }
-});
+})

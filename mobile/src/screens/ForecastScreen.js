@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,31 +7,84 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions
-} from 'react-native';
-import { getColors } from '../theme/colors';
-import { forecastDaysData, hourlyForecastData, allCityDatabase } from '../data/mockData';
+} from 'react-native'
+import { getColors } from '../theme/colors'
+import {
+  forecastDaysData,
+  hourlyForecastData,
+  allCityDatabase
+} from '../data/mockData'
+import { api } from '../services/api'
 
-const DETAIL_TABS = ['Temperature', 'Precipitation', 'Wind', 'Humidity', 'Pressure'];
+const DETAIL_TABS = [
+  'Temperature',
+  'Precipitation',
+  'Wind',
+  'Humidity',
+  'Pressure'
+]
 
-export function ForecastScreen({
+export function ForecastScreen ({
   isDark = false,
-  unit = 'C'
+  unit = 'C',
+  backendReady = false
 }) {
-  const c = getColors(isDark);
-  const { width } = useWindowDimensions();
-  const isWide = width > 768;
+  const c = getColors(isDark)
+  const { width } = useWindowDimensions()
+  const isWide = width > 768
 
-  const [activeDetailTab, setActiveDetailTab] = useState('Temperature');
-  const [selectedDayIdx, setSelectedDayIdx] = useState(0);
-  const [searchLocation, setSearchLocation] = useState('');
-  const [currentCity, setCurrentCity] = useState(allCityDatabase[0]);
+  const [activeDetailTab, setActiveDetailTab] = useState('Temperature')
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0)
+  const [searchLocation, setSearchLocation] = useState('')
+  const [currentCity, setCurrentCity] = useState(allCityDatabase[0])
+  const [liveForecast, setLiveForecast] = useState(null)
 
-  const formatTemperature = (tempC) => {
-    if (unit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°`;
+  useEffect(() => {
+    if (!backendReady) return
+
+    let isMounted = true
+    api
+      .forecast({
+        latitude: 18.5204,
+        longitude: 73.8567,
+        city: 'Pune',
+        days: 7
+      })
+      .then(result => {
+        if (!isMounted) return
+        if (result && typeof result === 'object') {
+          setLiveForecast(result)
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLiveForecast(null)
+      })
+
+    return () => {
+      isMounted = false
     }
-    return `${tempC}°`;
-  };
+  }, [backendReady])
+
+  const formatTemperature = tempC => {
+    if (unit === 'F') {
+      return `${Math.round((tempC * 9) / 5 + 32)}°`
+    }
+    return `${tempC}°`
+  }
+
+  const resolvedTemp = Number(
+    liveForecast?.current?.temperature ?? currentCity.tempC ?? 28
+  )
+  const resolvedFeelsLike = Number(
+    liveForecast?.current?.feelsLike ?? currentCity.feelsLikeC ?? 30
+  )
+  const resolvedCondition =
+    liveForecast?.current?.condition || currentCity.condition || 'Partly Cloudy'
+  const resolvedHumidity =
+    liveForecast?.current?.humidity ?? currentCity.humidity ?? 72
+  const resolvedWind =
+    liveForecast?.current?.windSpeedKmh ?? currentCity.windSpeedKmh ?? 16
 
   return (
     <ScrollView
@@ -40,7 +93,12 @@ export function ForecastScreen({
       showsVerticalScrollIndicator={false}
     >
       {/* Top Location Bar */}
-      <View style={[styles.topLocationBar, { backgroundColor: c.card, borderColor: c.border }]}>
+      <View
+        style={[
+          styles.topLocationBar,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
         <View>
           <View style={styles.locationTitleRow}>
             <Text style={[styles.locationPin, { color: c.blue }]}>📍</Text>
@@ -54,8 +112,15 @@ export function ForecastScreen({
           </Text>
         </View>
 
-        <Pressable style={[styles.changeLocBtn, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-          <Text style={[styles.changeLocText, { color: c.blue }]}>Change Location</Text>
+        <Pressable
+          style={[
+            styles.changeLocBtn,
+            { backgroundColor: c.cardAlt, borderColor: c.border }
+          ]}
+        >
+          <Text style={[styles.changeLocText, { color: c.blue }]}>
+            Change Location
+          </Text>
         </Pressable>
       </View>
 
@@ -64,8 +129,15 @@ export function ForecastScreen({
         {/* Left Column on wide screen */}
         <View style={[styles.col, isWide && styles.colLeft]}>
           {/* Today Overview Hero Card matching Screenshot 2 */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.todayDateText, { color: c.muted }]}>Today • 21 May 2025</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.todayDateText, { color: c.muted }]}>
+              Today • 21 May 2025
+            </Text>
             <View style={styles.todayHeroRow}>
               {/* Left Temp + Icon */}
               <View style={styles.todayLeft}>
@@ -75,11 +147,16 @@ export function ForecastScreen({
                 </View>
                 <View>
                   <Text style={[styles.todayTempNumber, { color: c.ink }]}>
-                    28<Text style={styles.degreeSymbol}>°C</Text>
+                    {Math.round(resolvedTemp)}
+                    <Text style={styles.degreeSymbol}>
+                      {unit === 'F' ? '°F' : '°C'}
+                    </Text>
                   </Text>
-                  <Text style={[styles.todayCondition, { color: c.ink }]}>Partly Cloudy</Text>
+                  <Text style={[styles.todayCondition, { color: c.ink }]}>
+                    {resolvedCondition}
+                  </Text>
                   <Text style={[styles.todayFeels, { color: c.muted }]}>
-                    Feels like {formatTemperature(30)}
+                    Feels like {formatTemperature(resolvedFeelsLike)}
                   </Text>
                 </View>
               </View>
@@ -88,32 +165,50 @@ export function ForecastScreen({
               <View style={styles.todayStatsGrid}>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.statIcon}>🌡️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>Min</Text>
+                  <Text style={[styles.statLabel, { color: c.muted }]}>
+                    Min
+                  </Text>
                   <Text style={[styles.statVal, { color: c.ink }]}>22°C</Text>
                 </View>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.statIcon}>🌡️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>Max</Text>
+                  <Text style={[styles.statLabel, { color: c.muted }]}>
+                    Max
+                  </Text>
                   <Text style={[styles.statVal, { color: c.ink }]}>31°C</Text>
                 </View>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.statIcon}>💧</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>Humidity</Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>72%</Text>
+                  <Text style={[styles.statLabel, { color: c.muted }]}>
+                    Humidity
+                  </Text>
+                  <Text style={[styles.statVal, { color: c.ink }]}>
+                    {resolvedHumidity}%
+                  </Text>
                 </View>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.statIcon}>💨</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>Wind</Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>16 km/h SW</Text>
+                  <Text style={[styles.statLabel, { color: c.muted }]}>
+                    Wind
+                  </Text>
+                  <Text style={[styles.statVal, { color: c.ink }]}>
+                    {resolvedWind} km/h SW
+                  </Text>
                 </View>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.statIcon}>⏲️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>Pressure</Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>1008 hPa</Text>
+                  <Text style={[styles.statLabel, { color: c.muted }]}>
+                    Pressure
+                  </Text>
+                  <Text style={[styles.statVal, { color: c.ink }]}>
+                    1008 hPa
+                  </Text>
                 </View>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.statIcon}>👁️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>Visibility</Text>
+                  <Text style={[styles.statLabel, { color: c.muted }]}>
+                    Visibility
+                  </Text>
                   <Text style={[styles.statVal, { color: c.ink }]}>8 km</Text>
                 </View>
               </View>
@@ -121,10 +216,19 @@ export function ForecastScreen({
           </View>
 
           {/* 7-Day Forecast Cards */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>7-Day Forecast</Text>
-              <Text style={[styles.cardAction, { color: c.blue }]}>View full 7-day forecast ›</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                7-Day Forecast
+              </Text>
+              <Text style={[styles.cardAction, { color: c.blue }]}>
+                View full 7-day forecast ›
+              </Text>
             </View>
 
             <ScrollView
@@ -133,7 +237,7 @@ export function ForecastScreen({
               contentContainerStyle={styles.daysScroll}
             >
               {forecastDaysData.map((day, idx) => {
-                const isSelected = selectedDayIdx === idx;
+                const isSelected = selectedDayIdx === idx
                 return (
                   <Pressable
                     key={day.date}
@@ -141,13 +245,23 @@ export function ForecastScreen({
                     style={[
                       styles.dayCard,
                       { backgroundColor: c.cardAlt, borderColor: c.border },
-                      isSelected && { borderColor: c.blue, backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF' }
+                      isSelected && {
+                        borderColor: c.blue,
+                        backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF'
+                      }
                     ]}
                   >
-                    <Text style={[styles.dayCardName, { color: isSelected ? c.blue : c.ink }]}>
+                    <Text
+                      style={[
+                        styles.dayCardName,
+                        { color: isSelected ? c.blue : c.ink }
+                      ]}
+                    >
                       {day.day}
                     </Text>
-                    <Text style={[styles.dayCardDate, { color: c.muted }]}>{day.date}</Text>
+                    <Text style={[styles.dayCardDate, { color: c.muted }]}>
+                      {day.date}
+                    </Text>
                     <Text style={styles.dayCardIcon}>{day.icon}</Text>
                     <Text style={[styles.dayCardHigh, { color: c.ink }]}>
                       {formatTemperature(day.high)}
@@ -155,18 +269,32 @@ export function ForecastScreen({
                     <Text style={[styles.dayCardLow, { color: c.muted }]}>
                       {formatTemperature(day.low)}
                     </Text>
-                    <View style={[styles.rainPill, { backgroundColor: isDark ? '#1C335A' : '#E0F2FE' }]}>
-                      <Text style={[styles.rainPillText, { color: c.blue }]}>💧 {day.rainChance}</Text>
+                    <View
+                      style={[
+                        styles.rainPill,
+                        { backgroundColor: isDark ? '#1C335A' : '#E0F2FE' }
+                      ]}
+                    >
+                      <Text style={[styles.rainPillText, { color: c.blue }]}>
+                        💧 {day.rainChance}
+                      </Text>
                     </View>
                   </Pressable>
-                );
+                )
               })}
             </ScrollView>
           </View>
 
           {/* Hourly Forecast */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Hourly Forecast</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Hourly Forecast
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -178,10 +306,15 @@ export function ForecastScreen({
                   style={[
                     styles.hourCard,
                     { backgroundColor: c.cardAlt, borderColor: c.border },
-                    idx === 0 && { borderColor: c.blue, backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF' }
+                    idx === 0 && {
+                      borderColor: c.blue,
+                      backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF'
+                    }
                   ]}
                 >
-                  <Text style={[styles.hourTime, { color: c.muted }]}>{hour.time}</Text>
+                  <Text style={[styles.hourTime, { color: c.muted }]}>
+                    {hour.time}
+                  </Text>
                   <Text style={styles.hourIcon}>{hour.icon}</Text>
                   <Text style={[styles.hourTemp, { color: c.ink }]}>
                     {formatTemperature(hour.temp)}
@@ -193,8 +326,15 @@ export function ForecastScreen({
           </View>
 
           {/* Detailed Forecast Section with Line Curve & Summary matching Screenshot 2 */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Detailed Forecast</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Detailed Forecast
+            </Text>
 
             {/* Metric tabs */}
             <ScrollView
@@ -203,14 +343,17 @@ export function ForecastScreen({
               contentContainerStyle={styles.detailTabsScroll}
             >
               {DETAIL_TABS.map(tab => {
-                const isActive = activeDetailTab === tab;
+                const isActive = activeDetailTab === tab
                 return (
                   <Pressable
                     key={tab}
                     onPress={() => setActiveDetailTab(tab)}
                     style={[
                       styles.detailTabItem,
-                      isActive && { borderBottomColor: c.blue, borderBottomWidth: 2 }
+                      isActive && {
+                        borderBottomColor: c.blue,
+                        borderBottomWidth: 2
+                      }
                     ]}
                   >
                     <Text
@@ -223,13 +366,23 @@ export function ForecastScreen({
                       {tab}
                     </Text>
                   </Pressable>
-                );
+                )
               })}
             </ScrollView>
 
-            <View style={[styles.chartSummaryRow, isWide && styles.chartSummaryRowWide]}>
+            <View
+              style={[
+                styles.chartSummaryRow,
+                isWide && styles.chartSummaryRowWide
+              ]}
+            >
               {/* Temperature Graph Simulation */}
-              <View style={[styles.chartContainer, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+              <View
+                style={[
+                  styles.chartContainer,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
+              >
                 <View style={styles.chartPointsRow}>
                   {[
                     { time: '6 AM', temp: '23°', height: 40 },
@@ -240,25 +393,41 @@ export function ForecastScreen({
                     { time: '9 PM', temp: '25°', height: 50 }
                   ].map(pt => (
                     <View key={pt.time} style={styles.chartBarCol}>
-                      <Text style={[styles.chartTempLabel, { color: pt.highest ? c.blue : c.ink }]}>
+                      <Text
+                        style={[
+                          styles.chartTempLabel,
+                          { color: pt.highest ? c.blue : c.ink }
+                        ]}
+                      >
                         {pt.temp}
                       </Text>
                       <View
                         style={[
                           styles.chartBar,
                           { height: pt.height },
-                          pt.highest ? { backgroundColor: c.blue } : { backgroundColor: '#60A5FA' }
+                          pt.highest
+                            ? { backgroundColor: c.blue }
+                            : { backgroundColor: '#60A5FA' }
                         ]}
                       />
-                      <Text style={[styles.chartTimeLabel, { color: c.muted }]}>{pt.time}</Text>
+                      <Text style={[styles.chartTimeLabel, { color: c.muted }]}>
+                        {pt.time}
+                      </Text>
                     </View>
                   ))}
                 </View>
               </View>
 
               {/* Summary Panel */}
-              <View style={[styles.detailSummaryPanel, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-                <Text style={[styles.summaryTitle, { color: c.ink }]}>Summary</Text>
+              <View
+                style={[
+                  styles.detailSummaryPanel,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
+              >
+                <Text style={[styles.summaryTitle, { color: c.ink }]}>
+                  Summary
+                </Text>
                 <Text style={[styles.summaryDescription, { color: c.muted }]}>
                   Warm with partly cloudy skies. Light winds throughout the day.
                 </Text>
@@ -266,22 +435,40 @@ export function ForecastScreen({
                   <View style={styles.summaryStatItem}>
                     <Text style={styles.summaryStatIcon}>🌡️</Text>
                     <View>
-                      <Text style={[styles.summaryStatName, { color: c.ink }]}>Max Temperature</Text>
-                      <Text style={[styles.summaryStatValue, { color: c.muted }]}>31°C at 3:00 PM</Text>
+                      <Text style={[styles.summaryStatName, { color: c.ink }]}>
+                        Max Temperature
+                      </Text>
+                      <Text
+                        style={[styles.summaryStatValue, { color: c.muted }]}
+                      >
+                        31°C at 3:00 PM
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.summaryStatItem}>
                     <Text style={styles.summaryStatIcon}>🌡️</Text>
                     <View>
-                      <Text style={[styles.summaryStatName, { color: c.ink }]}>Min Temperature</Text>
-                      <Text style={[styles.summaryStatValue, { color: c.muted }]}>22°C at 6:00 AM</Text>
+                      <Text style={[styles.summaryStatName, { color: c.ink }]}>
+                        Min Temperature
+                      </Text>
+                      <Text
+                        style={[styles.summaryStatValue, { color: c.muted }]}
+                      >
+                        22°C at 6:00 AM
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.summaryStatItem}>
                     <Text style={styles.summaryStatIcon}>💧</Text>
                     <View>
-                      <Text style={[styles.summaryStatName, { color: c.ink }]}>Rainfall</Text>
-                      <Text style={[styles.summaryStatValue, { color: c.muted }]}>2.4 mm</Text>
+                      <Text style={[styles.summaryStatName, { color: c.ink }]}>
+                        Rainfall
+                      </Text>
+                      <Text
+                        style={[styles.summaryStatValue, { color: c.muted }]}
+                      >
+                        2.4 mm
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -290,15 +477,31 @@ export function ForecastScreen({
           </View>
 
           {/* Plan Your Day Better Promo Banner */}
-          <View style={[styles.planBanner, { backgroundColor: isDark ? '#1C2E4A' : '#EFF6FF', borderColor: '#BFDBFE' }]}>
+          <View
+            style={[
+              styles.planBanner,
+              {
+                backgroundColor: isDark ? '#1C2E4A' : '#EFF6FF',
+                borderColor: '#BFDBFE'
+              }
+            ]}
+          >
             <Text style={styles.planIcon}>📅</Text>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.planTitle, { color: c.ink }]}>Plan Your Day Better</Text>
+              <Text style={[styles.planTitle, { color: c.ink }]}>
+                Plan Your Day Better
+              </Text>
               <Text style={[styles.planSubtitle, { color: c.muted }]}>
-                Get detailed 7-day forecasts, hourly updates and severe weather alerts with WeatherGPT Premium.
+                Get detailed 7-day forecasts, hourly updates and severe weather
+                alerts with WeatherGPT Premium.
               </Text>
             </View>
-            <Pressable style={[styles.upgradeBtn, { backgroundColor: c.card, borderColor: '#F59E0B' }]}>
+            <Pressable
+              style={[
+                styles.upgradeBtn,
+                { backgroundColor: c.card, borderColor: '#F59E0B' }
+              ]}
+            >
               <Text style={styles.upgradeBtnText}>👑 Upgrade to Premium</Text>
             </Pressable>
           </View>
@@ -307,14 +510,28 @@ export function ForecastScreen({
         {/* Right Column on wide screen */}
         <View style={[styles.col, isWide && styles.colRight]}>
           {/* Select Location Search Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Select Location</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Select Location
+            </Text>
             <TextInput
               value={searchLocation}
               onChangeText={setSearchLocation}
-              placeholder="Search location..."
+              placeholder='Search location...'
               placeholderTextColor={c.muted}
-              style={[styles.locSearchInput, { backgroundColor: c.cardAlt, borderColor: c.border, color: c.ink }]}
+              style={[
+                styles.locSearchInput,
+                {
+                  backgroundColor: c.cardAlt,
+                  borderColor: c.border,
+                  color: c.ink
+                }
+              ]}
             />
             <View style={styles.quickLocList}>
               {[
@@ -325,25 +542,52 @@ export function ForecastScreen({
               ].map(loc => (
                 <Pressable
                   key={loc.name}
-                  style={[styles.quickLocItem, { borderBottomColor: c.borderLight }]}
+                  style={[
+                    styles.quickLocItem,
+                    { borderBottomColor: c.borderLight }
+                  ]}
                 >
                   <Text style={[styles.quickPin, { color: c.blue }]}>📍</Text>
-                  <Text style={[styles.quickName, { color: c.ink }]}>{loc.name}</Text>
-                  <Text style={[styles.quickStar, { color: loc.star ? '#F59E0B' : c.mutedLight }]}>
+                  <Text style={[styles.quickName, { color: c.ink }]}>
+                    {loc.name}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.quickStar,
+                      { color: loc.star ? '#F59E0B' : c.mutedLight }
+                    ]}
+                  >
                     {loc.star ? '★' : '☆'}
                   </Text>
                 </Pressable>
               ))}
             </View>
-            <Text style={[styles.viewAllLocations, { color: c.blue }]}>View all locations</Text>
+            <Text style={[styles.viewAllLocations, { color: c.blue }]}>
+              View all locations
+            </Text>
           </View>
 
           {/* Precipitation Summary Card with Bar Chart matching Screenshot 2 */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Precipitation Summary</Text>
-            <Text style={[styles.precipSub, { color: c.muted }]}>Next 7 Days</Text>
-            <Text style={[styles.precipTotal, { color: c.ink }]}>28.6 <Text style={styles.precipUnit}>mm</Text></Text>
-            <Text style={[styles.precipSub, { color: c.muted, marginBottom: 12 }]}>Total Rainfall</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Precipitation Summary
+            </Text>
+            <Text style={[styles.precipSub, { color: c.muted }]}>
+              Next 7 Days
+            </Text>
+            <Text style={[styles.precipTotal, { color: c.ink }]}>
+              28.6 <Text style={styles.precipUnit}>mm</Text>
+            </Text>
+            <Text
+              style={[styles.precipSub, { color: c.muted, marginBottom: 12 }]}
+            >
+              Total Rainfall
+            </Text>
 
             {/* 7-Day Bar Chart */}
             <View style={styles.precipBarChart}>
@@ -357,21 +601,33 @@ export function ForecastScreen({
                 { day: 'Tue', mm: '0.6', h: 10 }
               ].map(bar => (
                 <View key={bar.day} style={styles.precipBarCol}>
-                  <Text style={[styles.precipValText, { color: c.muted }]}>{bar.mm}</Text>
+                  <Text style={[styles.precipValText, { color: c.muted }]}>
+                    {bar.mm}
+                  </Text>
                   <View
                     style={[
                       styles.precipBarItem,
-                      { height: bar.h, backgroundColor: bar.peak ? c.blue : '#60A5FA' }
+                      {
+                        height: bar.h,
+                        backgroundColor: bar.peak ? c.blue : '#60A5FA'
+                      }
                     ]}
                   />
-                  <Text style={[styles.precipDayText, { color: c.muted }]}>{bar.day}</Text>
+                  <Text style={[styles.precipDayText, { color: c.muted }]}>
+                    {bar.day}
+                  </Text>
                 </View>
               ))}
             </View>
           </View>
 
           {/* UV Index Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <Text style={[styles.cardTitle, { color: c.ink }]}>UV Index</Text>
             <Text style={[styles.precipSub, { color: c.muted }]}>Today</Text>
             <View style={styles.uvRow}>
@@ -380,11 +636,21 @@ export function ForecastScreen({
             </View>
             {/* Color spectrum bar */}
             <View style={styles.uvSpectrumBar}>
-              <View style={[styles.uvSegment, { backgroundColor: '#22C55E' }]} />
-              <View style={[styles.uvSegment, { backgroundColor: '#EAB308' }]} />
-              <View style={[styles.uvSegment, { backgroundColor: '#F97316' }]} />
-              <View style={[styles.uvSegment, { backgroundColor: '#EF4444' }]} />
-              <View style={[styles.uvSegment, { backgroundColor: '#8B5CF6' }]} />
+              <View
+                style={[styles.uvSegment, { backgroundColor: '#22C55E' }]}
+              />
+              <View
+                style={[styles.uvSegment, { backgroundColor: '#EAB308' }]}
+              />
+              <View
+                style={[styles.uvSegment, { backgroundColor: '#F97316' }]}
+              />
+              <View
+                style={[styles.uvSegment, { backgroundColor: '#EF4444' }]}
+              />
+              <View
+                style={[styles.uvSegment, { backgroundColor: '#8B5CF6' }]}
+              />
             </View>
             <Text style={[styles.uvAdvice, { color: c.muted }]}>
               🕶️ Wear sunglasses and use sun protection.
@@ -392,8 +658,15 @@ export function ForecastScreen({
           </View>
 
           {/* Air Quality Index Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Air Quality Index</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Air Quality Index
+            </Text>
             <Text style={[styles.precipSub, { color: c.muted }]}>Today</Text>
             <View style={styles.aqiRow}>
               <View style={styles.aqiBadge}>
@@ -407,36 +680,61 @@ export function ForecastScreen({
           </View>
 
           {/* Sunrise & Sunset Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Sunrise & Sunset</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Sunrise & Sunset
+            </Text>
             <View style={styles.sunTimesRow}>
               <View style={styles.sunTimeCol}>
                 <Text style={styles.sunIcon}>🌅</Text>
-                <Text style={[styles.sunLabel, { color: c.muted }]}>Sunrise</Text>
+                <Text style={[styles.sunLabel, { color: c.muted }]}>
+                  Sunrise
+                </Text>
                 <Text style={[styles.sunTime, { color: c.ink }]}>5:47 AM</Text>
               </View>
               <View style={styles.sunTimeCol}>
                 <Text style={styles.sunIcon}>🌇</Text>
-                <Text style={[styles.sunLabel, { color: c.muted }]}>Sunset</Text>
+                <Text style={[styles.sunLabel, { color: c.muted }]}>
+                  Sunset
+                </Text>
                 <Text style={[styles.sunTime, { color: c.ink }]}>6:57 PM</Text>
               </View>
             </View>
           </View>
 
           {/* Compare Locations Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Compare Locations</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Compare Locations
+            </Text>
             <Text style={[styles.precipSub, { color: c.muted }]}>
               Compare weather between different locations.
             </Text>
-            <Pressable style={[styles.compareBtn, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-              <Text style={[styles.compareBtnText, { color: c.blue }]}>+ Add Location to Compare</Text>
+            <Pressable
+              style={[
+                styles.compareBtn,
+                { backgroundColor: c.cardAlt, borderColor: c.border }
+              ]}
+            >
+              <Text style={[styles.compareBtnText, { color: c.blue }]}>
+                + Add Location to Compare
+              </Text>
             </Pressable>
           </View>
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -934,4 +1232,4 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700'
   }
-});
+})

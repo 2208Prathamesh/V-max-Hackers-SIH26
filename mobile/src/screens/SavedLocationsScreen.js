@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,30 +7,69 @@ import {
   ScrollView,
   ImageBackground,
   useWindowDimensions
-} from 'react-native';
-import { getColors } from '../theme/colors';
-import { allCityDatabase } from '../data/mockData';
+} from 'react-native'
+import { getColors } from '../theme/colors'
+import { allCityDatabase } from '../data/mockData'
+import { api } from '../services/api'
 
-export function SavedLocationsScreen({
+export function SavedLocationsScreen ({
   isDark = false,
   unit = 'C',
   onNavigate,
-  onNotification
+  onNotification,
+  backendReady = false
 }) {
-  const c = getColors(isDark);
-  const { width } = useWindowDimensions();
-  const isWide = width > 768;
+  const c = getColors(isDark)
+  const { width } = useWindowDimensions()
+  const isWide = width > 768
 
-  const [locations, setLocations] = useState(allCityDatabase.slice(0, 5));
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
-  const [sortBy, setSortBy] = useState('Last Updated');
+  const [locations, setLocations] = useState(allCityDatabase.slice(0, 5))
 
-  const formatTemperature = (tempC) => {
-    if (unit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°`;
+  useEffect(() => {
+    if (!backendReady) return
+
+    let isMounted = true
+    api
+      .locations()
+      .then(result => {
+        if (!isMounted) return
+        if (Array.isArray(result) && result.length > 0) {
+          setLocations(
+            result.map(item => ({
+              id: item._id || item.id,
+              city: item.city || item.name || 'Location',
+              region: item.state || item.region || 'Unknown',
+              country: item.country || 'India',
+              tempC: item.tempC ?? 28,
+              feelsLikeC: item.feelsLikeC ?? 30,
+              condition: item.condition || 'Clear',
+              humidity: item.humidity ?? 60,
+              windSpeedKmh: item.windSpeedKmh ?? 12,
+              windDirection: item.windDirection || 'NW',
+              updatedTime: item.updatedTime || 'Updated now',
+              forecast3Day: item.forecast3Day || []
+            }))
+          )
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLocations(allCityDatabase.slice(0, 5))
+      })
+
+    return () => {
+      isMounted = false
     }
-    return `${tempC}°`;
-  };
+  }, [backendReady])
+  const [viewMode, setViewMode] = useState('list') // 'list' | 'grid'
+  const [sortBy, setSortBy] = useState('Last Updated')
+
+  const formatTemperature = tempC => {
+    if (unit === 'F') {
+      return `${Math.round((tempC * 9) / 5 + 32)}°`
+    }
+    return `${tempC}°`
+  }
 
   return (
     <ScrollView
@@ -39,31 +78,55 @@ export function SavedLocationsScreen({
       showsVerticalScrollIndicator={false}
     >
       {/* Top Header Actions Bar */}
-      <View style={[styles.topHeaderBar, { backgroundColor: c.card, borderColor: c.border }]}>
+      <View
+        style={[
+          styles.topHeaderBar,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
         <View style={styles.headerTitleRow}>
           <Text style={[styles.mainHeading, { color: c.ink }]}>
-            My Locations <Text style={{ color: c.muted }}>({locations.length})</Text>
+            My Locations{' '}
+            <Text style={{ color: c.muted }}>({locations.length})</Text>
           </Text>
         </View>
 
         <View style={styles.topRightActions}>
-          <View style={[styles.sortSelect, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-            <Text style={[styles.sortLabel, { color: c.muted }]}>Sort by: </Text>
+          <View
+            style={[
+              styles.sortSelect,
+              { backgroundColor: c.cardAlt, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.sortLabel, { color: c.muted }]}>
+              Sort by:{' '}
+            </Text>
             <Text style={[styles.sortVal, { color: c.ink }]}>{sortBy}</Text>
             <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
           </View>
 
           {/* Grid / List view toggle */}
-          <View style={[styles.viewToggleGroup, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.viewToggleGroup,
+              { backgroundColor: c.cardAlt, borderColor: c.border }
+            ]}
+          >
             <Pressable
               onPress={() => setViewMode('grid')}
-              style={[styles.toggleBtn, viewMode === 'grid' && { backgroundColor: c.card }]}
+              style={[
+                styles.toggleBtn,
+                viewMode === 'grid' && { backgroundColor: c.card }
+              ]}
             >
               <Text style={styles.toggleIcon}>⊞</Text>
             </Pressable>
             <Pressable
               onPress={() => setViewMode('list')}
-              style={[styles.toggleBtn, viewMode === 'list' && { backgroundColor: c.card }]}
+              style={[
+                styles.toggleBtn,
+                viewMode === 'list' && { backgroundColor: c.card }
+              ]}
             >
               <Text style={styles.toggleIcon}>☰</Text>
             </Pressable>
@@ -71,7 +134,7 @@ export function SavedLocationsScreen({
 
           <Pressable
             onPress={() => {
-              if (onNotification) onNotification('Add location dialog opened');
+              if (onNotification) onNotification('Add location dialog opened')
             }}
             style={[styles.addLocBtn, { backgroundColor: c.blue }]}
           >
@@ -99,12 +162,16 @@ export function SavedLocationsScreen({
                 <View style={styles.locCardTop}>
                   <View style={styles.locInfoLeft}>
                     <View style={styles.locPinRow}>
-                      <View style={[styles.locPinDot, { backgroundColor: c.blue }]} />
+                      <View
+                        style={[styles.locPinDot, { backgroundColor: c.blue }]}
+                      />
                       <Text style={[styles.locCityName, { color: c.ink }]}>
                         {loc.city}, {loc.region}
                       </Text>
                     </View>
-                    <Text style={[styles.locCountry, { color: c.muted }]}>India</Text>
+                    <Text style={[styles.locCountry, { color: c.muted }]}>
+                      India
+                    </Text>
                     <Text style={[styles.locUpdated, { color: c.mutedLight }]}>
                       🕒 {loc.updatedTime}
                     </Text>
@@ -113,13 +180,19 @@ export function SavedLocationsScreen({
                   <View style={styles.locTempCol}>
                     <View style={styles.tempIconRow}>
                       <Text style={styles.conditionIcon}>
-                        {loc.condition.includes('Rain') ? '🌧️' : loc.condition.includes('Cloud') ? '⛅' : '☀️'}
+                        {loc.condition.includes('Rain')
+                          ? '🌧️'
+                          : loc.condition.includes('Cloud')
+                          ? '⛅'
+                          : '☀️'}
                       </Text>
                       <View>
                         <Text style={[styles.bigTemp, { color: c.ink }]}>
                           {formatTemperature(loc.tempC)}
                         </Text>
-                        <Text style={[styles.conditionLabel, { color: c.muted }]}>
+                        <Text
+                          style={[styles.conditionLabel, { color: c.muted }]}
+                        >
                           {loc.condition}
                         </Text>
                       </View>
@@ -129,13 +202,22 @@ export function SavedLocationsScreen({
                   {/* Metrics sub-block */}
                   <View style={styles.locMetricsBlock}>
                     <Text style={[styles.metricRowText, { color: c.muted }]}>
-                      Feels like <Text style={{ color: c.ink, fontWeight: '700' }}>{formatTemperature(loc.feelsLikeC)}</Text>
+                      Feels like{' '}
+                      <Text style={{ color: c.ink, fontWeight: '700' }}>
+                        {formatTemperature(loc.feelsLikeC)}
+                      </Text>
                     </Text>
                     <Text style={[styles.metricRowText, { color: c.muted }]}>
-                      Humidity <Text style={{ color: c.ink, fontWeight: '700' }}>{loc.humidity}%</Text>
+                      Humidity{' '}
+                      <Text style={{ color: c.ink, fontWeight: '700' }}>
+                        {loc.humidity}%
+                      </Text>
                     </Text>
                     <Text style={[styles.metricRowText, { color: c.muted }]}>
-                      Wind <Text style={{ color: c.ink, fontWeight: '700' }}>{loc.windSpeedKmh} km/h {loc.windDirection}</Text>
+                      Wind{' '}
+                      <Text style={{ color: c.ink, fontWeight: '700' }}>
+                        {loc.windSpeedKmh} km/h {loc.windDirection}
+                      </Text>
                     </Text>
                   </View>
 
@@ -145,9 +227,15 @@ export function SavedLocationsScreen({
                       <View style={styles.forecast3DayRow}>
                         {loc.forecast3Day.map(f => (
                           <View key={f.day} style={styles.f3DayItem}>
-                            <Text style={[styles.f3DayName, { color: c.muted }]}>{f.day}</Text>
+                            <Text
+                              style={[styles.f3DayName, { color: c.muted }]}
+                            >
+                              {f.day}
+                            </Text>
                             <Text style={styles.f3DayIcon}>{f.icon}</Text>
-                            <Text style={[styles.f3DayTemp, { color: c.ink }]}>{f.temp}</Text>
+                            <Text style={[styles.f3DayTemp, { color: c.ink }]}>
+                              {f.temp}
+                            </Text>
                           </View>
                         ))}
                       </View>
@@ -163,9 +251,12 @@ export function SavedLocationsScreen({
           {/* Add New Location Bottom Action Box matching Screenshot 4 */}
           <Pressable
             onPress={() => {
-              if (onNotification) onNotification('Add new location modal');
+              if (onNotification) onNotification('Add new location modal')
             }}
-            style={[styles.addNewLocationCard, { backgroundColor: c.card, borderColor: c.border }]}
+            style={[
+              styles.addNewLocationCard,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
           >
             <Text style={[styles.addNewLocationTitle, { color: c.blue }]}>
               + Add New Location
@@ -179,11 +270,20 @@ export function SavedLocationsScreen({
         {/* Right Column: Mini Map, Weather Summary & Tips */}
         <View style={[styles.col, isWide && styles.colRight]}>
           {/* Mini Location Map Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Location Map</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Location Map
+              </Text>
               <Pressable onPress={() => onNavigate('weather-map')}>
-                <Text style={[styles.cardAction, { color: c.blue }]}>View full map ›</Text>
+                <Text style={[styles.cardAction, { color: c.blue }]}>
+                  View full map ›
+                </Text>
               </Pressable>
             </View>
 
@@ -214,33 +314,70 @@ export function SavedLocationsScreen({
           </View>
 
           {/* Weather Summary Card matching Screenshot 4 */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Weather Summary</Text>
-            <Text style={[styles.summarySub, { color: c.muted }]}>Across your locations</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Weather Summary
+            </Text>
+            <Text style={[styles.summarySub, { color: c.muted }]}>
+              Across your locations
+            </Text>
 
             <View style={styles.summaryItemsList}>
-              <View style={[styles.summaryRowItem, { borderBottomColor: c.borderLight }]}>
+              <View
+                style={[
+                  styles.summaryRowItem,
+                  { borderBottomColor: c.borderLight }
+                ]}
+              >
                 <View>
-                  <Text style={[styles.summaryLabel, { color: c.muted }]}>Warmest Location</Text>
-                  <Text style={[styles.summaryValueName, { color: c.ink }]}>Jaipur</Text>
+                  <Text style={[styles.summaryLabel, { color: c.muted }]}>
+                    Warmest Location
+                  </Text>
+                  <Text style={[styles.summaryValueName, { color: c.ink }]}>
+                    Jaipur
+                  </Text>
                 </View>
-                <Text style={[styles.summaryBigVal, { color: '#F59E0B' }]}>35°C</Text>
+                <Text style={[styles.summaryBigVal, { color: '#F59E0B' }]}>
+                  35°C
+                </Text>
               </View>
 
-              <View style={[styles.summaryRowItem, { borderBottomColor: c.borderLight }]}>
+              <View
+                style={[
+                  styles.summaryRowItem,
+                  { borderBottomColor: c.borderLight }
+                ]}
+              >
                 <View>
-                  <Text style={[styles.summaryLabel, { color: c.muted }]}>Coolest Location</Text>
-                  <Text style={[styles.summaryValueName, { color: c.ink }]}>Bengaluru</Text>
+                  <Text style={[styles.summaryLabel, { color: c.muted }]}>
+                    Coolest Location
+                  </Text>
+                  <Text style={[styles.summaryValueName, { color: c.ink }]}>
+                    Bengaluru
+                  </Text>
                 </View>
-                <Text style={[styles.summaryBigVal, { color: '#3B82F6' }]}>24°C</Text>
+                <Text style={[styles.summaryBigVal, { color: '#3B82F6' }]}>
+                  24°C
+                </Text>
               </View>
 
               <View style={styles.summaryRowItem}>
                 <View>
-                  <Text style={[styles.summaryLabel, { color: c.muted }]}>Rainy Location</Text>
-                  <Text style={[styles.summaryValueName, { color: c.ink }]}>Mumbai</Text>
+                  <Text style={[styles.summaryLabel, { color: c.muted }]}>
+                    Rainy Location
+                  </Text>
+                  <Text style={[styles.summaryValueName, { color: c.ink }]}>
+                    Mumbai
+                  </Text>
                 </View>
-                <Text style={[styles.summaryBigVal, { color: '#06B6D4' }]}>28°C</Text>
+                <Text style={[styles.summaryBigVal, { color: '#06B6D4' }]}>
+                  28°C
+                </Text>
               </View>
             </View>
 
@@ -250,7 +387,12 @@ export function SavedLocationsScreen({
           </View>
 
           {/* Personalized Tips Card matching Screenshot 4 */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.tipsHeaderRow}>
               <Text style={styles.tipsIcon}>💡</Text>
               <Text style={[styles.cardTitle, { color: c.ink }]}>Tips</Text>
@@ -259,9 +401,16 @@ export function SavedLocationsScreen({
               Get personalized tips for your saved locations
             </Text>
 
-            <View style={[styles.tipHighlightBox, { backgroundColor: c.cardAlt, borderColor: c.borderLight }]}>
+            <View
+              style={[
+                styles.tipHighlightBox,
+                { backgroundColor: c.cardAlt, borderColor: c.borderLight }
+              ]}
+            >
               <Text style={styles.tipUmbrella}>☂️</Text>
-              <Text style={[styles.tipHighlightText, { color: c.inkSecondary }]}>
+              <Text
+                style={[styles.tipHighlightText, { color: c.inkSecondary }]}
+              >
                 Carry an umbrella in Mumbai, light rain expected today.
               </Text>
             </View>
@@ -273,7 +422,7 @@ export function SavedLocationsScreen({
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -583,4 +732,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75
   }
-});
+})

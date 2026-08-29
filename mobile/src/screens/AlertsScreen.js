@@ -1,13 +1,41 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native'
 import { getColors } from '../theme/colors'
 import { alertsData } from '../data/mockData'
+import { api } from '../services/api'
 
 const TABS = ['All Alerts', 'Active (3)', 'Warnings', 'Watch']
 
-export function AlertsScreen ({ isDark = false, onNotification }) {
+export function AlertsScreen ({
+  isDark = false,
+  onNotification,
+  backendReady = false
+}) {
   const c = getColors(isDark)
   const [activeTab, setActiveTab] = useState('All Alerts')
+  const [liveAlerts, setLiveAlerts] = useState([])
+
+  useEffect(() => {
+    if (!backendReady) return
+
+    let isMounted = true
+    api
+      .alerts()
+      .then(result => {
+        if (!isMounted) return
+        setLiveAlerts(Array.isArray(result) ? result : [])
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setLiveAlerts([])
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [backendReady])
+
+  const visibleAlerts = liveAlerts.length > 0 ? liveAlerts : alertsData
 
   return (
     <ScrollView
@@ -56,50 +84,67 @@ export function AlertsScreen ({ isDark = false, onNotification }) {
       </View>
 
       {/* Alert Cards */}
-      {alertsData.map(alert => (
+      {visibleAlerts.map(alert => (
         <View
-          key={alert.id}
+          key={alert.id || alert._id || alert.title}
           style={[
             styles.alertCard,
-            { backgroundColor: c.card, borderColor: `${alert.color}50` }
+            {
+              backgroundColor: c.card,
+              borderColor: `${alert.color || '#F59E0B'}50`
+            }
           ]}
         >
           <View
             style={[
               styles.alertIconBadge,
-              { backgroundColor: `${alert.color}20` }
+              { backgroundColor: `${alert.color || '#F59E0B'}20` }
             ]}
           >
-            <Text style={[styles.alertIconText, { color: alert.color }]}>
-              {alert.icon}
+            <Text
+              style={[
+                styles.alertIconText,
+                { color: alert.color || '#F59E0B' }
+              ]}
+            >
+              {alert.icon || '⚠️'}
             </Text>
           </View>
 
           <View style={styles.alertCardCopy}>
-            <Text style={[styles.alertCardTitle, { color: alert.color }]}>
+            <Text
+              style={[
+                styles.alertCardTitle,
+                { color: alert.color || '#F59E0B' }
+              ]}
+            >
               {alert.title}
             </Text>
             <Text style={[styles.alertCardLocation, { color: c.ink }]}>
-              {alert.location}
+              {alert.location || alert.area || 'Regional weather alert'}
             </Text>
             <Text style={[styles.alertCardTime, { color: c.muted }]}>
-              {alert.time}
+              {alert.time || alert.startTime || 'Live alert'}
             </Text>
             <Text style={[styles.alertCardDetail, { color: c.inkSecondary }]}>
-              {alert.detail}
+              {alert.detail ||
+                alert.message ||
+                'Severe weather advisory in effect.'}
             </Text>
 
             <View style={[styles.metaRow, { borderTopColor: c.borderLight }]}>
               <Text style={[styles.metaLabel, { color: c.muted }]}>
                 Severity:{' '}
-                <Text style={{ color: alert.color, fontWeight: '800' }}>
-                  {alert.severity}
+                <Text
+                  style={{ color: alert.color || '#F59E0B', fontWeight: '800' }}
+                >
+                  {alert.severity || 'Moderate'}
                 </Text>
               </Text>
               <Text style={[styles.metaLabel, { color: c.muted }]}>
                 Probability:{' '}
                 <Text style={[styles.metaValue, { color: c.ink }]}>
-                  {alert.probability}
+                  {alert.probability || 'High'}
                 </Text>
               </Text>
               <Pressable
@@ -107,9 +152,17 @@ export function AlertsScreen ({ isDark = false, onNotification }) {
                   onNotification &&
                   onNotification(`Advisory details for ${alert.title}`)
                 }
-                style={[styles.viewDetailsBtn, { borderColor: alert.color }]}
+                style={[
+                  styles.viewDetailsBtn,
+                  { borderColor: alert.color || '#F59E0B' }
+                ]}
               >
-                <Text style={[styles.viewDetailsText, { color: alert.color }]}>
+                <Text
+                  style={[
+                    styles.viewDetailsText,
+                    { color: alert.color || '#F59E0B' }
+                  ]}
+                >
                   View details →
                 </Text>
               </Pressable>
