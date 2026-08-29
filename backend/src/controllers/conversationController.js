@@ -1,118 +1,137 @@
-import Conversation from '../models/Conversation.js'
-import { successResponse } from '../utils/response.js'
+import Conversation from '../models/Conversation.js';
+import Message from '../models/Message.js';
+import { successResponse } from '../utils/response.js';
 
 /**
  * Create a new conversation
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const createConversation = async (req, res, next) => {
   try {
-    const { title, category } = req.body
+    const { title, category } = req.body;
 
     const conversation = await Conversation.create({
       userId: req.user._id,
       title: title || 'New Conversation',
       category: category || 'general'
-    })
+    });
 
     return successResponse(
       res,
-      201,
+      conversation,
       'Conversation created successfully',
-      conversation
-    )
+      201
+    );
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Get all conversations of logged-in user
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const getConversations = async (req, res, next) => {
   try {
     const conversations = await Conversation.find({
       userId: req.user._id
-    }).sort({ updatedAt: -1 })
+    }).sort({ updatedAt: -1 });
 
     return successResponse(
       res,
-      200,
+      conversations,
       'Conversations retrieved successfully',
-      conversations
-    )
+      200
+    );
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Get a single conversation
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const getConversation = async (req, res, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
     const conversation = await Conversation.findOne({
       _id: id,
       userId: req.user._id
-    })
+    });
 
     if (!conversation) {
       return res.status(404).json({
         success: false,
         message: 'Conversation not found'
-      })
+      });
     }
 
     return successResponse(
       res,
-      200,
+      conversation,
       'Conversation retrieved successfully',
-      conversation
-    )
+      200
+    );
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Delete a conversation
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const deleteConversation = async (req, res, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
     const conversation = await Conversation.findOneAndDelete({
       _id: id,
       userId: req.user._id
-    })
+    });
 
     if (!conversation) {
       return res.status(404).json({
         success: false,
         message: 'Conversation not found'
-      })
+      });
     }
 
-    return successResponse(res, 200, 'Conversation deleted successfully')
+    // Clean up associated messages
+    await Message.deleteMany({ conversationId: id });
+
+    return successResponse(res, null, 'Conversation deleted successfully', 200);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 /**
  * Rename a conversation
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
  */
 const renameConversation = async (req, res, next) => {
   try {
-    const { id } = req.params
-    const { title } = req.body
+    const { id } = req.params;
+    const { title } = req.body;
 
     if (!title || !title.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Conversation title is required'
-      })
+      });
     }
 
     const conversation = await Conversation.findOneAndUpdate(
@@ -124,28 +143,28 @@ const renameConversation = async (req, res, next) => {
         title: title.trim()
       },
       {
-        new: true,
+        returnDocument: 'after',
         runValidators: true
       }
-    )
+    );
 
     if (!conversation) {
       return res.status(404).json({
         success: false,
         message: 'Conversation not found'
-      })
+      });
     }
 
     return successResponse(
       res,
-      200,
+      conversation,
       'Conversation renamed successfully',
-      conversation
-    )
+      200
+    );
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export {
   createConversation,
@@ -153,4 +172,12 @@ export {
   getConversation,
   deleteConversation,
   renameConversation
-}
+};
+
+export default {
+  createConversation,
+  getConversations,
+  getConversation,
+  deleteConversation,
+  renameConversation
+};

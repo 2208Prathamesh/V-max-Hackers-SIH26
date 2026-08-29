@@ -1,0 +1,29 @@
+{
+  "name": "weathergpt-workspace",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "WeatherGPT - Multi-Model NWP Weather Intelligence & AI Chatbot",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "node seed/index.js",
+    "seed:clean": "node seed/index.js --clean",
+    "seed:fresh": "node seed/index.js --fresh",
+    "test": "node --test test/**/*.test.js",
+    "test:unit": "node --test test/unit/*.test.js",
+    "test:integration": "node --test test/integration/*.test.js",
+    "test:system": "node --test test/system/*.test.js",
+    "test:edge": "node --test test/edge-cases/*.test.js"
+  },
+  "keywords": [
+    "weather",
+    "nwp",
+    "ecmwf",
+    "gfs",
+    "open-meteo",
+    "ai",
+    "chatbot"
+  ],
+  "author": "",
+  "license": "ISC"
+}

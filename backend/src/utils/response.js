@@ -4,21 +4,10 @@ const successResponse = (
   message = 'Success',
   statusCode = 200
 ) => {
-  // Support legacy calls shaped as (res, statusCode, message, data).
-  const isLegacyCall = typeof data === 'number'
-  const responseData = isLegacyCall
-    ? statusCode === 200
-      ? null
-      : statusCode
-    : data
-  const responseStatus = isLegacyCall ? data : statusCode
-
-  return res.status(responseStatus).json({
+  return res.status(statusCode).json({
     success: true,
-
     message,
-
-    data: responseData
+    data
   })
 }
 
@@ -30,9 +19,7 @@ const errorResponse = (
 ) => {
   return res.status(statusCode).json({
     success: false,
-
     message,
-
     errors
   })
 }
@@ -50,3 +37,4 @@ const noContentResponse = res => {
 }
 
 export { successResponse, errorResponse, createdResponse, noContentResponse }
+export default { successResponse, errorResponse, createdResponse, noContentResponse }

@@ -1,35 +1,40 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import { UNITS, SUPPORTED_LANGUAGES } from '../config/constants.js';
 
+/**
+ * User Preferences Schema
+ */
 const userPreferencesSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      unique: true
+      unique: true,
+      index: true
     },
 
     temperatureUnit: {
       type: String,
-      enum: ['C', 'F'],
+      enum: UNITS.TEMPERATURE,
       default: 'C'
     },
 
     windUnit: {
       type: String,
-      enum: ['km/h', 'm/s', 'mph', 'knots'],
+      enum: UNITS.WIND,
       default: 'km/h'
     },
 
     pressureUnit: {
       type: String,
-      enum: ['hPa', 'mb', 'inHg', 'mmHg'],
+      enum: UNITS.PRESSURE,
       default: 'hPa'
     },
 
     precipitationUnit: {
       type: String,
-      enum: ['mm', 'in'],
+      enum: UNITS.PRECIPITATION,
       default: 'mm'
     },
 
@@ -63,13 +68,13 @@ const userPreferencesSchema = new mongoose.Schema(
 
     language: {
       type: String,
-      enum: ['en', 'hi', 'mr', 'bn', 'ta', 'te', 'gu', 'kn', 'ml', 'pa'],
+      enum: SUPPORTED_LANGUAGES,
       default: 'en'
     }
   },
   {
     timestamps: true
   }
-)
+);
 
-export default mongoose.model('UserPreferences', userPreferencesSchema)
+export default mongoose.model('UserPreferences', userPreferencesSchema);

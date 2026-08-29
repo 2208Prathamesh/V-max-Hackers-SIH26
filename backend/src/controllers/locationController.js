@@ -3,7 +3,7 @@ import { successResponse } from '../utils/response.js'
 import weatherService from '../services/weather/weatherService.js'
 
 /**
- * Get all saved locations
+ * Get all saved locations with enriched live weather
  */
 const getLocations = async (req, res, next) => {
   try {
@@ -18,93 +18,60 @@ const getLocations = async (req, res, next) => {
       locations.map(async location => {
         try {
           const [weatherData, forecastData] = await Promise.all([
-            weatherService.getWeather(
-              location.latitude,
-              location.longitude
-            ),
-            weatherService.getForecast(
-              location.latitude,
-              location.longitude,
-              3
-            )
+            weatherService.getWeather(location.latitude, location.longitude),
+            weatherService.getForecast(location.latitude, location.longitude, 3)
           ])
 
           const current = weatherData?.forecast?.current
-          const forecast =
-            forecastData?.models?.openMeteo?.daily || []
+          const forecast = forecastData?.models?.openMeteo?.daily || []
 
           return {
             ...location.toObject(),
-
             id: location._id,
-
             region: location.state,
-
             lat: location.latitude,
             lng: location.longitude,
-
-            // Current weather
             condition:
               current?.weatherDescription ||
               current?.condition ||
-              'Unknown',
-
+              'Clear',
             tempC: current?.temperature ?? null,
-
-            feelsLikeC:
-              current?.apparentTemperature ?? null,
-
-            humidity:
-              current?.humidity ?? null,
-
-            windSpeedKmh:
-              current?.windSpeed ?? null,
-
-            windDirection:
-              current?.windDirection ?? '',
-
+            feelsLikeC: current?.apparentTemperature ?? null,
+            humidity: current?.humidity ?? null,
+            windSpeedKmh: current?.windSpeed ?? null,
+            windDirection: current?.windDirection ?? '',
             updatedTime: new Date().toLocaleTimeString([], {
               hour: 'numeric',
               minute: '2-digit'
             }),
-
-            // 3-day forecast
             forecast3Day: forecast.slice(0, 3).map(day => ({
               day: day.date
                 ? new Date(day.date).toLocaleDateString([], {
                     weekday: 'short'
                   })
                 : '--',
-
               condition:
                 day.weatherDescription ||
                 day.condition ||
-                'Unknown',
-
+                'Clear',
               temp:
                 day.temperature ??
-                day.temperatureMax ??
+                day.maxTemperature ??
                 null
             }))
           }
         } catch (weatherError) {
-          // Don't make the entire saved-locations request fail
-          // if one weather provider/location is temporarily unavailable.
-          console.error(
+          console.warn(
             `Weather enrichment failed for ${location.city}:`,
             weatherError.message
           )
 
           return {
             ...location.toObject(),
-
             id: location._id,
-
             region: location.state,
-
             lat: location.latitude,
             lng: location.longitude,
-
             condition: 'Weather unavailable',
             tempC: null,
             feelsLikeC: null,
@@ -120,9 +87,9 @@ const getLocations = async (req, res, next) => {
 
     return successResponse(
       res,
-      200,
+      enrichedLocations,
       'Locations retrieved successfully',
-      enrichedLocations
+      200
     )
   } catch (error) {
     next(error)
@@ -137,21 +104,6 @@ const addLocation = async (req, res, next) => {
     const { name, city, state, country, latitude, longitude, isFavorite } =
       req.body
 
-    // Basic validation
-    if (
-      !name ||
-      !city ||
-      !country ||
-      latitude === undefined ||
-      longitude === undefined
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, city, country, latitude and longitude are required'
-      })
-    }
-
-    // Check if location already exists
     const existingLocation = await SavedLocation.findOne({
       userId: req.user._id,
       latitude,
@@ -165,8 +117,6 @@ const addLocation = async (req, res, next) => {
       })
     }
 
-    // If user wants this as favorite,
-    // remove favorite from other locations
     if (isFavorite === true) {
       await SavedLocation.updateMany(
         { userId: req.user._id },
@@ -178,14 +128,14 @@ const addLocation = async (req, res, next) => {
       userId: req.user._id,
       name,
       city,
-      state,
+      state: state || '',
       country,
       latitude,
       longitude,
       isFavorite: isFavorite || false
     })
 
-    return successResponse(res, 201, 'Location added successfully', location)
+    return successResponse(res, location, 'Location added successfully', 201)
   } catch (error) {
     next(error)
   }
@@ -213,8 +163,6 @@ const updateLocation = async (req, res, next) => {
     const { name, city, state, country, latitude, longitude, isFavorite } =
       req.body
 
-    // If changing favorite to true,
-    // remove favorite from other locations
     if (isFavorite === true) {
       await SavedLocation.updateMany(
         {
@@ -233,13 +181,11 @@ const updateLocation = async (req, res, next) => {
     if (country !== undefined) location.country = country
     if (latitude !== undefined) location.latitude = latitude
     if (longitude !== undefined) location.longitude = longitude
-    if (isFavorite !== undefined) {
-      location.isFavorite = isFavorite
-    }
+    if (isFavorite !== undefined) location.isFavorite = isFavorite
 
     await location.save()
 
-    return successResponse(res, 200, 'Location updated successfully', location)
+    return successResponse(res, location, 'Location updated successfully', 200)
   } catch (error) {
     next(error)
   }
@@ -264,7 +210,7 @@ const deleteLocation = async (req, res, next) => {
       })
     }
 
-    return successResponse(res, 200, 'Location deleted successfully')
+    return successResponse(res, null, 'Location deleted successfully', 200)
   } catch (error) {
     next(error)
   }
@@ -277,7 +223,6 @@ const setFavorite = async (req, res, next) => {
   try {
     const { id } = req.params
 
-    // Check location ownership
     const location = await SavedLocation.findOne({
       _id: id,
       userId: req.user._id
@@ -290,7 +235,6 @@ const setFavorite = async (req, res, next) => {
       })
     }
 
-    // Remove favorite from all user's locations
     await SavedLocation.updateMany(
       {
         userId: req.user._id,
@@ -301,15 +245,14 @@ const setFavorite = async (req, res, next) => {
       }
     )
 
-    // Set selected location as favorite
     location.isFavorite = true
     await location.save()
 
     return successResponse(
       res,
-      200,
+      location,
       'Favorite location updated successfully',
-      location
+      200
     )
   } catch (error) {
     next(error)
@@ -317,6 +260,14 @@ const setFavorite = async (req, res, next) => {
 }
 
 export {
+  getLocations,
+  addLocation,
+  updateLocation,
+  deleteLocation,
+  setFavorite
+}
+
+export default {
   getLocations,
   addLocation,
   updateLocation,

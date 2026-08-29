@@ -1,0 +1,6 @@
+{
+  "name": "weathergpt-seed",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Industry-grade modular database seeding system for WeatherGPT"
+}

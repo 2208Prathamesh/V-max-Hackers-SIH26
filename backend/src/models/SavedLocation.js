@@ -1,17 +1,22 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
+/**
+ * Saved Location Schema
+ */
 const savedLocationSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      index: true
     },
 
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 100
     },
 
     city: {
@@ -22,7 +27,8 @@ const savedLocationSchema = new mongoose.Schema(
 
     state: {
       type: String,
-      trim: true
+      trim: true,
+      default: ''
     },
 
     country: {
@@ -56,6 +62,11 @@ const savedLocationSchema = new mongoose.Schema(
       updatedAt: false
     }
   }
-)
+);
 
-export default mongoose.model('SavedLocation', savedLocationSchema)
+savedLocationSchema.index({ userId: 1, isFavorite: -1, createdAt: -1 });
+savedLocationSchema.index({ userId: 1, latitude: 1, longitude: 1 });
+
+const SavedLocation = mongoose.model('SavedLocation', savedLocationSchema);
+
+export default SavedLocation;

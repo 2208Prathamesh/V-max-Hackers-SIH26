@@ -1,5 +1,9 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+import { ALERT_TYPES, SEVERITY_LEVELS } from '../config/constants.js';
 
+/**
+ * Weather Alert Schema
+ */
 const alertSchema = new mongoose.Schema(
   {
     title: {
@@ -17,27 +21,15 @@ const alertSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: [
-        'rain',
-        'thunderstorm',
-        'cyclone',
-        'flood',
-        'heatwave',
-        'coldwave',
-        'strong_wind',
-        'fog',
-        'drought',
-        'lightning',
-        'other'
-      ],
+      enum: ALERT_TYPES,
       required: true
     },
 
     severity: {
       type: String,
-      enum: ['low', 'moderate', 'high', 'extreme'],
+      enum: Object.values(SEVERITY_LEVELS),
       required: true,
-      default: 'low'
+      default: SEVERITY_LEVELS.LOW
     },
 
     location: {
@@ -79,7 +71,8 @@ const alertSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['active', 'expired', 'cancelled'],
-      default: 'active'
+      default: 'active',
+      index: true
     }
   },
   {
@@ -88,6 +81,11 @@ const alertSchema = new mongoose.Schema(
       updatedAt: false
     }
   }
-)
+);
 
-export default mongoose.model('Alert', alertSchema)
+alertSchema.index({ status: 1, startTime: 1, endTime: 1 });
+alertSchema.index({ severity: 1, createdAt: -1 });
+
+const Alert = mongoose.model('Alert', alertSchema);
+
+export default Alert;
