@@ -1,0 +1,21 @@
+export const getColors = (isDark = false) => ({
+  isDark,
+  bg: isDark ? '#0B132B' : '#F5F8FC',
+  card: isDark ? '#152238' : '#FFFFFF',
+  cardAlt: isDark ? '#1C2E4A' : '#F8FAFD',
+  border: isDark ? '#223554' : '#E2E8F0',
+  borderLight: isDark ? '#1E2D44' : '#EEF2F6',
+  ink: isDark ? '#F1F5F9' : '#10243E',
+  inkSecondary: isDark ? '#CBD5E1' : '#334155',
+  muted: isDark ? '#8295AE' : '#7A8BA0',
+  mutedLight: isDark ? '#5C708A' : '#94A3B8',
+  blue: '#2563EB',
+  blueLight: isDark ? '#1D3B6C' : '#EFF6FF',
+  blueHover: '#1D4ED8',
+  white: '#FFFFFF',
+  accentAmber: '#F59E0B',
+  accentRed: '#EF4444',
+  accentGreen: '#10B981',
+  accentPurple: '#8B5CF6',
+  scrim: 'rgba(11, 23, 42, 0.65)'
+})
