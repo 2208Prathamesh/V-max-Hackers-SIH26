@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWeather } from '../../context/WeatherContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   Home,
   MessageSquare, 
@@ -17,7 +18,8 @@ import {
   Moon, 
   LogOut,
   User as UserIcon,
-  SunMedium
+  SunMedium,
+  Sprout
 } from 'lucide-react';
 
 // 3D Styled Cloud & Sun Logo for Sidebar
@@ -62,17 +64,19 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     setActiveConversationId
   } = useWeather();
   const { isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
-    { id: 'alerts', label: 'Alerts', icon: Bell, badge: '3' },
-    { id: 'weather-map', label: 'Weather Map', icon: Map },
-    { id: 'forecast', label: 'Forecast', icon: Calendar },
-    { id: 'history', label: 'History', icon: Clock },
-    { id: 'saved-locations', label: 'Saved Locations', icon: Star },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'dashboard', label: t('dashboard'), icon: Home },
+    { id: 'chat', label: t('chat'), icon: MessageSquare },
+    { id: 'advisory', label: t('advisory'), icon: Sprout },
+    { id: 'alerts', label: t('alerts'), icon: Bell, badge: '3' },
+    { id: 'weather-map', label: t('weatherMap'), icon: Map },
+    { id: 'forecast', label: t('forecast'), icon: Calendar },
+    { id: 'history', label: t('history'), icon: Clock },
+    { id: 'saved-locations', label: t('savedLocations'), icon: Star },
+    { id: 'settings', label: t('settings'), icon: Settings },
   ];
 
   const recentChats = [

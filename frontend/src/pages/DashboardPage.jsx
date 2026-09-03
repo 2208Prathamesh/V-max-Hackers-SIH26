@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useWeather } from '../context/WeatherContext'
+import { useLanguage } from '../context/LanguageContext'
 import {
   MapPin,
   Droplets,
@@ -168,6 +169,7 @@ export const DashboardPage = () => {
     formatWind,
     formatPressure
   } = useWeather()
+  const { t, translateCondition } = useLanguage()
 
   const [queryText, setQueryText] = useState('')
 
@@ -433,10 +435,10 @@ export const DashboardPage = () => {
                 )}
               </div>
               <p className='text-xs font-semibold text-slate-600 dark:text-slate-400 mt-1.5'>
-                Feels like {formatTemp(currentConditions?.apparentTemperature)}
+                {t('feelsLike', { temp: formatTemp(currentConditions?.apparentTemperature) })}
               </p>
               <p className='text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5'>
-                {weatherDescription}
+                {translateCondition(weatherDescription)}
               </p>
             </div>
 
@@ -452,7 +454,7 @@ export const DashboardPage = () => {
                 <Droplets className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Humidity
+                {t('humidity')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {currentConditions?.humidity ?? '--'}
@@ -466,7 +468,7 @@ export const DashboardPage = () => {
                 <Wind className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Wind
+                {t('wind')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {currentConditions?.windSpeed == null
@@ -481,7 +483,7 @@ export const DashboardPage = () => {
                 <Gauge className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Pressure
+                {t('pressure')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {currentConditions?.pressure == null
@@ -496,7 +498,7 @@ export const DashboardPage = () => {
                 <Eye className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Visibility
+                {t('visibility')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 --
@@ -509,13 +511,13 @@ export const DashboardPage = () => {
         <div className='lg:col-span-5 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between space-y-4'>
           <div className='flex items-center justify-between'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Active Alerts
+              {t('activeAlerts')}
             </h2>
             <button
               onClick={() => setCurrentPage('alerts')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View All
+              {t('viewAll')}
             </button>
           </div>
 
@@ -569,7 +571,7 @@ export const DashboardPage = () => {
             </div>
           ) : (
             <p className='text-xs text-slate-500 dark:text-slate-400'>
-              No active alerts
+              {t('noActiveAlerts')}
             </p>
           )}
         </div>
@@ -583,13 +585,13 @@ export const DashboardPage = () => {
         <div className='lg:col-span-7 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4'>
           <div className='flex items-center justify-between'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Today's Forecast
+              {t('todaysForecast')}
             </h2>
             <button
               onClick={() => setCurrentPage('forecast')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View Full Forecast
+              {t('viewFullForecast')}
             </button>
           </div>
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { WeatherProvider, useWeather } from './context/WeatherContext';
 import { Layout } from './components/layout/Layout';
 import { WeatherMapPage } from './pages/WeatherMapPage';
@@ -10,6 +11,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ChatPage } from './pages/ChatPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { ForecastPage } from './pages/ForecastPage';
+import { AdvisoryPage } from './pages/AdvisoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { ToastContainer } from './components/common/Toast';
 
@@ -32,6 +34,8 @@ const AppContent = () => {
         return <DashboardPage />;
       case 'chat':
         return <ChatPage />;
+      case 'advisory':
+        return <AdvisoryPage />;
       case 'alerts':
         return <AlertsPage />;
       case 'weather-map':
@@ -55,10 +59,11 @@ const AppContent = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <WeatherProvider>
-        <AppContent />
-      </WeatherProvider>
+      <LanguageProvider>
+        <WeatherProvider>
+          <AppContent />
+        </WeatherProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
-

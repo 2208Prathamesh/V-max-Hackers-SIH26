@@ -1,94 +1,254 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWeather } from '../context/WeatherContext';
-import { 
-  Send, 
-  Sparkles, 
-  Bot, 
-  User, 
-  MapPin, 
-  Wind, 
-  Droplets, 
-  CloudRain, 
-  Plus, 
-  Compass, 
-  RefreshCw 
+import { useLanguage } from '../context/LanguageContext';
+import { api } from '../services/api';
+import {
+  Send,
+  Sparkles,
+  Bot,
+  User,
+  MapPin,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Plus,
+  Compass,
+  Languages,
+  Loader2
 } from 'lucide-react';
 import { WeatherIcon } from '../components/common/WeatherIcon';
 
 export const ChatPage = () => {
-  const { 
-    conversations, 
-    activeConversationId, 
-    sendChatMessage, 
-    createNewChat, 
-    formatTemp, 
-    formatWind 
+  const {
+    conversations,
+    activeConversationId,
+    sendChatMessage,
+    createNewChat,
+    formatTemp,
+    addToast
   } = useWeather();
+  const { language, setLanguage, t, supportedLanguages } = useLanguage();
+
   const [inputText, setInputText] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [playingMessageIndex, setPlayingMessageIndex] = useState(null);
+  const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  const activeConv = conversations.find(c => c.id === activeConversationId) || conversations[0];
+  const activeConv = conversations.find((c) => c.id === activeConversationId) || conversations[0];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeConv?.messages]);
+
+  // Speech Recognition Language Mapping
+  const speechLangMap = {
+    hi: 'hi-IN',
+    mr: 'mr-IN',
+    bn: 'bn-IN',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    en: 'en-IN'
+  };
+
+  // Real Microphone Speech Recognition (Web Speech API)
+  const toggleSpeechRecognition = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      addToast(t('voiceError'), 'warning');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = speechLangMap[language] || 'en-IN';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        addToast(t('listening'), 'info');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0].transcript)
+          .join('');
+        setInputText(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          addToast('Microphone permission denied. Please allow mic access in your browser.', 'warning');
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.warn('Failed to start speech recognition:', err);
+      setIsListening(false);
+      addToast(t('voiceError'), 'warning');
+    }
+  };
+
+  // Clean Markdown & Formatting for Smooth Human-like Speech
+  const cleanTextForSpeech = (rawText) => {
+    return (rawText || '')
+      .replace(/[*#_`~]/g, '') // remove markdown symbols
+      .replace(/https?:\/\/\S+/g, '') // remove URLs
+      .replace(/[🚨⚠️🌧️☀️🌾🌱📞💡•]/g, ' ') // remove emojis that make robotic sounds
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  // Natural Human-Like Text-to-Speech
+  const handleSpeak = (text, msgIndex) => {
+    if (playingMessageIndex === msgIndex) {
+      window.speechSynthesis?.cancel();
+      setPlayingMessageIndex(null);
+      return;
+    }
+
+    if (!('speechSynthesis' in window)) {
+      addToast('Speech synthesis not supported in this browser.', 'warning');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanContent = cleanTextForSpeech(text);
+    const utterance = new SpeechSynthesisUtterance(cleanContent);
+
+    const targetLangCode = speechLangMap[language] || 'en-IN';
+    utterance.lang = targetLangCode;
+    utterance.rate = 0.92; // Natural, comfortable conversational speaking pace
+    utterance.pitch = 1.05; // Slightly warmer, lively tone
+
+    // Pick best natural Indian voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const naturalVoice = voices.find(
+      (v) =>
+        (v.lang === targetLangCode || v.lang.replace('_', '-').startsWith(language)) &&
+        (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('India') || v.name.includes('Heera') || v.name.includes('Kalpana') || v.name.includes('Hemant'))
+    ) || voices.find((v) => v.lang === targetLangCode || v.lang.replace('_', '-').startsWith(language)) || voices.find((v) => v.lang.includes('IN'));
+
+    if (naturalVoice) {
+      utterance.voice = naturalVoice;
+    }
+
+    utterance.onend = () => setPlayingMessageIndex(null);
+    utterance.onerror = () => setPlayingMessageIndex(null);
+
+    setPlayingMessageIndex(msgIndex);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSend = (e) => {
     e?.preventDefault();
     if (!inputText.trim()) return;
     sendChatMessage(inputText);
     setInputText('');
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
   };
 
   const samplePrompts = [
-    "Will it rain tomorrow in Pune?",
-    "Show cyclone track in Bay of Bengal",
-    "What is the AQI in Delhi right now?",
-    "Best time to visit Himachal Pradesh?",
-    "Weekend forecast for Lonavala trip",
+    language === 'hi'
+      ? 'क्या आज पुणे में बारिश होगी?'
+      : language === 'mr'
+      ? 'पुण्यात आज पाऊस पडेल का?'
+      : language === 'bn'
+      ? 'কলকাতায় আজকের আবহাওয়া কেমন?'
+      : language === 'ta'
+      ? 'சென்னையில் இன்று மழை பெய்யுமா?'
+      : language === 'te'
+      ? 'హైదరాబాద్‌లో ఈరోజు వర్షం పడుతుందా?'
+      : 'Will it rain today in Pune?',
+    language === 'hi'
+      ? 'कपास की फसल के लिए सिंचाई सलाह'
+      : language === 'mr'
+      ? 'कापूस पिकासाठी खत व पाणी व्यवस्थापन'
+      : 'Crop advisory for cotton this week',
+    'Compare ECMWF vs NOAA GFS forecast for Mumbai',
+    'Show official IMD weather warnings for today'
   ];
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col bg-white dark:bg-[#151F32] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-card overflow-hidden">
-      {/* Chat Header */}
+      {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{activeConv?.title || "WeatherGPT Assistant"}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-600">
-                Online • Radar Connected
+              <span>{activeConv?.title || 'WeatherGPT AI Assistant'}</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                Grounded • Zero Hallucination
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Powered by high-precision IMD & ECMWF satellite data</p>
+            <p className="text-xs text-slate-400">Natural Multilingual Conversational Meteorological AI</p>
           </div>
         </div>
 
-        <button
-          onClick={createNewChat}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-semibold transition"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Chat</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Language Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <Languages className="w-3.5 h-3.5 text-blue-500" />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
+            >
+              {supportedLanguages.map((l) => (
+                <option key={l.code} value={l.code} className="bg-slate-900 text-white">
+                  {l.flag} {l.name} ({l.nativeName})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={createNewChat}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-semibold transition"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Chat</span>
+          </button>
+        </div>
       </div>
 
       {/* Messages Stream */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* Welcome Box if empty */}
         {(!activeConv?.messages || activeConv.messages.length === 0) && (
           <div className="max-w-xl mx-auto text-center py-12 space-y-4">
             <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-inner">
               <Bot className="w-8 h-8" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              How can WeatherGPT help you today?
+              {t('chat')}
             </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Ask any question about weather forecasts, precipitation probabilities, severe storm alerts, or travel safety advisories.
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+              Ask in English, हिन्दी, मराठी, বাংলা, தமிழ், or తెలుగు about weather forecasts, rainfall probabilities, crop protection, or severe weather alerts.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
@@ -108,9 +268,11 @@ export const ChatPage = () => {
           </div>
         )}
 
-        {/* Render Messages */}
+        {/* Message Bubbles */}
         {activeConv?.messages?.map((msg, index) => {
           const isUser = msg.sender === 'user';
+          const isPlaying = playingMessageIndex === index;
+
           return (
             <div
               key={index}
@@ -127,7 +289,7 @@ export const ChatPage = () => {
                 {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
 
-              {/* Bubble */}
+              {/* Bubble Body */}
               <div className={`space-y-2 max-w-xl ${isUser ? 'items-end' : 'items-start'}`}>
                 <div
                   className={`p-4 rounded-2xl text-xs leading-relaxed shadow-xs ${
@@ -137,35 +299,31 @@ export const ChatPage = () => {
                   }`}
                 >
                   <p className="whitespace-pre-line">{msg.text}</p>
+
+                  {/* Natural TTS Voice Button */}
+                  {!isUser && (
+                    <button
+                      onClick={() => handleSpeak(msg.text, index)}
+                      className={`mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition border ${
+                        isPlaying
+                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:text-blue-500'
+                      }`}
+                    >
+                      {isPlaying ? (
+                        <>
+                          <VolumeX className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                          <span>{t('stopVoice')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-3.5 h-3.5 text-blue-500" />
+                          <span>{t('piperVoice')}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
-
-                {/* Weather Data Card inside chat bubble if attached */}
-                {msg.cardData && (
-                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900 shadow-md space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-                        <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                        <span>{msg.cardData.city}</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600">
-                        {msg.cardData.condition}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-black text-slate-900 dark:text-white">
-                        {formatTemp(msg.cardData.temp)}
-                      </div>
-                      <WeatherIcon condition={msg.cardData.condition} className="w-8 h-8" />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500">
-                      <div>Rain: <span className="font-bold text-slate-800 dark:text-slate-200">{msg.cardData.rainProb}</span></div>
-                      <div>Humidity: <span className="font-bold text-slate-800 dark:text-slate-200">{msg.cardData.humidity}</span></div>
-                      <div>Wind: <span className="font-bold text-slate-800 dark:text-slate-200">{msg.cardData.wind}</span></div>
-                    </div>
-                  </div>
-                )}
 
                 <span className="text-[10px] text-slate-400 block px-1">{msg.time}</span>
               </div>
@@ -175,31 +333,29 @@ export const ChatPage = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Quick Action Chips */}
-      <div className="px-6 py-2 bg-slate-50/50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto scrollbar-none">
-        <span className="text-[10px] font-semibold text-slate-400 shrink-0">Suggestions:</span>
-        {samplePrompts.slice(0, 3).map((p, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setInputText(p);
-            }}
-            className="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-blue-50 text-slate-600 dark:text-slate-400 hover:text-blue-600 rounded-lg text-[11px] border border-slate-200 dark:border-slate-700 whitespace-nowrap transition"
-          >
-            {p}
-          </button>
-        ))}
-      </div>
-
-      {/* Input Field */}
+      {/* Input Bar with Real Microphone STT Button */}
       <form onSubmit={handleSend} className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#151F32] flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleSpeechRecognition}
+          className={`p-3 rounded-2xl border transition flex items-center justify-center ${
+            isListening
+              ? 'bg-rose-500 text-white border-rose-600 animate-pulse ring-4 ring-rose-500/30'
+              : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-700'
+          }`}
+          title="Real Microphone Speech Recognition"
+        >
+          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </button>
+
         <input
           type="text"
-          placeholder="Ask WeatherGPT about rainfall, forecast, temperature, or travel safety..."
+          placeholder={isListening ? t('listening') : t('askPlaceholder')}
           value={inputText}
-          onChange={e => setInputText(e.target.value)}
+          onChange={(e) => setInputText(e.target.value)}
           className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
         />
+
         <button
           type="submit"
           disabled={!inputText.trim()}
@@ -211,3 +367,5 @@ export const ChatPage = () => {
     </div>
   );
 };
+
+export default ChatPage;

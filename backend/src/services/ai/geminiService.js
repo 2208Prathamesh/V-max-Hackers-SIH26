@@ -8,7 +8,7 @@ const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/mo
  * @param {object} param0
  * @param {string} param0.userMessage - Original user query
  * @param {object} param0.groundedContext - Meteorological parameters and warnings
- * @param {string} [param0.language='en'] - Output language
+ * @param {string} [param0.language='en'] - Output language ('en', 'hi', 'mr', 'bn', 'ta', 'te')
  * @returns {Promise<string>} Natural language response
  */
 export async function generateGeminiWeatherResponse({ userMessage, groundedContext, language = 'en' }) {
@@ -35,13 +35,13 @@ export async function generateGeminiWeatherResponse({ userMessage, groundedConte
           parts: [
             { text: SYSTEM_INSTRUCTION },
             { text: contextPrompt },
-            { text: `User Question: "${userMessage}"` }
+            { text: `User Question: "${userMessage}". Please answer exclusively in language code: ${language}. Provide a warm, polite, lively and natural conversational response.` }
           ]
         }
       ],
       generationConfig: {
-        temperature: 0.2, // Low temperature for high factual grounding
-        topP: 0.8,
+        temperature: 0.3,
+        topP: 0.85,
         maxOutputTokens: 800
       }
     };
@@ -74,7 +74,7 @@ export async function generateGeminiWeatherResponse({ userMessage, groundedConte
 }
 
 /**
- * Deterministic multilingual grounded fallback generator
+ * Deterministic lively multilingual grounded generator
  */
 function generateOfflineGroundedResponse({ userMessage, groundedContext, language = 'en' }) {
   const { location, currentWeather, forecastDaily = [], imdWarning, agroAdvisory } = groundedContext;
@@ -86,42 +86,92 @@ function generateOfflineGroundedResponse({ userMessage, groundedContext, languag
   const humidity = current.humidity ?? '65';
   const wind = current.windSpeed ?? '12';
   const rainProb = todayForecast.precipitationProbability ?? current.precipitation ?? 0;
-  const condition = current.weatherDescription || current.condition || 'Clear';
+  const condition = current.weatherDescription || current.condition || 'निरभ्र';
 
-  // Multilingual Templates (Marathi, Hindi, English)
-  if (language === 'mr' || query.includes('काय') || query.includes('आहे')) {
-    let answer = `सध्या ${location} मध्ये तापमान ${temp}°C असून हवामान ${condition} आहे. हवेतील आर्द्रता ${humidity}% आणि वाऱ्याचा वेग ${wind} किमी/तास आहे.`;
+  // 1. Marathi (मराठी - Lively & Natural)
+  if (language === 'mr' || query.includes('काय') || query.includes('आहे') || query.includes('हवामान')) {
+    let answer = `नमस्कार! सध्या **${location}** मध्ये हवामान **${condition}** असून तापमान **${temp}°C** आहे (जाणवणारे तापमान: ${current.apparentTemperature ?? temp}°C).\n\n`;
+    answer += `📊 **मुख्य हवामान घटक:**\n`;
+    answer += `• हवेतील ओलावा (आर्द्रता): **${humidity}%**\n`;
+    answer += `• वाऱ्याचा वेग: **${wind} किमी/तास**\n`;
+
+    if (todayForecast.maxTemperature !== undefined) {
+      answer += `• आजचे अपेक्षित तापमान: **${todayForecast.minTemperature}°C ते ${todayForecast.maxTemperature}°C** दरम्यान राहील.\n`;
+    }
+
     if (rainProb > 40) {
-      answer += ` 🌧️ पावसाची शक्यता ${rainProb}% आहे.`;
-    }
-    if (imdWarning?.hasActiveWarning) {
-      answer += ` 🚨 IMD इशारा: ${imdWarning.warningLevel} अलर्ट (${imdWarning.hazard}).`;
-    }
-    return answer;
-  }
-
-  if (language === 'hi' || query.includes('kaisa') || query.includes('hogi') || query.includes('mausam')) {
-    let answer = `वर्तमान में ${location} में तापमान ${temp}°C है और मौसम ${condition} बना हुआ है। आर्द्रता ${humidity}% और हवा की गति ${wind} किमी/घंटा है।`;
-    if (rainProb > 40) {
-      answer += ` 🌧️ बारिश की संभावना ${rainProb}% है।`;
-    }
-    if (imdWarning?.hasActiveWarning) {
-      answer += ` 🚨 IMD चेतावनी: ${imdWarning.warningLevel} अलर्ट (${imdWarning.hazard}).`;
-    }
-    return answer;
-  }
-
-  // Default English grounded answer
-  let answer = `Currently in ${location}, the weather is ${condition} with a temperature of ${temp}°C (feels like ${current.apparentTemperature ?? temp}°C). Humidity is at ${humidity}% with winds blowing at ${wind} km/h.`;
-
-  if (query.includes('rain') || query.includes('precipitation')) {
-    if (rainProb > 40) {
-      answer += ` 🌧️ Rain is likely with a ${rainProb}% precipitation probability today.`;
+      answer += `\n🌧️ **पावसाचा अंदाज:** आज पाऊस पडण्याची शक्यता **${rainProb}%** आहे. बाहेर पडताना छत्री किंवा रेनकोट सोबत ठेवा!`;
     } else {
-      answer += ` ☀️ Little to no rainfall expected today (${rainProb}% chance).`;
+      answer += `\n☀️ **पावसाचा अंदाज:** आज पावसाची शक्यता फारच कमी (**${rainProb}%**) असून दिवसभर हवामान कोरडे राहण्याचा अंदाज आहे.`;
     }
-  } else if (todayForecast.maxTemperature !== undefined && todayForecast.minTemperature !== undefined) {
-    answer += ` Today's temperature is expected to range between ${todayForecast.minTemperature}°C and ${todayForecast.maxTemperature}°C.`;
+
+    if (imdWarning && imdWarning.hasActiveWarning) {
+      answer += `\n\n🚨 **हवामान विभागाचा (IMD) इशारा:** ${imdWarning.warningLevel} अलर्ट (${imdWarning.action}) जारी करण्यात आला आहे. धोका: ${imdWarning.hazard} - ${imdWarning.advice}`;
+    }
+
+    if (agroAdvisory?.recommendations?.cropSpecificAdvisory || query.includes('पीक') || query.includes('शेत')) {
+      answer += `\n\n🌾 **शेतकरी मित्रांसाठी सल्ला:** ${agroAdvisory?.recommendations?.cropSpecificAdvisory || 'पिकांमधील ओलावा तपासा आणि हवामानानुसार पाणी व्यवस्थापन करा.'}`;
+    }
+
+    return answer;
+  }
+
+  // 2. Hindi (हिन्दी - Lively & Natural)
+  if (language === 'hi' || query.includes('kaisa') || query.includes('hogi') || query.includes('mausam') || query.includes('baarish')) {
+    let answer = `नमस्ते! वर्तमान में **${location}** में मौसम **${condition}** है और तापमान **${temp}°C** बना हुआ है।\n\n`;
+    answer += `📊 **प्रमुख मौसम आंकड़े:**\n`;
+    answer += `• आर्द्रता: **${humidity}%**\n`;
+    answer += `• हवा की गति: **${wind} किमी/घंटा**\n`;
+
+    if (rainProb > 40) {
+      answer += `\n🌧️ **बारिश की संभावना:** आज **${rainProb}%** बारिश होने के आसार हैं। बाहर निकलते समय सावधानी बरतें।`;
+    } else {
+      answer += `\n☀️ **बारिश की संभावना:** आज बारिश की संभावना कम (**${rainProb}%**) है और मौसम सामान्य रहेगा।`;
+    }
+
+    if (imdWarning?.hasActiveWarning) {
+      answer += `\n\n🚨 **मौसम विभाग (IMD) चेतावनी:** ${imdWarning.warningLevel} अलर्ट जारी है (${imdWarning.hazard})। कृपया स्थानीय सुरक्षा निर्देशों का पालन करें।`;
+    }
+
+    return answer;
+  }
+
+  // 3. Bengali (বাংলা)
+  if (language === 'bn') {
+    let answer = `নমস্কার! বর্তমানে **${location}**-এ আবহাওয়া **${condition}** এবং তাপমাত্রা **${temp}°C**। বাতাসের আর্দ্রতা **${humidity}%** এবং বাতাসের গতি **${wind} কিমি/ঘণ্টা**।`;
+    if (rainProb > 40) {
+      answer += `\n🌧️ বৃষ্টির সম্ভাবনা **${rainProb}%**।`;
+    }
+    return answer;
+  }
+
+  // 4. Tamil (தமிழ்)
+  if (language === 'ta') {
+    let answer = `வணக்கம்! தற்போது **${location}** பகுதியில் வெப்பநிலை **${temp}°C** ஆகவும், வானிலை **${condition}** ஆகவும் உள்ளது. ஈரப்பதம் **${humidity}%** மற்றும் காற்றின் வேகம் **${wind} கி.மீ/மணி**।`;
+    if (rainProb > 40) {
+      answer += `\n🌧️ மழை பெய்ய வாய்ப்பு **${rainProb}%** உள்ளது.`;
+    }
+    return answer;
+  }
+
+  // 5. Telugu (తెలుగు)
+  if (language === 'te') {
+    let answer = `నమస్కారం! ప్రస్తుతం **${location}** లో ఉష్ణోగ్రత **${temp}°C** మరియు వాతావరణం **${condition}** గా ఉంది. గాలిలో తేమ **${humidity}%** మరియు గాలి వేగం **${wind} కి.మీ/గం**।`;
+    if (rainProb > 40) {
+      answer += `\n🌧️ వర్షం పడే అవకాశం **${rainProb}%** ఉంది.`;
+    }
+    return answer;
+  }
+
+  // 6. Default English
+  let answer = `Hello! Currently in **${location}**, the weather is **${condition}** with a temperature of **${temp}°C** (feels like ${current.apparentTemperature ?? temp}°C).\n\n`;
+  answer += `• Humidity: **${humidity}%**\n`;
+  answer += `• Wind Speed: **${wind} km/h**\n`;
+
+  if (rainProb > 40) {
+    answer += `🌧️ **Precipitation:** Rain is likely today with a **${rainProb}%** probability.`;
+  } else {
+    answer += `☀️ **Precipitation:** Dry conditions expected with low rainfall chance (**${rainProb}%**).`;
   }
 
   if (imdWarning && imdWarning.hasActiveWarning) {

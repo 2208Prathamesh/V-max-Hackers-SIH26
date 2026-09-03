@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWeather } from '../../context/WeatherContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   Globe, 
   Moon, 
@@ -18,6 +19,7 @@ import {
 export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
   const { currentPage, user, alerts, setCurrentPage, settings, setSettings, addToast, logout } = useWeather();
   const { isDark, toggleTheme } = useTheme();
+  const { language, setLanguage, t, supportedLanguages } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -25,21 +27,23 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
   const getPageInfo = () => {
     switch (currentPage) {
       case 'settings':
-        return { title: 'Settings', subtitle: 'Manage your preferences and account settings' };
+        return { title: t('settings'), subtitle: 'Manage your preferences and account settings' };
       case 'saved-locations':
-        return { title: 'Saved Locations', subtitle: 'Quickly access weather updates for your saved locations' };
+        return { title: t('savedLocations'), subtitle: 'Quickly access weather updates for your saved locations' };
       case 'history':
-        return { title: 'History', subtitle: 'View and manage your past conversations with WeatherGPT' };
+        return { title: t('history'), subtitle: 'View and manage your past conversations & 20-year climate trends' };
       case 'weather-map':
-        return { title: 'Weather Map', subtitle: 'Explore real-time weather conditions across India' };
+        return { title: t('weatherMap'), subtitle: 'Explore real-time weather conditions & Doppler radar across India' };
       case 'dashboard':
-        return { title: 'Dashboard', subtitle: 'Real-time AI weather intelligence & environmental metrics' };
+        return { title: t('dashboard'), subtitle: 'Real-time AI weather intelligence & environmental metrics' };
       case 'chat':
-        return { title: 'WeatherGPT AI Assistant', subtitle: 'Ask any meteorological or climate query with real-time analysis' };
+        return { title: t('chat'), subtitle: 'Ask any meteorological or climate query with grounded AI reasoning' };
+      case 'advisory':
+        return { title: t('advisory'), subtitle: 'Soil moisture agronomy guide & emergency disaster action plan' };
       case 'alerts':
-        return { title: 'Active Weather Alerts', subtitle: 'Severe weather warnings, radar advisories, and emergency bulletins' };
+        return { title: t('alerts'), subtitle: 'Severe weather warnings, radar advisories, and IMD bulletins' };
       case 'forecast':
-        return { title: 'Extended Forecast', subtitle: '14-day precision meteorological projections' };
+        return { title: t('forecast'), subtitle: '7-14 day precision meteorological projections & NWP models' };
       default:
         return { title: 'WeatherGPT', subtitle: 'AI Weather Intelligence' };
     }
@@ -47,20 +51,13 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
 
   const { title, subtitle } = getPageInfo();
 
-  const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'hi', label: 'Hindi (हिन्दी)' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'de', label: 'Deutsch' },
-  ];
+  const currentLangObj = supportedLanguages.find(l => l.code === language) || supportedLanguages[0];
 
-  const currentLangLabel = languages.find(l => l.code === (settings.language || 'en'))?.label || 'English';
-
-  const handleSelectLang = (code, label) => {
+  const handleSelectLang = (code, name) => {
+    setLanguage(code);
     setSettings(prev => ({ ...prev, language: code }));
     setIsLangOpen(false);
-    addToast(`Language changed to ${label}`, 'info');
+    addToast(`Language switched to ${name}`, 'info');
   };
 
   return (
@@ -94,21 +91,28 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
             onClick={() => setIsLangOpen(!isLangOpen)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs"
           >
-            <Globe className="w-3.5 h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">{currentLangLabel}</span>
+            <Globe className="w-3.5 h-3.5 text-blue-500" />
+            <span className="font-semibold">{currentLangObj.flag} {currentLangObj.nativeName}</span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {isLangOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-fadeIn">
-              {languages.map(lang => (
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-fadeIn">
+              {supportedLanguages.map(lang => (
                 <button
                   key={lang.code}
-                  onClick={() => handleSelectLang(lang.code, lang.label)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+                  onClick={() => handleSelectLang(lang.code, lang.name)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl transition ${
+                    language === lang.code
+                      ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
                 >
-                  <span>{lang.label}</span>
-                  {settings.language === lang.code && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
+                  <div className="flex items-center gap-2">
+                    <span>{lang.flag}</span>
+                    <span>{lang.name} ({lang.nativeName})</span>
+                  </div>
+                  {language === lang.code && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                 </button>
               ))}
             </div>
@@ -128,105 +132,86 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
           )}
         </button>
 
-        {/* Notifications Bell */}
+        {/* Alerts Notification Bell */}
         <div className="relative">
           <button
             onClick={() => setIsAlertsOpen(!isAlertsOpen)}
-            aria-label="Notifications"
             className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs"
           >
             <Bell className="w-4 h-4" />
-            {alerts.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold">
-                {alerts.length}
-              </span>
-            )}
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
           </button>
 
           {isAlertsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-3 z-50 animate-fadeIn">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">Active Weather Alerts ({alerts.length})</span>
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50 animate-fadeIn">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{t('alerts')}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400">
+                    Live
+                  </span>
+                </h3>
                 <button
                   onClick={() => {
                     setCurrentPage('alerts');
                     setIsAlertsOpen(false);
                   }}
-                  className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                  className="text-xs text-blue-600 hover:underline font-semibold"
                 >
                   View all
                 </button>
               </div>
-              <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
-                {alerts.map(alert => (
-                  <div 
-                    key={alert.id} 
-                    onClick={() => {
-                      setCurrentPage('alerts');
-                      setIsAlertsOpen(false);
-                    }}
-                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition border border-slate-100 dark:border-slate-800"
-                  >
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{alert.title}</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">{alert.region}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+
+              <div className="space-y-2 mt-3 max-h-60 overflow-y-auto">
+                <div className="p-3 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl">
+                  <p className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" /> Heavy Rainfall Warning (IMD Orange Alert)
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Pune & Konkan: Expect heavy showers and localized waterlogging over next 24h.
+                  </p>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* User Initials / Photo Badge & Dropdown */}
+        {/* User Profile Avatar */}
         <div className="relative">
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            className="flex items-center gap-1.5 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.name}
-                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-xs"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                {user.avatarInitials || 'SP'}
-              </div>
-            )}
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
           </button>
 
           {isProfileMenuOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-fadeIn space-y-1">
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-fadeIn">
               <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
-                <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user?.name || 'User'}</p>
+                <p className="text-[10px] text-slate-400 truncate">{user?.email || 'user@weathergpt.com'}</p>
               </div>
               <button
                 onClick={() => {
                   setCurrentPage('settings');
                   setIsProfileMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition mt-1"
               >
-                <SettingsIcon className="w-3.5 h-3.5 text-slate-400" />
-                <span>Account Settings</span>
+                <SettingsIcon className="w-3.5 h-3.5" />
+                <span>{t('settings')}</span>
               </button>
-              <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
               <button
                 onClick={() => {
                   logout();
                   setIsProfileMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                <span>Log Out</span>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{t('logout')}</span>
               </button>
             </div>
           )}
@@ -235,3 +220,5 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
     </header>
   );
 };
+
+export default Header;

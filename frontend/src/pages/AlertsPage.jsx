@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useWeather } from '../context/WeatherContext';
+import { useLanguage } from '../context/LanguageContext';
+import { api } from '../services/api';
 import { 
   ShieldCheck, 
   AlertTriangle, 
@@ -16,7 +18,9 @@ import {
   Plus, 
   Minus,
   Settings as SettingsIcon,
-  Globe
+  Globe,
+  Radio,
+  Search
 } from 'lucide-react';
 import { AlertDetailsModal } from '../components/modals/AlertDetailsModal';
 
@@ -67,6 +71,7 @@ const SunArt = () => (
 
 export const AlertsPage = () => {
   const { setCurrentPage, addToast } = useWeather();
+  const { t, translateWarningLevel, translateHazard } = useLanguage();
 
   // Active Tab state: 'all' | 'active' | 'warnings' | 'watch' | 'information'
   const [activeTab, setActiveTab] = useState('all');
@@ -95,6 +100,29 @@ export const AlertsPage = () => {
     mumbai: true,
     nagpur: false
   });
+
+  // Official IMD Warning State
+  const [imdDistrictQuery, setImdDistrictQuery] = useState('Pune');
+  const [imdDistrictResult, setImdDistrictResult] = useState(null);
+  const [imdAllWarnings, setImdAllWarnings] = useState([]);
+  const [imdLoading, setImdLoading] = useState(false);
+
+  const fetchImdDistrict = async (districtName) => {
+    setImdLoading(true);
+    try {
+      const data = await api.imdDistrictWarning(districtName);
+      setImdDistrictResult(data);
+    } catch {
+      // Graceful fallback
+    } finally {
+      setImdLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchImdDistrict(imdDistrictQuery);
+    api.imdWarnings().then(setImdAllWarnings).catch(() => {});
+  }, []);
 
   // Master Alerts dataset matching mockup
   const activeAlertsList = [
@@ -321,6 +349,74 @@ export const AlertsPage = () => {
             LEFT COLUMN (Span 8): Active Alerts & Recent Alerts
             ===================================================================== */}
         <div className="lg:col-span-8 space-y-6">
+
+          {/* Official IMD Warning & District Nowcast Search Banner */}
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950/60 to-slate-900 border border-blue-500/30 shadow-lg space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                  <Radio className="w-4 h-4 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    <span>{t('imdOfficialWarning')}</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      Live IMD Nowcast
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">Official Ministry of Earth Sciences meteorological telemetry</p>
+                </div>
+              </div>
+
+              {/* District Search Input */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder={t('searchDistrict')}
+                  value={imdDistrictQuery}
+                  onChange={(e) => setImdDistrictQuery(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-blue-500 w-40 sm:w-48"
+                />
+                <button
+                  onClick={() => fetchImdDistrict(imdDistrictQuery)}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer"
+                >
+                  {t('search')}
+                </button>
+              </div>
+            </div>
+
+            {/* Live District Warning Result Card */}
+            {imdDistrictResult && (
+              <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                imdDistrictResult.warningLevel === 'Red'
+                  ? 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+                  : imdDistrictResult.warningLevel === 'Orange'
+                  ? 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+                  : imdDistrictResult.warningLevel === 'Yellow'
+                  ? 'bg-yellow-950/40 border-yellow-500/40 text-yellow-200'
+                  : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+              }`}>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm">
+                      {imdDistrictResult.district}, {imdDistrictResult.state}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-black/30 border border-current">
+                      {imdDistrictResult.warningLevel} Alert ({imdDistrictResult.action})
+                    </span>
+                  </div>
+                  <p className="text-xs mt-1 opacity-90">
+                    {imdDistrictResult.hazard} — {imdDistrictResult.advice}
+                  </p>
+                </div>
+
+                <span className="text-[11px] opacity-75 whitespace-nowrap shrink-0">
+                  Valid: {imdDistrictResult.validTo || 'Next 24h'}
+                </span>
+              </div>
+            )}
+          </div>
           
           {/* Active Alerts Subheading */}
           <div className="flex items-center justify-between">
