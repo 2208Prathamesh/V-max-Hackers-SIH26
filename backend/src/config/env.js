@@ -21,6 +21,10 @@ export const env = {
   // Official Meteorological & Satellite APIs
   IMD_API_KEY: process.env.IMD_API_KEY || '',
   MOSDAC_API_KEY: process.env.MOSDAC_API_KEY || '',
+  PASSWORD_RESET_TOKEN_TTL_MINUTES: parseInt(
+    process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES || '30',
+    10
+  ),
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins

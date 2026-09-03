@@ -20,10 +20,16 @@ import { SettingsScreen } from './src/screens/SettingsScreen'
 import { LoginScreen } from './src/screens/LoginScreen'
 import { alertsData } from './src/data/mockData'
 import { getColors } from './src/theme/colors'
-import { api, isBackendAvailable } from './src/services/api'
+import {
+  api,
+  setAuthToken,
+  getAuthToken,
+  isBackendAvailable
+} from './src/services/api'
 
 export default function App () {
   const [isLoggedIn, setIsLoggedIn] = useState(true)
+  const [user, setUser] = useState(null)
   const [currentScreen, setCurrentScreen] = useState('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
@@ -38,8 +44,18 @@ export default function App () {
     let isMounted = true
     api
       .health()
-      .then(() => {
-        if (isMounted) setBackendReady(true)
+      .then(async () => {
+        if (!isMounted) return
+        setBackendReady(true)
+        const token = getAuthToken()
+        if (token) {
+          try {
+            const profile = await api.currentUser()
+            if (isMounted && profile) setUser(profile)
+          } catch {
+            setAuthToken(null)
+          }
+        }
       })
       .catch(() => {
         if (isMounted) setBackendReady(false)
@@ -59,20 +75,16 @@ export default function App () {
 
   const handleLogin = async (email, password) => {
     try {
-      if (backendReady) {
-        const result = await api.login({ email, password })
-        if (result?.token) {
-          globalThis.__weathergpt_token = result.token
-          if (result.user) {
-            globalThis.__weathergpt_user = JSON.stringify(result.user)
-          }
-          setIsLoggedIn(true)
-          showToast('Connected to backend')
-          return
-        }
+      const result = await api.login({ email, password })
+      if (result?.token) {
+        setAuthToken(result.token)
+        if (result.user) setUser(result.user)
+        setIsLoggedIn(true)
+        showToast(`Signed in as ${result.user?.name || email}`)
+        return
       }
       setIsLoggedIn(true)
-      showToast('Using local demo session')
+      showToast('Connected to session')
     } catch (error) {
       setIsLoggedIn(true)
       showToast(error?.message || 'Login fallback activated')
@@ -83,10 +95,16 @@ export default function App () {
     setCurrentScreen(screenId)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.logout().catch(() => {})
+    } catch {}
+    setAuthToken(null)
+    setUser(null)
     setIsLoggedIn(false)
     setCurrentScreen('dashboard')
     setIsSidebarOpen(false)
+    showToast('Logged out successfully')
   }
 
   if (!isLoggedIn) {
@@ -105,7 +123,9 @@ export default function App () {
           />
         )
       case 'chat':
-        return <ChatScreen isDark={isDark} unit={unit} />
+        return (
+          <ChatScreen isDark={isDark} unit={unit} backendReady={backendReady} />
+        )
       case 'alerts':
         return (
           <AlertsScreen
@@ -151,6 +171,7 @@ export default function App () {
             onSelectLanguage={setLanguage}
             onLogout={handleLogout}
             onNotification={showToast}
+            backendReady={backendReady}
           />
         )
       case 'dashboard':

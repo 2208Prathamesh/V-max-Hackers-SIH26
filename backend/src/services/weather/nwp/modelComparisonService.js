@@ -20,6 +20,43 @@ async function fetchECMWF(latitude, longitude) {
   }
 }
 
+function extractEcmwfPoint(ecmwfData) {
+  if (!ecmwfData) {
+    return null;
+  }
+
+  if (ecmwfData.current) {
+    return {
+      temperatureC: ecmwfData.current.temperature ?? null,
+      feelsLikeC: ecmwfData.current.apparentTemperature ?? null,
+      humidity: ecmwfData.current.humidity ?? null,
+      windSpeedKmh: ecmwfData.current.windSpeed ?? null,
+      precipitationMm: ecmwfData.current.precipitation ?? 0,
+      pressureHpa: ecmwfData.current.pressure ?? null
+    };
+  }
+
+  if (ecmwfData.forecast) {
+    return {
+      temperatureC: ecmwfData.forecast.temperature ?? null,
+      feelsLikeC: ecmwfData.forecast.temperature ?? null,
+      humidity: ecmwfData.forecast.humidity ?? null,
+      windSpeedKmh: ecmwfData.forecast.windSpeed ?? null,
+      precipitationMm: 0,
+      pressureHpa: ecmwfData.forecast.pressure ?? null
+    };
+  }
+
+  return {
+    temperatureC: ecmwfData.temperature?.celsius ?? ecmwfData.temperature ?? null,
+    feelsLikeC: ecmwfData.feelsLike?.celsius ?? null,
+    humidity: ecmwfData.humidity?.relative ?? null,
+    windSpeedKmh: ecmwfData.wind?.speedKmh ?? null,
+    precipitationMm: ecmwfData.precipitation?.mm ?? 0,
+    pressureHpa: ecmwfData.pressure?.hpa ?? null
+  };
+}
+
 /**
  * Compare Multi-Model Numerical Weather Predictions (ECMWF vs NOAA GFS vs Open-Meteo)
  * @param {number} latitude
@@ -52,16 +89,18 @@ export async function compareNWPModels(latitude, longitude) {
     });
   }
 
-  if (ecmwfData) {
+  const ecmwfPoint = extractEcmwfPoint(ecmwfData);
+
+  if (ecmwfPoint) {
     models.push({
       modelName: 'ECMWF IFS (Integrated Forecast System)',
       provider: 'European Centre for Medium-Range Weather Forecasts',
-      temperatureC: ecmwfData.temperature?.celsius ?? ecmwfData.temperature ?? null,
-      feelsLikeC: ecmwfData.feelsLike?.celsius ?? null,
-      humidity: ecmwfData.humidity?.relative ?? null,
-      windSpeedKmh: ecmwfData.wind?.speedKmh ?? null,
-      precipitationMm: ecmwfData.precipitation?.mm ?? 0,
-      pressureHpa: ecmwfData.pressure?.hpa ?? null
+      temperatureC: ecmwfPoint.temperatureC,
+      feelsLikeC: ecmwfPoint.feelsLikeC,
+      humidity: ecmwfPoint.humidity,
+      windSpeedKmh: ecmwfPoint.windSpeedKmh,
+      precipitationMm: ecmwfPoint.precipitationMm,
+      pressureHpa: ecmwfPoint.pressureHpa
     });
   }
 

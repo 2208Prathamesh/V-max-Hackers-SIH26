@@ -1,6 +1,7 @@
 import Alert from '../models/Alert.js';
 import Notification from '../models/Notification.js';
 import { successResponse } from '../utils/response.js';
+import alertService from '../services/alertService.js';
 
 /**
  * Get all alerts
@@ -10,6 +11,7 @@ import { successResponse } from '../utils/response.js';
  */
 const getAlerts = async (req, res, next) => {
   try {
+    await alertService.syncOfficialAlerts().catch(() => null);
     const alerts = await Alert.find().sort({ createdAt: -1 });
     return successResponse(res, alerts, 'Alerts retrieved successfully', 200);
   } catch (error) {
@@ -25,6 +27,7 @@ const getAlerts = async (req, res, next) => {
  */
 const getAlert = async (req, res, next) => {
   try {
+    await alertService.syncOfficialAlerts().catch(() => null);
     const { id } = req.params;
     const alert = await Alert.findById(id);
 
@@ -49,6 +52,7 @@ const getAlert = async (req, res, next) => {
  */
 const getActiveAlerts = async (req, res, next) => {
   try {
+    await alertService.syncOfficialAlerts().catch(() => null);
     const now = new Date();
 
     const alerts = await Alert.find({

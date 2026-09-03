@@ -103,34 +103,82 @@ export const WeatherProvider = ({ children }) => {
     )
   }, [conversations])
 
+  // Hydrate auth status and user profile from backend on initial mount
+  useEffect(() => {
+    const token = localStorage.getItem('weathergpt_token')
+    if (token) {
+      api
+        .currentUser()
+        .then(userData => {
+          setIsAuthenticated(true)
+          if (userData) {
+            setUser(prev => ({
+              ...prev,
+              ...userData,
+              stats: {
+                ...defaultUserStats,
+                ...(prev.stats || {}),
+                ...(userData.stats || {})
+              }
+            }))
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('weathergpt_token')
+          localStorage.removeItem('weathergpt_user')
+          setIsAuthenticated(false)
+        })
+    }
+
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false)
+      addToast('Session expired. Please log in again.', 'warning')
+    }
+    window.addEventListener('weathergpt:unauthorized', handleUnauthorized)
+    return () =>
+      window.removeEventListener('weathergpt:unauthorized', handleUnauthorized)
+  }, [])
+
   useEffect(() => {
     if (!isAuthenticated) return
 
+    // 1. Fetch Conversations
     api
       .conversations()
       .then(serverConversations => {
-        setConversations(
-          serverConversations.map(conversation => ({
-            id: conversation._id,
-            title: conversation.title,
-            preview: conversation.title,
-            tag: conversation.category || 'General Query',
-            tagColor: 'blue',
-            icon: 'sun-cloud',
-            messages: []
-          }))
+        if (!Array.isArray(serverConversations)) return
+        setConversations(prevConvs =>
+          serverConversations.map(conversation => {
+            const existing = prevConvs.find(c => c.id === conversation._id)
+            return {
+              id: conversation._id,
+              title: conversation.title,
+              preview: conversation.title,
+              tag: conversation.category || 'General Query',
+              tagColor: 'blue',
+              icon: 'sun-cloud',
+              messages: existing?.messages?.length ? existing.messages : []
+            }
+          })
         )
       })
       .catch(() => addToast('Could not load your conversations', 'warning'))
 
+    // 2. Fetch Alerts
     api
       .alerts()
-      .then(setAlerts)
+      .then(result => {
+        if (Array.isArray(result) && result.length > 0) {
+          setAlerts(result)
+        }
+      })
       .catch(() => addToast('Could not load weather alerts', 'warning'))
 
+    // 3. Fetch Saved Locations
     api
       .locations()
       .then(serverLocations => {
+        if (!Array.isArray(serverLocations)) return
         const locations = serverLocations.map(location => {
           const fallback = savedLocations.find(
             previous =>
@@ -167,7 +215,66 @@ export const WeatherProvider = ({ children }) => {
         if (locations.length > 0) setSelectedMapLocation(locations[0])
       })
       .catch(() => addToast('Could not load saved locations', 'warning'))
+
+    // 4. Fetch User Settings
+    api
+      .getSettings()
+      .then(serverSettings => {
+        if (serverSettings) {
+          setSettings(prev => ({
+            ...prev,
+            units: {
+              temperature:
+                serverSettings.temperatureUnit === 'fahrenheit' ? 'F' : 'C',
+              windSpeed:
+                serverSettings.windUnit === 'mph'
+                  ? 'mph'
+                  : serverSettings.windUnit === 'm/s'
+                  ? 'ms'
+                  : serverSettings.windUnit === 'knots'
+                  ? 'knots'
+                  : 'kmh',
+              pressure: serverSettings.pressureUnit || 'hPa',
+              precipitation: serverSettings.precipitationUnit || 'mm'
+            },
+            appearance: serverSettings.appearance || 'system',
+            notifications: {
+              ...prev.notifications,
+              ...(serverSettings.notifications || {})
+            }
+          }))
+        }
+      })
+      .catch(() => {})
   }, [isAuthenticated])
+
+  // Load conversation messages when switching conversations
+  useEffect(() => {
+    if (!isAuthenticated || !activeConversationId) return
+    if (activeConversationId.startsWith('conv-')) return // local new unsaved chat
+
+    api
+      .messages(activeConversationId)
+      .then(msgList => {
+        if (!Array.isArray(msgList)) return
+        const formatted = msgList.map(message => ({
+          sender: message.sender === 'user' ? 'user' : 'assistant',
+          text: message.content,
+          time: new Date(message.createdAt).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        }))
+        setConversations(prev =>
+          prev.map(c =>
+            c.id === activeConversationId
+              ? { ...c, messages: formatted }
+              : c
+          )
+        )
+      })
+      .catch(() => {})
+  }, [isAuthenticated, activeConversationId])
 
   const refreshWeather = async (latitude = 18.5204, longitude = 73.8567) => {
     setWeatherLoading(true)
@@ -289,11 +396,11 @@ export const WeatherProvider = ({ children }) => {
     const newLoc = await api.addLocation({
       name: cityData.name || `${cityData.city} Location`,
       city: cityData.city,
-      state: cityData.region || cityData.state,
-      country: cityData.country,
-      latitude: cityData.lat ?? cityData.latitude,
-      longitude: cityData.lng ?? cityData.longitude,
-      isFavorite: cityData.isFavorite || false
+      state: cityData.region || cityData.state || '',
+      country: cityData.country || 'India',
+      latitude: Number(cityData.lat ?? cityData.latitude ?? 18.5204),
+      longitude: Number(cityData.lng ?? cityData.longitude ?? 73.8567),
+      isFavorite: Boolean(cityData.isFavorite)
     })
     const updatedLocation = {
       ...cityData,
@@ -332,23 +439,74 @@ export const WeatherProvider = ({ children }) => {
     )
   }
 
-  // Settings update helpers
-  const updateUnits = (key, value) => {
+  // Settings update helpers connected to backend
+  const updateUnits = async (key, value) => {
     setSettings(prev => ({
       ...prev,
       units: { ...prev.units, [key]: value }
     }))
     addToast(`Updated unit: ${key} to ${value}`, 'info')
+
+    if (!isAuthenticated) return
+    try {
+      const tempUnit =
+        key === 'temperature'
+          ? value === 'F'
+            ? 'fahrenheit'
+            : 'celsius'
+          : settings.units.temperature === 'F'
+          ? 'fahrenheit'
+          : 'celsius'
+      const windUnit =
+        key === 'windSpeed'
+          ? value === 'ms'
+            ? 'm/s'
+            : value
+          : settings.units.windSpeed === 'ms'
+          ? 'm/s'
+          : settings.units.windSpeed
+      const pressureUnit =
+        key === 'pressure' ? value : settings.units.pressure
+      const precipitationUnit =
+        key === 'precipitation' ? value : settings.units.precipitation
+
+      await api.updateSettings({
+        temperatureUnit: tempUnit,
+        windUnit,
+        pressureUnit,
+        precipitationUnit
+      })
+    } catch {
+      // Local state preserved
+    }
   }
 
-  const updateNotifications = (key, value) => {
+  const updateNotifications = async (key, value) => {
+    const updated = { ...settings.notifications, [key]: value }
     setSettings(prev => ({
       ...prev,
-      notifications: { ...prev.notifications, [key]: value }
+      notifications: updated
     }))
+
+    if (!isAuthenticated) return
+    try {
+      await api.updateSettings({ notifications: updated })
+    } catch {
+      // Local state preserved
+    }
   }
 
-  const updateProfile = updatedProfile => {
+  const updateProfile = async updatedProfile => {
+    if (isAuthenticated) {
+      try {
+        await api.updateProfile({
+          name: updatedProfile.name,
+          avatar: updatedProfile.avatar
+        })
+      } catch (err) {
+        addToast(err.message || 'Failed to sync profile with server', 'warning')
+      }
+    }
     setUser(prev => ({
       ...prev,
       ...updatedProfile
@@ -433,7 +591,14 @@ export const WeatherProvider = ({ children }) => {
     addToast('Started new chat session', 'info')
   }
 
-  const deleteConversation = id => {
+  const deleteConversation = async id => {
+    if (isAuthenticated && !id.startsWith('conv-')) {
+      try {
+        await api.deleteConversation(id)
+      } catch {
+        // Continue local cleanup
+      }
+    }
     setConversations(prev => prev.filter(c => c.id !== id))
 
     setUser(prev => ({

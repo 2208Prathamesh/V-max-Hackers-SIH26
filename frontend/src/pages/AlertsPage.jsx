@@ -66,7 +66,7 @@ const SunArt = () => (
 );
 
 export const AlertsPage = () => {
-  const { setCurrentPage, addToast } = useWeather();
+  const { alerts, setCurrentPage, addToast } = useWeather();
 
   // Active Tab state: 'all' | 'active' | 'warnings' | 'watch' | 'information'
   const [activeTab, setActiveTab] = useState('all');
@@ -96,8 +96,8 @@ export const AlertsPage = () => {
     nagpur: false
   });
 
-  // Master Alerts dataset matching mockup
-  const activeAlertsList = [
+  // Default alerts fallback
+  const defaultAlertsList = [
     {
       id: 'alert-1',
       title: 'Heavy Rainfall Warning',
@@ -147,6 +147,48 @@ export const AlertsPage = () => {
       art: 'sun'
     }
   ];
+
+  // Dynamic alerts mapping from backend alerts
+  const activeAlertsList = useMemo(() => {
+    if (!Array.isArray(alerts) || alerts.length === 0) {
+      return defaultAlertsList;
+    }
+    return alerts.map((alert, idx) => {
+      const sev = String(alert.severity || alert.warningLevel || 'Moderate').toLowerCase();
+      const isSevere = sev === 'red' || sev === 'extreme' || sev === 'severe';
+      const isModerate = sev === 'orange' || sev === 'moderate';
+      const isWatch = sev === 'yellow' || sev === 'watch';
+      const severityLabel = isSevere ? 'Severe' : isModerate ? 'Moderate' : isWatch ? 'Watch' : 'Information';
+      const severityLevel = isSevere ? 'high' : isModerate ? 'medium' : 'low';
+      const type = alert.type || (isSevere || isModerate ? 'warning' : isWatch ? 'watch' : 'information');
+      const art = (alert.title || alert.hazard || '').toLowerCase().includes('rain')
+        ? 'rain'
+        : (alert.title || alert.hazard || '').toLowerCase().includes('wind')
+        ? 'wind'
+        : (alert.title || alert.hazard || '').toLowerCase().includes('heat')
+        ? 'sun'
+        : idx % 2 === 0 ? 'rain' : 'wind';
+
+      return {
+        id: alert._id || alert.id || `alert-${idx}`,
+        title: alert.title || alert.hazard || 'Weather Advisory',
+        location: alert.location || alert.district || (alert.areas ? alert.areas.join(', ') : 'Maharashtra, India'),
+        region: alert.region || alert.state || 'Maharashtra',
+        type,
+        severity: severityLabel,
+        severityLevel,
+        time: alert.time || (alert.startTime ? new Date(alert.startTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Live'),
+        effectiveTime: alert.startTime ? new Date(alert.startTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Immediate',
+        untilTime: alert.endTime ? new Date(alert.endTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Until further notice',
+        probability: alert.probability ? `${alert.probability}%` : '75%',
+        source: alert.source || alert.issuedBy || 'IMD',
+        description: alert.description || alert.message || alert.advice || 'Severe weather alert in effect for this region.',
+        art,
+        action: alert.action,
+        colorDetails: alert.colorDetails
+      };
+    });
+  }, [alerts]);
 
   const recentAlertsList = [
     {

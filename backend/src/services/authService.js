@@ -1,6 +1,8 @@
 import User from '../models/User.js'
 import generateToken from '../utils/generateToken.js'
 import { hashPassword, comparePassword } from '../utils/password.js'
+import crypto from 'node:crypto'
+import env from '../config/env.js'
 
 /**
  * Register user
@@ -100,28 +102,58 @@ const logout = async userId => {
 const forgotPassword = async email => {
   const user = await User.findOne({
     email: email.toLowerCase()
-  })
+  }).select('+passwordResetTokenHash +passwordResetExpiresAt')
 
   if (!user) {
     // Do not reveal whether an email exists.
     return
   }
 
-  // Later:
-  // 1. Generate reset token
-  // 2. Store hashed token
-  // 3. Set expiration
-  // 4. Send email
+  const resetToken = crypto.randomBytes(32).toString('hex')
+  const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
 
-  return true
+  user.passwordResetTokenHash = tokenHash
+  user.passwordResetExpiresAt = new Date(
+    Date.now() + env.PASSWORD_RESET_TOKEN_TTL_MINUTES * 60 * 1000
+  )
+  await user.save()
+
+  return {
+    resetToken,
+    expiresAt: user.passwordResetExpiresAt
+  }
 }
 
 /**
  * Reset password
  */
 const resetPassword = async (token, password) => {
-  // Implement token verification here.
-  // Then hash and update the password.
+  if (!token || !String(token).trim()) {
+    const error = new Error('Reset token is required')
+    error.statusCode = 400
+    throw error
+  }
+
+  const tokenHash = crypto
+    .createHash('sha256')
+    .update(String(token).trim())
+    .digest('hex')
+
+  const user = await User.findOne({
+    passwordResetTokenHash: tokenHash,
+    passwordResetExpiresAt: { $gt: new Date() }
+  }).select('+passwordHash +passwordResetTokenHash +passwordResetExpiresAt')
+
+  if (!user) {
+    const error = new Error('Reset token is invalid or has expired')
+    error.statusCode = 400
+    throw error
+  }
+
+  user.passwordHash = await hashPassword(password)
+  user.passwordResetTokenHash = null
+  user.passwordResetExpiresAt = null
+  await user.save()
 
   return true
 }

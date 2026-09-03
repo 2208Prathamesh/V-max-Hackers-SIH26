@@ -9,8 +9,8 @@ test('Integration: IMD Official Weather Warnings Endpoints', async (t) => {
     await context.cleanup();
   });
 
-  await t.test('GET /api/imd/warnings should return list of active warnings across India', async () => {
-    const res = await fetch(`${context.baseUrl}/api/imd/warnings`);
+  await t.test('GET /api/weather/imd/warnings should return list of active warnings across India', async () => {
+    const res = await fetch(`${context.baseUrl}/api/weather/imd/warnings`);
     assert.equal(res.status, 200);
 
     const body = await res.json();
@@ -19,8 +19,8 @@ test('Integration: IMD Official Weather Warnings Endpoints', async (t) => {
     assert.ok(body.data.length > 0);
   });
 
-  await t.test('GET /api/imd/warnings/district?name=Pune should return district alert status', async () => {
-    const res = await fetch(`${context.baseUrl}/api/imd/warnings/district?name=Pune`);
+  await t.test('GET /api/weather/imd/warnings/district?name=Pune should return district alert status', async () => {
+    const res = await fetch(`${context.baseUrl}/api/weather/imd/warnings/district?name=Pune`);
     assert.equal(res.status, 200);
 
     const body = await res.json();
@@ -30,8 +30,8 @@ test('Integration: IMD Official Weather Warnings Endpoints', async (t) => {
     assert.ok(body.data.colorDetails);
   });
 
-  await t.test('GET /api/imd/bulletin should return meteorological bulletin summary', async () => {
-    const res = await fetch(`${context.baseUrl}/api/imd/bulletin`);
+  await t.test('GET /api/weather/imd/bulletin should return meteorological bulletin summary', async () => {
+    const res = await fetch(`${context.baseUrl}/api/weather/imd/bulletin`);
     assert.equal(res.status, 200);
 
     const body = await res.json();

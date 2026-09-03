@@ -68,6 +68,43 @@ const alertSchema = new mongoose.Schema(
       trim: true
     },
 
+    sourceType: {
+      type: String,
+      default: 'provider',
+      trim: true
+    },
+
+    externalId: {
+      type: String,
+      default: null,
+      index: true
+    },
+
+    isOfficial: {
+      type: Boolean,
+      default: false
+    },
+
+    affectedAreas: {
+      type: [String],
+      default: []
+    },
+
+    rawSourceUrl: {
+      type: String,
+      default: null
+    },
+
+    issuedAt: {
+      type: Date,
+      default: null
+    },
+
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+
     status: {
       type: String,
       enum: ['active', 'expired', 'cancelled'],

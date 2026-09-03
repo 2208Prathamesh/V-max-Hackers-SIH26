@@ -216,6 +216,15 @@ export const DashboardPage = () => {
         })
       : 'Weather data unavailable'
 
+  const rawVisibility =
+    currentConditions?.visibility ?? currentHour?.visibility ?? 10000
+  const formattedVisibility =
+    rawVisibility != null
+      ? rawVisibility > 100
+        ? `${Math.round(rawVisibility / 1000)} km`
+        : `${Math.round(rawVisibility)} km`
+      : '10 km'
+
   const formattedCurrentTemperature = formatTemp(currentConditions?.temperature)
   const suggestionChips = [
     'Will it rain tomorrow?',
@@ -305,13 +314,16 @@ export const DashboardPage = () => {
             ? 'Favorite location'
             : 'Saved location',
         temp:
-          index === 0 && currentHour
+          location.tempC != null
+            ? formatTemp(location.tempC)
+            : index === 0 && currentHour
             ? formatTemp(currentHour.temperature)
             : '--',
-        icon:
-          index === 0
-            ? weatherIcon(currentHour?.precipitationProbability ?? 0)
-            : 'sun-cloud',
+        icon: location.condition?.toLowerCase().includes('rain')
+          ? 'rain'
+          : index === 0
+          ? weatherIcon(currentHour?.precipitationProbability ?? 0)
+          : 'sun-cloud',
         rawCity: location.city
       }))
     : []
@@ -499,7 +511,7 @@ export const DashboardPage = () => {
                 Visibility
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
-                --
+                {formattedVisibility}
               </span>
             </div>
           </div>

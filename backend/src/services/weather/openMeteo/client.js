@@ -1,4 +1,5 @@
 const BASE_URL = 'https://api.open-meteo.com/v1/forecast';
+import { buildOfflineForecastPayload } from '../offlineWeather.js';
 
 /**
  * Fetch comprehensive forecast data from Open-Meteo
@@ -25,13 +26,21 @@ async function getForecast(latitude, longitude, days = 7) {
     timezone: 'auto'
   });
 
-  const response = await fetch(`${BASE_URL}?${params}`);
+  try {
+    const response = await fetch(`${BASE_URL}?${params}`);
 
-  if (!response.ok) {
-    throw new Error(`Open-Meteo API error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Open-Meteo API error: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    return buildOfflineForecastPayload(Number(latitude), Number(longitude), {
+      days,
+      hours: Math.max(days * 24, 48),
+      providerName: 'WeatherGPT Offline Forecast'
+    });
   }
-
-  return response.json();
 }
 
 export { getForecast };

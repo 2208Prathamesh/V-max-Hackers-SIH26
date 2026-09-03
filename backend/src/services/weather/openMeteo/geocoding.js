@@ -1,3 +1,5 @@
+import { findCatalogLocationByName } from '../locationCatalog.js';
+
 const BASE_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
 /**
@@ -23,13 +25,48 @@ async function searchLocation(name, countryCode) {
   }
 
   const params = new URLSearchParams(queryParams);
-  const response = await fetch(`${BASE_URL}?${params}`);
+  try {
+    const response = await fetch(`${BASE_URL}?${params}`);
 
-  if (!response.ok) {
-    throw new Error(`Geocoding API error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Geocoding API error: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (payload?.results?.length) {
+      return payload;
+    }
+  } catch (error) {
+    const fallbackLocation = findCatalogLocationByName(name, countryCode);
+    if (fallbackLocation) {
+      return {
+        results: [
+          {
+            ...fallbackLocation,
+            source: 'WeatherGPT Offline Location Catalog',
+            isFallback: true
+          }
+        ]
+      };
+    }
+
+    return { results: [] };
   }
 
-  return response.json();
+  const fallbackLocation = findCatalogLocationByName(name, countryCode);
+  if (fallbackLocation) {
+    return {
+      results: [
+        {
+          ...fallbackLocation,
+          source: 'WeatherGPT Offline Location Catalog',
+          isFallback: true
+        }
+      ]
+    };
+  }
+
+  return { results: [] };
 }
 
 export { searchLocation };
