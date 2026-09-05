@@ -9,7 +9,9 @@ const TABS = ['All Alerts', 'Active (3)', 'Warnings', 'Watch']
 export function AlertsScreen ({
   isDark = false,
   onNotification,
-  backendReady = false
+  backendReady = false,
+  onNavigate,
+  onSelectAlert
 }) {
   const c = getColors(isDark)
   const [activeTab, setActiveTab] = useState('All Alerts')
@@ -148,10 +150,12 @@ export function AlertsScreen ({
                 </Text>
               </Text>
               <Pressable
-                onPress={() =>
-                  onNotification &&
-                  onNotification(`Advisory details for ${alert.title}`)
-                }
+                onPress={() => {
+                  if (onSelectAlert) onSelectAlert(alert)
+                  if (onNavigate) onNavigate('alert-details')
+                  else if (onNotification)
+                    onNotification(`Advisory details for ${alert.title}`)
+                }}
                 style={[
                   styles.viewDetailsBtn,
                   { borderColor: alert.color || '#F59E0B' }

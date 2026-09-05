@@ -13,6 +13,8 @@ const NAV_ITEMS = [
   { id: 'forecast', label: 'Forecast', icon: '📅' },
   { id: 'history', label: 'History', icon: '🕒' },
   { id: 'saved-locations', label: 'Saved Locations', icon: '⭐' },
+  { id: 'air-quality', label: 'Air Quality', icon: '💨' },
+  { id: 'compare', label: 'Compare Cities', icon: '⇄' },
   { id: 'settings', label: 'Settings', icon: '⚙️' }
 ];
 
@@ -162,7 +164,7 @@ export function Sidebar({
                 Unlock advanced maps, ad-free experience and exclusive alerts.
               </Text>
               <Pressable
-                onPress={() => handleItemPress('settings')}
+                onPress={() => handleItemPress('premium')}
                 style={({ pressed }) => [
                   styles.premiumButton,
                   pressed && styles.pressed
@@ -179,7 +181,9 @@ export function Sidebar({
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.currentLocLabel, { color: c.muted }]}>Current Location</Text>
                   <Text style={[styles.currentLocCity, { color: c.ink }]}>Pune, Maharashtra</Text>
-                  <Text style={[styles.changeLocLink, { color: c.blue }]}>Change Location</Text>
+                  <Pressable onPress={() => handleItemPress('add-location')}>
+                    <Text style={[styles.changeLocLink, { color: c.blue }]}>Change Location</Text>
+                  </Pressable>
                 </View>
               </View>
             </View>
@@ -198,7 +202,10 @@ export function Sidebar({
 
           {/* User Profile Footer */}
           <View style={[styles.drawerFooter, { borderTopColor: c.borderLight, backgroundColor: c.cardAlt }]}>
-            <View style={styles.userInfo}>
+            <Pressable
+              onPress={() => handleItemPress('profile')}
+              style={styles.userInfo}
+            >
               <View style={styles.footerAvatar}>
                 <Text style={styles.footerAvatarText}>SP</Text>
               </View>
@@ -206,7 +213,7 @@ export function Sidebar({
                 <Text style={[styles.userName, { color: c.ink }]}>Sid Patil</Text>
                 <Text style={[styles.userEmail, { color: c.muted }]}>sidpatil@gmail.com</Text>
               </View>
-            </View>
+            </Pressable>
             <Pressable
               onPress={onLogout}
               style={({ pressed }) => [

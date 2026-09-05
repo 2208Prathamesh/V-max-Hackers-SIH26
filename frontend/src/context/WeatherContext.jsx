@@ -515,59 +515,67 @@ export const WeatherProvider = ({ children }) => {
   }
 
   const sendChatMessage = async text => {
-    if (!text.trim()) return
+  if (!text.trim()) return
 
-    let convId = activeConversationId
-    if (!conversations.some(conversation => conversation.id === convId)) {
-      const conversation = await api.createConversation({
-        title: text.slice(0, 32),
-        category: 'general'
-      })
-      convId = conversation._id
-      setActiveConversationId(convId)
-      setConversations(prev => [
-        {
-          id: convId,
-          title: conversation.title,
-          preview: text,
-          tag: 'General Query',
-          tagColor: 'blue',
-          icon: 'sun-cloud',
-          messages: []
-        },
-        ...prev
-      ])
-    }
+  let convId = activeConversationId
 
-    const result = await api.sendMessage({
-      conversationId: convId,
-      content: text.trim()
-    })
-    const toMessage = message => ({
-      sender: message.sender === 'user' ? 'user' : 'assistant',
-      text: message.content,
-      time: new Date(message.createdAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+  // Create the conversation in MongoDB if this is a new/local chat
+  if (!convId || convId.startsWith('conv-')) {
+    const conversation = await api.createConversation({
+      title: text.slice(0, 32),
+      category: 'general'
     })
 
+    convId = conversation._id
+
+    // Replace the temporary local conversation with the real MongoDB conversation
     setConversations(prev =>
-      prev.map(conversation =>
-        conversation.id === convId
+      prev.map(c =>
+        c.id === activeConversationId
           ? {
-              ...conversation,
-              messages: [
-                ...conversation.messages,
-                toMessage(result.userMessage),
-                toMessage(result.aiMessage)
-              ],
-              preview: text
+              ...c,
+              id: convId,
+              title: conversation.title,
+              preview: text,
+              messages: []
             }
-          : conversation
+          : c
       )
     )
+
+    setActiveConversationId(convId)
   }
+
+  const result = await api.sendMessage({
+    conversationId: convId,
+    content: text.trim()
+  })
+
+  const toMessage = message => ({
+    sender: message.sender === 'user' ? 'user' : 'assistant',
+    text: message.content,
+    time: new Date(message.createdAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  })
+
+  setConversations(prev =>
+    prev.map(conversation =>
+      conversation.id === convId
+        ? {
+            ...conversation,
+            messages: [
+              ...conversation.messages,
+              toMessage(result.userMessage),
+              toMessage(result.aiMessage)
+            ],
+            preview: text
+          }
+        : conversation
+    )
+  )
+}
 
   const createNewChat = () => {
     const newId = `conv-${Date.now()}`

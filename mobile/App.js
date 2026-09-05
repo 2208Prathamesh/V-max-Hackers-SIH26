@@ -18,6 +18,12 @@ import { HistoryScreen } from './src/screens/HistoryScreen'
 import { SavedLocationsScreen } from './src/screens/SavedLocationsScreen'
 import { SettingsScreen } from './src/screens/SettingsScreen'
 import { LoginScreen } from './src/screens/LoginScreen'
+import { AirQualityScreen } from './src/screens/AirQualityScreen'
+import { CompareLocationsScreen } from './src/screens/CompareLocationsScreen'
+import { AddLocationScreen } from './src/screens/AddLocationScreen'
+import { AlertDetailsScreen } from './src/screens/AlertDetailsScreen'
+import { PremiumScreen } from './src/screens/PremiumScreen'
+import { ProfileScreen } from './src/screens/ProfileScreen'
 import { alertsData } from './src/data/mockData'
 import { getColors } from './src/theme/colors'
 import {
@@ -35,16 +41,19 @@ export default function App () {
   const [isDark, setIsDark] = useState(false)
   const [unit, setUnit] = useState('C')
   const [language, setLanguage] = useState('en')
+  const [selectedAlert, setSelectedAlert] = useState(null)
   const [toastMessage, setToastMessage] = useState('')
   const [backendReady, setBackendReady] = useState(false)
 
   const c = getColors(isDark)
 
+  // Keep mobile connected to backend with automatic heartbeat/polling
   useEffect(() => {
     let isMounted = true
-    api
-      .health()
-      .then(async () => {
+
+    const checkBackend = async () => {
+      try {
+        await api.health()
         if (!isMounted) return
         setBackendReady(true)
         const token = getAuthToken()
@@ -56,13 +65,17 @@ export default function App () {
             setAuthToken(null)
           }
         }
-      })
-      .catch(() => {
+      } catch {
         if (isMounted) setBackendReady(false)
-      })
+      }
+    }
+
+    checkBackend()
+    const interval = setInterval(checkBackend, 5000)
 
     return () => {
       isMounted = false
+      clearInterval(interval)
     }
   }, [])
 
@@ -91,6 +104,24 @@ export default function App () {
     }
   }
 
+  const handleRegister = async (name, email, password) => {
+    try {
+      const result = await api.register({ name, email, password })
+      if (result?.token) {
+        setAuthToken(result.token)
+        if (result.user) setUser(result.user)
+        setIsLoggedIn(true)
+        showToast(`Account created for ${result.user?.name || name}`)
+        return
+      }
+      setIsLoggedIn(true)
+      showToast('Account created successfully')
+    } catch (error) {
+      setIsLoggedIn(true)
+      showToast(error?.message || 'Created local demo account')
+    }
+  }
+
   const handleNavigate = screenId => {
     setCurrentScreen(screenId)
   }
@@ -108,7 +139,7 @@ export default function App () {
   }
 
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />
+    return <LoginScreen onLogin={handleLogin} onRegister={handleRegister} />
   }
 
   const renderScreen = () => {
@@ -124,7 +155,66 @@ export default function App () {
         )
       case 'chat':
         return (
-          <ChatScreen isDark={isDark} unit={unit} backendReady={backendReady} />
+          <ChatScreen
+            isDark={isDark}
+            unit={unit}
+            backendReady={backendReady}
+            onNotification={showToast}
+          />
+        )
+      case 'air-quality':
+        return (
+          <AirQualityScreen
+            isDark={isDark}
+            onNavigate={handleNavigate}
+            onNotification={showToast}
+          />
+        )
+      case 'compare':
+        return (
+          <CompareLocationsScreen
+            isDark={isDark}
+            unit={unit}
+            onNavigate={handleNavigate}
+          />
+        )
+      case 'add-location':
+        return (
+          <AddLocationScreen
+            isDark={isDark}
+            unit={unit}
+            onNavigate={handleNavigate}
+            onNotification={showToast}
+            backendReady={backendReady}
+          />
+        )
+      case 'alert-details':
+        return (
+          <AlertDetailsScreen
+            isDark={isDark}
+            alertData={selectedAlert}
+            onNavigate={handleNavigate}
+            onNotification={showToast}
+          />
+        )
+      case 'premium':
+        return (
+          <PremiumScreen
+            isDark={isDark}
+            onNavigate={handleNavigate}
+            onNotification={showToast}
+          />
+        )
+      case 'profile':
+        return (
+          <ProfileScreen
+            isDark={isDark}
+            user={user}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+            onNotification={showToast}
+            backendReady={backendReady}
+          />
         )
       case 'alerts':
         return (
@@ -132,6 +222,8 @@ export default function App () {
             isDark={isDark}
             onNotification={showToast}
             backendReady={backendReady}
+            onNavigate={handleNavigate}
+            onSelectAlert={setSelectedAlert}
           />
         )
       case 'forecast':
@@ -140,6 +232,7 @@ export default function App () {
             isDark={isDark}
             unit={unit}
             backendReady={backendReady}
+            onNavigate={handleNavigate}
           />
         )
       case 'history':

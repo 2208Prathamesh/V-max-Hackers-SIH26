@@ -104,7 +104,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(details)
     }),
-  deleteConversation: id => request(`/conversations/${id}`, { method: 'DELETE' }),
+  deleteConversation: id =>
+    request(`/conversations/${id}`, { method: 'DELETE' }),
   messages: conversationId => request(`/messages/${conversationId}`),
   sendMessage: details =>
     request('/messages', {

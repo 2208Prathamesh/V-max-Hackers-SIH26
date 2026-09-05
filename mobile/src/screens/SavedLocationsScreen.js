@@ -134,7 +134,7 @@ export function SavedLocationsScreen ({
 
           <Pressable
             onPress={() => {
-              if (onNotification) onNotification('Add location dialog opened')
+              if (onNavigate) onNavigate('add-location')
             }}
             style={[styles.addLocBtn, { backgroundColor: c.blue }]}
           >

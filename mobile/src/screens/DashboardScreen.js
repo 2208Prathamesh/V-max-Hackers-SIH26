@@ -514,7 +514,7 @@ export function DashboardScreen ({
               </Pressable>
 
               <Pressable
-                onPress={() => onNavigate('weather-map')}
+                onPress={() => onNavigate('air-quality')}
                 style={[
                   styles.quickCard,
                   { backgroundColor: isDark ? '#2E1A47' : '#F5F3FF' }
@@ -539,11 +539,18 @@ export function DashboardScreen ({
               <Text style={[styles.cardTitle, { color: c.ink }]}>
                 Saved Locations
               </Text>
-              <Pressable onPress={() => onNavigate('saved-locations')}>
-                <Text style={[styles.cardAction, { color: c.blue }]}>
-                  View All
-                </Text>
-              </Pressable>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                <Pressable onPress={() => onNavigate('add-location')}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: c.blue }}>
+                    + Add City
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => onNavigate('saved-locations')}>
+                  <Text style={[styles.cardAction, { color: c.blue }]}>
+                    View All
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
             <View style={styles.savedLocationsList}>
