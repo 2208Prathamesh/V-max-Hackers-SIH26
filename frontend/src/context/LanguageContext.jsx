@@ -1,12 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧', speechCode: 'en-IN' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', speechCode: 'hi-IN' },
   { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳', speechCode: 'mr-IN' },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳', speechCode: 'bn-IN' },
-  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳', speechCode: 'ta-IN' },
-  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳', speechCode: 'te-IN' }
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', speechCode: 'hi-IN' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧', speechCode: 'en-IN' }
 ];
 
 export const TRANSLATIONS = {
@@ -23,6 +20,19 @@ export const TRANSLATIONS = {
     settings: 'Settings',
     logout: 'Logout',
 
+    // Greetings
+    goodMorning: 'Good morning',
+    goodAfternoon: 'Good afternoon',
+    goodEvening: 'Good evening',
+    weatherOverview: "Here's your weather overview",
+    askAnything: 'Ask WeatherGPT anything...',
+
+    // Suggestion Chips
+    chipRain: 'Will it rain tomorrow?',
+    chipMumbai: 'Weather in Mumbai',
+    chipCyclone: 'Cyclone update',
+    chipAqi: 'Air quality today',
+
     // Titles & Subtitles
     dashboardTitle: 'Weather Intelligence Dashboard',
     dashboardSubtitle: 'Real-time AI weather intelligence, radar telemetry & environmental metrics',
@@ -31,7 +41,7 @@ export const TRANSLATIONS = {
     advisoryTitle: 'Agricultural & Disaster Decision Support',
     advisorySubtitle: 'Crop phenology guide, root-zone soil moisture & emergency disaster action plan',
     alertsTitle: 'Official IMD Meteorological Warnings',
-    alertsSubtitle: 'Real-time severe weather warnings, district-level radar alerts & bulletins',
+    alertsSubtitle: 'Stay informed and stay safe. Real-time weather alerts and warnings.',
     forecastTitle: 'NWP Multi-Model Weather Forecast',
     forecastSubtitle: 'High-resolution extended forecast comparing ECMWF IFS and NOAA GFS models',
     mapTitle: 'Interactive GIS Weather & Radar Map',
@@ -43,11 +53,12 @@ export const TRANSLATIONS = {
     settingsTitle: 'System Settings & Preferences',
     settingsSubtitle: 'Customize units, language, appearance, and notification thresholds',
 
-    // Metrics
+    // Metrics & Tags
     currentWeather: 'Current Weather',
     overview: 'Live Overview',
     temperature: 'Temperature',
     humidity: 'Humidity',
+    wind: 'Wind',
     windSpeed: 'Wind Speed',
     pressure: 'Atmospheric Pressure',
     precipitation: 'Precipitation',
@@ -55,14 +66,24 @@ export const TRANSLATIONS = {
     uvIndex: 'UV Index',
     visibility: 'Visibility',
     cloudCover: 'Cloud Cover',
-    feelsLike: 'Feels Like',
+    feelsLike: 'Feels like',
     dewPoint: 'Dew Point',
     sunrise: 'Sunrise',
     sunset: 'Sunset',
     hourlyForecast: 'Hourly Forecast (Next 24 Hours)',
     sevenDayForecast: '7-Day Extended Forecast',
+    todaysForecast: "Today's Forecast",
+    viewFullForecast: 'View Full Forecast',
     radarSummary: 'Live Weather Radar',
     satelliteView: 'INSAT-3D Satellite Imagery',
+    now: 'Now',
+    currentLocation: 'Current location',
+    favoriteLocation: 'Favorite location',
+    savedLocation: 'Saved location',
+    rainNearby: 'Rain nearby',
+    humidConditions: 'Humid conditions',
+    currentConditions: 'Current conditions',
+    weatherUnavailable: 'Weather data unavailable',
 
     // Conditions
     clearSky: 'Clear Sky',
@@ -76,11 +97,37 @@ export const TRANSLATIONS = {
     fog: 'Dense Fog',
     mist: 'Mist & Haze',
 
-    // IMD Warning Levels
+    // IMD Warning Levels & Alerts Page
+    allAlerts: 'All Alerts',
+    active: 'Active',
+    warnings: 'Warnings',
+    watch: 'Watch',
+    information: 'Information',
+    liveNowcast: 'Live IMD Nowcast',
+    imdMinistrySubtitle: 'Official Ministry of Earth Sciences meteorological telemetry',
+    viewAllActive: 'View all active',
+    recentAlerts: 'Recent Alerts',
+    severity: 'Severity',
+    severe: 'Severe',
+    moderate: 'Moderate',
+    info: 'Info',
+    probability: 'Probability',
+    source: 'Source',
+    until: 'Until',
+    viewDetails: 'View Details',
+    alertFilters: 'Alert Filters',
+    location: 'Location',
+    alertType: 'Alert Type',
+    allTypes: 'All Types',
+    clearFilters: 'Clear Filters',
+    alertMap: 'Alert Map',
+    viewFullMap: 'View full map',
     redAlert: 'Red Alert (Take Action Immediately)',
     orangeAlert: 'Orange Alert (Be Prepared)',
     yellowAlert: 'Yellow Alert (Be Updated)',
     greenAlert: 'Green Alert (No Warning)',
+    activeAlerts: 'Active Alerts',
+    noActiveAlerts: 'No active weather alerts at this time.',
     imdOfficialWarning: 'IMD Official District Warning',
     searchDistrict: 'Search Indian district or city for live alerts...',
     activeWarningsCount: 'Active Severe Warnings',
@@ -104,6 +151,16 @@ export const TRANSLATIONS = {
     minTemp: 'Min Temp',
     ensembleSpread: 'Inter-Model Ensemble Spread',
 
+    // Quick Actions & Widgets
+    quickActions: 'Quick Actions',
+    weatherForecast: 'Weather Forecast',
+    recentConversations: 'Recent Conversations',
+    didYouKnow: 'Did you know?',
+    treesEcoTip: 'Trees can reduce the surrounding air temperature by up to 5°C. Plant more trees and stay cool!',
+    goPremium: 'Go Premium',
+    premiumDesc: 'Unlock advanced alerts, longer forecasts and custom notifications.',
+    upgradeNow: 'Upgrade Now',
+
     // Agro & Safety
     cropAdvisory: 'Agro-Meteorological Crop Advisory',
     cropSelector: 'Select Target Crop Profile',
@@ -126,13 +183,304 @@ export const TRANSLATIONS = {
     voiceError: 'Microphone access is unavailable or denied in your browser.',
     newChat: 'New Chat',
 
+    // Authentication & Login
+    welcomeBack: 'Welcome back',
+    signInSubtitle: 'Sign in to continue to WeatherGPT intelligence',
+    createAccount: 'Create your account',
+    signUpSubtitle: 'Join WeatherGPT for precision meteorological AI and disaster advisories',
+    emailAddress: 'Email address',
+    password: 'Password',
+    fullName: 'Full Name',
+    rememberMe: 'Remember me',
+    forgotPassword: 'Forgot password?',
+    signIn: 'Sign In',
+    signUp: 'Create Account',
+    orContinueWith: 'Or continue with',
+    noAccount: "Don't have an account?",
+    haveAccount: 'Already have an account?',
+    preferredLanguage: 'Platform Language',
+
+    // Settings
+    general: 'General',
+    unitsAndFormat: 'Units & Format',
+    notifications: 'Notifications',
+    weatherPreferences: 'Weather Preferences',
+    privacyAndData: 'Privacy & Data',
+    appearance: 'Appearance',
+    language: 'Language',
+    connectedAccounts: 'Connected Accounts',
+    about: 'About',
+    languageSettingsTitle: 'Display & AI Language',
+    languageSettingsDesc: 'Choose your preferred language for the dashboard, alerts, AI chat, and voice audio.',
+
     // Actions & Tools
     search: 'Search city or district...',
     refresh: 'Refresh Live Data',
     viewAll: 'View All',
     saveLocation: 'Save Location',
     removeLocation: 'Remove',
-    favorite: 'Favorite'
+    favorite: 'Favorite',
+
+    // Forecast Page
+    changeLocation: 'Change Location',
+    loadingForecast: 'Loading forecast...',
+    liveForecastSource: 'Live forecast from WeatherGPT',
+    rainLikely: 'Rain likely',
+    detailedForecast: 'Detailed Forecast',
+    summary: 'Summary',
+    forecastSummaryText: 'Warm with partly cloudy skies. Light winds throughout the day.',
+    maxTemperature: 'Max Temperature',
+    minTemperature: 'Min Temperature',
+    rainfall: 'Rainfall',
+    nwpConsensusDesc: 'Inter-model ensemble spread across ECMWF IFS, NOAA GFS & Open-Meteo',
+    confidence: 'Confidence',
+    modelAgreementNote: 'Model Agreement Note',
+    planYourDayBetter: 'Plan Your Day Better',
+    planYourDayDesc: 'Get detailed forecasts, radar maps, and severe weather alerts with WeatherGPT.',
+    selectLocation: 'Select Location',
+    searchLocationPlaceholder: 'Search location...',
+    viewAllLocations: 'View all locations',
+    precipitationSummary: 'Precipitation Summary',
+    next7Days: 'Next 7 Days',
+    totalRainfall: 'Total Rainfall',
+    high: 'High',
+    uvProtectionAdvice: 'Wear sunglasses and use sun protection.',
+    aqiGood: 'Good',
+    aqiGoodDesc: 'Air quality is satisfactory and poses little or no risk.',
+    sunriseSunset: 'Sunrise & Sunset',
+    compareLocations: 'Compare Locations',
+    compareLocationsDesc: 'Compare weather between different locations.',
+    addLocationCompare: 'Add Location to Compare',
+    viewFull7Day: 'View full 7-day forecast',
+
+    // Advisory Page
+    decisionSupport: 'Agricultural & Disaster Decision Support',
+    targetZone: 'Target Zone',
+    moisture: 'moisture',
+    growthStages: 'Phenological Crop Growth Stages',
+    stage: 'Stage',
+    volumetricRootZone: 'Volumetric root zone (0–7 cm)',
+    faoReferenceCropLoss: 'FAO-56 reference crop water loss',
+    seedbedThermalIndex: 'Seedbed thermal index',
+    predicted72hPrecipitation: 'Predicted 72-hour precipitation',
+    irrigationAdvisory: 'Irrigation Advisory',
+    disasterChecklist: 'Disaster Action Checklist',
+    emergencyHotlines: 'Emergency Helplines (24x7)',
+    noActiveEmergency: 'No Active Emergency',
+    alertStatus: 'Alert Status',
+    alertSubscriptions: 'Alert Subscriptions',
+    alertSubscriptionsDesc: 'Get notified about alerts in your selected locations.',
+    manageSubscriptions: 'Manage Subscriptions',
+
+    // History Page
+    historicalClimateAnalysis: 'Historical & Climate Analysis',
+    allConversations: 'All Conversations',
+    yesterday: 'Yesterday',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    recentHistory: 'Recent History',
+    conversationsTab: 'Conversations',
+    climateTab: 'Climate Trends',
+    noConversations: 'No conversations yet. Start a new chat!',
+    deleteConversation: 'Delete',
+    openConversation: 'Open',
+
+    // Map Page
+    liveGIS: 'Live GIS',
+    tempLayer: 'Temperature',
+    rainLayer: 'Precipitation',
+    windLayer: 'Wind',
+    alertsLayer: 'Alerts',
+    floodLayer: 'Flood Risk',
+    satelliteLayer: 'Satellite',
+
+    // Saved Locations Page
+    addCity: 'Add City',
+    searchCity: 'Search Indian city or district...',
+    setAsPrimary: 'Set as Primary',
+    noSavedLocations: 'No saved locations yet.',
+
+    // Common / Shared
+    loading: 'Loading...',
+    error: 'Error',
+    retry: 'Retry',
+    close: 'Close',
+    save: 'Save',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    back: 'Back',
+    next: 'Next',
+
+    // Modals & Dialogs
+    liveAqiScore: 'Live AQI Score',
+    standardAqi: 'Standard US-AQI',
+    aqiGoodDesc: 'Air quality is considered satisfactory, and air pollution poses little or no risk.',
+    aqiModerateDesc: 'Air quality is acceptable; however, sensitive individuals should limit prolonged outdoor exertion.',
+    aqiUnhealthySensitiveDesc: 'Members of sensitive groups may experience health effects.',
+    aqiUnhealthyDesc: 'Everyone may begin to experience health effects.',
+    pollutantConcentrations: 'Pollutant Concentrations',
+    favorableAirOutdoor: 'Air conditions are favorable for outdoor activities and open window ventilation.',
+    moderateAirAdvice: 'Air quality is moderate. Sensitive individuals should consider reducing intense outdoor exercise.',
+    unhealthyAirAdvice: 'Air pollution is elevated. Wear N95 masks outdoors and use indoor air purifiers.',
+    editProfile: 'Edit Profile',
+    clickChangeAvatar: 'Click to change profile picture',
+    saveChanges: 'Save Changes',
+    resetPassword: 'Reset Password',
+    checkYourInbox: 'Check Your Inbox',
+    resetPasswordDesc: 'Enter your email address to receive password recovery instructions.',
+    sendResetLink: 'Send Reset Link',
+    backToSignIn: 'Back to Sign In',
+    addNewLocation: 'Add New Location',
+    searchSaveCityDesc: 'Search and save any city to get real-time weather',
+    searchCityPlaceholder: 'Search city, state or territory...',
+    saved: 'Saved',
+    compareWeatherLocations: 'Compare Weather Locations',
+    sideBySideDesc: 'Side-by-side meteorological comparison',
+    firstLocation: 'First Location',
+    secondLocation: 'Second Location',
+    upgradePro: 'Upgrade to WeatherGPT Pro',
+    upgradeProDesc: 'Unlock advanced satellite radar, unlimited saved locations, and real-time severe weather alert dispatch.',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    savePercent: 'Save 35%',
+    lightTheme: 'Light Theme',
+    darkTheme: 'Dark Theme',
+    accountSettings: 'Account Settings',
+
+    // Settings Detailed
+    profileInfo: 'Profile Information',
+    profileInfoDesc: 'Update your name, email and profile picture.',
+    changePassword: 'Change Password',
+    changePasswordDesc: 'Update your password to keep your account secure.',
+    change: 'Change',
+    timeZone: 'Time Zone',
+    timeZoneDesc: 'Set your default time zone for accurate updates.',
+    chooseTempUnit: 'Choose your preferred temperature unit.',
+    chooseWindUnit: 'Choose your preferred wind speed unit.',
+    choosePressureUnit: 'Choose your preferred pressure unit.',
+    dailyForecastDesc: 'Get your daily weather forecast every morning.',
+    weeklySummaryDesc: 'Receive weekly weather summary and outlook.',
+    breakingNews: 'Breaking News & Alerts',
+    breakingNewsDesc: 'Important weather news and urgent safety updates.',
+    deleteAccountDesc: 'Permanently delete your account and all your data.',
+    accountSummary: 'Account Summary',
+    memberSince: 'Member Since',
+    locationsSavedCount: 'Locations Saved',
+    dataAndPrivacy: 'Data & Privacy',
+    exportData: 'Export Data',
+    needHelp: 'Need Help?',
+    faqDocs: 'FAQ & Documentation',
+    contactSupport: 'Contact Support',
+
+    // Authentication Hero
+    loginHeroTitle: 'Your AI Weather Companion',
+    loginHeroSubtitle: 'Real-time forecasts, smart alerts and personalized insights — all in one place.',
+    chatNaturally: 'Chat Naturally',
+    chatNaturallyDesc: 'Ask anything about weather in natural language.',
+    instantAlerts: 'Instant Official Alerts',
+    instantAlertsDesc: 'Get notified about severe weather and important updates.',
+    locationBased: 'Location Based',
+    locationBasedDesc: 'Accurate weather updates for any location you care about.',
+    smartInsights: 'Smart Insights',
+    smartInsightsDesc: 'Get climate trends, spraying windows and crop guidance.',
+    weatherQuote: '“The best time to plant a tree was 20 years ago. The second best time is now.”',
+    weatherWisdom: '— Weather wisdom',
+
+    // Telemetry & Map
+    quickCityTelemetry: 'Quick City Telemetry',
+    activeCyclonicSystem: 'Active Cyclonic System',
+    basin: 'Basin',
+    intensity: 'Intensity',
+    sustainedWind: 'Sustained Wind',
+    movement: 'Movement',
+
+    // Saved Locations View & Context
+    viewOnMap: 'View on Map',
+    starLocation: 'Star Location',
+    unstarLocation: 'Unstar Location',
+    deleteLocation: 'Delete Location',
+    addNewLocationDesc: 'Search and save any city to get real-time weather updates',
+    locationMap: 'Location Map',
+    viewFullMap: 'View full map',
+    openInteractiveMap: 'Open Interactive Map ➔',
+    weatherSummary: 'Weather Summary',
+    acrossLocations: 'Across your locations',
+    warmestLocation: 'Warmest Location',
+    coolestLocation: 'Coolest Location',
+    rainyLocation: 'Rainy Location',
+    viewDetailedSummary: 'View detailed summary',
+    tips: 'Tips',
+    personalizedTipsDesc: 'Get personalized tips for your saved locations',
+    umbrellaTip: 'Carry an umbrella in Mumbai, light rain expected today.',
+    viewAllTips: 'View all tips',
+    addedToFavorites: 'Added to favorites',
+    removedFromFavorites: 'Removed from favorites',
+
+    // Climate & History
+    searchClimatePlaceholder: 'Analyze climate history for city (e.g. Pune, Mumbai, Delhi)...',
+    recalculateTrends: 'Recalculate Trends',
+    warmingShift20Yr: '20-Yr Warming Shift',
+    relativeToNormal: 'Relative to 2004–2010 normal',
+    rainfallAnomaly: 'Rainfall Anomaly',
+    annualCumulativeDeviation: 'Annual cumulative deviation',
+    extremeHeatDays: 'Extreme Heat Days',
+    daysAbove40C: 'Days exceeding 40°C ceiling',
+    heavyRainEvents: 'Heavy Rain Events',
+    precipAbove50mm: 'Precipitation > 50mm / 24h',
+    scientificSummaryFor: 'Scientific Climate Summary for',
+    scientificSummaryBody: 'Based on Open-Meteo ERA5 historical reanalysis (2004–2024), exhibits a sustained warming trajectory accompanied by higher convective precipitation intensity and increased frequency of heat spikes.',
+
+    // Chat Page
+    zeroHallucinationBadge: 'Grounded • Zero Hallucination',
+    conversationalAiSubtitle: 'Natural Multilingual Conversational Meteorological AI',
+    chatHeroDescription: 'Ask in English, हिन्दी, or मराठी about weather forecasts, rainfall probabilities, crop protection, or severe weather alerts.',
+    stopVoice: 'Stop Voice',
+    piperVoice: 'Read Aloud (TTS)',
+    voiceError: 'Microphone speech recognition not supported in this browser.',
+    listening: 'Listening to your voice...',
+    speechPermissionDenied: 'Microphone permission denied. Please allow mic access in your browser.',
+    languageSwitchedToast: 'Language switched to',
+
+    // Helplines & Emergency
+    nationalDisasterHelpline: 'National Disaster Helpline',
+    kisanCallCentre: 'Kisan Call Centre (Agro)',
+    policeControlRoom: 'Police Emergency',
+    emergencyAmbulance: 'Ambulance & Medical',
+
+    // Forecast & Models
+    viewFull7Day: 'View Full 7-Day',
+    at: 'at',
+    selectLocation: 'Select Location',
+    searchLocationPlaceholder: 'Search location...',
+    viewAllLocations: 'View all saved locations',
+    precipitationSummary: 'Precipitation Summary',
+    next7Days: 'Next 7 Days',
+    totalRainfall: 'Total rainfall expected',
+    uvProtectionAdvice: 'Very high UV levels. Wear sunglasses and sun protective clothing.',
+    aqiGood: 'Good Air Quality',
+    aqiGoodDesc: 'Air quality is satisfactory with minimal health risk.',
+    sunriseSunset: 'Sunrise & Sunset',
+    compareLocations: 'Compare Locations',
+    compareLocationsDesc: 'Compare live telemetry and forecasts between 2 cities.',
+    addLocationCompare: 'Add Location to Compare',
+    planYourDayBetter: 'Plan Your Day Better',
+    planYourDayDesc: 'Get hourly precipitation forecasts, severe weather alerts, and radar telemetry.',
+    upgradeNow: 'Upgrade Now',
+    modelAgreementNote: 'Model Agreement Analysis',
+    confidence: 'Confidence',
+    alertsProvidedByImd: 'Alerts are provided by India Meteorological Department (IMD)',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    centerOnCity: 'Center on Pune',
+    viewFull7Day: 'View Full 7 Days',
+    pushEmail: 'Push, Email',
+    push: 'Push',
+    email: 'Email',
+    at: 'at',
+    india: 'India',
+    nationalCapital: 'National Capital',
+    mapZoomIn: 'Map zoom in',
+    mapZoomOut: 'Map zoom out'
   },
   mr: {
     // Navigation
@@ -147,6 +495,19 @@ export const TRANSLATIONS = {
     settings: 'सेटिंग्ज व प्राधान्ये',
     logout: 'बाहेर पडा (लॉगआउट)',
 
+    // Greetings
+    goodMorning: 'शुभ प्रभात',
+    goodAfternoon: 'शुभ दुपार',
+    goodEvening: 'शुभ संध्याकाळ',
+    weatherOverview: 'येथे तुमचा हवामान आढावा आहे',
+    askAnything: 'वेदर-जीपीटी ला काहीही विचारा...',
+
+    // Suggestion Chips
+    chipRain: 'उद्या पाऊस पडेल का?',
+    chipMumbai: 'मुंबईतील हवामान',
+    chipCyclone: 'चक्रीवादळ अपडेट',
+    chipAqi: 'आजची हवेची गुणवत्ता',
+
     // Titles & Subtitles
     dashboardTitle: 'हवामान बुद्धिमत्ता डॅशबोर्ड',
     dashboardSubtitle: 'थेट हवामान अंदाज, रडार माहिती आणि पर्यावरणीय विश्लेषण',
@@ -154,8 +515,8 @@ export const TRANSLATIONS = {
     chatSubtitle: 'हवामान, शेती, पाऊस आणि वादळांविषयी कोणतीही अचूक माहिती विचारा',
     advisoryTitle: 'कृषी पीक संरक्षण व आपत्ती निवारण',
     advisorySubtitle: 'पीक वाढीचे टप्पे, मातीतील ओलावा व आपत्कालीन सुरक्षा कृती योजना',
-    alertsTitle: 'भारतीय हवामान विभाग (IMD) अधिकृत इशारे',
-    alertsSubtitle: 'जिल्हानिहाय थेट हवामान इशारे, अतिवृष्टी सूचना आणि सुरक्षा उपाय',
+    alertsTitle: 'हवामान इशारे व चेतावणी',
+    alertsSubtitle: 'सावध राहा आणि सुरक्षित राहा. थेट हवामान इशारे व अधिकृत चेतावणी.',
     forecastTitle: 'एनडब्ल्यूपी बहु-मॉडेल हवामान अंदाज',
     forecastSubtitle: 'युरोपियन (ECMWF) आणि अमेरिकन (GFS) मॉडेल्सची तुलना व ७ ते १४ दिवसांचा अंदाज',
     mapTitle: 'थेट परस्परसंवादी हवामान व रडार नकाशा',
@@ -167,11 +528,12 @@ export const TRANSLATIONS = {
     settingsTitle: 'प्रणाली सेटिंग्ज आणि भाषा निवडी',
     settingsSubtitle: 'तापमान एकक, भाषा, डार्क मोड आणि सूचना प्राधान्ये बदला',
 
-    // Metrics
+    // Metrics & Tags
     currentWeather: 'सध्याचे थेट हवामान',
     overview: 'थेट आढावा',
     temperature: 'तापमान',
     humidity: 'हवेतील आर्द्रता (ओलावा)',
+    wind: 'वारा',
     windSpeed: 'वाऱ्याचा वेग',
     pressure: 'हवेचा वातावरणीय दाब',
     precipitation: 'पर्जन्यमान (पाऊस)',
@@ -185,8 +547,18 @@ export const TRANSLATIONS = {
     sunset: 'सूर्यास्त',
     hourlyForecast: 'तासनिहाय हवामान अंदाज (पुढील २४ तास)',
     sevenDayForecast: '७ दिवसांचा सविस्तर हवामान अंदाज',
+    todaysForecast: 'आजचा हवामान अंदाज',
+    viewFullForecast: 'पूर्ण अंदाज पहा',
     radarSummary: 'थेट हवामान रडार',
     satelliteView: 'इन्सॅट-३डी उपग्रह थेट प्रतिमा',
+    now: 'आता',
+    currentLocation: 'सध्याचे ठिकाण',
+    favoriteLocation: 'आवडते ठिकाण',
+    savedLocation: 'जतन केलेले ठिकाण',
+    rainNearby: 'जवळपास पाऊस',
+    humidConditions: 'दमट हवामान',
+    currentConditions: 'सध्याचे हवामान',
+    weatherUnavailable: 'हवामान माहिती अनुपलब्ध',
 
     // Conditions
     clearSky: 'निरभ्र व स्वच्छ आकाश',
@@ -200,11 +572,37 @@ export const TRANSLATIONS = {
     fog: 'दाट धुके व कुहासा',
     mist: 'धुकट हवा',
 
-    // IMD Warning Levels
+    // IMD Warning Levels & Alerts Page
+    allAlerts: 'सर्व इशारे',
+    active: 'सक्रिय',
+    warnings: 'चेतावण्या',
+    watch: 'सावधगिरी',
+    information: 'माहिती',
+    liveNowcast: 'थेट हवामान अंदाज (Nowcast)',
+    imdMinistrySubtitle: 'पृथ्वी विज्ञान मंत्रालय अधिकृत हवामान निरीक्षण',
+    viewAllActive: 'सर्व सक्रिय पहा',
+    recentAlerts: 'मागील इशारे',
+    severity: 'तीव्रता',
+    severe: 'गंभीर',
+    moderate: 'मध्यम',
+    info: 'माहिती',
+    probability: 'शक्यता',
+    source: 'स्रोत',
+    until: 'पर्यंत',
+    viewDetails: 'सविस्तर पहा',
+    alertFilters: 'इशारे फिल्टर',
+    location: 'स्थान / ठिकाण',
+    alertType: 'इशारा प्रकार',
+    allTypes: 'सर्व प्रकार',
+    clearFilters: 'फिल्टर रीसेट करा',
+    alertMap: 'इशारे नकाशा',
+    viewFullMap: 'पूर्ण नकाशा पहा',
     redAlert: 'रेड अलर्ट (तात्काळ सुरक्षिततेची कृती करा)',
     orangeAlert: 'ऑरेंज अलर्ट (सावध व सज्ज राहा)',
     yellowAlert: 'यलो अलर्ट (हवामान माहिती घेत राहा)',
     greenAlert: 'ग्रीन अलर्ट (कोणताही धोका नाही, सुरक्षित)',
+    activeAlerts: 'सक्रिय हवामान इशारे',
+    noActiveAlerts: 'सध्या कोणताही सक्रिय हवामान इशारा नाही.',
     imdOfficialWarning: 'हवामान विभागाचा (IMD) अधिकृत जिल्हा इशारा',
     searchDistrict: 'महाराष्ट्रातील किंवा देशातील जिल्हा किंवा शहर शोधा...',
     activeWarningsCount: 'सक्रिय हवामान इशारे',
@@ -228,6 +626,16 @@ export const TRANSLATIONS = {
     minTemp: 'किमान तापमान',
     ensembleSpread: 'मॉडेल्समधील फरक व निष्कर्ष',
 
+    // Quick Actions & Widgets
+    quickActions: 'जलद कृती',
+    weatherForecast: 'हवामान अंदाज',
+    recentConversations: 'अलीकडील संभाषणे',
+    didYouKnow: 'तुम्हाला माहीत आहे का?',
+    treesEcoTip: 'झाडे सभोवतालचे तापमान ५°C पर्यंत कमी करू शकतात. अधिक झाडे लावा आणि थंड राहा!',
+    goPremium: 'प्रीमियम मिळवा',
+    premiumDesc: 'प्रगत इशारे, दीर्घ अंदाज आणि सानुकूल सूचना मिळवा.',
+    upgradeNow: 'आता अपग्रेड करा',
+
     // Agro & Safety
     cropAdvisory: 'कृषी-हवामान पीक सल्ला व संरक्षण',
     cropSelector: 'लक्षित पीक निवडा',
@@ -250,13 +658,304 @@ export const TRANSLATIONS = {
     voiceError: 'मायक्रोफोन परवानगी नाकारली आहे किंवा उपलब्ध नाही.',
     newChat: 'नवीन संवाद',
 
+    // Authentication & Login
+    welcomeBack: 'पुन्हा स्वागत आहे',
+    signInSubtitle: 'वेदर-जीपीटी हवामान बुद्धिमत्तेत पुढे जाण्यासाठी साइन इन करा',
+    createAccount: 'नवीन खाते तयार करा',
+    signUpSubtitle: 'अचूक हवामान अंदाज आणि एआय मदतीसाठी वेदर-जीपीटी शी जोडा',
+    emailAddress: 'ईमेल पत्ता',
+    password: 'पासवर्ड',
+    fullName: 'पूर्ण नाव',
+    rememberMe: 'माझे खाते लक्षात ठेवा',
+    forgotPassword: 'पासवर्ड विसरलात?',
+    signIn: 'साइन इन करा',
+    signUp: 'खाते तयार करा',
+    orContinueWith: 'किंवा याद्वारे सुरू ठेवा',
+    noAccount: 'खाते नाही आहे का?',
+    haveAccount: 'आधीच खाते आहे का?',
+    preferredLanguage: 'प्लॅटफॉर्म भाषा',
+
+    // Settings
+    general: 'सामान्य',
+    unitsAndFormat: 'एकके व स्वरूप',
+    notifications: 'सूचना (नोटिफिकेशन्स)',
+    weatherPreferences: 'हवामान प्राधान्ये',
+    privacyAndData: 'गोपनीयता व डेटा',
+    appearance: 'स्वरूप (थीम)',
+    language: 'भाषा निवड',
+    connectedAccounts: 'जोडलेली खाती',
+    about: 'प्रणाली माहिती',
+    languageSettingsTitle: 'प्रणाली व एआय भाषा',
+    languageSettingsDesc: 'डॅशबोर्ड, इशारे, एआय संवाद आणि आवाज ऑडिओसाठी तुमची आवडती भाषा निवडा.',
+
     // Actions & Tools
     search: 'शहर किंवा जिल्हा शोधा...',
     refresh: 'माहिती ताजी करा',
     viewAll: 'सर्व पहा',
     saveLocation: 'शहर जतन करा',
     removeLocation: 'काढून टाका',
-    favorite: 'आवडते शहर'
+    favorite: 'आवडते शहर',
+
+    // Forecast Page
+    changeLocation: 'स्थान बदला',
+    loadingForecast: 'हवामान अंदाज लोड होत आहे...',
+    liveForecastSource: 'वेदर-जीपीटी थेट अंदाज',
+    rainLikely: 'पावसाची शक्यता',
+    detailedForecast: 'सविस्तर हवामान अंदाज',
+    summary: 'थोडक्यात माहिती',
+    forecastSummaryText: 'उबदार हवामान व अंशतः ढगाळ वातावरण. दिवसभर मंद वारे.',
+    maxTemperature: 'कमाल तापमान',
+    minTemperature: 'किमान तापमान',
+    rainfall: 'पावसाचे प्रमाण',
+    nwpConsensusDesc: 'युरोपियन ECMWF, अमेरिकन GFS आणि ओपन-मेटिओ मॉडेल्सचा संयुक्त अभ्यास',
+    confidence: 'विश्वासार्हता',
+    modelAgreementNote: 'मॉडेल सहमती आढावा',
+    planYourDayBetter: 'आपल्या दिवसाचे उत्तम नियोजन करा',
+    planYourDayDesc: 'वेदर-जीपीटीसह सविस्तर अंदाज, थेट रडार नकाशे आणि आपत्कालीन धोक्याचे इशारे मोफत मिळवा.',
+    selectLocation: 'स्थान निवडा',
+    searchLocationPlaceholder: 'स्थान शोधा...',
+    viewAllLocations: 'सर्व स्थाने पहा',
+    precipitationSummary: 'पर्जन्यमान सारांश',
+    next7Days: 'पुढील ७ दिवस',
+    totalRainfall: 'एकूण पाऊस',
+    high: 'उच्च',
+    uvProtectionAdvice: 'सनग्लासेस वापरा आणि उन्हापासून संरक्षण करा.',
+    aqiGood: 'चांगली',
+    aqiGoodDesc: 'हवेची गुणवत्ता समाधानकारक आहे आणि आरोग्यास धोका नाही.',
+    sunriseSunset: 'सूर्योदय व सूर्यास्त',
+    compareLocations: 'हवामानाची तुलना करा',
+    compareLocationsDesc: 'वेगवेगळ्या शहरांच्या हवामानाची तुलना करा.',
+    addLocationCompare: 'तुलनेसाठी शहर जोडा',
+    viewFull7Day: 'पूर्ण ७ दिवसांचा अंदाज पहा',
+
+    // Advisory Page
+    decisionSupport: 'कृषी व आपत्ती निर्णय सहाय्य',
+    targetZone: 'निवडलेले क्षेत्र',
+    moisture: 'ओलावा',
+    growthStages: 'पिकाच्या वाढीचे मुख्य टप्पे',
+    stage: 'टप्पा',
+    volumetricRootZone: 'मुळांचे क्षेत्र (०-७ सेमी)',
+    faoReferenceCropLoss: 'बाष्पीभवन पाणी हानी (FAO-56)',
+    seedbedThermalIndex: 'बियाणे माती तापमान सूचकांक',
+    predicted72hPrecipitation: 'पुढील ७२ तासांमधील संभाव्य पाऊस',
+    irrigationAdvisory: 'सिंचन सल्ला',
+    disasterChecklist: 'आपत्ती कृती चेकलिस्ट',
+    emergencyHotlines: 'आपत्कालीन संपर्क (२४ तास)',
+    noActiveEmergency: 'सध्या कोणतीही आपत्कालीन स्थिती नाही',
+    alertStatus: 'इशारा स्थिती',
+    alertSubscriptions: 'इशारे सूचना (Alert Notifications)',
+    alertSubscriptionsDesc: 'तुमच्या निवडलेल्या ठिकाणांसाठी हवामान इशारे त्वरित मिळवा.',
+    manageSubscriptions: 'सूचना व्यवस्थापित करा',
+
+    // History Page
+    historicalClimateAnalysis: 'हवामान इतिहास व विश्लेषण',
+    allConversations: 'सर्व संभाषणे',
+    yesterday: 'काल',
+    thisWeek: 'हा आठवडा',
+    thisMonth: 'हा महिना',
+    recentHistory: 'अलीकडील इतिहास',
+    conversationsTab: 'संभाषणे',
+    climateTab: 'हवामान बदल',
+    noConversations: 'अजून कोणतेही संभाषण नाही. नवीन संवाद सुरू करा!',
+    deleteConversation: 'हटवा',
+    openConversation: 'उघडा',
+
+    // Map Page
+    liveGIS: 'थेट GIS',
+    tempLayer: 'तापमान',
+    rainLayer: 'पर्जन्यमान',
+    windLayer: 'वारा',
+    alertsLayer: 'इशारे',
+    floodLayer: 'पूर धोका',
+    satelliteLayer: 'उपग्रह',
+
+    // Saved Locations Page
+    addCity: 'शहर जोडा',
+    searchCity: 'भारतातील शहर किंवा जिल्हा शोधा...',
+    setAsPrimary: 'मुख्य म्हणून सेट करा',
+    noSavedLocations: 'अजून कोणतेही शहर जतन केलेले नाही.',
+
+    // Common / Shared
+    loading: 'लोड होत आहे...',
+    error: 'त्रुटी',
+    retry: 'पुन्हा प्रयत्न करा',
+    close: 'बंद करा',
+    save: 'जतन करा',
+    cancel: 'रद्द करा',
+    confirm: 'पुष्टी करा',
+    back: 'मागे',
+    next: 'पुढे',
+
+    // Modals & Dialogs
+    liveAqiScore: 'थेट AQI स्कोअर',
+    standardAqi: 'प्रमाणित हवा गुणवत्ता',
+    aqiGoodDesc: 'हवेची गुणवत्ता समाधानकारक असून प्रदूषणाचा कोणताही धोका नाही.',
+    aqiModerateDesc: 'हवेची गुणवत्ता मध्यम आहे; संवेदनशील व्यक्तींनी जास्त वेळ बाहेर राहणे टाळावे.',
+    aqiUnhealthySensitiveDesc: 'संवेदनशील व्यक्तींना (दम्याचे रुग्ण, वृद्ध) त्रास होण्याची शक्यता आहे.',
+    aqiUnhealthyDesc: 'हवा सर्वांसाठी अहितकारक असून बाहेर पडताना काळजी घ्यावी.',
+    pollutantConcentrations: 'प्रमुख प्रदूषक घटकांचे प्रमाण',
+    favorableAirOutdoor: 'आज मैदानी खेळ व बाहेर फिरण्यासाठी हवा अनुकूल आणि सुरक्षित आहे.',
+    moderateAirAdvice: 'हवेची गुणवत्ता मध्यम आहे. संवेदनशील व्यक्तींनी जास्त कष्टाची कामे टाळावीत.',
+    unhealthyAirAdvice: 'हवेचे प्रदूषण वाढले आहे. बाहेर जाताना मास्क वापरा आणि खिडक्या बंद ठेवा.',
+    editProfile: 'प्रोफाइल संपादित करा',
+    clickChangeAvatar: 'प्रोफाइल फोटो बदलण्यासाठी क्लिक करा',
+    saveChanges: 'बदल जतन करा',
+    resetPassword: 'पासवर्ड रीसेट करा',
+    checkYourInbox: 'आपला इनबॉक्स तपासा',
+    resetPasswordDesc: 'पासवर्ड पुनर्प्राप्ती सूचना मिळवण्यासाठी आपला ईमेल प्रविष्ट करा.',
+    sendResetLink: 'रीसेट लिंक पाठवा',
+    backToSignIn: 'साइन इन वर परत जा',
+    addNewLocation: 'नवीन ठिकाण जोडा',
+    searchSaveCityDesc: 'थेट हवामानासाठी कोणतेही शहर किंवा जिल्हा शोधा आणि जतन करा',
+    searchCityPlaceholder: 'शहर किंवा जिल्हा शोधा...',
+    saved: 'जतन केले',
+    compareWeatherLocations: 'हवामान ठिकाणांची तुलना',
+    sideBySideDesc: 'दोन शहरांच्या हवामानाची समोरासमोर तुलना',
+    firstLocation: 'पहिले शहर',
+    secondLocation: 'दुसरे शहर',
+    upgradePro: 'वेदर-जीपीटी प्रो वर अपग्रेड करा',
+    upgradeProDesc: 'प्रगत उपग्रह रडार, अमर्यादित शहरे आणि थेट आपत्कालीन चेतावणी मिळवा.',
+    monthly: 'मासिक',
+    yearly: 'वार्षिक',
+    savePercent: '३५% बचत',
+    lightTheme: 'लाइट थीम',
+    darkTheme: 'डार्क थीम',
+    accountSettings: 'खाते सेटिंग्ज',
+
+    // Settings Detailed
+    profileInfo: 'प्रोफाइल माहिती',
+    profileInfoDesc: 'आपले नाव, ईमेल आणि प्रोफाइल फोटो अद्यतनित करा.',
+    changePassword: 'पासवर्ड बदला',
+    changePasswordDesc: 'खाते सुरक्षित ठेवण्यासाठी पासवर्ड वेळेवर बदला.',
+    change: 'बदला',
+    timeZone: 'वेळ क्षेत्र (Timezone)',
+    timeZoneDesc: 'अचूक हवामान वेळेसाठी तुमचा टाइम झोन निवडा.',
+    chooseTempUnit: 'तापमानाचे आवडते एकक निवडा (°C किंवा °F).',
+    chooseWindUnit: 'वाऱ्याच्या वेगाचे एकक निवडा.',
+    choosePressureUnit: 'हवेच्या दाबाचे एकक निवडा.',
+    dailyForecastDesc: 'दररोज सकाळी आजच्या हवामानाचा अंदाज मिळवा.',
+    weeklySummaryDesc: 'आठवड्याचा हवामान सारांश व आगामी अंदाज मिळवा.',
+    breakingNews: 'हवामान ताज्या बातम्या व अलर्ट',
+    breakingNewsDesc: 'महत्त्वाच्या हवामान घडामोडी आणि आपत्कालीन इशारे.',
+    deleteAccountDesc: 'आपले खाते आणि सर्व डेटा कायमचा हटवा.',
+    accountSummary: 'खाते सारांश',
+    memberSince: 'नोंदणी तारीख',
+    locationsSavedCount: 'जतन केलेली शहरे',
+    dataAndPrivacy: 'डेटा आणि गोपनीयता',
+    exportData: 'डेटा एक्सपोर्ट करा',
+    needHelp: 'मदत हवी आहे?',
+    faqDocs: 'वारंवार विचारले जाणारे प्रश्न व माहिती',
+    contactSupport: 'सपोर्टशी संपर्क साधा',
+
+    // Authentication Hero
+    loginHeroTitle: 'तुमचा विश्वासू हवामान AI साथीदार',
+    loginHeroSubtitle: 'थेट हवामान अंदाज, अचूक इशारे आणि वैयक्तिक शेती सल्ला — सर्व एकाच ठिकाणी.',
+    chatNaturally: 'हवे तसे बोला व विचारा',
+    chatNaturallyDesc: 'हवामान, शेती व पावसाविषयी मातृभाषेत प्रश्न विचारा.',
+    instantAlerts: 'थेट हवामान इशारे',
+    instantAlertsDesc: 'अतिवृष्टी, वादळ व उष्णतेच्या लाटेविषयी त्वरित सूचना मिळवा.',
+    locationBased: 'स्थाननिहाय अचूकता',
+    locationBasedDesc: 'तुमच्या गावासाठी आणि शहरासाठी अचूक हवामान माहिती.',
+    smartInsights: 'शेती व हवामान मार्गदर्शन',
+    smartInsightsDesc: 'पीक संरक्षण, औषध फवारणी वेळ आणि हवामान सल्ला.',
+    weatherQuote: '“झाड लावण्याची सर्वोत्तम वेळ २० वर्षांपूर्वी होती. दुसरी सर्वोत्तम वेळ आत्ता आहे.”',
+    weatherWisdom: '— निसर्ग सुविचार',
+
+    // Telemetry & Map
+    quickCityTelemetry: 'थेट शहर हवामान स्थिती',
+    activeCyclonicSystem: 'सक्रिय चक्रीवादळ प्रणाली',
+    basin: 'समुद्री क्षेत्र',
+    intensity: 'तीव्रता',
+    sustainedWind: 'स्थिर वाऱ्याचा वेग',
+    movement: 'हालचाल दिशा व वेग',
+
+    // Saved Locations View & Context
+    viewOnMap: 'नकाशावर पहा',
+    starLocation: 'महत्त्वाचे म्हणून चिन्हांकित करा',
+    unstarLocation: 'स्टार काढून टाका',
+    deleteLocation: 'शहर हटवा',
+    addNewLocationDesc: 'थेट हवामान अपडेट्स मिळवण्यासाठी कोणतेही शहर शोधा आणि जतन करा',
+    locationMap: 'स्थान नकाशा',
+    viewFullMap: 'पूर्ण नकाशा उघडा',
+    openInteractiveMap: 'परस्परसंवादी नकाशा उघडा ➔',
+    weatherSummary: 'हवामान सारांश',
+    acrossLocations: 'तुमच्या सर्व शहरांचा आढावा',
+    warmestLocation: 'सर्वात उष्ण शहर',
+    coolestLocation: 'सर्वात थंड शहर',
+    rainyLocation: 'पावसाळी शहर',
+    viewDetailedSummary: 'सविस्तर सारांश पहा',
+    tips: 'महत्त्वाच्या टिप्स',
+    personalizedTipsDesc: 'तुमच्या जतन केलेल्या शहरांसाठी वैयक्तिकृत हवामान सल्ला',
+    umbrellaTip: 'मुंबईत हलक्या पावसाची शक्यता आहे, बाहेर पडताना छत्री सोबत ठेवा.',
+    viewAllTips: 'सर्व टिप्स पहा',
+    addedToFavorites: 'आवडत्या शहरांमध्ये जोडले',
+    removedFromFavorites: 'आवडत्या शहरांमधून काढले',
+
+    // Climate & History
+    searchClimatePlaceholder: 'शहराचा ऐतिहासिक हवामान डेटा शोधा (उदा. पुणे, मुंबई, नागपूर)...',
+    recalculateTrends: 'पुन्हा विश्लेषण करा',
+    warmingShift20Yr: '२० वर्षांतील तापमान वाढ',
+    relativeToNormal: '२००४-२०१० सरासरीच्या तुलनेत',
+    rainfallAnomaly: 'पावसातील तफावत (अ‍ॅनॉमली)',
+    annualCumulativeDeviation: 'वार्षिक एकूण पर्जन्य विचलन',
+    extremeHeatDays: 'अति उष्णतेचे दिवस (>४०°C)',
+    daysAbove40C: '४०°C पेक्षा जास्त तापमान असलेले दिवस',
+    heavyRainEvents: 'अतिवृष्टीचे दिवस (>५० मिमी)',
+    precipAbove50mm: '२४ तासांत ५० मिमी पेक्षा जास्त पाऊस',
+    scientificSummaryFor: 'साठी हवामान शास्त्रीय सारांश',
+    scientificSummaryBody: 'Open-Meteo ERA5 ऐतिहासिक हवामान नोंदींनुसार (२००४-२०२४), या भागात सरासरी तापमानात +०.८५°C ते +१.२°C पर्यंत सातत्यपूर्ण वाढ नोंदवली गेली असून, अचानक मुसळधार पाऊस व तीव्र उन्हाळ्याच्या लाटांमध्ये वाढ झाली आहे.',
+
+    // Chat Page
+    zeroHallucinationBadge: 'तथ्याधारित • शून्य भ्रम',
+    conversationalAiSubtitle: 'नैसर्गिक बहुभाषिक हवामान बुद्धिमत्ता सहाय्यक',
+    chatHeroDescription: 'हवामान अंदाज, पावसाची शक्यता, पीक संरक्षण किंवा अधिकृत सतर्कतेबद्दल मराठी, हिन्दी किंवा इंग्रजीत सहज विचारा.',
+    stopVoice: 'आवाज थांबवा',
+    piperVoice: 'आवाज ऐका (TTS)',
+    voiceError: 'या ब्राउझरमध्ये व्हॉइस स्पीच रेकग्निशन उपलब्ध नाही.',
+    listening: 'तुमचा आवाज ऐकत आहे...',
+    speechPermissionDenied: 'मायक्रोफोन परवानगी नाकारली गेली. कृपया ब्राउझरमध्ये माइक चालू करा.',
+    languageSwitchedToast: 'भाषा बदलली:',
+
+    // Helplines & Emergency
+    nationalDisasterHelpline: 'राष्ट्रीय आपत्ती निवारण हेल्पलाइन',
+    kisanCallCentre: 'किसान कॉल सेंटर (कृषी सल्ला)',
+    policeControlRoom: 'पोलीस नियंत्रण कक्ष',
+    emergencyAmbulance: 'रुग्णवाहिका व वैद्यकीय मदत',
+
+    // Forecast & Models
+    viewFull7Day: 'संपूर्ण ७ दिवसांचा अंदाज पहा',
+    at: 'वाजता',
+    selectLocation: 'शहर निवडा',
+    searchLocationPlaceholder: 'शहर शोधा...',
+    viewAllLocations: 'सर्व जतन केलेली शहरे पहा',
+    precipitationSummary: 'पर्जन्यवृष्टी सारांश',
+    next7Days: 'पुढील ७ दिवस',
+    totalRainfall: 'अपेक्षित एकूण पाऊस',
+    uvProtectionAdvice: 'अतिनील किरणे (UV) तीव्र आहेत. उन्हात बाहेर पडताना सनग्लासेस आणि टोपी वापरा.',
+    aqiGood: 'हवेची गुणवत्ता उत्तम',
+    aqiGoodDesc: 'हवेची गुणवत्ता समाधानकारक असून आरोग्याला कोणताही धोका नाही.',
+    sunriseSunset: 'सूर्योदय आणि सूर्यास्त',
+    compareLocations: 'दोन शहरांची तुलना',
+    compareLocationsDesc: 'दोन शहरांमधील तापमान, पाऊस आणि वाऱ्याची थेट तुलना करा.',
+    addLocationCompare: 'तुलनेसाठी शहर जोडा',
+    planYourDayBetter: 'तुमच्या दिवसाचे उत्तम नियोजन करा',
+    planYourDayDesc: 'तासनिहाय पाऊस अंदाज, गंभीर वादळ इशारे आणि थेट रडार अपडेट्स मिळवा.',
+    upgradeNow: 'आता अपग्रेड करा',
+    modelAgreementNote: 'मॉडेल एकमत विश्लेषण',
+    confidence: 'विश्वासार्हता',
+    alertsProvidedByImd: 'इशारे भारतीय हवामान विभाग (IMD) कडून प्रदान केले जातात',
+    zoomIn: 'झूम इन',
+    zoomOut: 'झूम आउट',
+    centerOnCity: 'पुण्यावर केंद्रित करा',
+    viewFull7Day: 'पूर्ण ७ दिवस पहा',
+    pushEmail: 'पुश, ईमेल',
+    push: 'पुश',
+    email: 'ईमेल',
+    at: 'वाजता',
+    india: 'भारत',
+    nationalCapital: 'राष्ट्रीय राजधानी',
+    mapZoomIn: 'नकाशा झूम इन',
+    mapZoomOut: 'नकाशा झूम आउट'
   },
   hi: {
     // Navigation
@@ -271,6 +970,19 @@ export const TRANSLATIONS = {
     settings: 'सेटिंग्स एवं प्राथमिकताएं',
     logout: 'लॉगआउट',
 
+    // Greetings
+    goodMorning: 'शुभ प्रभात',
+    goodAfternoon: 'शुभ दोपहर',
+    goodEvening: 'शुभ संध्या',
+    weatherOverview: 'यहाँ आपका मौसम अवलोकन है',
+    askAnything: 'वेदर-जीपीटी से कुछ भी पूछें...',
+
+    // Suggestion Chips
+    chipRain: 'क्या कल बारिश होगी?',
+    chipMumbai: 'मुंबई का मौसम',
+    chipCyclone: 'चक्रवात अपडेट',
+    chipAqi: 'आज की वायु गुणवत्ता',
+
     // Titles & Subtitles
     dashboardTitle: 'मौसम बुद्धिमत्ता डैशबोर्ड',
     dashboardSubtitle: 'रीयल-टाइम मौसम पूर्वानुमान, रडार डेटा और पर्यावरण विश्लेषण',
@@ -278,8 +990,8 @@ export const TRANSLATIONS = {
     chatSubtitle: 'मौसम, खेती, बारिश और आपदाओं से संबंधित कोई भी सवाल पूछें',
     advisoryTitle: 'कृषि फसल सुरक्षा एवं आपदा प्रबंधन',
     advisorySubtitle: 'फसल विकास चरण, मिट्टी की नमी और आपातकालीन कार्य योजना',
-    alertsTitle: 'भारतीय मौसम विभाग (IMD) आधिकारिक चेतावनियां',
-    alertsSubtitle: 'जिला स्तरीय मौसम अलर्ट, भारी बारिश चेतावनी और सुरक्षा निर्देश',
+    alertsTitle: 'मौसम चेतावनियां एवं अलर्ट',
+    alertsSubtitle: 'सावधान रहें और सुरक्षित रहें। रीयल-टाइम मौसम चेतावनियां।',
     forecastTitle: 'एनडब्ल्यूपी मल्टी-मॉडल मौसम पूर्वानुमान',
     forecastSubtitle: 'यूरोपीय (ECMWF) और अमेरिकी (GFS) मॉडल्स की तुलना एवं 7-14 दिन का पूर्वानुमान',
     mapTitle: 'लाइव इंटरएक्टिव मौसम और रडार मैप',
@@ -291,11 +1003,12 @@ export const TRANSLATIONS = {
     settingsTitle: 'सिस्टम सेटिंग्स एवं भाषा प्राथमिकता',
     settingsSubtitle: 'तापमान इकाई, भाषा, डार्क मोड और अलर्ट नोटिफिकेशन सेट करें',
 
-    // Metrics
+    // Metrics & Tags
     currentWeather: 'वर्तमान मौसम',
     overview: 'लाइव मौसम विवरण',
     temperature: 'तापमान',
     humidity: 'हवा में नमी (आर्द्रता)',
+    wind: 'हवा',
     windSpeed: 'हवा की गति',
     pressure: 'वायुमंडलीय दबाव',
     precipitation: 'वर्षा / बारिश',
@@ -309,8 +1022,18 @@ export const TRANSLATIONS = {
     sunset: 'सूर्यास्त',
     hourlyForecast: 'प्रति घंटे का पूर्वानुमान (अगले 24 घंटे)',
     sevenDayForecast: '7-दिवसीय विस्तृत मौसम पूर्वानुमान',
+    todaysForecast: 'आज का मौसम पूर्वानुमान',
+    viewFullForecast: 'पूरा पूर्वानुमान देखें',
     radarSummary: 'लाइव मौसम रडार',
     satelliteView: 'इनसैट-3डी उपग्रह चित्र',
+    now: 'अभी',
+    currentLocation: 'वर्तमान स्थान',
+    favoriteLocation: 'पसंदीदा स्थान',
+    savedLocation: 'सहेजा गया स्थान',
+    rainNearby: 'आसपास बारिश',
+    humidConditions: 'नम मौसम',
+    currentConditions: 'वर्तमान मौसम',
+    weatherUnavailable: 'मौसम डेटा अनुपलब्ध',
 
     // Conditions
     clearSky: 'साफ एवं खुला आसमान',
@@ -324,11 +1047,37 @@ export const TRANSLATIONS = {
     fog: 'घना कोहरा',
     mist: 'धुंध एवं कुहासा',
 
-    // IMD Warning Levels
+    // IMD Warning Levels & Alerts Page
+    allAlerts: 'सभी अलर्ट',
+    active: 'सक्रिय',
+    warnings: 'चेतावनियां',
+    watch: 'निगरानी',
+    information: 'जानकारी',
+    liveNowcast: 'लाइव मौसम अनुमान (Nowcast)',
+    imdMinistrySubtitle: 'पृथ्वी विज्ञान मंत्रालय आधिकारिक मौसम टेलीमेट्री',
+    viewAllActive: 'सभी सक्रिय देखें',
+    recentAlerts: 'हालिया अलर्ट',
+    severity: 'गंभीरता',
+    severe: 'गंभीर',
+    moderate: 'मध्यम',
+    info: 'सूचना',
+    probability: 'संभावना',
+    source: 'स्रोत',
+    until: 'तक',
+    viewDetails: 'विवरण देखें',
+    alertFilters: 'अलर्ट फिल्टर',
+    location: 'स्थान',
+    alertType: 'अलर्ट प्रकार',
+    allTypes: 'सभी प्रकार',
+    clearFilters: 'फिल्टर हटाएं',
+    alertMap: 'अलर्ट मैप',
+    viewFullMap: 'पूरा मैप देखें',
     redAlert: 'रेड अलर्ट (तुरंत सुरक्षा कदम उठाएं)',
     orangeAlert: 'ऑरेंज अलर्ट (सावधान एवं तैयार रहें)',
     yellowAlert: 'यलो अलर्ट (मौसम पर नज़र बनाए रखें)',
     greenAlert: 'ग्रीन अलर्ट (कोई चेतावनी नहीं, सुरक्षित)',
+    activeAlerts: 'सक्रिय मौसम चेतावनियां',
+    noActiveAlerts: 'इस समय कोई सक्रिय मौसम चेतावनी नहीं है।',
     imdOfficialWarning: 'मौसम विभाग (IMD) का आधिकारिक जिला अलर्ट',
     searchDistrict: 'भारत के किसी भी जिले या शहर का नाम खोजें...',
     activeWarningsCount: 'सक्रिय मौसम चेतावनियां',
@@ -352,6 +1101,16 @@ export const TRANSLATIONS = {
     minTemp: 'न्यूनतम तापमान',
     ensembleSpread: 'मॉडल्स में तुलना एवं अंतर',
 
+    // Quick Actions & Widgets
+    quickActions: 'त्वरित कार्य',
+    weatherForecast: 'मौसम पूर्वानुमान',
+    recentConversations: 'हालिया बातचीत',
+    didYouKnow: 'क्या आप जानते हैं?',
+    treesEcoTip: 'पेड़ आसपास का तापमान 5°C तक कम कर सकते हैं। अधिक पेड़ लगाएं और स्वस्थ रहें!',
+    goPremium: 'प्रीमियम अपग्रेड',
+    premiumDesc: 'उन्नत अलर्ट, लंबे पूर्वानुमान और कस्टम नोटिफिकेशन प्राप्त करें।',
+    upgradeNow: 'अभी अपग्रेड करें',
+
     // Agro & Safety
     cropAdvisory: 'कृषि मौसम परामर्श एवं फसल सुरक्षा',
     cropSelector: 'लक्षित फसल चुनें',
@@ -374,13 +1133,304 @@ export const TRANSLATIONS = {
     voiceError: 'माइक्रोफ़ोन की अनुमति नहीं मिली या यह उपलब्ध नहीं है।',
     newChat: 'नया संवाद',
 
+    // Authentication & Login
+    welcomeBack: 'वापसी पर स्वागत है',
+    signInSubtitle: 'वेदर-जीपीटी मौसम बुद्धिमत्ता में आगे बढ़ने के लिए साइन इन करें',
+    createAccount: 'नया खाता बनाएं',
+    signUpSubtitle: 'सटीक मौसम पूर्वानुमान और एआई सहायता के लिए वेदर-जीपीटी से जुड़ें',
+    emailAddress: 'ईमेल पता',
+    password: 'पासवर्ड',
+    fullName: 'पूरा नाम',
+    rememberMe: 'मुझे याद रखें',
+    forgotPassword: 'पासवर्ड भूल गए?',
+    signIn: 'साइन इन करें',
+    signUp: 'खाता बनाएं',
+    orContinueWith: 'या इसके साथ जारी रखें',
+    noAccount: 'खाता नहीं है?',
+    haveAccount: 'पहले से खाता है?',
+    preferredLanguage: 'प्लेटफ़ॉर्म भाषा',
+
+    // Settings
+    general: 'सामान्य',
+    unitsAndFormat: 'इकाई एवं प्रारूप',
+    notifications: 'सूचनाएं',
+    weatherPreferences: 'मौसम प्राथमिकताएं',
+    privacyAndData: 'गोपनीयता एवं डेटा',
+    appearance: 'दिखावट (थीम)',
+    language: 'भाषा चयन',
+    connectedAccounts: 'जुड़े हुए खाते',
+    about: 'सिस्टम परिचय',
+    languageSettingsTitle: 'सिस्टम एवं एआई भाषा',
+    languageSettingsDesc: 'डैशबोर्ड, अलर्ट, एआई चैट और वॉयस ऑडियो के लिए अपनी पसंदीदा भाषा चुनें।',
+
     // Actions & Tools
     search: 'शहर या जिला खोजें...',
     refresh: 'डेटा अपडेट करें',
     viewAll: 'सभी देखें',
     saveLocation: 'स्थान सहेजें',
     removeLocation: 'हटाएं',
-    favorite: 'पसंदीदा शहर'
+    favorite: 'पसंदीदा शहर',
+
+    // Forecast Page
+    changeLocation: 'स्थान बदलें',
+    loadingForecast: 'मौसम पूर्वानुमान लोड हो रहा है...',
+    liveForecastSource: 'वेदर-जीपीटी लाइव पूर्वानुमान',
+    rainLikely: 'बारिश की संभावना',
+    detailedForecast: 'विस्तृत मौसम पूर्वानुमान',
+    summary: 'सारांश',
+    forecastSummaryText: 'गर्म मौसम और आंशिक रूप से बादल छाए। दिन भर हल्की हवाएं।',
+    maxTemperature: 'अधिकतम तापमान',
+    minTemperature: 'न्यूनतम तापमान',
+    rainfall: 'वर्षा की मात्रा',
+    nwpConsensusDesc: 'ECMWF, NOAA GFS और Open-Meteo मॉडल का समग्र विश्लेषण',
+    confidence: 'सटीकता',
+    modelAgreementNote: 'मॉडल सहमति रिपोर्ट',
+    planYourDayBetter: 'अपने दिन की बेहतर योजना बनाएं',
+    planYourDayDesc: 'वेदर-जीपीटी के साथ विस्तृत पूर्वानुमान, लाइव रडार और गंभीर मौसम अलर्ट प्राप्त करें।',
+    selectLocation: 'स्थान चुनें',
+    searchLocationPlaceholder: 'स्थान खोजें...',
+    viewAllLocations: 'सभी स्थान देखें',
+    precipitationSummary: 'वर्षा सारांश',
+    next7Days: 'अगले 7 दिन',
+    totalRainfall: 'कुल बारिश',
+    high: 'उच्च',
+    uvProtectionAdvice: 'धूप का चश्मा पहनें और सनस्क्रीन लगाएं।',
+    aqiGood: 'अच्छी',
+    aqiGoodDesc: 'हवा की गुणवत्ता संतोषजनक है और स्वास्थ्य को कोई खतरा नहीं।',
+    sunriseSunset: 'सूर्योदय व सूर्यास्त',
+    compareLocations: 'मौसम की तुलना करें',
+    compareLocationsDesc: 'विभिन्न शहरों के मौसम की तुलना करें।',
+    addLocationCompare: 'तुलना के लिए शहर जोड़ें',
+    viewFull7Day: 'पूरा 7 दिन का पूर्वानुमान देखें',
+
+    // Advisory Page
+    decisionSupport: 'कृषि एवं आपदा निर्णय सहायता',
+    targetZone: 'चयनित क्षेत्र',
+    moisture: 'नमी',
+    growthStages: 'फसल विकास के मुख्य चरण',
+    stage: 'चरण',
+    volumetricRootZone: 'जड़ क्षेत्र (0-7 सेमी)',
+    faoReferenceCropLoss: 'वाष्पोत्सर्जन जल हानि (FAO-56)',
+    seedbedThermalIndex: 'मृदा तापमान सूचकांक',
+    predicted72hPrecipitation: 'अगले 72 घंटों में अनुमानित बारिश',
+    irrigationAdvisory: 'सिंचाई सलाह',
+    disasterChecklist: 'आपदा सुरक्षा चेकलिस्ट',
+    emergencyHotlines: 'आपातकालीन हेल्पलाइन (24x7)',
+    noActiveEmergency: 'कोई सक्रिय आपातकालीन स्थिति नहीं',
+    alertStatus: 'अलर्ट स्थिति',
+    alertSubscriptions: 'अलर्ट नोटिफिकेशन (Alert Subscriptions)',
+    alertSubscriptionsDesc: 'अपने चयनित स्थानों के लिए मौसम अलर्ट तुरंत प्राप्त करें।',
+    manageSubscriptions: 'नोटिफिकेशन प्रबंधित करें',
+
+    // History Page
+    historicalClimateAnalysis: 'ऐतिहासिक जलवायु विश्लेषण',
+    allConversations: 'सभी वार्तालाप',
+    yesterday: 'कल',
+    thisWeek: 'इस सप्ताह',
+    thisMonth: 'इस महीने',
+    recentHistory: 'हालिया इतिहास',
+    conversationsTab: 'वार्तालाप',
+    climateTab: 'जलवायु रुझान',
+    noConversations: 'अभी कोई वार्तालाप नहीं है। नई चैट शुरू करें!',
+    deleteConversation: 'हटाएं',
+    openConversation: 'खोलें',
+
+    // Map Page
+    liveGIS: 'लाइव GIS',
+    tempLayer: 'तापमान',
+    rainLayer: 'वर्षा',
+    windLayer: 'हवा',
+    alertsLayer: 'अलर्ट',
+    floodLayer: 'बाढ़ जोखिम',
+    satelliteLayer: 'उपग्रह',
+
+    // Saved Locations Page
+    addCity: 'शहर जोड़ें',
+    searchCity: 'भारतीय शहर या जिला खोजें...',
+    setAsPrimary: 'प्राथमिक के रूप में सेट करें',
+    noSavedLocations: 'अभी कोई सहेजा हुआ स्थान नहीं है।',
+
+    // Common / Shared
+    loading: 'लोड हो रहा है...',
+    error: 'त्रुटि',
+    retry: 'पुनः प्रयास करें',
+    close: 'बंद करें',
+    save: 'सहेजें',
+    cancel: 'रद्द करें',
+    confirm: 'पुष्टि करें',
+    back: 'वापस',
+    next: 'आगे',
+
+    // Modals & Dialogs
+    liveAqiScore: 'लाइव AQI स्कोर',
+    standardAqi: 'मानक वायु गुणवत्ता',
+    aqiGoodDesc: 'हवा की गुणवत्ता संतोषजनक है और प्रदूषण का जोखिम नगण्य है।',
+    aqiModerateDesc: 'हवा की गुणवत्ता सामान्य है; संवेदनशील लोग बाहर ज्यादा देर रहने से बचें।',
+    aqiUnhealthySensitiveDesc: 'संवेदनशील व्यक्तियों (अस्थमा रोगी, बुजुर्ग) के लिए स्वास्थ्य जोखिम हो सकता है।',
+    aqiUnhealthyDesc: 'हवा अस्वास्थ्यकर है, बाहर निकलते समय पूरी सावधानी बरतें।',
+    pollutantConcentrations: 'प्रमुख प्रदूषक तत्वों की मात्रा',
+    favorableAirOutdoor: 'आज बाहर टहलने और खेलकूद के लिए वायु गुणवत्ता अनुकूल है।',
+    moderateAirAdvice: 'वायु गुणवत्ता मध्यम है। संवेदनशील व्यक्ति अधिक परिश्रम वाली बाहरी गतिविधियों से बचें।',
+    unhealthyAirAdvice: 'वायु प्रदूषण बढ़ गया है। बाहर जाते समय मास्क पहनें और खिड़कियां बंद रखें।',
+    editProfile: 'प्रोफाइल संपादित करें',
+    clickChangeAvatar: 'प्रोफाइल फोटो बदलने के लिए क्लिक करें',
+    saveChanges: 'बदलाव सहेजें',
+    resetPassword: 'पासवर्ड रीसेट करें',
+    checkYourInbox: 'अपना इनबॉक्स देखें',
+    resetPasswordDesc: 'पासवर्ड पुनर्प्राप्ति निर्देश प्राप्त करने के लिए अपना ईमेल दर्ज करें।',
+    sendResetLink: 'रीसेट लिंक भेजें',
+    backToSignIn: 'साइन इन पर वापस जाएं',
+    addNewLocation: 'नया स्थान जोड़ें',
+    searchSaveCityDesc: 'रीयल-टाइम मौसम के लिए कोई भी शहर या ज़िला खोजें और सहेजें',
+    searchCityPlaceholder: 'शहर या ज़िला खोजें...',
+    saved: 'सहेजा गया',
+    compareWeatherLocations: 'मौसम स्थानों की तुलना',
+    sideBySideDesc: 'दो शहरों के मौसम का आमने-सामने तुलनात्मक विश्लेषण',
+    firstLocation: 'पहला स्थान',
+    secondLocation: 'दूसरा स्थान',
+    upgradePro: 'वेदर-जीपीटी प्रो में अपग्रेड करें',
+    upgradeProDesc: 'उन्नत सैटेलाइट रडार, असीमित स्थान और रीयल-टाइम आपातकालीन अलर्ट प्राप्त करें।',
+    monthly: 'मासिक',
+    yearly: 'वार्षिक',
+    savePercent: '35% बचत',
+    lightTheme: 'लाइट थीम',
+    darkTheme: 'डार्क थीम',
+    accountSettings: 'खाता सेटिंग्स',
+
+    // Settings Detailed
+    profileInfo: 'प्रोफाइल जानकारी',
+    profileInfoDesc: 'अपना नाम, ईमेल और प्रोफाइल फोटो अपडेट करें।',
+    changePassword: 'पासवर्ड बदलें',
+    changePasswordDesc: 'खाता सुरक्षित रखने के लिए समय-समय पर पासवर्ड बदलें।',
+    change: 'बदलें',
+    timeZone: 'समय क्षेत्र (Timezone)',
+    timeZoneDesc: 'सटीक मौसम समय के लिए अपना टाइम ज़ोन चुनें।',
+    chooseTempUnit: 'तापमान की पसंदीदा इकाई चुनें (°C या °F)।',
+    chooseWindUnit: 'हवा की गति की इकाई चुनें।',
+    choosePressureUnit: 'वायुमंडलीय दबाव की इकाई चुनें।',
+    dailyForecastDesc: 'हर सुबह आज का मौसम पूर्वानुमान प्राप्त करें।',
+    weeklySummaryDesc: 'साप्ताहिक मौसम सारांश और आगामी दृष्टिकोण प्राप्त करें।',
+    breakingNews: 'मौसम की ताज़ा खबरें व अलर्ट',
+    breakingNewsDesc: 'महत्वपूर्ण मौसम समाचार और आपातकालीन चेतावनियां।',
+    deleteAccountDesc: 'अपना खाता और सारा डेटा हमेशा के लिए हटाएं।',
+    accountSummary: 'खाता सारांश',
+    memberSince: 'सदस्यता तिथि',
+    locationsSavedCount: 'सहेजे गए स्थान',
+    dataAndPrivacy: 'डेटा और गोपनीयता',
+    exportData: 'डेटा निर्यात करें',
+    needHelp: 'सहायता चाहिए?',
+    faqDocs: 'अक्सर पूछे जाने वाले प्रश्न एवं गाइड',
+    contactSupport: 'सपोर्ट से संपर्क करें',
+
+    // Authentication Hero
+    loginHeroTitle: 'आपका विश्वसनीय मौसम AI साथी',
+    loginHeroSubtitle: 'रीयल-टाइम पूर्वानुमान, सटीक चेतावनियां और व्यक्तिगत कृषि सलाह — सब एक ही जगह।',
+    chatNaturally: 'सहज भाषा में पूछें',
+    chatNaturallyDesc: 'मौसम, खेती और बारिश के बारे में अपनी भाषा में सवाल पूछें।',
+    instantAlerts: 'तुरंत सरकारी मौसम अलर्ट',
+    instantAlertsDesc: 'भारी बारिश, तूफान और लू की तुरंत सूचना प्राप्त करें।',
+    locationBased: 'स्थान आधारित सटीकता',
+    locationBasedDesc: 'अपने गांव और शहर के लिए सटीक मौसम जानकारी।',
+    smartInsights: 'कृषि एवं जलवायु मार्गदर्शन',
+    smartInsightsDesc: 'फसल सुरक्षा, छिड़काव का सही समय और मौसम सलाह।',
+    weatherQuote: '“पेड़ लगाने का सबसे अच्छा समय 20 साल पहले था। दूसरा सबसे अच्छा समय अब है।”',
+    weatherWisdom: '— मौसम संदेश',
+
+    // Telemetry & Map
+    quickCityTelemetry: 'त्वरित शहर मौसम स्थिति',
+    activeCyclonicSystem: 'सक्रिय चक्रवाती तंत्र',
+    basin: 'समुद्री क्षेत्र',
+    intensity: 'तीव्रता',
+    sustainedWind: 'हवा की निरंतर गति',
+    movement: 'गति और दिशा',
+
+    // Saved Locations View & Context
+    viewOnMap: 'मानचित्र पर देखें',
+    starLocation: 'पसंदीदा में जोड़ें',
+    unstarLocation: 'पसंदीदा से हटाएं',
+    deleteLocation: 'शहर हटाएं',
+    addNewLocationDesc: 'रीयल-टाइम मौसम अपडेट के लिए कोई भी शहर खोजें और सहेजें',
+    locationMap: 'स्थान मानचित्र',
+    viewFullMap: 'पूरा नक्शा देखें',
+    openInteractiveMap: 'इंटरैक्टिव मैप खोलें ➔',
+    weatherSummary: 'मौसम सारांश',
+    acrossLocations: 'आपके सभी शहरों की स्थिति',
+    warmestLocation: 'सबसे गर्म स्थान',
+    coolestLocation: 'सबसे ठंडा स्थान',
+    rainyLocation: 'बारिश वाला स्थान',
+    viewDetailedSummary: 'विस्तृत सारांश देखें',
+    tips: 'महत्वपूर्ण सुझाव',
+    personalizedTipsDesc: 'आपके सहेजे गए शहरों के लिए व्यक्तिगत मौसम सुझाव',
+    umbrellaTip: 'मुंबई में हल्की बारिश की संभावना है, बाहर जाते समय छाता साथ रखें।',
+    viewAllTips: 'सभी सुझाव देखें',
+    addedToFavorites: 'पसंदीदा में जोड़ा गया',
+    removedFromFavorites: 'पसंदीदा से हटाया गया',
+
+    // Climate & History
+    searchClimatePlaceholder: 'शहर का ऐतिहासिक जलवायु डेटा खोजें (उदा. पुणे, मुंबई, दिल्ली)...',
+    recalculateTrends: 'पुनः विश्लेषण करें',
+    warmingShift20Yr: '20 वर्षों में तापमान वृद्धि',
+    relativeToNormal: '2004–2010 सामान्य के सापेक्ष',
+    rainfallAnomaly: 'वर्षा विसंगति (एनॉमली)',
+    annualCumulativeDeviation: 'वार्षिक कुल वर्षा विचलन',
+    extremeHeatDays: 'अत्यधिक गर्मी के दिन (>40°C)',
+    daysAbove40C: '40°C से अधिक तापमान वाले दिन',
+    heavyRainEvents: 'भारी वर्षा की घटनाएं (>50 मिमी)',
+    precipAbove50mm: '24 घंटों में 50 मिमी से अधिक बारिश',
+    scientificSummaryFor: 'के लिए वैज्ञानिक जलवायु सारांश',
+    scientificSummaryBody: 'Open-Meteo ERA5 ऐतिहासिक जलवायु आंकड़ों के अनुसार (2004–2024), इस क्षेत्र में औसत तापमान में +0.85°C से +1.2°C की सतत वृद्धि दर्ज की गई है, साथ ही तीव्र मानसूनी बारिश और भीषण गर्मी की घटनाओं में वृद्धि हुई है।',
+
+    // Chat Page
+    zeroHallucinationBadge: 'तथ्य आधारित • शून्य भ्रम',
+    conversationalAiSubtitle: 'प्राकृतिक बहुभाषी मौसम बुद्धिमत्ता सहायक',
+    chatHeroDescription: 'मौसम पूर्वानुमान, बारिश की संभावना, फसल सुरक्षा या सरकारी चेतावनियों के बारे में हिन्दी, मराठी या अंग्रेज़ी में आसानी से पूछें।',
+    stopVoice: 'आवाज़ बंद करें',
+    piperVoice: 'आवाज़ सुनें (TTS)',
+    voiceError: 'इस ब्राउज़र में वॉइस स्पीच रिकग्निशन समर्थित नहीं है।',
+    listening: 'आपकी आवाज़ सुन रहे हैं...',
+    speechPermissionDenied: 'माइक्रोफ़ोन की अनुमति अस्वीकृत। कृपया ब्राउज़र में माइक चालू करें।',
+    languageSwitchedToast: 'भाषा बदली गई:',
+
+    // Helplines & Emergency
+    nationalDisasterHelpline: 'राष्ट्रीय आपदा प्रबंधन हेल्पलाइन',
+    kisanCallCentre: 'किसान कॉल सेंटर (कृषि सलाह)',
+    policeControlRoom: 'पुलिस नियंत्रण कक्ष',
+    emergencyAmbulance: 'एम्बुलेंस एवं आपातकालीन चिकित्सा',
+
+    // Forecast & Models
+    viewFull7Day: 'पूरा 7 दिनों का पूर्वानुमान देखें',
+    at: 'बजे',
+    selectLocation: 'स्थान चुनें',
+    searchLocationPlaceholder: 'स्थान खोजें...',
+    viewAllLocations: 'सभी सहेजे गए स्थान देखें',
+    precipitationSummary: 'वर्षा सारांश',
+    next7Days: 'अगले 7 दिन',
+    totalRainfall: 'अनुमानित कुल वर्षा',
+    uvProtectionAdvice: 'पराबैंगनी (UV) किरणें तीव्र हैं। धूप में चश्मा और टोपी पहनें।',
+    aqiGood: 'वायु गुणवत्ता अच्छी है',
+    aqiGoodDesc: 'वायु गुणवत्ता संतोषजनक है और स्वास्थ्य को कोई ख़तरा नहीं है।',
+    sunriseSunset: 'सूर्योदय और सूर्यास्त',
+    compareLocations: 'दो स्थानों की तुलना',
+    compareLocationsDesc: 'दो शहरों के बीच तापमान, बारिश और हवा की रीयल-टाइम तुलना करें।',
+    addLocationCompare: 'तुलना के लिए स्थान जोड़ें',
+    planYourDayBetter: 'अपने दिन की बेहतर योजना बनाएं',
+    planYourDayDesc: 'घंटे-दर-घंटे बारिश पूर्वानुमान, गंभीर मौसम अलर्ट और लाइव रडार अपडेट प्राप्त करें।',
+    upgradeNow: 'अभी अपग्रेड करें',
+    modelAgreementNote: 'मॉडल सहमति विश्लेषण',
+    confidence: 'विश्वसनीयता',
+    alertsProvidedByImd: 'अलर्ट भारत मौसम विज्ञान विभाग (IMD) द्वारा प्रदान किए जाते हैं',
+    zoomIn: 'ज़ूम इन',
+    zoomOut: 'ज़ूम आउट',
+    centerOnCity: 'पुणे पर केंद्रित करें',
+    viewFull7Day: 'पूरे 7 दिन देखें',
+    pushEmail: 'पुश, ईमेल',
+    push: 'पुश',
+    email: 'ईमेल',
+    at: 'बजे',
+    india: 'भारत',
+    nationalCapital: 'राष्ट्रीय राजधानी',
+    mapZoomIn: 'मानचित्र ज़ूम इन',
+    mapZoomOut: 'मानचित्र ज़ूम आउट'
   },
   bn: {
     dashboard: 'ড্যাশবোর্ড',
@@ -393,14 +1443,63 @@ export const TRANSLATIONS = {
     savedLocations: 'সংরক্ষিত শহর',
     settings: 'সেটিংস',
     logout: 'লগআউট',
+    goodMorning: 'সুপ্রভাত',
+    goodAfternoon: 'শুভ দুপুর',
+    goodEvening: 'শুভ সন্ধ্যা',
+    weatherOverview: 'এখানে আপনার আবহাওয়ার বিবরণ রয়েছে',
+    askAnything: 'ওয়েদার-জিপিটি-কে যেকোনো কিছু জিজ্ঞাসা করুন...',
+    chipRain: 'কাল কি বৃষ্টি হবে?',
+    chipMumbai: 'মুম্বাইয়ের আবহাওয়া',
+    chipCyclone: 'ঘূর্ণিঝড়ের আপডেট',
+    chipAqi: 'আজকের বাতাসের মান',
     temperature: 'তাপমাত্রা',
     humidity: 'আর্দ্রতা',
+    wind: 'বাতাস',
     windSpeed: 'বাতাসের গতি',
     precipitation: 'বৃষ্টিপাত',
     currentWeather: 'বর্তমান আবহাওয়া',
     overview: 'সংক্ষিপ্ত বিবরণ',
     hourlyForecast: 'ঘণ্টাভিত্তিক পূর্বাভাস',
     sevenDayForecast: '৭ দিনের আবহাওয়া পূর্বাভাস',
+    todaysForecast: 'আজকের পূর্বাভাস',
+    viewFullForecast: 'সম্পূর্ণ পূর্বাভাস দেখুন',
+    now: 'এখন',
+    quickActions: 'দ্রুত পদক্ষেপ',
+    recentConversations: 'সাম্প্রতিক কথোপকথন',
+    didYouKnow: 'আপনি কি জানেন?',
+    treesEcoTip: 'গাছপালা আশেপাশের তাপমাত্রা ৫°C পর্যন্ত কমাতে পারে।',
+    allAlerts: 'সব সতর্কবার্তা',
+    active: 'সক্রিয়',
+    warnings: 'সতর্কতা',
+    watch: 'নজরদারি',
+    information: 'তথ্য',
+    liveNowcast: 'লাইভ পূর্বাভাস (Nowcast)',
+    imdMinistrySubtitle: 'মন্ত্রণালয়ের আবহাওয়া পরিমাপ',
+    viewAllActive: 'সব সক্রিয় দেখুন',
+    recentAlerts: 'সাম্প্রতিক সতর্কতা',
+    severity: 'তীব্রতা',
+    probability: 'সম্ভাবনা',
+    source: 'উৎস',
+    until: 'পর্যন্ত',
+    viewDetails: 'বিস্তারিত দেখুন',
+    alertFilters: 'ফিল্টার',
+    location: 'স্থান',
+    alertType: 'প্রকার',
+    allTypes: 'সব ধরন',
+    clearFilters: 'ফিল্টার মুছুন',
+    alertMap: 'মানচিত্র',
+    viewFullMap: 'সম্পূর্ণ মানচিত্র',
+    goPremium: 'প্রিমিয়াম নিন',
+    upgradeNow: 'আপগ্রেড করুন',
+    welcomeBack: 'স্বাগতম',
+    signInSubtitle: 'লগইন করুন ওয়েদার-জিপিটি ব্যবহার করতে',
+    createAccount: 'নতুন অ্যাকাউন্ট তৈরি করুন',
+    emailAddress: 'ইমেইল ঠিকানা',
+    password: 'পাসওয়ার্ড',
+    fullName: 'পুরো নাম',
+    signIn: 'সাইন ইন করুন',
+    signUp: 'অ্যাকাউন্ট খুলুন',
+    preferredLanguage: 'ভাষা নির্বাচন',
     redAlert: 'রেড অ্যালার্ট (তাত্ক্ষণিক পদক্ষেপ নিন)',
     orangeAlert: 'অরেঞ্জ অ্যালার্ট (প্রস্তুত থাকুন)',
     yellowAlert: 'ইয়েলো অ্যালার্ট (নজর রাখুন)',
@@ -414,7 +1513,76 @@ export const TRANSLATIONS = {
     stopVoice: 'ভয়েস বন্ধ করুন',
     search: 'শহর বা জেলা খুঁজুন...',
     refresh: 'রিফ্রেশ করুন',
-    viewAll: 'সব দেখুন'
+    viewAll: 'সব দেখুন',
+    changeLocation: 'স্থান পরিবর্তন করুন',
+    loadingForecast: 'পূর্বাভাস লোড হচ্ছে...',
+    liveForecastSource: 'ওয়েদার-জিপিটি লাইভ পূর্বাভাস',
+    rainLikely: 'বৃষ্টির সম্ভাবনা',
+    detailedForecast: 'বিস্তারিত পূর্বাভাস',
+    summary: 'সারসংক্ষেপ',
+    forecastSummaryText: 'উষ্ণ আবহাওয়া এবং আংশিক মেঘলা আকাশ। সারাদিন হালকা বাতাস।',
+    maxTemperature: 'সর্বোচ্চ তাপমাত্রা',
+    minTemperature: 'সর্বনিম্ন তাপমাত্রা',
+    rainfall: 'বৃষ্টিপাতের পরিমাণ',
+    nwpConsensusDesc: 'ECMWF, NOAA GFS এবং Open-Meteo মডেলের সমন্বিত বিশ্লেষণ',
+    confidence: 'নির্ভরযোগ্যতা',
+    modelAgreementNote: 'মডেল সম্মতি রিপোর্ট',
+    planYourDayBetter: 'আপনার দিনটি আরও ভালোভাবে পরিকল্পনা করুন',
+    planYourDayDesc: 'প্রিমিয়ামের সাথে ৭ দিনের বিস্তারিত পূর্বাভাস এবং সতর্কতা পান।',
+    selectLocation: 'স্থান নির্বাচন করুন',
+    searchLocationPlaceholder: 'স্থান খুঁজুন...',
+    viewAllLocations: 'সব স্থান দেখুন',
+    precipitationSummary: 'বৃষ্টিপাত সারাংশ',
+    next7Days: 'পরবর্তী ৭ দিন',
+    totalRainfall: 'মোট বৃষ্টিপাত',
+    high: 'উচ্চ',
+    uvProtectionAdvice: 'সানগ্লাস পরুন এবং সূর্য থেকে সুরক্ষা নিন।',
+    aqiGood: 'ভালো',
+    aqiGoodDesc: 'বায়ুর মান সন্তোষজনক এবং কোনো ঝুঁকি নেই।',
+    sunriseSunset: 'সূর্যোদয় ও সূর্যাস্ত',
+    compareLocations: 'আবহাওয়া তুলনা করুন',
+    compareLocationsDesc: 'বিভিন্ন শহরের আবহাওয়া তুলনা করুন।',
+    addLocationCompare: 'তুলনার জন্য শহর যোগ করুন',
+    viewFull7Day: 'সম্পূর্ণ ৭ দিনের পূর্বাভাস দেখুন',
+    decisionSupport: 'কৃষি ও দুর্যোগ সিদ্ধান্ত সহায়তা',
+    targetZone: 'নির্বাচিত এলাকা',
+    moisture: 'আর্দ্রতা',
+    growthStages: 'ফসল বৃদ্ধির প্রধান পর্যায়',
+    stage: 'পর্যায়',
+    volumetricRootZone: 'মূল অঞ্চল (০-৭ সেমি)',
+    faoReferenceCropLoss: 'বাষ্পীভবন জল ক্ষতি (FAO-56)',
+    seedbedThermalIndex: 'মাটির তাপমাত্রা সূচক',
+    predicted72hPrecipitation: 'আগামী ৭২ ঘণ্টায় সম্ভাব্য বৃষ্টি',
+    irrigationAdvisory: 'সেচ পরামর্শ',
+    disasterChecklist: 'দুর্যোগ কর্ম তালিকা',
+    emergencyHotlines: 'জরুরি হেল্পলাইন (২৪x৭)',
+    noActiveEmergency: 'কোনো সক্রিয় জরুরি অবস্থা নেই',
+    alertStatus: 'সতর্কতার স্থিতি',
+    historicalClimateAnalysis: 'ঐতিহাসিক জলবায়ু বিশ্লেষণ',
+    allConversations: 'সব কথোপকথন',
+    yesterday: 'গতকাল',
+    thisWeek: 'এই সপ্তাহ',
+    thisMonth: 'এই মাস',
+    recentHistory: 'সাম্প্রতিক ইতিহাস',
+    conversationsTab: 'কথোপকথন',
+    climateTab: 'জলবায়ু প্রবণতা',
+    noConversations: 'এখনো কোনো কথোপকথন নেই। নতুন চ্যাট শুরু করুন!',
+    deleteConversation: 'মুছুন',
+    openConversation: 'খুলুন',
+    liveGIS: 'লাইভ GIS',
+    tempLayer: 'তাপমাত্রা',
+    rainLayer: 'বৃষ্টিপাত',
+    windLayer: 'বাতাস',
+    alertsLayer: 'সতর্কতা',
+    floodLayer: 'বন্যা ঝুঁকি',
+    satelliteLayer: 'উপগ্রহ',
+    addCity: 'শহর যোগ করুন',
+    searchCity: 'ভারতীয় শহর বা জেলা খুঁজুন...',
+    setAsPrimary: 'প্রাথমিক হিসেবে সেট করুন',
+    noSavedLocations: 'এখনো কোনো সংরক্ষিত স্থান নেই।',
+    loading: 'লোড হচ্ছে...',
+    today: 'আজ',
+    tomorrow: 'আগামীকাল'
   },
   ta: {
     dashboard: 'முகப்பு பலகை',
@@ -427,14 +1595,63 @@ export const TRANSLATIONS = {
     savedLocations: 'சேமிக்கப்பட்ட இடங்கள்',
     settings: 'அமைப்புகள்',
     logout: 'வெளியேறு',
+    goodMorning: 'காலை வணக்கம்',
+    goodAfternoon: 'மதிய வணக்கம்',
+    goodEvening: 'மாலை வணக்கம்',
+    weatherOverview: 'உங்கள் வானிலை கண்ணோட்டம் இங்கே',
+    askAnything: 'எதையும் கேளுங்கள்...',
+    chipRain: 'நாளை மழை பெய்யுமா?',
+    chipMumbai: 'மும்பை வானிலை',
+    chipCyclone: 'புயல் அப்டேட்',
+    chipAqi: 'இன்றைய காற்றின் தரம்',
     temperature: 'வெப்பநிலை',
     humidity: 'ஈரப்பதம்',
+    wind: 'காற்று',
     windSpeed: 'காற்றின் வேகம்',
     precipitation: 'மழைப்பொழிவு',
     currentWeather: 'தற்போதைய வானிலை',
     overview: 'கண்ணோட்டம்',
     hourlyForecast: 'மணிநேர முன்னறிவிப்பு',
     sevenDayForecast: '7 நாள் முன்னறிவிப்பு',
+    todaysForecast: 'இன்றைய வானிலை முன்னறிவிப்பு',
+    viewFullForecast: 'முழு முன்னறிவிப்பை காண்க',
+    now: 'இப்போது',
+    quickActions: 'விரைவு நடவடிக்கைகள்',
+    recentConversations: 'சமீபத்திய உரையாடல்கள்',
+    didYouKnow: 'உங்களுக்குத் தெரியுமா?',
+    treesEcoTip: 'மரங்கள் சுற்றியுள்ள வெப்பநிலையை 5°C வரை குறைக்கலாம்.',
+    allAlerts: 'அனைத்து எச்சரிக்கைகள்',
+    active: 'செயலில்',
+    warnings: 'எச்சரிக்கைகள்',
+    watch: 'கண்காணிப்பு',
+    information: 'தகவல்',
+    liveNowcast: 'நேரலை முன்னறிவிப்பு',
+    imdMinistrySubtitle: 'அமைச்சக வானிலை தரவு',
+    viewAllActive: 'செயலில் உள்ளதை பார்க்கவும்',
+    recentAlerts: 'சமீபத்திய எச்சரிக்கைகள்',
+    severity: 'தீவிரம்',
+    probability: 'வாய்ப்பு',
+    source: 'மூலம்',
+    until: 'வரை',
+    viewDetails: 'விவரங்களை காண்க',
+    alertFilters: 'வடிப்பான்கள்',
+    location: 'இடம்',
+    alertType: 'வகை',
+    allTypes: 'அனைத்து வகைகள்',
+    clearFilters: 'வடிப்பானை நீக்கு',
+    alertMap: 'வரைபடம்',
+    viewFullMap: 'முழு வரைபடம்',
+    goPremium: 'பிரீமியம் பெறுங்கள்',
+    upgradeNow: 'மேம்படுத்தவும்',
+    welcomeBack: 'மீண்டும் வருக',
+    signInSubtitle: 'வெதர்-ஜிபிடியில் உள்நுழையவும்',
+    createAccount: 'புதிய கணக்கை உருவாக்கவும்',
+    emailAddress: 'மின்னஞ்சல் முகவரி',
+    password: 'கடவுச்சொல்',
+    fullName: 'முழு பெயர்',
+    signIn: 'உள்நுழையவும்',
+    signUp: 'கணக்கை உருவாக்கு',
+    preferredLanguage: 'மொழி தேர்வு',
     redAlert: 'ரெட் அலர்ட் (உடனடி நடவடிக்கை தேவை)',
     orangeAlert: 'ஆரஞ்ச் அலர்ட் (தயாராக இருங்கள்)',
     yellowAlert: 'மஞ்சள் அலர்ட் (கவனமாக இருங்கள்)',
@@ -448,7 +1665,76 @@ export const TRANSLATIONS = {
     stopVoice: 'குரலை நிறுத்து',
     search: 'நகரம் அல்லது மாவட்டம் தேடுக...',
     refresh: 'புதுப்பிக்கவும்',
-    viewAll: 'அனைத்தையும் காண்க'
+    viewAll: 'அனைத்தையும் காண்க',
+    changeLocation: 'இடத்தை மாற்றுங்கள்',
+    loadingForecast: 'வானிலை முன்னறிவிப்பு ஏற்றப்படுகிறது...',
+    liveForecastSource: 'வெதர்-ஜிபிடி நேரலை முன்னறிவிப்பு',
+    rainLikely: 'மழை வாய்ப்பு',
+    detailedForecast: 'விரிவான வானிலை முன்னறிவிப்பு',
+    summary: 'சுருக்கம்',
+    forecastSummaryText: 'வெப்பமான வானிலை மற்றும் ஓரளவு மேகமூட்டம். நாள் முழுவதும் மெல்லிய காற்று.',
+    maxTemperature: 'அதிகபட்ச வெப்பநிலை',
+    minTemperature: 'குறைந்தபட்ச வெப்பநிலை',
+    rainfall: 'மழையின் அளவு',
+    nwpConsensusDesc: 'ECMWF, NOAA GFS மற்றும் Open-Meteo மாதிரிகளின் ஒருங்கிணைந்த பகுப்பாய்வு',
+    confidence: 'நம்பகத்தன்மை',
+    modelAgreementNote: 'மாதிரி உடன்பாடு அறிக்கை',
+    planYourDayBetter: 'உங்கள் நாளை சிறப்பாகத் திட்டமிடுங்கள்',
+    planYourDayDesc: 'பிரீமியத்துடன் 7 நாள் விரிவான முன்னறிவிப்புகள் மற்றும் எச்சரிக்கைகளைப் பெறுங்கள்.',
+    selectLocation: 'இடம் தேர்ந்தெடுக்கவும்',
+    searchLocationPlaceholder: 'இடம் தேடுங்கள்...',
+    viewAllLocations: 'அனைத்து இடங்களையும் காண்க',
+    precipitationSummary: 'மழைப்பொழிவு சுருக்கம்',
+    next7Days: 'அடுத்த 7 நாட்கள்',
+    totalRainfall: 'மொத்த மழை',
+    high: 'அதிகம்',
+    uvProtectionAdvice: 'சன்கிளாஸ் அணிந்து சூரிய பாதுகாப்பைப் பயன்படுத்துங்கள்.',
+    aqiGood: 'நல்லது',
+    aqiGoodDesc: 'காற்றின் தரம் திருப்திகரமாக உள்ளது, ஆபத்து இல்லை.',
+    sunriseSunset: 'சூரிய உதயம் & சூரிய அஸ்தமனம்',
+    compareLocations: 'வானிலை ஒப்பீடு',
+    compareLocationsDesc: 'பல நகரங்களின் வானிலையை ஒப்பிடுங்கள்.',
+    addLocationCompare: 'ஒப்பிட நகரத்தைச் சேர்க்கவும்',
+    viewFull7Day: 'முழு 7 நாள் முன்னறிவிப்பைக் காண்க',
+    decisionSupport: 'விவசாயம் & பேரிடர் முடிவு ஆதரவு',
+    targetZone: 'தேர்ந்தெடுக்கப்பட்ட பகுதி',
+    moisture: 'ஈரப்பதம்',
+    growthStages: 'பயிர் வளர்ச்சியின் முக்கிய நிலைகள்',
+    stage: 'நிலை',
+    volumetricRootZone: 'வேர் பகுதி (0-7 செ.மீ)',
+    faoReferenceCropLoss: 'நீராவி நீர் இழப்பு (FAO-56)',
+    seedbedThermalIndex: 'மண் வெப்பநிலை குறியீடு',
+    predicted72hPrecipitation: 'அடுத்த 72 மணி நேரத்தில் எதிர்பார்க்கப்படும் மழை',
+    irrigationAdvisory: 'நீர்ப்பாசன ஆலோசனை',
+    disasterChecklist: 'பேரிடர் நடவடிக்கை பட்டியல்',
+    emergencyHotlines: 'அவசர ஹெல்ப்லைன் (24x7)',
+    noActiveEmergency: 'செயலில் உள்ள அவசரநிலை இல்லை',
+    alertStatus: 'எச்சரிக்கை நிலை',
+    historicalClimateAnalysis: 'வரலாற்று காலநிலை பகுப்பாய்வு',
+    allConversations: 'அனைத்து உரையாடல்கள்',
+    yesterday: 'நேற்று',
+    thisWeek: 'இந்த வாரம்',
+    thisMonth: 'இந்த மாதம்',
+    recentHistory: 'சமீபத்திய வரலாறு',
+    conversationsTab: 'உரையாடல்கள்',
+    climateTab: 'காலநிலை போக்குகள்',
+    noConversations: 'இன்னும் உரையாடல்கள் இல்லை. புதிய சாட் தொடங்குங்கள்!',
+    deleteConversation: 'நீக்கு',
+    openConversation: 'திற',
+    liveGIS: 'நேரலை GIS',
+    tempLayer: 'வெப்பநிலை',
+    rainLayer: 'மழைப்பொழிவு',
+    windLayer: 'காற்று',
+    alertsLayer: 'எச்சரிக்கைகள்',
+    floodLayer: 'வெள்ள அபாயம்',
+    satelliteLayer: 'செயற்கைக்கோள்',
+    addCity: 'நகரம் சேர்',
+    searchCity: 'இந்திய நகரம் அல்லது மாவட்டம் தேடுங்கள்...',
+    setAsPrimary: 'முதன்மையாக அமை',
+    noSavedLocations: 'இன்னும் சேமிக்கப்பட்ட இடங்கள் இல்லை.',
+    loading: 'ஏற்றப்படுகிறது...',
+    today: 'இன்று',
+    tomorrow: 'நாளை'
   },
   te: {
     dashboard: 'డ్యాష్‌బోర్డ్',
@@ -461,14 +1747,63 @@ export const TRANSLATIONS = {
     savedLocations: 'సేవ్ చేసిన నగరాలు',
     settings: 'సెట్టింగ్‌లు',
     logout: 'లాగౌట్',
+    goodMorning: 'శుభోదయం',
+    goodAfternoon: 'శుభ మధ్యాహ్నం',
+    goodEvening: 'శుభ సాయంత్రం',
+    weatherOverview: 'మీ వాతావరణ సారాంశం ఇక్కడ ఉంది',
+    askAnything: 'వెదర్-జీపీటీ ని ఏదైనా అడగండి...',
+    chipRain: 'రేపు వర్షం పడుతుందా?',
+    chipMumbai: 'ముంబై వాతావరణం',
+    chipCyclone: 'తుఫాను సమాచారం',
+    chipAqi: 'నేటి గాలి నాణ్యత',
     temperature: 'ఉష్ణోగ్రత',
     humidity: 'గాలిలో తేమ',
+    wind: 'గాలి',
     windSpeed: 'గాలి వేగం',
     precipitation: 'వర్షపాతం',
     currentWeather: 'ప్రస్తుత వాతావరణం',
     overview: 'వాతావరణ సారాంశం',
     hourlyForecast: 'గంటల వారీ అంచనా',
     sevenDayForecast: '7 రోజుల వాతావరణ అంచనా',
+    todaysForecast: 'నేటి వాతావరణ అంచనా',
+    viewFullForecast: 'పూర్తి అంచనా చూడండి',
+    now: 'ఇప్పుడు',
+    quickActions: 'త్వరిత చర్యలు',
+    recentConversations: 'ఇటీవలి సంభాషణలు',
+    didYouKnow: 'మీకు తెలుసా?',
+    treesEcoTip: 'చెట్లు పరిసర ఉష్ణోగ్రతను 5°C వరకు తగ్గించగలవు.',
+    allAlerts: 'అన్ని హెచ్చరికలు',
+    active: 'యాక్టివ్',
+    warnings: 'హెచ్చరికలు',
+    watch: 'నిఘా',
+    information: 'సమాచారం',
+    liveNowcast: 'లైవ్ అంచనా (Nowcast)',
+    imdMinistrySubtitle: 'మంత్రిత్వ శాఖ వాతావరణ సమాచారం',
+    viewAllActive: 'అన్ని యాక్టివ్ చూడండి',
+    recentAlerts: 'ఇటీవలి హెచ్చరికలు',
+    severity: 'తీవ్రత',
+    probability: 'అవకాశం',
+    source: 'మూలం',
+    until: 'వరకు',
+    viewDetails: 'పూర్తి వివరాలు',
+    alertFilters: 'ఫిల్టర్లు',
+    location: 'ప్రదేశం',
+    alertType: 'రకం',
+    allTypes: 'అన్ని రకాలు',
+    clearFilters: 'ఫిల్టర్లను తొలగించు',
+    alertMap: 'మ్యాప్',
+    viewFullMap: 'పూర్తి మ్యాప్ చూడండి',
+    goPremium: 'ప్రీమియం పొందండి',
+    upgradeNow: 'అప్‌గ్రేడ్ చేయండి',
+    welcomeBack: 'స్వాగతం',
+    signInSubtitle: 'వెదర్-జీపీటీ లోకి లాగిన్ అవ్వండి',
+    createAccount: 'ఖాతాను సృష్టించండి',
+    emailAddress: 'ఈమెయిల్ చిరునామా',
+    password: 'పాస్‌వర్డ్',
+    fullName: 'పూర్తి పేరు',
+    signIn: 'సైన్ ఇన్ చేయండి',
+    signUp: 'ఖాతా తెరవండి',
+    preferredLanguage: 'భాష ఎంపిక',
     redAlert: 'రెడ్ అలర్ట్ (వెంటనే రక్షణ చర్యలు తీసుకోండి)',
     orangeAlert: 'ఆరెంజ్ అలర్ట్ (అప్రమత్తంగా ఉండండి)',
     yellowAlert: 'ఎల్లో అలర్ట్ (గమనిస్తూ ఉండండి)',
@@ -482,7 +1817,76 @@ export const TRANSLATIONS = {
     stopVoice: 'వాయిస్ ఆపండి',
     search: 'నగరం లేదా జిల్లా శోధించండి...',
     refresh: 'తాజాకరించండి',
-    viewAll: 'అన్నీ చూడండి'
+    viewAll: 'అన్నీ చూడండి',
+    changeLocation: 'ప్రదేశం మార్చండి',
+    loadingForecast: 'వాతావరణ అంచనా లోడ్ అవుతోంది...',
+    liveForecastSource: 'వెదర్-జీపీటీ లైవ్ అంచనా',
+    rainLikely: 'వర్షం సంభావ్యం',
+    detailedForecast: 'వివరమైన వాతావరణ అంచనా',
+    summary: 'సారాంశం',
+    forecastSummaryText: 'వెచ్చని వాతావరణం మరియు పాక్షిక మేఘావృతం. రోజంతా తేలికపాటి గాలులు.',
+    maxTemperature: 'గరిష్ట ఉష్ణోగ్రత',
+    minTemperature: 'కనిష్ట ఉష్ణోగ్రత',
+    rainfall: 'వర్షపాతం మొత్తం',
+    nwpConsensusDesc: 'ECMWF, NOAA GFS మరియు Open-Meteo మోడల్ల సమన్వయ విశ్లేషణ',
+    confidence: 'విశ్వసనీయత',
+    modelAgreementNote: 'మోడల్ ఏకాభిప్రాయ నివేదిక',
+    planYourDayBetter: 'మీ రోజును మెరుగ్గా ప్లాన్ చేయండి',
+    planYourDayDesc: 'ప్రీమియంతో 7 రోజుల వివరమైన అంచనాలు మరియు హెచ్చరికలు పొందండి.',
+    selectLocation: 'ప్రదేశాన్ని ఎంచుకోండి',
+    searchLocationPlaceholder: 'ప్రదేశాన్ని శోధించండి...',
+    viewAllLocations: 'అన్ని ప్రదేశాలు చూడండి',
+    precipitationSummary: 'వర్షపాత సారాంశం',
+    next7Days: 'తదుపరి 7 రోజులు',
+    totalRainfall: 'మొత్తం వర్షపాతం',
+    high: 'ఎక్కువ',
+    uvProtectionAdvice: 'సన్‌గ్లాసెస్ ధరించండి మరియు సూర్యరక్షణ వాడండి.',
+    aqiGood: 'మంచిది',
+    aqiGoodDesc: 'గాలి నాణ్యత సంతృప్తికరంగా ఉంది, ఎటువంటి ప్రమాదం లేదు.',
+    sunriseSunset: 'సూర్యోదయం & సూర్యాస్తమయం',
+    compareLocations: 'వాతావరణ పోలిక',
+    compareLocationsDesc: 'వివిధ నగరాల వాతావరణాన్ని పోల్చండి.',
+    addLocationCompare: 'పోలిక కోసం నగరం జోడించండి',
+    viewFull7Day: 'పూర్తి 7 రోజుల అంచనా చూడండి',
+    decisionSupport: 'వ్యవసాయ & విపత్తు నిర్ణయ మద్దతు',
+    targetZone: 'ఎంపిక చేసిన ప్రాంతం',
+    moisture: 'తేమ',
+    growthStages: 'పంట పెరుగుదల దశలు',
+    stage: 'దశ',
+    volumetricRootZone: 'వేరు ప్రాంతం (0-7 సెమీ)',
+    faoReferenceCropLoss: 'బాష్పీభవన నీటి నష్టం (FAO-56)',
+    seedbedThermalIndex: 'నేల ఉష్ణోగ్రత సూచిక',
+    predicted72hPrecipitation: 'తదుపరి 72 గంటల్లో అంచనా వర్షం',
+    irrigationAdvisory: 'నీటిపారుదల సలహా',
+    disasterChecklist: 'విపత్తు చర్య జాబితా',
+    emergencyHotlines: 'అత్యవసర హెల్ప్‌లైన్ (24x7)',
+    noActiveEmergency: 'ప్రస్తుతం ఎటువంటి అత్యవసర పరిస్థితి లేదు',
+    alertStatus: 'హెచ్చరిక స్థితి',
+    historicalClimateAnalysis: 'చారిత్రక వాతావరణ విశ్లేషణ',
+    allConversations: 'అన్ని సంభాషణలు',
+    yesterday: 'నిన్న',
+    thisWeek: 'ఈ వారం',
+    thisMonth: 'ఈ నెల',
+    recentHistory: 'ఇటీవలి చరిత్ర',
+    conversationsTab: 'సంభాషణలు',
+    climateTab: 'వాతావరణ ధోరణులు',
+    noConversations: 'ఇంకా సంభాషణలు లేవు. కొత్త చాట్ ప్రారంభించండి!',
+    deleteConversation: 'తొలగించు',
+    openConversation: 'తెరువు',
+    liveGIS: 'లైవ్ GIS',
+    tempLayer: 'ఉష్ణోగ్రత',
+    rainLayer: 'వర్షపాతం',
+    windLayer: 'గాలి',
+    alertsLayer: 'హెచ్చరికలు',
+    floodLayer: 'వరద ప్రమాదం',
+    satelliteLayer: 'ఉపగ్రహం',
+    addCity: 'నగరాన్ని జోడించండి',
+    searchCity: 'భారత నగరం లేదా జిల్లా శోధించండి...',
+    setAsPrimary: 'ప్రాథమికంగా సెట్ చేయండి',
+    noSavedLocations: 'ఇంకా సేవ్ చేసిన ప్రదేశాలు లేవు.',
+    loading: 'లోడ్ అవుతోంది...',
+    today: 'ఈ రోజు',
+    tomorrow: 'రేపు'
   }
 };
 
@@ -495,10 +1899,57 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('weathergpt_language', language);
+    try {
+      document.documentElement.lang = language;
+      document.documentElement.classList.remove('lang-en', 'lang-mr', 'lang-hi');
+      document.documentElement.classList.add(`lang-${language}`);
+    } catch (_) {}
   }, [language]);
 
   const t = (key, fallback) => {
     return TRANSLATIONS[language]?.[key] || TRANSLATIONS.en?.[key] || fallback || key;
+  };
+
+  const formatDay = (day) => {
+    if (!day) return '';
+    const dLower = String(day).toLowerCase();
+    if (language === 'mr') {
+      if (dLower.includes('mon') || dLower.includes('सोम')) return 'सोम';
+      if (dLower.includes('tue') || dLower.includes('मंगळ')) return 'मंगळ';
+      if (dLower.includes('wed') || dLower.includes('बुध')) return 'बुध';
+      if (dLower.includes('thu') || dLower.includes('गुरू')) return 'गुरू';
+      if (dLower.includes('fri') || dLower.includes('शुक्र')) return 'शुक्र';
+      if (dLower.includes('sat') || dLower.includes('शनि')) return 'शनि';
+      if (dLower.includes('sun') || dLower.includes('रवि')) return 'रवि';
+    } else if (language === 'hi') {
+      if (dLower.includes('mon') || dLower.includes('सोम')) return 'सोम';
+      if (dLower.includes('tue') || dLower.includes('मंगल')) return 'मंगल';
+      if (dLower.includes('wed') || dLower.includes('बुध')) return 'बुध';
+      if (dLower.includes('thu') || dLower.includes('गुरु')) return 'गुरु';
+      if (dLower.includes('fri') || dLower.includes('शुक्र')) return 'शुक्र';
+      if (dLower.includes('sat') || dLower.includes('शनि')) return 'शनि';
+      if (dLower.includes('sun') || dLower.includes('रवि')) return 'रवि';
+    }
+    return day;
+  };
+
+  const formatHour = (hour) => {
+    if (!hour) return '';
+    const h = String(hour);
+    if (language === 'mr') {
+      return h.replace('AM', 'सकाळी').replace('PM', 'संध्याकाळी').replace('Now', 'आत्ता');
+    }
+    if (language === 'hi') {
+      return h.replace('AM', 'सुबह').replace('PM', 'शाम').replace('Now', 'अभी');
+    }
+    return hour;
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('goodMorning');
+    if (hour < 17) return t('goodAfternoon');
+    return t('goodEvening');
   };
 
   const translateWarningLevel = (level) => {
@@ -521,6 +1972,86 @@ export const LanguageProvider = ({ children }) => {
     return hazard;
   };
 
+  const translateAlertTitle = (title) => {
+    if (!title) return '';
+    const tLower = String(title).toLowerCase();
+    if (language === 'mr') {
+      if (tLower.includes('heavy rain') || tLower.includes('rainfall')) return 'मुसळधार पावसाचा इशारा';
+      if (tLower.includes('wind')) return 'तीव्र वादळी वारे इशारा';
+      if (tLower.includes('heat')) return 'तीव्र उष्णतेची लाट इशारा';
+      if (tLower.includes('thunder') || tLower.includes('lightning')) return 'विजांसह वादळी पावसाचा इशारा';
+      if (tLower.includes('fog')) return 'दाट धुक्याचा इशारा';
+      if (tLower.includes('flood')) return 'पूर चेतावणी व सुरक्षा सल्ला';
+      if (tLower.includes('cyclone') || tLower.includes('storm')) return 'तीव्र चक्रीवादळ इशारा';
+    } else if (language === 'hi') {
+      if (tLower.includes('heavy rain') || tLower.includes('rainfall')) return 'भारी बारिश की चेतावनी';
+      if (tLower.includes('wind')) return 'तेज़ हवाएं एवं आंधी चेतावनी';
+      if (tLower.includes('heat')) return 'भीषण लू / हीटवेव चेतावनी';
+      if (tLower.includes('thunder') || tLower.includes('lightning')) return 'गरज-चमक के साथ आंधी चेतावनी';
+      if (tLower.includes('fog')) return 'घने कोहरे की चेतावनी';
+      if (tLower.includes('flood')) return 'बाढ़ सुरक्षा चेतावनी';
+      if (tLower.includes('cyclone') || tLower.includes('storm')) return 'चक्रवाती तूफान चेतावनी';
+    }
+    return title;
+  };
+
+  const translateAlertDescription = (desc) => {
+    if (!desc) return '';
+    const dLower = String(desc).toLowerCase();
+    if (language === 'mr') {
+      if (dLower.includes('waterlogging') || dLower.includes('heavy rainfall')) {
+        return 'पुढील २४ तासांत मुसळधार पावसाची शक्यता आहे. सखल भागात पाणी साचू शकते आणि रस्ते वाहतुकीस अडथळा निर्माण होऊ शकतो.';
+      }
+      if (dLower.includes('gusty winds') || dLower.includes('loose outdoor')) {
+        return 'ताशी ४५ किमी पर्यंत जोरदार वारे वाहण्याचा अंदाज आहे. मोकळ्या वस्तू सुरक्षित ठिकाणी ठेवा.';
+      }
+      if (dLower.includes('maximum temperature') || dLower.includes('hydrated')) {
+        return 'कमाल तापमान ३९°C पर्यंत जाण्याची शक्यता आहे. भरपूर पाणी प्या आणि दुपारच्या उन्हात बाहेर पडणे टाळा.';
+      }
+      if (dLower.includes('lightning') || dLower.includes('thunderstorm')) {
+        return 'दुपारी किंवा संध्याकाळी विजांच्या कडकडाटासह वादळी पावसाचा अंदाज आहे. झाडांखाली किंवा खुल्या मैदानात उभे राहू नका.';
+      }
+    } else if (language === 'hi') {
+      if (dLower.includes('waterlogging') || dLower.includes('heavy rainfall')) {
+        return 'अगले 24 घंटों में भारी बारिश की संभावना है। निचले इलाकों में जलभराव और यातायात में बाधा उत्पन्न हो सकती है।';
+      }
+      if (dLower.includes('gusty winds') || dLower.includes('loose outdoor')) {
+        return '45 किमी/घंटा तक की तेज़ हवाएं चलने की संभावना है। बाहरी खुले सामान को सुरक्षित रखें।';
+      }
+      if (dLower.includes('maximum temperature') || dLower.includes('hydrated')) {
+        return 'अधिकतम तापमान 39°C तक पहुंच सकता है। पर्याप्त पानी पिएं और दोपहर की धूप से बचें।';
+      }
+      if (dLower.includes('lightning') || dLower.includes('thunderstorm')) {
+        return 'दोपहर या शाम को गरज-चमक के साथ बारिश का अनुमान है। पेड़ों के नीचे या खुले मैदान में न जाएं।';
+      }
+    }
+    return desc;
+  };
+
+  const translateSeverity = (sev) => {
+    if (!sev) return '';
+    const s = String(sev).toLowerCase();
+    if (language === 'mr') {
+      if (s === 'severe') return 'गंभीर';
+      if (s === 'moderate') return 'मध्यम';
+      if (s === 'watch') return 'सावधगिरी';
+      if (s === 'info') return 'माहिती';
+    } else if (language === 'hi') {
+      if (s === 'severe') return 'गंभीर';
+      if (s === 'moderate') return 'मध्यम';
+      if (s === 'watch') return 'निगरानी';
+      if (s === 'info') return 'सूचना';
+    }
+    return sev;
+  };
+
+  const formatUntil = (untilTime) => {
+    if (!untilTime) return '';
+    if (language === 'mr') return `${untilTime} पर्यंत`;
+    if (language === 'hi') return `${untilTime} तक`;
+    return `Until ${untilTime}`;
+  };
+
   const translateCondition = (conditionText) => {
     if (!conditionText) return t('clearSky');
     const lower = String(conditionText).toLowerCase();
@@ -536,15 +2067,89 @@ export const LanguageProvider = ({ children }) => {
     return conditionText;
   };
 
+  // Indian Cities & States Localization Map
+  const CITY_TRANSLATIONS = {
+    'pune': { mr: 'पुणे', hi: 'पुणे' },
+    'mumbai': { mr: 'मुंबई', hi: 'मुंबई' },
+    'nagpur': { mr: 'नागपूर', hi: 'नागपुर' },
+    'nashik': { mr: 'नाशिक', hi: 'नासिक' },
+    'aurangabad': { mr: 'छत्रपती संभाजीनगर', hi: 'छत्रपति संभाजीनगर' },
+    'chhatrapati sambhajinagar': { mr: 'छत्रपती संभाजीनगर', hi: 'छत्रपति संभाजीनगर' },
+    'solapur': { mr: 'सोलापूर', hi: 'सोलापुर' },
+    'kolhapur': { mr: 'कोल्हापूर', hi: 'कोल्हापुर' },
+    'thane': { mr: 'ठाणे', hi: 'ठाणे' },
+    'delhi': { mr: 'नवी दिल्ली', hi: 'नई दिल्ली' },
+    'new delhi': { mr: 'नवी दिल्ली', hi: 'नई दिल्ली' },
+    'jaipur': { mr: 'जयपूर', hi: 'जयपुर' },
+    'bengaluru': { mr: 'बेंगळुरू', hi: 'बेंगलुरु' },
+    'bangalore': { mr: 'बेंगळुरू', hi: 'बेंगलुरु' },
+    'kolkata': { mr: 'कोलकाता', hi: 'कोलकाता' },
+    'chennai': { mr: 'चेन्नई', hi: 'चेन्नई' },
+    'hyderabad': { mr: 'हैदराबाद', hi: 'हैदराबाद' },
+    'ahmedabad': { mr: 'अहमदाबाद', hi: 'अहमदाबाद' },
+    'surat': { mr: 'सुरत', hi: 'सूरत' },
+    'lucknow': { mr: 'लखनौ', hi: 'लखनऊ' },
+    'bhopal': { mr: 'भोपाळ', hi: 'भोपाल' },
+    'indore': { mr: 'इंदूर', hi: 'इंदौर' },
+    'patna': { mr: 'पाटणा', hi: 'पटना' },
+    'chandigarh': { mr: 'चंदिगढ', hi: 'चंडीगढ़' },
+    'all': { mr: 'सर्व ठिकाणे', hi: 'सभी स्थान' }
+  };
+
+  const REGION_TRANSLATIONS = {
+    'maharashtra': { mr: 'महाराष्ट्र', hi: 'महाराष्ट्र' },
+    'national capital': { mr: 'राष्ट्रीय राजधानी', hi: 'राष्ट्रीय राजधानी' },
+    'delhi': { mr: 'दिल्ली', hi: 'दिल्ली' },
+    'karnataka': { mr: 'कर्नाटक', hi: 'कर्नाटक' },
+    'west bengal': { mr: 'पश्चिम बंगाल', hi: 'पश्चिम बंगाल' },
+    'tamil nadu': { mr: 'तामिळनाडू', hi: 'तमिलनाडु' },
+    'rajasthan': { mr: 'राजस्थान', hi: 'राजस्थान' },
+    'gujarat': { mr: 'गुजरात', hi: 'गुजरात' },
+    'uttar pradesh': { mr: 'उत्तर प्रदेश', hi: 'उत्तर प्रदेश' },
+    'madhya pradesh': { mr: 'मध्य प्रदेश', hi: 'मध्य प्रदेश' },
+    'telangana': { mr: 'तेलंगणा', hi: 'तेलंगाना' },
+    'bihar': { mr: 'बिहार', hi: 'बिहार' },
+    'punjab': { mr: 'पंजाब', hi: 'पंजाब' },
+    'india': { mr: 'भारत', hi: 'भारत' }
+  };
+
+  const translateCity = (cityName) => {
+    if (!cityName || language === 'en') return cityName;
+    // Check if contains comma, e.g. "Pune, Maharashtra"
+    if (String(cityName).includes(',')) {
+      const parts = String(cityName).split(',').map(p => p.trim());
+      const translatedCity = translateCity(parts[0]);
+      const translatedReg = parts[1] ? translateRegion(parts[1]) : '';
+      return translatedReg ? `${translatedCity}, ${translatedReg}` : translatedCity;
+    }
+    const clean = String(cityName).toLowerCase().trim();
+    return CITY_TRANSLATIONS[clean]?.[language] || cityName;
+  };
+
+  const translateRegion = (regionName) => {
+    if (!regionName || language === 'en') return regionName;
+    const clean = String(regionName).toLowerCase().trim();
+    return REGION_TRANSLATIONS[clean]?.[language] || regionName;
+  };
+
   return (
     <LanguageContext.Provider
       value={{
         language,
         setLanguage,
         t,
+        getGreeting,
         translateCondition,
         translateWarningLevel,
         translateHazard,
+        translateAlertTitle,
+        translateAlertDescription,
+        translateSeverity,
+        translateCity,
+        translateRegion,
+        formatUntil,
+        formatDay,
+        formatHour,
         supportedLanguages: SUPPORTED_LANGUAGES
       }}
     >

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWeather } from '../context/WeatherContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { 
   Search, 
@@ -32,6 +33,7 @@ export const HistoryPage = () => {
     formatTemp,
     addToast 
   } = useWeather();
+  const { t } = useLanguage();
 
   const [activeMainTab, setActiveMainTab] = useState('conversations'); // 'conversations' | 'climate'
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +51,7 @@ export const HistoryPage = () => {
       const result = await api.climateTrends({ city: cityName, startYear: 2004, endYear: 2024 });
       setClimateData(result);
     } catch {
-      addToast('Could not load climate archive for selected city', 'warning');
+      addToast(t('error'), 'warning');
     } finally {
       setClimateLoading(false);
     }
@@ -62,11 +64,11 @@ export const HistoryPage = () => {
   }, [activeMainTab, climateCity]);
 
   const dateTabs = [
-    { id: 'all', label: 'All Conversations' },
-    { id: 'today', label: 'Today' },
-    { id: 'yesterday', label: 'Yesterday' },
-    { id: 'week', label: 'This Week' },
-    { id: 'month', label: 'This Month' },
+    { id: 'all', label: t('allConversations') },
+    { id: 'today', label: t('today') },
+    { id: 'yesterday', label: t('yesterday') },
+    { id: 'week', label: t('thisWeek') },
+    { id: 'month', label: t('thisMonth') },
   ];
 
   const handleOpenConversation = (convId) => {
@@ -84,7 +86,7 @@ export const HistoryPage = () => {
   });
 
   const grouped = filteredConversations.reduce((acc, conv) => {
-    const group = conv.dateGroup || 'Recent History';
+    const group = conv.dateGroup || t('recentHistory');
     if (!acc[group]) acc[group] = [];
     acc[group].push(conv);
     return acc;
@@ -96,11 +98,11 @@ export const HistoryPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#151F32] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-card">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-            <span>Historical & Climate Analysis</span>
+            <span>{t('historicalClimateAnalysis')}</span>
             <BarChart2 className="w-6 h-6 text-blue-600" />
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Access past chat inquiries, forecast logs, and 20-year meteorological climate trends.
+            {t('historySubtitle')}
           </p>
         </div>
 
@@ -114,7 +116,7 @@ export const HistoryPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            💬 Chat History
+            💬 {t('conversationsTab')}
           </button>
           <button
             onClick={() => setActiveMainTab('climate')}
@@ -124,7 +126,7 @@ export const HistoryPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            📈 20-Yr Climate Shift
+            📈 {t('climateTab')}
           </button>
         </div>
       </div>
@@ -137,7 +139,7 @@ export const HistoryPage = () => {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Analyze climate history for city (e.g. Pune, Mumbai, Delhi)..."
+                placeholder={t('searchClimatePlaceholder')}
                 value={climateCity}
                 onChange={(e) => setClimateCity(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchClimateTrends(climateCity)}
@@ -152,10 +154,10 @@ export const HistoryPage = () => {
             <button
               onClick={() => fetchClimateTrends(climateCity)}
               disabled={climateLoading}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${climateLoading ? 'animate-spin' : ''}`} />
-              <span>Recalculate Trends</span>
+              <span>{t('recalculateTrends')}</span>
             </button>
           </div>
 
@@ -163,7 +165,7 @@ export const HistoryPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-[#151F32] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-slate-400">
-                <span className="text-xs uppercase font-bold tracking-wider">20-Yr Warming Shift</span>
+                <span className="text-xs uppercase font-bold tracking-wider">{t('warmingShift20Yr')}</span>
                 <TrendingUp className="w-4 h-4 text-rose-500" />
               </div>
               <div className="text-2xl font-black text-rose-500">
@@ -171,12 +173,12 @@ export const HistoryPage = () => {
                   ? `+${climateData.climateShift.warmingShiftC}°C`
                   : '+0.85°C'}
               </div>
-              <p className="text-[11px] text-slate-400">Relative to 2004–2010 normal</p>
+              <p className="text-[11px] text-slate-400">{t('relativeToNormal')}</p>
             </div>
 
             <div className="bg-white dark:bg-[#151F32] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-slate-400">
-                <span className="text-xs uppercase font-bold tracking-wider">Rainfall Anomaly</span>
+                <span className="text-xs uppercase font-bold tracking-wider">{t('rainfallAnomaly')}</span>
                 <CloudRain className="w-4 h-4 text-blue-500" />
               </div>
               <div className="text-2xl font-black text-slate-900 dark:text-white">
@@ -184,40 +186,39 @@ export const HistoryPage = () => {
                   ? `${climateData.climateShift.annualPrecipitationShiftMm > 0 ? '+' : ''}${climateData.climateShift.annualPrecipitationShiftMm} mm`
                   : '-38.4 mm'}
               </div>
-              <p className="text-[11px] text-slate-400">Annual cumulative deviation</p>
+              <p className="text-[11px] text-slate-400">{t('annualCumulativeDeviation')}</p>
             </div>
 
             <div className="bg-white dark:bg-[#151F32] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-slate-400">
-                <span className="text-xs uppercase font-bold tracking-wider">Extreme Heat Days</span>
+                <span className="text-xs uppercase font-bold tracking-wider">{t('extremeHeatDays')}</span>
                 <Flame className="w-4 h-4 text-amber-500" />
               </div>
               <div className="text-2xl font-black text-amber-500">
-                {climateData?.extremeWeatherDaysCount?.heatDaysAbove40C ?? 18} <span className="text-xs font-normal text-slate-400">days/yr</span>
+                {climateData?.extremeWeatherDaysCount?.heatDaysAbove40C ?? 18} <span className="text-xs font-normal text-slate-400">{t('days')}</span>
               </div>
-              <p className="text-[11px] text-slate-400">Days exceeding 40°C ceiling</p>
+              <p className="text-[11px] text-slate-400">{t('daysAbove40C')}</p>
             </div>
 
             <div className="bg-white dark:bg-[#151F32] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-slate-400">
-                <span className="text-xs uppercase font-bold tracking-wider">Heavy Rain Events</span>
+                <span className="text-xs uppercase font-bold tracking-wider">{t('heavyRainEvents')}</span>
                 <Thermometer className="w-4 h-4 text-cyan-500" />
               </div>
               <div className="text-2xl font-black text-cyan-500">
-                {climateData?.extremeWeatherDaysCount?.heavyRainDaysAbove50mm ?? 12} <span className="text-xs font-normal text-slate-400">days/yr</span>
+                {climateData?.extremeWeatherDaysCount?.heavyRainDaysAbove50mm ?? 12} <span className="text-xs font-normal text-slate-400">{t('days')}</span>
               </div>
-              <p className="text-[11px] text-slate-400">Precipitation &gt; 50mm / 24h</p>
+              <p className="text-[11px] text-slate-400">{t('precipAbove50mm')}</p>
             </div>
           </div>
 
           {/* Historical Trend Narrative */}
           <div className="bg-gradient-to-r from-indigo-950/30 to-slate-900/60 p-6 rounded-3xl border border-indigo-500/20 space-y-3">
             <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" /> Scientific Climate Summary for {climateCity}:
+              <Sparkles className="w-4 h-4 text-indigo-400" /> {climateCity} {t('scientificSummaryFor')}:
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Based on Open-Meteo ERA5 historical reanalysis (2004–2024), {climateCity} exhibits a sustained warming trajectory of approximately 
-              +0.85°C to +1.2°C, accompanied by higher convective precipitation intensity and increased frequency of pre-monsoon heat spikes.
+              {t('scientificSummaryBody')}
             </p>
           </div>
         </div>
@@ -228,7 +229,7 @@ export const HistoryPage = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search conversations by location, topic or keyword..."
+              placeholder={t('search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
@@ -291,13 +292,13 @@ export const HistoryPage = () => {
                           </span>
 
                           <span className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-600 border border-blue-200 dark:border-blue-900">
-                            {conv.tag || 'Weather Query'}
+                            {conv.tag || t('chat')}
                           </span>
 
                           <button
                             onClick={() => deleteConversation(conv.id)}
                             className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition"
-                            title="Delete Conversation"
+                            title={t('deleteConversation')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -309,7 +310,7 @@ export const HistoryPage = () => {
               ))
             ) : (
               <div className="text-center py-12 text-slate-400 text-xs">
-                No past conversation records found.
+                {t('noConversations')}
               </div>
             )}
           </div>

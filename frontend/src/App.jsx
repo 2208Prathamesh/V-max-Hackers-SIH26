@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { WeatherProvider, useWeather } from './context/WeatherContext';
 import { Layout } from './components/layout/Layout';
 import { WeatherMapPage } from './pages/WeatherMapPage';
@@ -16,7 +16,16 @@ import { LoginPage } from './pages/LoginPage';
 import { ToastContainer } from './components/common/Toast';
 
 const AppContent = () => {
-  const { currentPage, isAuthenticated } = useWeather();
+  const { currentPage, isAuthenticated, user, settings } = useWeather();
+  const { language, setLanguage } = useLanguage();
+
+  // Keep language in sync with authenticated user's preferred language
+  useEffect(() => {
+    const preferred = user?.language || settings?.language;
+    if (preferred && preferred !== language) {
+      setLanguage(preferred);
+    }
+  }, [user?.language, settings?.language]);
 
   // If not authenticated or on login page, display the WeatherGPT Login Page
   if (!isAuthenticated || currentPage === 'login') {

@@ -15,7 +15,9 @@ function normalizeForecast (data, source) {
       windSpeed: data.current?.wind_speed_10m ?? null,
       windDirection: data.current?.wind_direction_10m ?? null,
       pressure: data.current?.surface_pressure ?? null,
-      precipitation: data.current?.precipitation ?? null
+      precipitation: data.current?.precipitation ?? null,
+      visibility: data.current?.visibility ?? data.hourly?.visibility?.[0] ?? null,
+      uvIndex: data.current?.uv_index ?? data.hourly?.uv_index?.[0] ?? null
     },
 
     hourly:
@@ -28,7 +30,9 @@ function normalizeForecast (data, source) {
           data.hourly.precipitation_probability?.[index] ?? null,
         windSpeed: data.hourly.wind_speed_10m?.[index] ?? null,
         windDirection: data.hourly.wind_direction_10m?.[index] ?? null,
-        pressure: data.hourly.surface_pressure?.[index] ?? null
+        pressure: data.hourly.surface_pressure?.[index] ?? null,
+        visibility: data.hourly.visibility?.[index] ?? null,
+        uvIndex: data.hourly.uv_index?.[index] ?? null
       })) ?? [],
 
     daily:

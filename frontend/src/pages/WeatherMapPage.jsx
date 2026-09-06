@@ -31,7 +31,7 @@ export const WeatherMapPage = () => {
     formatWind,
     addToast
   } = useWeather();
-  const { t, language } = useLanguage();
+  const { t, language, translateCity, translateRegion } = useLanguage();
 
   const [activeLayer, setActiveLayer] = useState('temperature'); // 'temperature' | 'precipitation' | 'wind' | 'alerts' | 'flood-risk' | 'satellite'
   const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629, zoom: 5 }); // India center
@@ -118,10 +118,10 @@ export const WeatherMapPage = () => {
             <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span>{t('weatherMap')}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                Live GIS
+                {t('liveGIS')}
               </span>
             </h1>
-            <p className="text-xs text-slate-400">OpenStreetMap & ISRO MOSDAC Telemetry</p>
+            <p className="text-xs text-slate-400">{t('mapSubtitle')}</p>
           </div>
         </div>
 
@@ -246,7 +246,7 @@ export const WeatherMapPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{props.stationName}</span>
+                    <span>{translateCity(props.stationName)}</span>
                     <span className="text-amber-400 font-extrabold">
                       {activeLayer === 'precipitation'
                         ? `${props.precipitationMm} mm`
@@ -265,7 +265,7 @@ export const WeatherMapPage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-bold text-sm text-white">
                     <MapPin className="w-4 h-4 text-blue-400" />
-                    <span>{selectedStation.name}, India</span>
+                    <span>{translateCity(selectedStation.name)}, {t('india')}</span>
                   </div>
                   <button
                     onClick={() => setSelectedStation(null)}
@@ -301,16 +301,16 @@ export const WeatherMapPage = () => {
             {/* Map Controls: Floating Top-Left */}
             <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700 shadow-xl">
               <button
-                onClick={() => addToast('Zoom In', 'info')}
+                onClick={() => addToast(t('mapZoomIn'), 'info')}
                 className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition"
-                title="Zoom In"
+                title={t('zoomIn')}
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
-                onClick={() => addToast('Zoom Out', 'info')}
+                onClick={() => addToast(t('mapZoomOut'), 'info')}
                 className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition"
-                title="Zoom Out"
+                title={t('zoomOut')}
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -321,7 +321,7 @@ export const WeatherMapPage = () => {
                   handleFocusCity(pune);
                 }}
                 className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition"
-                title="Center on Pune"
+                title={t('centerOnCity')}
               >
                 <Crosshair className="w-4 h-4" />
               </button>
@@ -334,7 +334,7 @@ export const WeatherMapPage = () => {
           {/* Quick City Switcher */}
           <div className="bg-white dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Navigation className="w-4 h-4 text-blue-500" /> Quick City Telemetry
+              <Navigation className="w-4 h-4 text-blue-500" /> {t('quickCityTelemetry')}
             </h3>
             <div className="space-y-1.5">
               {[
@@ -348,11 +348,11 @@ export const WeatherMapPage = () => {
                 <button
                   key={idx}
                   onClick={() => handleFocusCity(c)}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700 text-left"
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700 text-left cursor-pointer"
                 >
                   <div>
-                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">{c.city}</span>
-                    <span className="text-[10px] text-slate-400">{c.state}</span>
+                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200 block">{translateCity(c.city)}</span>
+                    <span className="text-[10px] text-slate-400">{translateRegion(c.state)}</span>
                   </div>
                   <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
                     {formatTemp(c.temp)}
@@ -367,19 +367,19 @@ export const WeatherMapPage = () => {
             <div className="bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/30 rounded-3xl p-5 shadow-md space-y-3">
               <div className="flex items-center gap-2 text-rose-400">
                 <Radio className="w-4 h-4 animate-pulse" />
-                <h4 className="text-xs font-bold uppercase tracking-wider">Active Cyclonic System</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider">{t('activeCyclonicSystem')}</h4>
               </div>
               <div>
                 <p className="font-extrabold text-sm text-slate-100">{cycloneData.systemName}</p>
-                <p className="text-xs text-slate-400">Basin: {cycloneData.basin} | Intensity: {cycloneData.currentIntensity}</p>
+                <p className="text-xs text-slate-400">{t('basin')}: {cycloneData.basin} | {t('intensity')}: {cycloneData.currentIntensity}</p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                 <div className="p-2 rounded-xl bg-slate-800/50">
-                  <span className="text-[10px] text-slate-400 block">Sustained Wind</span>
+                  <span className="text-[10px] text-slate-400 block">{t('sustainedWind')}</span>
                   <span className="font-bold text-slate-200">{cycloneData.maximumSustainedWindKmh} km/h</span>
                 </div>
                 <div className="p-2 rounded-xl bg-slate-800/50">
-                  <span className="text-[10px] text-slate-400 block">Movement</span>
+                  <span className="text-[10px] text-slate-400 block">{t('movement')}</span>
                   <span className="font-bold text-slate-200">{cycloneData.movementDirection} ({cycloneData.movementSpeedKmh} km/h)</span>
                 </div>
               </div>

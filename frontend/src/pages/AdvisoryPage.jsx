@@ -94,6 +94,60 @@ export const AdvisoryPage = () => {
 
   const currentCrop = CROP_PROFILES.find((c) => c.id === selectedCropId) || CROP_PROFILES[0];
 
+  const getCropDisplayName = (crop) => {
+    if (language === 'mr') {
+      if (crop.id === 'cotton') return 'कापूस (Cotton)';
+      if (crop.id === 'rice') return 'भात / धान (Paddy)';
+      if (crop.id === 'wheat') return 'गहू (Wheat)';
+      if (crop.id === 'sugarcane') return 'ऊस (Sugarcane)';
+      if (crop.id === 'soybean') return 'सोयाबीन (Soybean)';
+      if (crop.id === 'tomato') return 'टोमॅटो / भाजीपाला (Tomato)';
+    } else if (language === 'hi') {
+      if (crop.id === 'cotton') return 'कपास (Cotton)';
+      if (crop.id === 'rice') return 'धान / चावल (Paddy)';
+      if (crop.id === 'wheat') return 'गेहूं (Wheat)';
+      if (crop.id === 'sugarcane') return 'गन्ना (Sugarcane)';
+      if (crop.id === 'soybean') return 'सोयाबीन (Soybean)';
+      if (crop.id === 'tomato') return 'टमाटर / सब्जियां (Tomato)';
+    }
+    return crop.name;
+  };
+
+  const getStageDisplayName = (cropId, stageIdx, fallback) => {
+    if (language === 'mr') {
+      const mrStages = {
+        cotton: ['पेरणी (०-२० दिवस)', 'शाकीय वाढ (२१-५० दिवस)', 'पात्या व फुले (५१-९० दिवस)', 'बोंड भरणे (९१-१३० दिवस)', 'कापूस वेचणी'],
+        rice: ['रोपे तयार करणे (०-२५ दि.)', 'फुटवे फुटणे (२६-५५ दि.)', 'लोंबी बाहेर पडणे', 'दाणे भरणे', 'कापणी व मळणी'],
+        wheat: ['मुकुट मुळे फुटणे (२०-२५ दि.)', 'कांडी अवस्था', 'ओंबी बाहेर पडणे', 'दाणे दुधाळ अवस्था', 'कापणी'],
+        sugarcane: ['उगवण अवस्था', 'जोमदार वाढीचा काळ', 'कांड्यांची वाढ', 'पक्वता व तोडणी'],
+        soybean: ['उगवण', 'शाकीय वाढ', 'फुलधारणा', 'शेंगा भरणे', 'कापणी'],
+        tomato: ['पुनर्लागवड', 'शाकीय वाढ', 'पहिले फूल', 'फळधारणा', 'तोडणी']
+      };
+      return mrStages[cropId]?.[stageIdx] || fallback;
+    } else if (language === 'hi') {
+      const hiStages = {
+        cotton: ['बुवाई (0-20 दिन)', 'वानस्पतिक वृद्धि (21-50 दिन)', 'फूल एवं कलियां (51-90 दिन)', 'टिंडे बनना (91-130 दिन)', 'चुनाई / कटाई'],
+        rice: ['नर्सरी (0-25 दिन)', 'कल्ले फूटना (26-55 दिन)', 'बाली निकलना', 'दाना भराव', 'पकना व कटाई'],
+        wheat: ['ताज जड़ अवस्था (20-25 दिन)', 'कल्ले निकलना', 'गांठ बनना', 'बाली अवस्था', 'पकने की अवस्था'],
+        sugarcane: ['अंकुरण', 'शुरुआती वृद्धि', 'गन्ने की तीव्र बढ़वार', 'परिपक्वता एवं कटाई'],
+        soybean: ['अंकुरण', 'वानस्पतिक वृद्धि', 'फूल आना', 'फली बनना', 'कटाई'],
+        tomato: ['रोपाई', 'वानस्पतिक वृद्धि', 'प्रथम फूल', 'फल लगना', 'तुड़ाई']
+      };
+      return hiStages[cropId]?.[stageIdx] || fallback;
+    }
+    return fallback;
+  };
+
+  const translateHotlineName = (name) => {
+    if (!name) return '';
+    const nLower = String(name).toLowerCase();
+    if (nLower.includes('disaster')) return t('nationalDisasterHelpline') || name;
+    if (nLower.includes('kisan')) return t('kisanCallCentre') || name;
+    if (nLower.includes('police')) return t('policeControlRoom') || name;
+    if (nLower.includes('ambulance') || nLower.includes('medical')) return t('emergencyAmbulance') || name;
+    return name;
+  };
+
   const fetchAdvisories = async () => {
     setLoading(true);
     try {
@@ -127,7 +181,7 @@ export const AdvisoryPage = () => {
               <span>{t('decisionSupport')}</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Target Zone: <span className="text-emerald-400 font-bold">{cityName}</span> ({latitude.toFixed(2)}°N, {longitude.toFixed(2)}°E)
+              {t('targetZone')}: <span className="text-emerald-400 font-bold">{cityName}</span> ({latitude.toFixed(2)}°N, {longitude.toFixed(2)}°E)
             </p>
           </div>
         </div>
@@ -181,7 +235,7 @@ export const AdvisoryPage = () => {
                 <button
                   key={crop.id}
                   onClick={() => setSelectedCropId(crop.id)}
-                  className={`p-3.5 rounded-2xl text-left transition-all border flex flex-col justify-between gap-2 ${
+                  className={`p-3.5 rounded-2xl text-left transition-all border flex flex-col justify-between gap-2 cursor-pointer ${
                     selectedCropId === crop.id
                       ? 'bg-emerald-500/15 border-emerald-500/60 ring-2 ring-emerald-500/30 shadow-md'
                       : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -189,8 +243,8 @@ export const AdvisoryPage = () => {
                 >
                   <span className="text-2xl">{crop.icon}</span>
                   <div>
-                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block truncate">{crop.name}</span>
-                    <span className="text-[10px] text-slate-400 block">{crop.optimalMoisture} moisture</span>
+                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block truncate">{getCropDisplayName(crop)}</span>
+                    <span className="text-[10px] text-slate-400 block">{crop.optimalMoisture} {t('moisture')}</span>
                   </div>
                 </button>
               ))}
@@ -200,7 +254,7 @@ export const AdvisoryPage = () => {
           {/* Growth Stage Progress Pipeline */}
           <div className="bg-white dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-500" /> Phenological Crop Growth Stages ({currentCrop.name}):
+              <Clock className="w-4 h-4 text-blue-500" /> {t('growthStages')} ({getCropDisplayName(currentCrop)}):
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
               {currentCrop.stages.map((stage, i) => (
@@ -212,8 +266,8 @@ export const AdvisoryPage = () => {
                       : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 text-slate-400'
                   }`}
                 >
-                  <span className="text-[10px] uppercase tracking-wider block font-semibold text-slate-400">Stage {i + 1}</span>
-                  <span className="text-xs mt-1 block truncate">{stage}</span>
+                  <span className="text-[10px] uppercase tracking-wider block font-semibold text-slate-400">{t('stage')} {i + 1}</span>
+                  <span className="text-xs mt-1 block truncate">{getStageDisplayName(currentCrop.id, i, stage)}</span>
                 </div>
               ))}
             </div>
@@ -230,7 +284,7 @@ export const AdvisoryPage = () => {
               <div className="text-2xl font-black text-slate-900 dark:text-white">
                 {agroData?.fieldConditions?.soilMoistureM3M3 ? `${(agroData.fieldConditions.soilMoistureM3M3 * 100).toFixed(0)}%` : '32%'}
               </div>
-              <p className="text-[11px] text-slate-400">Volumetric root zone (0–7 cm)</p>
+              <p className="text-[11px] text-slate-400">{t('volumetricRootZone')}</p>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-2">
                 <div
                   className="bg-blue-500 h-full rounded-full transition-all duration-700"
@@ -248,7 +302,7 @@ export const AdvisoryPage = () => {
               <div className="text-2xl font-black text-amber-500">
                 {agroData?.fieldConditions?.dailyEvapotranspirationMm ?? '4.2'} <span className="text-xs font-normal text-slate-400">mm/day</span>
               </div>
-              <p className="text-[11px] text-slate-400">FAO-56 reference crop water loss</p>
+              <p className="text-[11px] text-slate-400">{t('faoReferenceCropLoss')}</p>
             </div>
 
             {/* Soil Temperature Card */}
@@ -260,7 +314,7 @@ export const AdvisoryPage = () => {
               <div className="text-2xl font-black text-emerald-500">
                 {formatTemp(agroData?.fieldConditions?.soilTemperatureC ?? 26)}
               </div>
-              <p className="text-[11px] text-slate-400">Seedbed thermal index</p>
+              <p className="text-[11px] text-slate-400">{t('seedbedThermalIndex')}</p>
             </div>
 
             {/* 3-Day Rain Forecast */}
@@ -272,7 +326,7 @@ export const AdvisoryPage = () => {
               <div className="text-2xl font-black text-slate-900 dark:text-white">
                 {agroData?.fieldConditions?.forecastedRainfallNext3DaysMm ?? '0'} <span className="text-xs font-normal text-slate-400">mm</span>
               </div>
-              <p className="text-[11px] text-slate-400">Predicted 72-hour precipitation</p>
+              <p className="text-[11px] text-slate-400">{t('predicted72hPrecipitation')}</p>
             </div>
           </div>
 
@@ -289,7 +343,12 @@ export const AdvisoryPage = () => {
                 </span>
               </div>
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                {agroData?.recommendations?.irrigation?.advice || 'Monitor field moisture regularly and adhere to standard irrigation schedules.'}
+                {agroData?.recommendations?.irrigation?.advice ||
+                  (language === 'mr'
+                    ? 'मातीतील ओलावा नियमित तपासा आणि पीक वाढीच्या टप्प्यानुसार ठिबक किंवा प्रमाणित सिंचन वेळापत्रक पाळा.'
+                    : language === 'hi'
+                    ? 'खेत में नमी की नियमित निगरानी करें और फसल की आवश्यकतानुसार सिंचाई करें।'
+                    : 'Monitor field moisture regularly and adhere to standard irrigation schedules.')}
               </p>
             </div>
 
@@ -308,19 +367,28 @@ export const AdvisoryPage = () => {
                 </span>
               </div>
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                {agroData?.recommendations?.pesticideSpraying?.advice || currentCrop.sprayWindow}
+                {agroData?.recommendations?.pesticideSpraying?.advice ||
+                  (language === 'mr'
+                    ? 'सकाळच्या वेळी जेव्हा वाऱ्याचा वेग ताशी १५ किमी पेक्षा कमी असेल आणि पाऊस नसेल तेव्हाच औषध फवारणी करा.'
+                    : language === 'hi'
+                    ? 'सुबह के समय जब हवा की गति 15 किमी/घंटा से कम हो और बारिश की संभावना न हो तभी कीटनाशक छिड़कें।'
+                    : currentCrop.sprayWindow)}
               </p>
             </div>
           </div>
 
           {/* Agronomic Protection Guidance */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-3">
+          <div className="bg-white dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-emerald-500" /> {t('agronomicHealth')}:
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {agroData?.recommendations?.cropSpecificAdvisory ||
-                `Maintain soil aeration and balanced NPK fertilizer application for ${currentCrop.name}. Ensure field drainage channels are clear to prevent waterlogging during monsoon showers.`}
+                (language === 'mr'
+                  ? `${getCropDisplayName(currentCrop)} पिकासाठी मातीचे वायुवीजन आणि संतुलित NPK खत व्यवस्थापन ठेवा. पावसाळ्यात शेतात पाणी साचू नये म्हणून निचरा चर स्वच्छ ठेवा.`
+                  : language === 'hi'
+                  ? `${getCropDisplayName(currentCrop)} फसल के लिए मिट्टी में वायु संचार और संतुलित NPK उर्वरक प्रबंधन बनाए रखें। बारिश में जलभराव से बचने के लिए जल निकासी की नालियां साफ रखें।`
+                  : `Maintain soil aeration and balanced NPK fertilizer application for ${currentCrop.name}. Ensure field drainage channels are clear to prevent waterlogging during monsoon showers.`)}
             </p>
           </div>
         </div>
@@ -339,10 +407,10 @@ export const AdvisoryPage = () => {
               <ShieldAlert className="w-7 h-7 text-rose-400" />
               <div>
                 <h2 className="text-lg font-bold">
-                  {disasterData?.activeWarning?.warningLevel || 'Green'} Alert Status – {disasterData?.activeWarning?.action || 'No Active Emergency'}
+                  {disasterData?.activeWarning?.warningLevel ? `${disasterData.activeWarning.warningLevel} ${t('alertStatus')}` : t('greenAlert')} – {disasterData?.activeWarning?.action || t('noActiveEmergency')}
                 </h2>
                 <p className="text-xs opacity-90 mt-0.5">
-                  {disasterData?.activeWarning?.hazard || 'No severe meteorological hazard detected.'} {disasterData?.activeWarning?.advice || ''}
+                  {disasterData?.activeWarning?.hazard || t('noActiveAlerts')} {disasterData?.activeWarning?.advice || ''}
                 </p>
               </div>
             </div>
@@ -377,7 +445,7 @@ export const AdvisoryPage = () => {
                   href={`tel:${hotline.number}`}
                   className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition group block"
                 >
-                  <p className="text-xs text-slate-400">{hotline.name}</p>
+                  <p className="text-xs text-slate-400">{translateHotlineName(hotline.name)}</p>
                   <p className="text-lg font-black text-emerald-500 group-hover:text-blue-500 transition mt-1">
                     {hotline.number} 📞
                   </p>

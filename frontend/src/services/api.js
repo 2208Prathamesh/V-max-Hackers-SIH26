@@ -2,27 +2,102 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const getToken = () => localStorage.getItem('weathergpt_token');
 
+// High-Performance In-Memory Client Cache & In-flight Deduplication
+const cache = new Map();
+const inflight = new Map();
+const DEFAULT_TTL_MS = 2 * 60 * 1000; // 2 minutes for general weather, forecasts, maps, historical
+const SHORT_TTL_MS = 30 * 1000; // 30 seconds for live alerts
+const MAX_CACHE_ENTRIES = 120;
+
+const getTtlForPath = (path) => {
+  if (path.includes('/alerts') || path.includes('/warnings')) return SHORT_TTL_MS;
+  return DEFAULT_TTL_MS;
+};
+
+const invalidateCache = () => {
+  cache.clear();
+};
+
 const request = async (path, options = {}) => {
-  const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  const method = (options.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
 
-  const token = getToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  // For mutating requests (POST, PUT, DELETE, PATCH), invalidate cache and run directly
+  if (!isGet) {
+    invalidateCache();
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
+    const token = getToken();
+    if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers
-  });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.message || 'Request failed');
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.message || 'Request failed');
+    }
+    return payload.data ?? payload;
   }
 
-  return payload.data ?? payload;
+  // Check cache for GET requests
+  const cacheKey = `${path}`;
+  const cachedEntry = cache.get(cacheKey);
+  const now = Date.now();
+  if (cachedEntry && now - cachedEntry.timestamp < cachedEntry.ttl) {
+    return cachedEntry.data;
+  }
+
+  // Deduplicate in-flight concurrent requests to the same path
+  if (inflight.has(cacheKey)) {
+    return inflight.get(cacheKey);
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const headers = new Headers(options.headers);
+      headers.set('Content-Type', 'application/json');
+      const token = getToken();
+      if (token) headers.set('Authorization', `Bearer ${token}`);
+
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.message || 'Request failed');
+      }
+
+      const data = payload.data ?? payload;
+
+      // LRU Eviction if full
+      if (cache.size >= MAX_CACHE_ENTRIES) {
+        const oldest = cache.keys().next().value;
+        cache.delete(oldest);
+      }
+
+      cache.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+        ttl: getTtlForPath(path)
+      });
+
+      return data;
+    } finally {
+      inflight.delete(cacheKey);
+    }
+  })();
+
+  inflight.set(cacheKey, fetchPromise);
+  return fetchPromise;
 };
 
 export const api = {
+  // Cache Management
+  clearCache: invalidateCache,
   // Liveness
   health: () => request('/health'),
 

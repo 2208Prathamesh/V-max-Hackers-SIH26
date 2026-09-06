@@ -5,7 +5,7 @@ import { hashPassword, comparePassword } from '../utils/password.js'
 /**
  * Register user
  */
-const register = async ({ name, email, password }) => {
+const register = async ({ name, email, password, language = 'en' }) => {
   const existingUser = await User.findOne({
     email: email.toLowerCase()
   })
@@ -21,7 +21,8 @@ const register = async ({ name, email, password }) => {
   const user = await User.create({
     name,
     email: email.toLowerCase(),
-    passwordHash: hashedPassword
+    passwordHash: hashedPassword,
+    language: language || 'en'
   })
 
   const token = generateToken(user._id)
@@ -30,7 +31,8 @@ const register = async ({ name, email, password }) => {
     user: {
       id: user._id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      language: user.language || 'en'
     },
     token
   }
@@ -64,7 +66,8 @@ const login = async (email, password) => {
     user: {
       id: user._id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      language: user.language || 'en'
     },
     token
   }

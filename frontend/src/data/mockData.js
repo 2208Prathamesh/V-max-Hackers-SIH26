@@ -5,7 +5,7 @@ export const initialUser = {
   email: "sidpatil@gmail.com",
   avatarInitials: "SP",
   avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-  plan: "Free Plan",
+  plan: "Full Access",
   memberSince: "May 12, 2024",
   stats: {
     locationsSaved: 5,

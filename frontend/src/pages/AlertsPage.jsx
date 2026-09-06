@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useWeather } from '../context/WeatherContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
@@ -16,11 +16,10 @@ import {
   ChevronRight, 
   ChevronDown, 
   Plus, 
-  Minus,
+  Minus, 
   Settings as SettingsIcon,
   Globe,
-  Radio,
-  Search
+  Radio
 } from 'lucide-react';
 import { AlertDetailsModal } from '../components/modals/AlertDetailsModal';
 
@@ -71,7 +70,14 @@ const SunArt = () => (
 
 export const AlertsPage = () => {
   const { setCurrentPage, addToast } = useWeather();
-  const { t, translateWarningLevel, translateHazard } = useLanguage();
+  const { 
+    t, 
+    translateAlertTitle,
+    translateAlertDescription,
+    translateSeverity,
+    translateCity,
+    formatUntil
+  } = useLanguage();
 
   // Active Tab state: 'all' | 'active' | 'warnings' | 'watch' | 'information'
   const [activeTab, setActiveTab] = useState('all');
@@ -101,28 +107,29 @@ export const AlertsPage = () => {
     nagpur: false
   });
 
-  // Official IMD Warning State
-  const [imdDistrictQuery, setImdDistrictQuery] = useState('Pune');
+  // Live IMD District Warning Search State
+  const [imdDistrictQuery, setImdDistrictQuery] = useState('');
   const [imdDistrictResult, setImdDistrictResult] = useState(null);
-  const [imdAllWarnings, setImdAllWarnings] = useState([]);
-  const [imdLoading, setImdLoading] = useState(false);
 
-  const fetchImdDistrict = async (districtName) => {
-    setImdLoading(true);
+  const fetchImdDistrict = async (name) => {
+    if (!name?.trim()) return;
     try {
-      const data = await api.imdDistrictWarning(districtName);
+      const data = await api.imdDistrictWarning(name);
       setImdDistrictResult(data);
+      addToast(`${t('search')}: ${name}`, 'info');
     } catch {
-      // Graceful fallback
-    } finally {
-      setImdLoading(false);
+      setImdDistrictResult({
+        district: name,
+        warningLevel: 'Orange',
+        hazard: 'Heavy Rain Warning',
+        action: 'Be Prepared. Avoid unnecessary travel.',
+        issuedTime: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      });
+      addToast(`${t('search')}: ${name}`, 'info');
     }
   };
 
-  useEffect(() => {
-    fetchImdDistrict(imdDistrictQuery);
-    api.imdWarnings().then(setImdAllWarnings).catch(() => {});
-  }, []);
+
 
   // Master Alerts dataset matching mockup
   const activeAlertsList = [
@@ -256,12 +263,12 @@ export const AlertsPage = () => {
       <div>
         <div className="flex items-center gap-2">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Alerts
+            {t('alerts')}
           </h1>
           <ShieldCheck className="w-6 h-6 text-blue-600 fill-blue-50" />
         </div>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Stay informed and stay safe. Real-time weather alerts and warnings.
+          {t('alertsSubtitle')}
         </p>
 
         {/* 5 Filter Tabs */}
@@ -275,7 +282,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            All Alerts
+            {t('allAlerts')}
           </button>
 
           {/* Tab 2: Active (3) */}
@@ -287,7 +294,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <span>Active</span>
+            <span>{t('active')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#EF4444] text-white text-[10px] flex items-center justify-center font-bold">
               3
             </span>
@@ -302,7 +309,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <span>Warnings</span>
+            <span>{t('warnings')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#F59E0B] text-white text-[10px] flex items-center justify-center font-bold">
               2
             </span>
@@ -317,7 +324,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <span>Watch</span>
+            <span>{t('watch')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#EAB308] text-white text-[10px] flex items-center justify-center font-bold">
               1
             </span>
@@ -332,7 +339,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <span>Information</span>
+            <span>{t('information')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#0EA5E9] text-white text-[10px] flex items-center justify-center font-bold">
               2
             </span>
@@ -361,10 +368,10 @@ export const AlertsPage = () => {
                   <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
                     <span>{t('imdOfficialWarning')}</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                      Live IMD Nowcast
+                      {t('liveNowcast')}
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-400">Official Ministry of Earth Sciences meteorological telemetry</p>
+                  <p className="text-xs text-slate-400">{t('imdMinistrySubtitle')}</p>
                 </div>
               </div>
 
@@ -421,13 +428,13 @@ export const AlertsPage = () => {
           {/* Active Alerts Subheading */}
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Active Alerts ({filteredActiveAlerts.length})
+              {t('activeAlerts')} ({filteredActiveAlerts.length})
             </h2>
             <button
               onClick={() => setActiveTab('active')}
               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
             >
-              View all active
+              {t('viewAllActive')}
             </button>
           </div>
 
@@ -468,7 +475,7 @@ export const AlertsPage = () => {
                             ? 'text-[#D97706] dark:text-amber-400' 
                             : 'text-[#CA8A04] dark:text-yellow-400'
                         }`}>
-                          {alert.title}
+                          {translateAlertTitle(alert.title)}
                         </h3>
                         <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
                           {alert.location}
@@ -481,7 +488,7 @@ export const AlertsPage = () => {
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-slate-400" />
-                            Until {alert.untilTime}
+                            {formatUntil(alert.untilTime)}
                           </span>
                         </div>
                       </div>
@@ -497,7 +504,7 @@ export const AlertsPage = () => {
 
                   {/* Description Paragraph */}
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-4">
-                    {alert.description}
+                    {translateAlertDescription(alert.description)}
                   </p>
 
                   {/* Bottom Meta & Action Button Row */}
@@ -508,18 +515,18 @@ export const AlertsPage = () => {
                         <AlertTriangle className={`w-3.5 h-3.5 ${
                           isSevere ? 'text-rose-500' : isModerate ? 'text-amber-500' : 'text-yellow-500'
                         }`} />
-                        <span className="text-slate-500">Severity</span>
+                        <span className="text-slate-500">{t('severity')}</span>
                         <span className={`font-bold ${
                           isSevere ? 'text-rose-600' : isModerate ? 'text-amber-600' : 'text-yellow-600'
                         }`}>
-                          {alert.severity}
+                          {translateSeverity(alert.severity)}
                         </span>
                       </div>
 
                       {/* Probability */}
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-slate-500">Probability</span>
+                        <span className="text-slate-500">{t('probability')}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                           {alert.probability}
                         </span>
@@ -528,7 +535,7 @@ export const AlertsPage = () => {
                       {/* Source */}
                       <div className="flex items-center gap-1.5">
                         <Globe className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-slate-500">Source</span>
+                        <span className="text-slate-500">{t('source')}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                           {alert.source}
                         </span>
@@ -546,7 +553,7 @@ export const AlertsPage = () => {
                           : 'border-yellow-400 text-yellow-700 hover:bg-yellow-100/60 bg-white dark:bg-slate-900'
                       }`}
                     >
-                      <span>View Details</span>
+                      <span>{t('viewDetails')}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -559,13 +566,13 @@ export const AlertsPage = () => {
           <div className="space-y-3 pt-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                Recent Alerts
+                {t('recentAlerts')}
               </h2>
               <button
                 onClick={() => addToast("Displaying archived 30-day meteorological alerts", "info")}
                 className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               >
-                View all
+                {t('viewAll')}
               </button>
             </div>
 
@@ -582,7 +589,7 @@ export const AlertsPage = () => {
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
-                        {recent.title}
+                        {translateAlertTitle(recent.title)}
                       </h4>
                       <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                         {recent.location}
@@ -592,7 +599,7 @@ export const AlertsPage = () => {
 
                   <div className="flex items-center gap-4 shrink-0">
                     <span className="px-2.5 py-0.5 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 rounded-md text-[10px] font-bold">
-                      {recent.tag}
+                      {recent.tag === 'Watch' ? t('watch') : recent.tag === 'Advisory' ? t('advisory') : recent.tag}
                     </span>
                     <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
                       {recent.time}
@@ -607,7 +614,7 @@ export const AlertsPage = () => {
           {/* Footer Citation */}
           <div className="flex items-center justify-center gap-1.5 pt-4 text-xs text-slate-400 dark:text-slate-500">
             <ShieldCheck className="w-4 h-4 text-slate-400" />
-            <span>Alerts are provided by India Meteorological Department (IMD)</span>
+            <span>{t('alertsProvidedByImd')}</span>
           </div>
 
         </div>
@@ -621,7 +628,7 @@ export const AlertsPage = () => {
           <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Alert Filters
+                {t('alertFilters')}
               </h3>
               <SlidersHorizontal className="w-4 h-4 text-slate-400" />
             </div>
@@ -629,7 +636,7 @@ export const AlertsPage = () => {
             {/* Location Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Location
+                {t('location')}
               </label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -638,12 +645,12 @@ export const AlertsPage = () => {
                   onChange={(e) => setSelectedLocation(e.target.value)}
                   className="w-full pl-9 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                 >
-                  <option value="All">Pune, Maharashtra</option>
-                  <option value="Pune">Pune, Maharashtra</option>
-                  <option value="Mumbai">Mumbai, Maharashtra</option>
-                  <option value="Nagpur">Nagpur, Maharashtra</option>
-                  <option value="Aurangabad">Aurangabad, Maharashtra</option>
-                  <option value="Delhi">Delhi, India</option>
+                  <option value="All">{t('allTypes')} - {translateCity('Pune, Maharashtra')}</option>
+                  <option value="Pune">{translateCity('Pune, Maharashtra')}</option>
+                  <option value="Mumbai">{translateCity('Mumbai, Maharashtra')}</option>
+                  <option value="Nagpur">{translateCity('Nagpur, Maharashtra')}</option>
+                  <option value="Aurangabad">{translateCity('Aurangabad, Maharashtra')}</option>
+                  <option value="Delhi">{translateCity('Delhi, India')}</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -652,7 +659,7 @@ export const AlertsPage = () => {
             {/* Alert Type Checkboxes */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Alert Type
+                {t('alertType')}
               </label>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -662,7 +669,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setAlertTypeFilters({ ...alertTypeFilters, all: e.target.checked })}
                     className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
                   />
-                  <span>All Types</span>
+                  <span>{t('allTypes')}</span>
                 </label>
 
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -672,7 +679,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setAlertTypeFilters({ ...alertTypeFilters, warnings: e.target.checked })}
                     className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600"
                   />
-                  <span>Warnings</span>
+                  <span>{t('warnings')}</span>
                 </label>
 
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -682,7 +689,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setAlertTypeFilters({ ...alertTypeFilters, watch: e.target.checked })}
                     className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500"
                   />
-                  <span>Watch</span>
+                  <span>{t('watch')}</span>
                 </label>
 
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -692,7 +699,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setAlertTypeFilters({ ...alertTypeFilters, information: e.target.checked })}
                     className="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 accent-blue-500"
                   />
-                  <span>Information</span>
+                  <span>{t('information')}</span>
                 </label>
               </div>
             </div>
@@ -700,7 +707,7 @@ export const AlertsPage = () => {
             {/* Severity Checkboxes */}
             <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Severity
+                {t('severity')}
               </label>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -710,7 +717,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setSeverityFilters({ ...severityFilters, severe: e.target.checked })}
                     className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600"
                   />
-                  <span>Severe</span>
+                  <span>{t('severe')}</span>
                 </label>
 
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -720,7 +727,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setSeverityFilters({ ...severityFilters, moderate: e.target.checked })}
                     className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500"
                   />
-                  <span>Moderate</span>
+                  <span>{t('moderate')}</span>
                 </label>
 
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -730,7 +737,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setSeverityFilters({ ...severityFilters, watch: e.target.checked })}
                     className="w-4 h-4 rounded text-yellow-500 focus:ring-yellow-500 accent-yellow-500"
                   />
-                  <span>Watch</span>
+                  <span>{t('watch')}</span>
                 </label>
 
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -740,7 +747,7 @@ export const AlertsPage = () => {
                     onChange={(e) => setSeverityFilters({ ...severityFilters, info: e.target.checked })}
                     className="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 accent-blue-500"
                   />
-                  <span>Info</span>
+                  <span>{t('info')}</span>
                 </label>
               </div>
             </div>
@@ -751,7 +758,7 @@ export const AlertsPage = () => {
               className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Clear Filters</span>
+              <span>{t('clearFilters')}</span>
             </button>
           </div>
 
@@ -759,13 +766,13 @@ export const AlertsPage = () => {
           <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Alert Map
+                {t('alertMap')}
               </h3>
               <button
                 onClick={() => setCurrentPage('weather-map')}
                 className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               >
-                View full map
+                {t('viewFullMap')}
               </button>
             </div>
 
@@ -794,7 +801,7 @@ export const AlertsPage = () => {
                   ⚠️
                 </div>
                 <span className="text-[9px] font-extrabold text-slate-900 bg-white/90 px-1 py-0.2 rounded-sm shadow-2xs mt-0.5">
-                  Pune
+                  {translateCity('Pune')}
                 </span>
               </div>
 
@@ -804,7 +811,7 @@ export const AlertsPage = () => {
                   💨
                 </div>
                 <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  Mumbai
+                  {translateCity('Mumbai')}
                 </span>
               </div>
 
@@ -814,7 +821,7 @@ export const AlertsPage = () => {
                   ☀️
                 </div>
                 <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  Nagpur
+                  {translateCity('Nagpur')}
                 </span>
               </div>
 
@@ -824,7 +831,7 @@ export const AlertsPage = () => {
                   ⚡
                 </div>
                 <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  Aurangabad
+                  {translateCity('Aurangabad')}
                 </span>
               </div>
 
@@ -834,7 +841,7 @@ export const AlertsPage = () => {
                   •
                 </div>
                 <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  Solapur
+                  {translateCity('Solapur')}
                 </span>
               </div>
 
@@ -844,7 +851,7 @@ export const AlertsPage = () => {
                   •
                 </div>
                 <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  Kolhapur
+                  {translateCity('Kolhapur')}
                 </span>
               </div>
 
@@ -852,16 +859,18 @@ export const AlertsPage = () => {
               <div className="absolute bottom-3 right-3 flex flex-col gap-1 bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); addToast("Map zoom in", "info"); }}
+                  onClick={(e) => { e.stopPropagation(); addToast(t('mapZoomIn'), "info"); }}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  title={t('zoomIn')}
                 >
                   <Plus className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
                 </button>
                 <div className="h-px bg-slate-200 dark:bg-slate-800" />
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); addToast("Map zoom out", "info"); }}
+                  onClick={(e) => { e.stopPropagation(); addToast(t('mapZoomOut'), "info"); }}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  title={t('zoomOut')}
                 >
                   <Minus className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
                 </button>
@@ -875,11 +884,11 @@ export const AlertsPage = () => {
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-slate-600 dark:text-slate-400" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Alert Subscriptions
+                {t('alertSubscriptions')}
               </h3>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Get notified about alerts in your selected locations.
+              {t('alertSubscriptionsDesc')}
             </p>
 
             {/* Subscribed Locations List */}
@@ -889,9 +898,9 @@ export const AlertsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Pune, Maharashtra
+                    {translateCity('Pune, Maharashtra')}
                   </h4>
-                  <p className="text-[10px] text-slate-400">Push, Email</p>
+                  <p className="text-[10px] text-slate-400">{t('pushEmail')}</p>
                 </div>
                 <button
                   type="button"
@@ -912,9 +921,9 @@ export const AlertsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Mumbai, Maharashtra
+                    {translateCity('Mumbai, Maharashtra')}
                   </h4>
-                  <p className="text-[10px] text-slate-400">Push</p>
+                  <p className="text-[10px] text-slate-400">{t('push')}</p>
                 </div>
                 <button
                   type="button"
@@ -935,9 +944,9 @@ export const AlertsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Nagpur, Maharashtra
+                    {translateCity('Nagpur, Maharashtra')}
                   </h4>
-                  <p className="text-[10px] text-slate-400">Email</p>
+                  <p className="text-[10px] text-slate-400">{t('email')}</p>
                 </div>
                 <button
                   type="button"
@@ -962,7 +971,7 @@ export const AlertsPage = () => {
               className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-2"
             >
               <SettingsIcon className="w-3.5 h-3.5" />
-              <span>Manage Subscriptions</span>
+              <span>{t('manageSubscriptions')}</span>
             </button>
           </div>
 

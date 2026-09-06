@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useWeather } from '../context/WeatherContext'
+import { useLanguage } from '../context/LanguageContext'
 import {
   LayoutGrid,
   List,
@@ -29,6 +30,7 @@ export const SavedLocationsPage = () => {
     formatWind,
     addToast
   } = useWeather()
+  const { t, translateCondition, formatDay, language, translateCity, translateRegion } = useLanguage()
 
   const [viewMode, setViewMode] = useState('list') // 'list' | 'grid'
   const [sortBy, setSortBy] = useState('updated') // 'updated' | 'temp' | 'name'
@@ -40,7 +42,7 @@ export const SavedLocationsPage = () => {
     region: location.region || location.state || '',
     tempC: location.tempC ?? null,
     feelsLikeC: location.feelsLikeC ?? null,
-    condition: location.condition || 'Weather unavailable',
+    condition: location.condition || t('weatherUnavailable'),
     humidity: location.humidity ?? null,
     windSpeedKmh: location.windSpeedKmh ?? null,
     windDirection: location.windDirection || '',
@@ -79,19 +81,19 @@ export const SavedLocationsPage = () => {
       <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
         <div className='flex items-center gap-2'>
           <span className='text-sm font-bold text-slate-900 dark:text-white'>
-            My Locations ({savedLocations.length})
+            {t('savedLocations')} ({savedLocations.length})
           </span>
           <span className='text-slate-300 dark:text-slate-700'>•</span>
           <div className='flex items-center gap-1.5 text-xs text-slate-500'>
-            <span>Sort by:</span>
+            <span>{t('alertFilters')}:</span>
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
               className='bg-transparent font-medium text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer'
             >
-              <option value='updated'>Last Updated</option>
-              <option value='temp'>Highest Temperature</option>
-              <option value='name'>City Name</option>
+              <option value='updated'>{t('refresh')}</option>
+              <option value='temp'>{t('maxTemp')}</option>
+              <option value='name'>{t('location')}</option>
             </select>
           </div>
         </div>
@@ -127,7 +129,7 @@ export const SavedLocationsPage = () => {
             className='flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/20 transition'
           >
             <Plus className='w-4 h-4' />
-            <span>Add Location</span>
+            <span>{t('addCity')}</span>
           </button>
         </div>
       </div>
@@ -153,7 +155,7 @@ export const SavedLocationsPage = () => {
                             onClick={() => handleLocationClick(loc)}
                             className='text-base font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition'
                           >
-                            {loc.city}, {loc.region}
+                            {translateCity(loc.city)}, {translateRegion(loc.region)}
                           </h3>
                         </div>
                         <p className='text-xs text-slate-400 dark:text-slate-500'>
@@ -178,7 +180,7 @@ export const SavedLocationsPage = () => {
                           {formatTemp(loc.tempC)}
                         </div>
                         <div className='text-xs font-medium text-slate-500 dark:text-slate-400'>
-                          {loc.condition}
+                          {translateCondition(loc.condition)}
                         </div>
                       </div>
                     </div>
@@ -186,19 +188,19 @@ export const SavedLocationsPage = () => {
                     {/* Key Metrics: Feels like, Humidity, Wind */}
                     <div className='text-xs space-y-1 text-slate-500 dark:text-slate-400 border-l border-slate-100 dark:border-slate-800/80 pl-4'>
                       <div>
-                        Feels like{' '}
+                        {t('feelsLike')}{' '}
                         <span className='font-semibold text-slate-800 dark:text-slate-200'>
                           {formatTemp(loc.feelsLikeC)}
                         </span>
                       </div>
                       <div>
-                        Humidity{' '}
+                        {t('humidity')}{' '}
                         <span className='font-semibold text-slate-800 dark:text-slate-200'>
                           {loc.humidity}%
                         </span>
                       </div>
                       <div>
-                        Wind{' '}
+                        {t('wind')}{' '}
                         <span className='font-semibold text-slate-800 dark:text-slate-200'>
                           {formatWind(loc.windSpeedKmh)} {loc.windDirection}
                         </span>
@@ -210,7 +212,7 @@ export const SavedLocationsPage = () => {
                       {loc.forecast3Day.map((fc, idx) => (
                         <div key={idx} className='text-center px-1.5'>
                           <span className='text-[10px] font-semibold text-slate-400 block'>
-                            {fc.day}
+                            {formatDay(fc.day)}
                           </span>
                           <div className='my-1 flex justify-center'>
                             <WeatherIcon
@@ -248,7 +250,7 @@ export const SavedLocationsPage = () => {
                             className='w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition'
                           >
                             <MapPin className='w-3.5 h-3.5' />
-                            <span>View on Map</span>
+                            <span>{t('viewOnMap')}</span>
                           </button>
                           <button
                             onClick={() => {
@@ -256,8 +258,8 @@ export const SavedLocationsPage = () => {
                               setActiveMenuId(null)
                               addToast(
                                 loc.isFavorite
-                                  ? 'Removed from favorites'
-                                  : 'Added to favorites',
+                                  ? t('removedFromFavorites')
+                                  : t('addedToFavorites'),
                                 'info'
                               )
                             }}
@@ -272,8 +274,8 @@ export const SavedLocationsPage = () => {
                             />
                             <span>
                               {loc.isFavorite
-                                ? 'Unstar Location'
-                                : 'Star Location'}
+                                ? t('unstarLocation')
+                                : t('starLocation')}
                             </span>
                           </button>
                           <button
@@ -284,7 +286,7 @@ export const SavedLocationsPage = () => {
                             className='w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition'
                           >
                             <Trash2 className='w-3.5 h-3.5' />
-                            <span>Delete Location</span>
+                            <span>{t('deleteLocation')}</span>
                           </button>
                         </div>
                       )}
@@ -305,7 +307,7 @@ export const SavedLocationsPage = () => {
                   <div className='flex items-start justify-between'>
                     <div>
                       <h3 className='font-bold text-slate-900 dark:text-white text-base'>
-                        {loc.city}, {loc.region}
+                        {translateCity(loc.city)}, {translateRegion(loc.region)}
                       </h3>
                       <span className='text-xs text-slate-400'>
                         {loc.country}
@@ -321,12 +323,12 @@ export const SavedLocationsPage = () => {
                       {formatTemp(loc.tempC)}
                     </span>
                     <span className='text-xs text-slate-500 font-medium'>
-                      {loc.condition}
+                      {translateCondition(loc.condition)}
                     </span>
                   </div>
                   <div className='flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800'>
-                    <span>Humidity: {loc.humidity}%</span>
-                    <span>Wind: {formatWind(loc.windSpeedKmh)}</span>
+                    <span>{t('humidity')}: {loc.humidity}%</span>
+                    <span>{t('wind')}: {formatWind(loc.windSpeedKmh)}</span>
                   </div>
                 </div>
               ))}
@@ -336,14 +338,14 @@ export const SavedLocationsPage = () => {
           {/* Add New Location bottom card button */}
           <button
             onClick={() => setIsAddLocationOpen(true)}
-            className='w-full py-6 px-4 bg-white dark:bg-[#151F32]/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 border-2 border-dashed border-blue-200 dark:border-blue-900/60 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition text-center group'
+            className='w-full py-6 px-4 bg-white dark:bg-[#151F32]/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 border-2 border-dashed border-blue-200 dark:border-blue-900/60 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition text-center group cursor-pointer'
           >
             <div className='flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 group-hover:scale-105 transition'>
               <Plus className='w-4 h-4' />
-              <span>Add New Location</span>
+              <span>{t('addNewLocation')}</span>
             </div>
             <p className='text-xs text-slate-500 dark:text-slate-400'>
-              Search and save any city to get real-time weather updates
+              {t('addNewLocationDesc')}
             </p>
           </button>
         </div>
@@ -354,13 +356,13 @@ export const SavedLocationsPage = () => {
           <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Location Map
+                {t('locationMap')}
               </h3>
               <button
                 onClick={() => setCurrentPage('weather-map')}
-                className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline'
+                className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
               >
-                View full map
+                {t('viewFullMap')}
               </button>
             </div>
 
@@ -374,25 +376,25 @@ export const SavedLocationsPage = () => {
 
               {/* City Pins on Map Preview */}
               <div className='absolute top-[20%] left-[48%] -translate-x-1/2 flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-full shadow-md text-[10px] font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'>
-                <MapPin className='w-2.5 h-2.5 text-blue-600' /> New Delhi
+                <MapPin className='w-2.5 h-2.5 text-blue-600' /> {translateCity('New Delhi')}
               </div>
               <div className='absolute top-[32%] left-[32%] -translate-x-1/2 flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-full shadow-md text-[10px] font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'>
-                <MapPin className='w-2.5 h-2.5 text-blue-600' /> Jaipur
+                <MapPin className='w-2.5 h-2.5 text-blue-600' /> {translateCity('Jaipur')}
               </div>
               <div className='absolute top-[52%] left-[35%] -translate-x-1/2 flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-full shadow-md text-[10px] font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'>
-                <MapPin className='w-2.5 h-2.5 text-blue-600' /> Mumbai
+                <MapPin className='w-2.5 h-2.5 text-blue-600' /> {translateCity('Mumbai')}
               </div>
               <div className='absolute top-[58%] left-[38%] -translate-x-1/2 flex items-center gap-1 bg-blue-600 text-white px-2 py-0.5 rounded-full shadow-md text-[10px] font-bold animate-pulse'>
-                <MapPin className='w-2.5 h-2.5' /> Pune
+                <MapPin className='w-2.5 h-2.5' /> {translateCity('Pune')}
               </div>
               <div className='absolute top-[75%] left-[45%] -translate-x-1/2 flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded-full shadow-md text-[10px] font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'>
-                <MapPin className='w-2.5 h-2.5 text-blue-600' /> Bengaluru
+                <MapPin className='w-2.5 h-2.5 text-blue-600' /> {translateCity('Bengaluru')}
               </div>
 
               {/* Hover overlay */}
               <div className='absolute inset-0 bg-blue-600/10 dark:bg-blue-600/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center'>
                 <span className='px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 shadow-md text-xs font-bold text-blue-600 dark:text-blue-400'>
-                  Open Interactive Map ➔
+                  {t('openInteractiveMap')}
                 </span>
               </div>
             </div>
@@ -402,19 +404,19 @@ export const SavedLocationsPage = () => {
           <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
             <div>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Weather Summary
+                {t('weatherSummary')}
               </h3>
-              <p className='text-xs text-slate-400'>Across your locations</p>
+              <p className='text-xs text-slate-400'>{t('acrossLocations')}</p>
             </div>
 
             <div className='space-y-3 pt-1'>
               <div className='flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl'>
                 <div>
                   <span className='text-[11px] text-slate-400 block'>
-                    Warmest Location
+                    {t('warmestLocation')}
                   </span>
                   <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                    {warmest?.city || 'Jaipur'}
+                    {translateCity(warmest?.city || 'Jaipur')}
                   </span>
                 </div>
                 <span className='text-base font-extrabold text-amber-500'>
@@ -425,10 +427,10 @@ export const SavedLocationsPage = () => {
               <div className='flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl'>
                 <div>
                   <span className='text-[11px] text-slate-400 block'>
-                    Coolest Location
+                    {t('coolestLocation')}
                   </span>
                   <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                    {coolest?.city || 'Bengaluru'}
+                    {translateCity(coolest?.city || 'Bengaluru')}
                   </span>
                 </div>
                 <span className='text-base font-extrabold text-blue-500'>
@@ -439,10 +441,10 @@ export const SavedLocationsPage = () => {
               <div className='flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl'>
                 <div>
                   <span className='text-[11px] text-slate-400 block'>
-                    Rainy Location
+                    {t('rainyLocation')}
                   </span>
                   <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                    {rainy?.city || 'Mumbai'}
+                    {translateCity(rainy?.city || 'Mumbai')}
                   </span>
                 </div>
                 <span className='text-base font-extrabold text-sky-500'>
@@ -453,9 +455,9 @@ export const SavedLocationsPage = () => {
 
             <button
               onClick={() => setCurrentPage('forecast')}
-              className='flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline pt-1'
+              className='flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline pt-1 cursor-pointer'
             >
-              <span>View detailed summary</span>
+              <span>{t('viewDetailedSummary')}</span>
               <ArrowRight className='w-3.5 h-3.5' />
             </button>
           </div>
@@ -465,11 +467,11 @@ export const SavedLocationsPage = () => {
             <div className='flex items-center gap-2'>
               <Lightbulb className='w-4 h-4 text-amber-500' />
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Tips
+                {t('tips')}
               </h3>
             </div>
             <p className='text-xs text-slate-500 dark:text-slate-400'>
-              Get personalized tips for your saved locations
+              {t('personalizedTipsDesc')}
             </p>
 
             <div className='p-3 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl flex items-start gap-3'>
@@ -477,20 +479,24 @@ export const SavedLocationsPage = () => {
                 <Umbrella className='w-4 h-4' />
               </div>
               <p className='text-xs text-slate-700 dark:text-slate-300 leading-relaxed'>
-                Carry an umbrella in Mumbai, light rain expected today.
+                {t('umbrellaTip')}
               </p>
             </div>
 
             <button
               onClick={() =>
                 addToast(
-                  'Personalized weather alerts enabled for all saved locations',
+                  language === 'mr'
+                    ? 'सर्व जतन केलेल्या शहरांसाठी वैयक्तिकृत हवामान अलर्ट सुरू केले आहेत'
+                    : language === 'hi'
+                    ? 'सभी सहेजे गए स्थानों के लिए व्यक्तिगत मौसम अलर्ट सक्रिय किए गए'
+                    : 'Personalized weather alerts enabled for all saved locations',
                   'info'
                 )
               }
-              className='flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline'
+              className='flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              <span>View all tips</span>
+              <span>{t('viewAllTips')}</span>
               <ArrowRight className='w-3.5 h-3.5' />
             </button>
           </div>

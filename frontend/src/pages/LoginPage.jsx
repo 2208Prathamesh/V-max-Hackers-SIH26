@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useWeather } from '../context/WeatherContext'
+import { useLanguage } from '../context/LanguageContext'
 import {
   Mail,
   Lock,
@@ -13,7 +14,8 @@ import {
   TrendingUp,
   User,
   Sparkles,
-  Sun
+  Sun,
+  Globe
 } from 'lucide-react'
 import { ForgotPasswordModal } from '../components/modals/ForgotPasswordModal'
 import confetti from 'canvas-confetti'
@@ -97,6 +99,7 @@ const WeatherGPTLogo = () => (
 
 export const LoginPage = () => {
   const { login, signUp, setIsForgotPasswordOpen, addToast } = useWeather()
+  const { language, setLanguage, t, supportedLanguages } = useLanguage()
 
   const [isSignUpMode, setIsSignUpMode] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -130,7 +133,8 @@ export const LoginPage = () => {
         await signUp({
           name: formData.name,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          language
         })
       } else {
         await login(formData.email, formData.password)
@@ -205,11 +209,10 @@ export const LoginPage = () => {
               {/* Main Headline & Subtitle */}
               <div className='mt-8 md:mt-10 max-w-md'>
                 <h1 className='text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight'>
-                  Your AI Weather Companion
+                  {t('loginHeroTitle')}
                 </h1>
                 <p className='mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal'>
-                  Real-time forecasts, smart alerts and personalized insights —
-                  all in one place.
+                  {t('loginHeroSubtitle')}
                 </p>
               </div>
 
@@ -222,10 +225,10 @@ export const LoginPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      Chat Naturally
+                      {t('chatNaturally')}
                     </h3>
                     <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      Ask anything about weather in natural language.
+                      {t('chatNaturallyDesc')}
                     </p>
                   </div>
                 </div>
@@ -237,10 +240,10 @@ export const LoginPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      Instant Alerts
+                      {t('instantAlerts')}
                     </h3>
                     <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      Get notified about severe weather and important updates.
+                      {t('instantAlertsDesc')}
                     </p>
                   </div>
                 </div>
@@ -252,10 +255,10 @@ export const LoginPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      Location Based
+                      {t('locationBased')}
                     </h3>
                     <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      Accurate weather updates for any location you care about.
+                      {t('locationBasedDesc')}
                     </p>
                   </div>
                 </div>
@@ -267,10 +270,10 @@ export const LoginPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      Smart Insights
+                      {t('smartInsights')}
                     </h3>
                     <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      Get climate trends and helpful recommendations.
+                      {t('smartInsightsDesc')}
                     </p>
                   </div>
                 </div>
@@ -285,12 +288,11 @@ export const LoginPage = () => {
                     “
                   </span>
                   <p className='text-xs sm:text-sm text-white/95 font-medium leading-relaxed italic'>
-                    The best time to plant a tree was 20 years ago. The second
-                    best time is now.”
+                    {t('weatherQuote').replace(/[“”]/g, '')}
                   </p>
                 </div>
                 <p className='text-[11px] text-white/75 mt-2.5 font-normal tracking-wide pl-4'>
-                  — Weather wisdom
+                  {t('weatherWisdom')}
                 </p>
               </div>
             </div>
@@ -300,30 +302,49 @@ export const LoginPage = () => {
         {/* =========================================================================
             RIGHT PANEL: Clean Modern Authentication Form
             ========================================================================= */}
-        <div className='lg:col-span-6 flex flex-col justify-center items-center p-6 sm:p-10 lg:p-14 bg-white dark:bg-[#111C2E]'>
+        <div className='lg:col-span-6 flex flex-col justify-center items-center p-6 sm:p-10 lg:p-14 bg-white dark:bg-[#111C2E] relative'>
+          {/* Top Language Switcher Bar on Login */}
+          <div className='w-full max-w-md flex items-center justify-between pb-6 mb-2 border-b border-slate-100 dark:border-slate-800'>
+            <div className='flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400'>
+              <Globe className='w-3.5 h-3.5 text-blue-500' />
+              <span>{t('preferredLanguage')}:</span>
+            </div>
+            <div className='flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-700'>
+              <select
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+                className='bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer'
+              >
+                {supportedLanguages.map(l => (
+                  <option key={l.code} value={l.code} className='bg-slate-900 text-white'>
+                    {l.flag} {l.name} ({l.nativeName})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className='w-full max-w-md'>
             {/* Form Header */}
             <div className='mb-8'>
               <div className='flex items-center justify-between'>
                 <h2 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
-                  {isSignUpMode ? 'Create Account' : 'Welcome Back!'}
+                  {isSignUpMode ? t('createAccount') : t('welcomeBack')}
                 </h2>
                 {/* 1-Click Quick Demo Pill */}
                 <button
                   type='button'
                   onClick={handleQuickDemoLogin}
-                  className='inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-semibold rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/60 transition'
+                  className='inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-semibold rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/60 transition cursor-pointer'
                   title='Auto-fill and login with demo credentials'
                 >
                   <Sparkles className='w-3.5 h-3.5' />
-                  <span>Demo Login</span>
+                  <span>{language === 'mr' ? 'डेमो लॉगिन' : language === 'hi' ? 'डेमो लॉगिन' : 'Demo Login'}</span>
                 </button>
               </div>
 
               <p className='text-sm text-slate-500 dark:text-slate-400 mt-1.5'>
-                {isSignUpMode
-                  ? 'Sign up to start receiving AI weather forecasts'
-                  : 'Login to continue to WeatherGPT'}
+                {isSignUpMode ? t('signUpSubtitle') : t('signInSubtitle')}
               </p>
             </div>
 
@@ -333,7 +354,7 @@ export const LoginPage = () => {
               {isSignUpMode && (
                 <div className='animate-fadeIn'>
                   <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5'>
-                    Full Name
+                    {t('fullName')}
                   </label>
                   <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
                     <User className='w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
@@ -341,7 +362,7 @@ export const LoginPage = () => {
                       type='text'
                       name='name'
                       required
-                      placeholder='Enter your name'
+                      placeholder={t('fullName')}
                       value={formData.name}
                       onChange={handleChange}
                       className='w-full pl-11 pr-4 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
@@ -353,7 +374,7 @@ export const LoginPage = () => {
               {/* Email Address */}
               <div>
                 <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5'>
-                  Email Address
+                  {t('emailAddress')}
                 </label>
                 <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
                   <Mail className='w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
@@ -362,7 +383,7 @@ export const LoginPage = () => {
                     name='email'
                     required
                     autoComplete='username'
-                    placeholder='Enter your email'
+                    placeholder={t('emailAddress')}
                     value={formData.email}
                     onChange={handleChange}
                     className='w-full pl-11 pr-4 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
@@ -373,7 +394,7 @@ export const LoginPage = () => {
               {/* Password */}
               <div>
                 <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5'>
-                  Password
+                  {t('password')}
                 </label>
                 <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
                   <Lock className='w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
@@ -384,7 +405,7 @@ export const LoginPage = () => {
                     autoComplete={
                       isSignUpMode ? 'new-password' : 'current-password'
                     }
-                    placeholder='Enter your password'
+                    placeholder={t('password')}
                     value={formData.password}
                     onChange={handleChange}
                     className='w-full pl-11 pr-11 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
@@ -392,7 +413,7 @@ export const LoginPage = () => {
                   <button
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
-                    className='absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1'
+                    className='absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer'
                     aria-label={
                       showPassword ? 'Hide password' : 'Show password'
                     }
@@ -411,9 +432,9 @@ export const LoginPage = () => {
                     <button
                       type='button'
                       onClick={() => setIsForgotPasswordOpen(true)}
-                      className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline'
+                      className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline cursor-pointer'
                     >
-                      Forgot Password?
+                      {t('forgotPassword')}
                     </button>
                   </div>
                 )}
@@ -430,7 +451,7 @@ export const LoginPage = () => {
                 ) : (
                   <>
                     <LogIn className='w-5 h-5' />
-                    <span>{isSignUpMode ? 'Sign Up' : 'Login'}</span>
+                    <span>{isSignUpMode ? t('signUp') : t('signIn')}</span>
                   </>
                 )}
               </button>
@@ -443,7 +464,7 @@ export const LoginPage = () => {
               </div>
               <div className='relative flex justify-center text-xs'>
                 <span className='bg-white dark:bg-[#111C2E] px-4 text-slate-500 dark:text-slate-400 font-medium'>
-                  or continue with
+                  {t('orContinueWith')}
                 </span>
               </div>
             </div>
@@ -454,7 +475,7 @@ export const LoginPage = () => {
               <button
                 type='button'
                 onClick={() => handleSocialLogin('Google')}
-                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group'
+                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
               >
                 <GoogleIcon />
                 <span>Google</span>
@@ -464,7 +485,7 @@ export const LoginPage = () => {
               <button
                 type='button'
                 onClick={() => handleSocialLogin('Apple')}
-                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group'
+                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
               >
                 <AppleIcon />
                 <span>Apple</span>
@@ -474,7 +495,7 @@ export const LoginPage = () => {
               <button
                 type='button'
                 onClick={() => handleSocialLogin('Microsoft')}
-                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group'
+                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
               >
                 <MicrosoftIcon />
                 <span>Microsoft</span>
@@ -483,15 +504,13 @@ export const LoginPage = () => {
 
             {/* Switch between Login and Sign up */}
             <p className='text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-7'>
-              {isSignUpMode
-                ? 'Already have an account? '
-                : "Don't have an account? "}
+              {isSignUpMode ? t('haveAccount') : t('noAccount')}{' '}
               <button
                 type='button'
                 onClick={() => setIsSignUpMode(!isSignUpMode)}
                 className='text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer'
               >
-                {isSignUpMode ? 'Login' : 'Sign up'}
+                {isSignUpMode ? t('signIn') : t('signUp')}
               </button>
             </p>
 

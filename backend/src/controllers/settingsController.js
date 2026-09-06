@@ -1,3 +1,4 @@
+import User from '../models/User.js';
 import UserPreferences from '../models/UserPreferences.js';
 import authService from '../services/authService.js';
 import { successResponse, errorResponse } from '../utils/response.js';
@@ -88,6 +89,10 @@ const updateSettings = async (req, res, next) => {
         setDefaultsOnInsert: true
       }
     );
+
+    if (updateData.language) {
+      await User.findByIdAndUpdate(req.user._id, { language: updateData.language });
+    }
 
     return successResponse(res, settings, 'Settings updated successfully', 200);
   } catch (error) {

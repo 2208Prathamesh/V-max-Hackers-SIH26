@@ -183,13 +183,26 @@ export const ChatPage = () => {
       ? 'హైదరాబాద్‌లో ఈరోజు వర్షం పడుతుందా?'
       : 'Will it rain today in Pune?',
     language === 'hi'
-      ? 'कपास की फसल के लिए सिंचाई सलाह'
+      ? 'कपास की फसल के लिए सिंचाई और छिड़काव सलाह'
       : language === 'mr'
-      ? 'कापूस पिकासाठी खत व पाणी व्यवस्थापन'
-      : 'Crop advisory for cotton this week',
-    'Compare ECMWF vs NOAA GFS forecast for Mumbai',
-    'Show official IMD weather warnings for today'
+      ? 'कापूस आणि सोयाबीन पिकासाठी खत व पाणी सल्ला'
+      : 'Crop advisory for cotton and soybean this week',
+    language === 'hi'
+      ? 'मुंबई के लिए 7 दिनों का मौसम पूर्वानुमान'
+      : language === 'mr'
+      ? 'मुंबई आणि पुण्यासाठी पुढील ७ दिवसांचा अंदाज'
+      : 'Compare ECMWF vs NOAA GFS forecast for Mumbai',
+    language === 'hi'
+      ? 'आज के सरकारी मौसम विभाग (IMD) अलर्ट दिखाएं'
+      : language === 'mr'
+      ? 'आजचे हवामान विभागाचे (IMD) अधिकृत इशारे दाखवा'
+      : 'Show official IMD weather warnings for today'
   ];
+
+  const handleChatLanguageChange = (newLang) => {
+    setLanguage(newLang);
+    api.updateSettings({ language: newLang }).catch(() => {});
+  };
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col bg-white dark:bg-[#151F32] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-card overflow-hidden">
@@ -203,10 +216,10 @@ export const ChatPage = () => {
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span>{activeConv?.title || 'WeatherGPT AI Assistant'}</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                Grounded • Zero Hallucination
+                {t('zeroHallucinationBadge')}
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Natural Multilingual Conversational Meteorological AI</p>
+            <p className="text-xs text-slate-400">{t('conversationalAiSubtitle')}</p>
           </div>
         </div>
 
@@ -216,7 +229,7 @@ export const ChatPage = () => {
             <Languages className="w-3.5 h-3.5 text-blue-500" />
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => handleChatLanguageChange(e.target.value)}
               className="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
             >
               {supportedLanguages.map((l) => (
@@ -229,10 +242,10 @@ export const ChatPage = () => {
 
           <button
             onClick={createNewChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-semibold transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-semibold transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>New Chat</span>
+            <span>{t('newChat')}</span>
           </button>
         </div>
       </div>
@@ -248,7 +261,7 @@ export const ChatPage = () => {
               {t('chat')}
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-              Ask in English, हिन्दी, मराठी, বাংলা, தமிழ், or తెలుగు about weather forecasts, rainfall probabilities, crop protection, or severe weather alerts.
+              {t('chatHeroDescription')}
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-2 pt-2">

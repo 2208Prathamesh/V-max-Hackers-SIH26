@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useWeather } from '../../context/WeatherContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { X, Search, MapPin, Plus, Check } from 'lucide-react';
 import { WeatherIcon } from '../common/WeatherIcon';
 
 export const AddLocationModal = () => {
   const { isAddLocationOpen, setIsAddLocationOpen, allCityDatabase, savedLocations, addLocation, formatTemp } = useWeather();
+  const { t, translateCondition, translateCity, translateRegion } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   if (!isAddLocationOpen) return null;
@@ -15,17 +17,21 @@ export const AddLocationModal = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn select-none">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Add New Location</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Search and save any city to get real-time weather</p>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              {t('addNewLocation')}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t('searchSaveCityDesc')}
+            </p>
           </div>
           <button
             onClick={() => setIsAddLocationOpen(false)}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -38,7 +44,7 @@ export const AddLocationModal = () => {
             <input
               type="text"
               autoFocus
-              placeholder="Search city, state or territory..."
+              placeholder={t('searchCityPlaceholder')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -62,10 +68,10 @@ export const AddLocationModal = () => {
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        {city.city}, {city.region}
+                        {translateCity(city.city)}, {translateRegion(city.region)}
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {city.condition} • {formatTemp(city.tempC)} (Feels like {formatTemp(city.feelsLikeC)})
+                        {translateCondition(city.condition)} • {formatTemp(city.tempC)} ({t('feelsLike', { temp: formatTemp(city.feelsLikeC) })})
                       </p>
                     </div>
                   </div>
@@ -76,7 +82,7 @@ export const AddLocationModal = () => {
                       addLocation(city);
                       setIsAddLocationOpen(false);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
                       isSaved
                         ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-default'
                         : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/20'
@@ -85,12 +91,12 @@ export const AddLocationModal = () => {
                     {isSaved ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        Saved
+                        {t('saved')}
                       </>
                     ) : (
                       <>
                         <Plus className="w-3.5 h-3.5" />
-                        Add City
+                        {t('addCity')}
                       </>
                     )}
                   </button>
@@ -100,7 +106,7 @@ export const AddLocationModal = () => {
           ) : (
             <div className="text-center py-8 text-slate-400">
               <MapPin className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No locations found matching "{searchTerm}"</p>
+              <p className="text-sm">{t('noSavedLocations')} "{searchTerm}"</p>
             </div>
           )}
         </div>
@@ -109,12 +115,14 @@ export const AddLocationModal = () => {
         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end">
           <button
             onClick={() => setIsAddLocationOpen(false)}
-            className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition"
+            className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition cursor-pointer"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default AddLocationModal;

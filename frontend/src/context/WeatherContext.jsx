@@ -71,7 +71,6 @@ export const WeatherProvider = ({ children }) => {
 
   // Modals state
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
   const [isAirQualityOpen, setIsAirQualityOpen] = useState(false)
@@ -167,6 +166,25 @@ export const WeatherProvider = ({ children }) => {
         if (locations.length > 0) setSelectedMapLocation(locations[0])
       })
       .catch(() => addToast('Could not load saved locations', 'warning'))
+
+    api
+      .settings()
+      .then(serverSettings => {
+        if (serverSettings) {
+          setSettings(prev => ({
+            ...prev,
+            ...serverSettings,
+            units: {
+              ...prev.units,
+              ...(serverSettings.units || {})
+            }
+          }))
+          if (serverSettings.language) {
+            localStorage.setItem('weathergpt_language', serverSettings.language)
+          }
+        }
+      })
+      .catch(() => {})
   }, [isAuthenticated])
 
   const refreshWeather = async (latitude = 18.5204, longitude = 73.8567) => {
@@ -452,17 +470,26 @@ export const WeatherProvider = ({ children }) => {
   const login = async (email, password) => {
     const result = await api.login({ email, password })
     localStorage.setItem('weathergpt_token', result.token)
-    setUser(normalizeUser(result.user))
+    const normalized = normalizeUser(result.user)
+    setUser(normalized)
+    if (result.user?.language) {
+      localStorage.setItem('weathergpt_language', result.user.language)
+      setSettings(prev => ({ ...prev, language: result.user.language }))
+    }
     setIsAuthenticated(true)
     setCurrentPage('dashboard')
     addToast(`Welcome back to WeatherGPT!`, 'success')
     return result
   }
 
-  const signUp = async ({ name, email, password }) => {
-    const result = await api.register({ name, email, password })
+  const signUp = async ({ name, email, password, language }) => {
+    const lang = language || localStorage.getItem('weathergpt_language') || 'en'
+    const result = await api.register({ name, email, password, language: lang })
     localStorage.setItem('weathergpt_token', result.token)
-    setUser(normalizeUser(result.user))
+    const normalized = normalizeUser(result.user)
+    setUser(normalized)
+    localStorage.setItem('weathergpt_language', lang)
+    setSettings(prev => ({ ...prev, language: lang }))
     setIsAuthenticated(true)
     setCurrentPage('dashboard')
     addToast(
@@ -528,8 +555,6 @@ export const WeatherProvider = ({ children }) => {
         // Modals
         isAddLocationOpen,
         setIsAddLocationOpen,
-        isPremiumModalOpen,
-        setIsPremiumModalOpen,
         isEditProfileOpen,
         setIsEditProfileOpen,
         isForgotPasswordOpen,

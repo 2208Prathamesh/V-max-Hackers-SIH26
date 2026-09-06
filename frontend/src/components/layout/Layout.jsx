@@ -3,7 +3,6 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ToastContainer } from '../common/Toast';
 import { AddLocationModal } from '../modals/AddLocationModal';
-import { PremiumModal } from '../modals/PremiumModal';
 import { EditProfileModal } from '../modals/EditProfileModal';
 import { AirQualityModal } from '../modals/AirQualityModal';
 
@@ -36,7 +35,6 @@ export const Layout = ({ children }) => {
 
       {/* Global Modals & Notifications */}
       <AddLocationModal />
-      <PremiumModal />
       <EditProfileModal />
       <AirQualityModal />
       <ToastContainer />

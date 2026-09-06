@@ -27,25 +27,25 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
   const getPageInfo = () => {
     switch (currentPage) {
       case 'settings':
-        return { title: t('settings'), subtitle: 'Manage your preferences and account settings' };
+        return { title: t('settings'), subtitle: t('settingsSubtitle') };
       case 'saved-locations':
-        return { title: t('savedLocations'), subtitle: 'Quickly access weather updates for your saved locations' };
+        return { title: t('savedLocations'), subtitle: t('savedLocationsSubtitle') };
       case 'history':
-        return { title: t('history'), subtitle: 'View and manage your past conversations & 20-year climate trends' };
+        return { title: t('history'), subtitle: t('historySubtitle') };
       case 'weather-map':
-        return { title: t('weatherMap'), subtitle: 'Explore real-time weather conditions & Doppler radar across India' };
+        return { title: t('weatherMap'), subtitle: t('mapSubtitle') };
       case 'dashboard':
-        return { title: t('dashboard'), subtitle: 'Real-time AI weather intelligence & environmental metrics' };
+        return { title: t('dashboard'), subtitle: t('dashboardSubtitle') };
       case 'chat':
-        return { title: t('chat'), subtitle: 'Ask any meteorological or climate query with grounded AI reasoning' };
+        return { title: t('chat'), subtitle: t('chatSubtitle') };
       case 'advisory':
-        return { title: t('advisory'), subtitle: 'Soil moisture agronomy guide & emergency disaster action plan' };
+        return { title: t('advisory'), subtitle: t('advisorySubtitle') };
       case 'alerts':
-        return { title: t('alerts'), subtitle: 'Severe weather warnings, radar advisories, and IMD bulletins' };
+        return { title: t('alerts'), subtitle: t('alertsSubtitle') };
       case 'forecast':
-        return { title: t('forecast'), subtitle: '7-14 day precision meteorological projections & NWP models' };
+        return { title: t('forecast'), subtitle: t('forecastSubtitle') };
       default:
-        return { title: 'WeatherGPT', subtitle: 'AI Weather Intelligence' };
+        return { title: 'WeatherGPT', subtitle: t('dashboardSubtitle') };
     }
   };
 
@@ -57,11 +57,12 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
     setLanguage(code);
     setSettings(prev => ({ ...prev, language: code }));
     setIsLangOpen(false);
-    addToast(`Language switched to ${name}`, 'info');
+    const prefix = t('languageSwitchedToast') || (code === 'mr' ? 'भाषा बदलली:' : code === 'hi' ? 'भाषा बदली गई:' : 'Language switched to');
+    addToast(`${prefix} ${name}`, 'info');
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-6 py-4 flex items-center justify-between transition-colors duration-200">
+    <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between transition-colors duration-200">
       {/* Left Title & Mobile Menu Button */}
       <div className="flex items-center gap-3">
         <button
@@ -83,25 +84,47 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
         )}
       </div>
 
-      {/* Right Action Icons: Language, Dark Mode, Alerts Bell, User Avatar */}
-      <div className="flex items-center gap-2.5 sm:gap-3">
-        {/* Language Dropdown */}
-        <div className="relative">
+      {/* Right Action Icons: High-UX Language Segmented Control, Dark Mode, Alerts Bell, User Avatar */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Desktop 1-Click Segmented Language Switcher (Gov & Top App UX) */}
+        <div className="hidden sm:flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+          {supportedLanguages.map(lang => {
+            const isActive = language === lang.code;
+            return (
+              <button
+                key={lang.code}
+                onClick={() => handleSelectLang(lang.code, lang.nativeName)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isActive
+                    ? 'bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-xs scale-102'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+                title={`Switch to ${lang.name}`}
+              >
+                <span className="text-sm leading-none">{lang.flag}</span>
+                <span>{lang.nativeName}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Mobile Compact Language Dropdown */}
+        <div className="relative sm:hidden">
           <button
             onClick={() => setIsLangOpen(!isLangOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs"
           >
             <Globe className="w-3.5 h-3.5 text-blue-500" />
-            <span className="font-semibold">{currentLangObj.flag} {currentLangObj.nativeName}</span>
+            <span>{currentLangObj.nativeName}</span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {isLangOpen && (
-            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-fadeIn">
+            <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-fadeIn">
               {supportedLanguages.map(lang => (
                 <button
                   key={lang.code}
-                  onClick={() => handleSelectLang(lang.code, lang.name)}
+                  onClick={() => handleSelectLang(lang.code, lang.nativeName)}
                   className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl transition ${
                     language === lang.code
                       ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold'
@@ -110,7 +133,7 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
                 >
                   <div className="flex items-center gap-2">
                     <span>{lang.flag}</span>
-                    <span>{lang.name} ({lang.nativeName})</span>
+                    <span>{lang.nativeName}</span>
                   </div>
                   {language === lang.code && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                 </button>
@@ -123,7 +146,7 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
         <button
           onClick={toggleTheme}
           aria-label="Toggle Theme"
-          className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs"
+          className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs cursor-pointer"
         >
           {isDark ? (
             <Sun className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -136,7 +159,7 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
         <div className="relative">
           <button
             onClick={() => setIsAlertsOpen(!isAlertsOpen)}
-            className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs"
+            className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs cursor-pointer"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
@@ -156,19 +179,24 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
                     setCurrentPage('alerts');
                     setIsAlertsOpen(false);
                   }}
-                  className="text-xs text-blue-600 hover:underline font-semibold"
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
                 >
-                  View all
+                  {language === 'mr' ? 'सर्व पहा' : language === 'hi' ? 'सभी देखें' : 'View all'}
                 </button>
               </div>
 
               <div className="space-y-2 mt-3 max-h-60 overflow-y-auto">
                 <div className="p-3 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl">
                   <p className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5" /> Heavy Rainfall Warning (IMD Orange Alert)
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>{t('heavyRain')} (IMD Orange Alert)</span>
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Pune & Konkan: Expect heavy showers and localized waterlogging over next 24h.
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                    {language === 'mr'
+                      ? 'पुणे व कोकण: पुढील २४ तासांत मुसळधार पाऊस व सखल भागात पाणी साचण्याची शक्यता.'
+                      : language === 'hi'
+                      ? 'पुणे और कोंकण: अगले 24 घंटों में भारी बारिश और निचले इलाकों में जलभराव की संभावना।'
+                      : 'Pune & Konkan: Expect heavy showers and localized waterlogging over next 24h.'}
                   </p>
                 </div>
               </div>

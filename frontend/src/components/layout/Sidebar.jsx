@@ -11,7 +11,6 @@ import {
   Clock, 
   Star, 
   Settings, 
-  Crown,
   ChevronRight,
   ChevronDown,
   Sun, 
@@ -58,13 +57,13 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     currentPage, 
     setCurrentPage, 
     user,
+    conversations = [],
     logout,
-    setIsPremiumModalOpen,
     setIsEditProfileOpen,
     setActiveConversationId
   } = useWeather();
   const { isDark, toggleTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navItems = [
@@ -79,13 +78,61 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { id: 'settings', label: t('settings'), icon: Settings },
   ];
 
-  const recentChats = [
-    { id: 'conv-1', title: 'Will it rain tomorrow in Pune?', time: '10:21 AM' },
-    { id: 'conv-3', title: 'Weather this weekend in Mumbai', time: 'Yesterday' },
-    { id: 'conv-5', title: 'Cyclone update in Bay of Bengal', time: '2 days ago' },
-    { id: 'conv-4', title: 'Air quality in Delhi', time: '2 days ago' },
-    { id: 'conv-6', title: "Tomorrow's temperature in Nagpur", time: '3 days ago' },
+  const fallbackRecentChats = [
+    { 
+      id: 'conv-1', 
+      title: language === 'mr' 
+        ? 'पुण्यात उद्या पाऊस पडेल का?' 
+        : language === 'hi' 
+        ? 'क्या कल पुणे में बारिश होगी?' 
+        : 'Will it rain tomorrow in Pune?', 
+      time: '10:21 AM' 
+    },
+    { 
+      id: 'conv-3', 
+      title: language === 'mr'
+        ? 'या आठवड्यात मुंबईतील हवामान'
+        : language === 'hi'
+        ? 'इस सप्ताहांत मुंबई का मौसम'
+        : 'Weather this weekend in Mumbai', 
+      time: language === 'mr' ? 'काल' : language === 'hi' ? 'कल' : 'Yesterday' 
+    },
+    { 
+      id: 'conv-5', 
+      title: language === 'mr'
+        ? 'बंगालच्या उपसागरातील चक्रीवादळ अपडेट'
+        : language === 'hi'
+        ? 'बंगाल की खाड़ी में चक्रवात अपडेट'
+        : 'Cyclone update in Bay of Bengal', 
+      time: language === 'mr' ? '२ दिवसांपूर्वी' : language === 'hi' ? '2 दिन पहले' : '2 days ago' 
+    },
+    { 
+      id: 'conv-4', 
+      title: language === 'mr'
+        ? 'दिल्लीतील हवेची गुणवत्ता (AQI)'
+        : language === 'hi'
+        ? 'दिल्ली में वायु गुणवत्ता'
+        : 'Air quality in Delhi', 
+      time: language === 'mr' ? '२ दिवसांपूर्वी' : language === 'hi' ? '2 दिन पहले' : '2 days ago' 
+    },
+    { 
+      id: 'conv-6', 
+      title: language === 'mr'
+        ? 'नागपूरचे उद्याचे तापमान'
+        : language === 'hi'
+        ? 'नागपुर का कल का तापमान'
+        : "Tomorrow's temperature in Nagpur", 
+      time: language === 'mr' ? '३ दिवसांपूर्वी' : language === 'hi' ? '3 दिन पहले' : '3 days ago' 
+    },
   ];
+
+  const recentChats = conversations.length
+    ? conversations.slice(0, 5).map(c => ({
+        id: c.id,
+        title: c.title,
+        time: c.time || (language === 'mr' ? 'अलीकडील' : language === 'hi' ? 'हालिया' : 'Recent')
+      }))
+    : fallbackRecentChats;
 
   const handleNavClick = (pageId) => {
     setCurrentPage(pageId);
@@ -148,7 +195,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60">
           <div className="flex items-center justify-between px-2 mb-2">
             <span className="text-[11px] font-bold text-slate-900 dark:text-slate-200 tracking-tight">
-              Recent Conversations
+              {t('recentConversations')}
             </span>
           </div>
           <div className="space-y-1">
@@ -171,27 +218,12 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
             onClick={() => handleNavClick('history')}
             className="flex items-center gap-1 px-2.5 py-1 mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
           >
-            <span>View all</span>
+            <span>{t('viewAll')}</span>
             <ChevronRight className="w-3 h-3" />
           </button>
         </div>
 
-        {/* Go Premium Box */}
-        <div className="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/30 space-y-2">
-          <div className="flex items-center gap-1.5">
-            <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
-            <span className="text-xs font-bold text-amber-900 dark:text-amber-200">Go Premium</span>
-          </div>
-          <p className="text-[11px] text-amber-800/80 dark:text-amber-400/80 leading-relaxed">
-            Unlock advanced alerts, longer forecasts and custom notifications.
-          </p>
-          <button
-            onClick={() => setIsPremiumModalOpen(true)}
-            className="w-full py-1.5 px-3 bg-white dark:bg-amber-900/40 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-600 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer"
-          >
-            Upgrade Now
-          </button>
-        </div>
+
 
       </div>
 
@@ -236,7 +268,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
             >
               <UserIcon className="w-4 h-4 text-slate-400" />
-              <span>Edit Profile</span>
+              <span>{t('editProfile')}</span>
             </button>
             <button
               onClick={() => {
@@ -246,7 +278,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-400" />}
-              <span>{isDark ? 'Light Theme' : 'Dark Theme'}</span>
+              <span>{isDark ? t('lightTheme') : t('darkTheme')}</span>
             </button>
             <button
               onClick={() => {
@@ -256,7 +288,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
             >
               <Settings className="w-4 h-4 text-slate-400" />
-              <span>Account Settings</span>
+              <span>{t('accountSettings')}</span>
             </button>
             <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
             <button
@@ -267,7 +299,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition cursor-pointer"
             >
               <LogOut className="w-4 h-4 text-rose-500" />
-              <span>Log Out</span>
+              <span>{t('logout')}</span>
             </button>
           </div>
         )}

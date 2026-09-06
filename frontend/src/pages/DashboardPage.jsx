@@ -169,7 +169,16 @@ export const DashboardPage = () => {
     formatWind,
     formatPressure
   } = useWeather()
-  const { t, translateCondition } = useLanguage()
+  const {
+    language,
+    t,
+    getGreeting,
+    translateCondition,
+    translateAlertTitle,
+    translateAlertDescription,
+    translateCity,
+    translateRegion
+  } = useLanguage()
 
   const [queryText, setQueryText] = useState('')
 
@@ -195,18 +204,18 @@ export const DashboardPage = () => {
 
   const selectedLocation = selectedMapLocation || savedLocations[0]
   const locationLabel = selectedLocation
-    ? `${selectedLocation.city}, ${
+    ? `${translateCity(selectedLocation.city)}, ${translateRegion(
         selectedLocation.region ||
         selectedLocation.state ||
         selectedLocation.country
-      }`
-    : 'Current location'
+      )}`
+    : t('currentLocation')
   const weatherDescription =
     currentConditions?.precipitation > 0
-      ? 'Rain nearby'
+      ? t('rainNearby')
       : currentConditions?.humidity > 80
-      ? 'Humid conditions'
-      : 'Current conditions'
+      ? t('humidConditions')
+      : t('currentConditions')
   const currentTime =
     currentHour?.time || forecastHour?.time
       ? new Date(currentHour?.time || forecastHour.time).toLocaleString([], {
@@ -216,14 +225,14 @@ export const DashboardPage = () => {
           hour: 'numeric',
           minute: '2-digit'
         })
-      : 'Weather data unavailable'
+      : t('weatherUnavailable')
 
   const formattedCurrentTemperature = formatTemp(currentConditions?.temperature)
   const suggestionChips = [
-    'Will it rain tomorrow?',
-    'Weather in Mumbai',
-    'Cyclone update',
-    'Air quality today'
+    t('chipRain'),
+    t('chipMumbai'),
+    t('chipCyclone'),
+    t('chipAqi')
   ]
 
   const handleSearchSubmit = e => {
@@ -240,15 +249,74 @@ export const DashboardPage = () => {
   }
 
   const handleVoiceSearch = () => {
-    addToast('Listening... Speak your weather query', 'info')
-    setTimeout(() => {
-      setQueryText('What is the forecast for this weekend?')
-    }, 1500)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      addToast(
+        language === 'mr' 
+          ? 'या ब्राउझरमध्ये व्हॉइस सर्च उपलब्ध नाही.' 
+          : language === 'hi' 
+          ? 'इस ब्राउज़र में वॉइस सर्च उपलब्ध नहीं है।' 
+          : 'Voice recognition not supported in this browser.', 
+        'warning'
+      )
+      return
+    }
+
+    try {
+      const recognition = new SpeechRecognition()
+      const speechLangMap = {
+        hi: 'hi-IN',
+        mr: 'mr-IN',
+        bn: 'bn-IN',
+        ta: 'ta-IN',
+        te: 'te-IN',
+        en: 'en-IN'
+      }
+      recognition.lang = speechLangMap[language] || 'en-IN'
+      recognition.continuous = false
+      recognition.interimResults = false
+
+      recognition.onstart = () => {
+        addToast(
+          language === 'mr' 
+            ? 'ऐकत आहे... तुमचा प्रश्न बोला...' 
+            : language === 'hi' 
+            ? 'सुन रहा हूँ... अपना सवाल बोलिए...' 
+            : 'Listening... Speak your weather query...', 
+          'info'
+        )
+      }
+
+      recognition.onresult = (event) => {
+        const spokenText = event.results[0]?.[0]?.transcript
+        if (spokenText) {
+          setQueryText(spokenText)
+          sendChatMessage(spokenText)
+          setCurrentPage('chat')
+        }
+      }
+
+      recognition.onerror = (event) => {
+        console.warn('Dashboard voice search error:', event.error)
+        addToast(
+          language === 'mr' 
+            ? 'आवाज ओळखण्यात अडचण आली. पुन्हा प्रयत्न करा.' 
+            : language === 'hi' 
+            ? 'आवाज पहचानने में समस्या आई। पुनः प्रयास करें।' 
+            : 'Could not recognize voice. Please try again.', 
+          'warning'
+        )
+      }
+
+      recognition.start()
+    } catch (e) {
+      console.warn('Voice recognition startup failed:', e)
+    }
   }
 
   // Hourly Forecast Data matching screenshot
   const fallbackHourlyData = [
-    { time: 'Now', temp: '28°', pop: '65%', icon: 'sun-cloud', isNow: true },
+    { time: t('now'), temp: '28°', pop: '65%', icon: 'sun-cloud', isNow: true },
     { time: '9 AM', temp: '29°', pop: '60%', icon: 'rain' },
     { time: '10 AM', temp: '30°', pop: '70%', icon: 'rain' },
     { time: '11 AM', temp: '31°', pop: '80%', icon: 'rain' },
@@ -260,7 +328,7 @@ export const DashboardPage = () => {
     ? forecastHours.slice(0, 7).map((hour, index) => ({
         time:
           index === 0
-            ? 'Now'
+            ? t('now')
             : new Date(hour.time).toLocaleTimeString([], {
                 hour: 'numeric',
                 minute: '2-digit'
@@ -276,36 +344,107 @@ export const DashboardPage = () => {
 
   // Recent Conversations matching screenshot
   const fallbackRecentChats = [
-    { id: 'conv-1', title: 'Will it rain tomorrow in Pune?', time: '8:15 AM' },
-    { id: 'conv-2', title: 'Weather update for my farm', time: 'Yesterday' },
+    {
+      id: 'conv-1',
+      title:
+        language === 'mr'
+          ? 'पुण्यात उद्या पाऊस पडेल का?'
+          : language === 'hi'
+          ? 'क्या कल पुणे में बारिश होगी?'
+          : language === 'bn'
+          ? 'কাল কি পুনেতে বৃষ্টি হবে?'
+          : language === 'ta'
+          ? 'புனேயில் நாளை மழை பெய்யுமா?'
+          : language === 'te'
+          ? 'పూణేలో రేపు వర్షం పడుతుందా?'
+          : 'Will it rain tomorrow in Pune?',
+      time: '8:15 AM'
+    },
+    {
+      id: 'conv-2',
+      title:
+        language === 'mr'
+          ? 'माझ्या शेतीसाठी हवामान अंदाज'
+          : language === 'hi'
+          ? 'मेरे खेत के लिए मौसम का हाल'
+          : language === 'bn'
+          ? 'আমার খামারের আবহাওয়ার তথ্য'
+          : language === 'ta'
+          ? 'எனது பண்ணைக்கான வானிலை தகவல்'
+          : language === 'te'
+          ? 'నా వ్యవసాయ క్షేత్ర వాతావరణ సమాచారం'
+          : 'Weather update for my farm',
+      time: language === 'mr' ? 'काल' : language === 'hi' ? 'कल' : 'Yesterday'
+    },
     {
       id: 'conv-3',
-      title: 'Cyclone update in Bay of Bengal',
-      time: 'Yesterday'
+      title:
+        language === 'mr'
+          ? 'बंगालच्या उपसागरातील चक्रीवादळ स्थिती'
+          : language === 'hi'
+          ? 'बंगाल की खाड़ी में चक्रवात अपडेट'
+          : language === 'bn'
+          ? 'বঙ্গোপসাগরে ঘূর্ণিঝড়ের আপডেট'
+          : language === 'ta'
+          ? 'வங்காள விரிகுடாவில் புயல் எச்சரிக்கை'
+          : language === 'te'
+          ? 'బంగాళాఖాతంలో తుఫాను స్థితి'
+          : 'Cyclone update in Bay of Bengal',
+      time: language === 'mr' ? 'काल' : language === 'hi' ? 'कल' : 'Yesterday'
     },
-    { id: 'conv-4', title: 'What is the temperature today?', time: '20 May' },
-    { id: 'conv-5', title: 'Air quality in Delhi', time: '19 May' }
+    {
+      id: 'conv-4',
+      title:
+        language === 'mr'
+          ? 'आजचे तापमान किती आहे?'
+          : language === 'hi'
+          ? 'आज का तापमान क्या है?'
+          : language === 'bn'
+          ? 'আজকের তাপমাত্রা কত?'
+          : language === 'ta'
+          ? 'இன்றைய வெப்பநிலை என்ன?'
+          : language === 'te'
+          ? 'ఈరోజు ఉష్ణోగ్రత ఎంత?'
+          : 'What is the temperature today?',
+      time: '20 May'
+    },
+    {
+      id: 'conv-5',
+      title:
+        language === 'mr'
+          ? 'दिल्लीमधील हवेची गुणवत्ता (AQI)'
+          : language === 'hi'
+          ? 'दिल्ली में वायु गुणवत्ता'
+          : language === 'bn'
+          ? 'দিল্লির বায়ু গুণমান'
+          : language === 'ta'
+          ? 'டெல்லியில் காற்றின் தரம்'
+          : language === 'te'
+          ? 'ఢిల్లీలో గాలి నాణ్యత'
+          : 'Air quality in Delhi',
+      time: '19 May'
+    }
   ]
   const recentChats = conversations.length
     ? conversations.slice(0, 5).map(conversation => ({
         id: conversation.id,
         title: conversation.title,
-        time: conversation.time || 'Recent'
+        time: conversation.time || (language === 'mr' ? 'अलीकडील' : language === 'hi' ? 'हालिया' : 'Recent')
       }))
     : fallbackRecentChats
 
   // Saved Locations matching screenshot
   const dashboardLocations = savedLocations.length
     ? savedLocations.slice(0, 4).map((location, index) => ({
-        city: `${location.city}, ${
+        city: `${translateCity(location.city)}, ${translateRegion(
           location.region || location.state || location.country
-        }`,
+        )}`,
         status:
           index === 0
-            ? 'Current Location'
+            ? t('currentLocation')
             : location.isFavorite
-            ? 'Favorite location'
-            : 'Saved location',
+            ? t('favoriteLocation')
+            : t('savedLocation'),
         temp:
           index === 0 && currentHour
             ? formatTemp(currentHour.temperature)
@@ -343,12 +482,12 @@ export const DashboardPage = () => {
       <div>
         <div className='flex items-center gap-2'>
           <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
-            Good morning, {userName}!
+            {getGreeting()}, {userName}!
           </h1>
           <span className='text-2xl sm:text-3xl animate-bounce'>👋</span>
         </div>
         <p className='text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1'>
-          Here's your weather overview
+          {t('weatherOverview')}
         </p>
 
         {/* AI Query Input Bar */}
@@ -356,7 +495,7 @@ export const DashboardPage = () => {
           <div className='relative flex items-center w-full rounded-full bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-700/80 shadow-sm hover:border-blue-300 dark:hover:border-slate-600 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition p-1.5 pl-6'>
             <input
               type='text'
-              placeholder='Ask WeatherGPT anything...'
+              placeholder={t('askAnything')}
               value={queryText}
               onChange={e => setQueryText(e.target.value)}
               className='w-full bg-transparent text-sm sm:text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none pr-3'
@@ -501,7 +640,11 @@ export const DashboardPage = () => {
                 {t('visibility')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
-                --
+                {currentConditions?.visibility != null
+                  ? currentConditions.visibility >= 1000
+                    ? `${Math.round(currentConditions.visibility / 1000)} km`
+                    : `${Math.round(currentConditions.visibility)} m`
+                  : '10 km'}
               </span>
             </div>
           </div>
@@ -549,14 +692,14 @@ export const DashboardPage = () => {
                             : 'text-xs text-slate-800 dark:text-slate-200'
                         } font-bold truncate group-hover:text-blue-600`}
                       >
-                        {alert.title}
+                        {translateAlertTitle(alert.title)}
                       </h3>
                       <p className='text-[11px] text-slate-500 dark:text-slate-400 truncate'>
                         {alert.location}
                       </p>
                       {index === 0 && (
                         <p className='text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1'>
-                          {alert.description}
+                          {translateAlertDescription(alert.description)}
                         </p>
                       )}
                     </div>
@@ -650,7 +793,7 @@ export const DashboardPage = () => {
         {/* Right: Quick Actions (2x2 Grid) - Span 5 */}
         <div className='lg:col-span-5 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4'>
           <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-            Quick Actions
+            {t('quickActions')}
           </h2>
 
           <div className='grid grid-cols-2 gap-3.5 pt-1'>
@@ -663,7 +806,7 @@ export const DashboardPage = () => {
                 <CalendarDays className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-blue-900 dark:text-blue-200'>
-                Weather Forecast
+                {t('weatherForecast')}
               </span>
             </button>
 
@@ -676,7 +819,7 @@ export const DashboardPage = () => {
                 <Map className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-emerald-900 dark:text-emerald-200'>
-                Weather Map
+                {t('weatherMap')}
               </span>
             </button>
 
@@ -689,7 +832,7 @@ export const DashboardPage = () => {
                 <AlertTriangle className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-rose-900 dark:text-rose-200'>
-                Alerts
+                {t('alerts')}
               </span>
             </button>
 
@@ -702,7 +845,7 @@ export const DashboardPage = () => {
                 <Wind className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-purple-900 dark:text-purple-200'>
-                Air Quality
+                {t('airQuality')}
               </span>
             </button>
           </div>
@@ -717,13 +860,13 @@ export const DashboardPage = () => {
         <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-3'>
           <div className='flex items-center justify-between pb-1'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Recent Conversations
+              {t('recentConversations')}
             </h2>
             <button
               onClick={() => setCurrentPage('history')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View All
+              {t('viewAll')}
             </button>
           </div>
 
@@ -752,13 +895,13 @@ export const DashboardPage = () => {
         <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-3'>
           <div className='flex items-center justify-between pb-1'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Saved Locations
+              {t('savedLocations')}
             </h2>
             <button
               onClick={() => setCurrentPage('saved-locations')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View All
+              {t('viewAll')}
             </button>
           </div>
 
@@ -816,11 +959,10 @@ export const DashboardPage = () => {
           </div>
           <div>
             <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight'>
-              Did you know?
+              {t('didYouKnow')}
             </h3>
             <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed'>
-              Trees can reduce the surrounding air temperature by up to 5°C.
-              Plant more trees and stay cool!
+              {t('treesEcoTip')}
             </p>
           </div>
         </div>

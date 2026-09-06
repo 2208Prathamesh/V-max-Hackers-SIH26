@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useWeather } from '../../context/WeatherContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { X, ArrowRightLeft } from 'lucide-react';
 
 export const CompareLocationsModal = ({ isOpen, onClose }) => {
-  const { savedLocations } = useWeather();
+  const { savedLocations, formatTemp } = useWeather();
+  const { t, translateCondition, translateCity, translateRegion } = useLanguage();
   const [city1Id, setCity1Id] = useState(savedLocations[0]?.id || 'loc-1');
   const [city2Id, setCity2Id] = useState(savedLocations[1]?.id || 'loc-2');
 
@@ -23,9 +25,9 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Compare Weather Locations
+                {t('compareWeatherLocations')}
               </h3>
-              <p className="text-xs text-slate-500">Side-by-side meteorological comparison</p>
+              <p className="text-xs text-slate-500">{t('sideBySideDesc')}</p>
             </div>
           </div>
           <button
@@ -42,7 +44,7 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                First Location
+                {t('firstLocation')}
               </label>
               <select
                 value={city1Id}
@@ -50,14 +52,14 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
                 className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {savedLocations.map(l => (
-                  <option key={l.id} value={l.id}>{l.city}, {l.region}</option>
+                  <option key={l.id} value={l.id}>{translateCity(l.city)}, {translateRegion(l.region)}</option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                Second Location
+                {t('secondLocation')}
               </label>
               <select
                 value={city2Id}
@@ -65,7 +67,7 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
                 className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {savedLocations.map(l => (
-                  <option key={l.id} value={l.id}>{l.city}, {l.region}</option>
+                  <option key={l.id} value={l.id}>{translateCity(l.city)}, {translateRegion(l.region)}</option>
                 ))}
               </select>
             </div>
@@ -75,21 +77,21 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
           <div className="grid grid-cols-2 gap-4">
             {/* Location 1 Card */}
             <div className="p-4 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-2xl space-y-3 text-center">
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{city1.city}</span>
-              <div className="text-4xl font-black text-slate-900 dark:text-white">{city1.tempC}°C</div>
-              <p className="text-xs text-slate-600 dark:text-slate-400">{city1.condition}</p>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{translateCity(city1.city)}</span>
+              <div className="text-4xl font-black text-slate-900 dark:text-white">{formatTemp(city1.tempC)}</div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">{translateCondition(city1.condition)}</p>
 
               <div className="space-y-1.5 pt-2 border-t border-blue-100 dark:border-blue-900/30 text-xs text-left">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Humidity:</span>
+                  <span className="text-slate-500">{t('humidity')}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{city1.humidity}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Wind:</span>
+                  <span className="text-slate-500">{t('wind')}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{city1.windSpeedKmh} km/h</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Pressure:</span>
+                  <span className="text-slate-500">{t('pressure')}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{city1.pressureHpa} hPa</span>
                 </div>
                 <div className="flex justify-between">
@@ -101,21 +103,21 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
 
             {/* Location 2 Card */}
             <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl space-y-3 text-center">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{city2.city}</span>
-              <div className="text-4xl font-black text-slate-900 dark:text-white">{city2.tempC}°C</div>
-              <p className="text-xs text-slate-600 dark:text-slate-400">{city2.condition}</p>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{translateCity(city2.city)}</span>
+              <div className="text-4xl font-black text-slate-900 dark:text-white">{formatTemp(city2.tempC)}</div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">{translateCondition(city2.condition)}</p>
 
               <div className="space-y-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/40 text-xs text-left">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Humidity:</span>
+                  <span className="text-slate-500">{t('humidity')}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{city2.humidity}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Wind:</span>
+                  <span className="text-slate-500">{t('wind')}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{city2.windSpeedKmh} km/h</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Pressure:</span>
+                  <span className="text-slate-500">{t('pressure')}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{city2.pressureHpa} hPa</span>
                 </div>
                 <div className="flex justify-between">
@@ -130,10 +132,12 @@ export const CompareLocationsModal = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
           >
-            Done Comparing
+            {t('close')}
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default CompareLocationsModal;
