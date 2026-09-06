@@ -78,7 +78,15 @@ export const ForecastPage = () => {
 
   const city = selectedMapLocation ||
     savedLocations[0] || { city: 'Pune', region: 'Maharashtra' }
-  const liveForecast = forecastData?.models?.openMeteo
+  const liveForecast =
+    forecastData?.models?.ecmwf?.current &&
+    forecastData.models.ecmwf.isFallback !== true
+      ? forecastData.models.ecmwf
+      : forecastData?.models?.gfs?.current &&
+        forecastData.models.gfs.isFallback !== true
+      ? forecastData.models.gfs
+      : forecastData?.models?.openMeteo
+  const currentForecast = liveForecast?.current
   const currentForecastHour = liveForecast?.hourly?.[0]
   const currentForecastDay = liveForecast?.daily?.[0]
 
@@ -97,65 +105,6 @@ export const ForecastPage = () => {
 
   const liveChartHours = liveForecast?.hourly?.slice(0, 6)
 
-  // 7-Day Forecast Data matching screenshot
-  const fallbackSevenDayForecast = [
-    {
-      day: 'Wed',
-      date: '21 May',
-      high: '31°',
-      low: '22°',
-      pop: '20%',
-      icon: 'sun-cloud'
-    },
-    {
-      day: 'Thu',
-      date: '22 May',
-      high: '30°',
-      low: '22°',
-      pop: '60%',
-      icon: 'rain'
-    },
-    {
-      day: 'Fri',
-      date: '23 May',
-      high: '29°',
-      low: '21°',
-      pop: '70%',
-      icon: 'rain'
-    },
-    {
-      day: 'Sat',
-      date: '24 May',
-      high: '28°',
-      low: '21°',
-      pop: '80%',
-      icon: 'rain'
-    },
-    {
-      day: 'Sun',
-      date: '25 May',
-      high: '30°',
-      low: '22°',
-      pop: '30%',
-      icon: 'sun-cloud'
-    },
-    {
-      day: 'Mon',
-      date: '26 May',
-      high: '31°',
-      low: '23°',
-      pop: '20%',
-      icon: 'sun-cloud'
-    },
-    {
-      day: 'Tue',
-      date: '27 May',
-      high: '32°',
-      low: '23°',
-      pop: '10%',
-      icon: 'sun'
-    }
-  ]
   const sevenDayForecast = liveForecast?.daily?.length
     ? liveForecast.daily.slice(0, 7).map(day => ({
         day: formatDate(day.date).split(' ')[0],
@@ -168,20 +117,8 @@ export const ForecastPage = () => {
         pop: `${Math.round(day.precipitationProbability ?? 0)}%`,
         icon: weatherIcon(day.precipitationProbability ?? 0)
       }))
-    : fallbackSevenDayForecast
+    : []
 
-  // 9-Slot Hourly Forecast matching screenshot
-  const fallbackNineHourForecast = [
-    { time: 'Now', temp: '28°C', pop: '20%', icon: 'sun-cloud' },
-    { time: '9 AM', temp: '29°C', pop: '30%', icon: 'rain' },
-    { time: '10 AM', temp: '30°C', pop: '40%', icon: 'cloud' },
-    { time: '11 AM', temp: '31°C', pop: '60%', icon: 'cloud' },
-    { time: '12 PM', temp: '31°C', pop: '70%', icon: 'rain' },
-    { time: '1 PM', temp: '30°C', pop: '70%', icon: 'rain' },
-    { time: '2 PM', temp: '29°C', pop: '70%', icon: 'rain' },
-    { time: '3 PM', temp: '28°C', pop: '40%', icon: 'rain' },
-    { time: '4 PM', temp: '27°C', pop: '40%', icon: 'rain' }
-  ]
   const nineHourForecast = liveForecast?.hourly?.length
     ? liveForecast.hourly.slice(0, 9).map((hour, index) => ({
         time:
@@ -195,11 +132,11 @@ export const ForecastPage = () => {
         pop: `${Math.round(hour.precipitationProbability ?? 0)}%`,
         icon: weatherIcon(hour.precipitationProbability ?? 0)
       }))
-    : fallbackNineHourForecast
+    : []
 
   // Chart data based on active tab
   const getChartPoints = () => {
-    if (liveChartHours?.length === 6) {
+    if (liveChartHours?.length) {
       const chartValues = {
         temperature: hour => formatTemp(hour.temperature),
         precipitation: hour => `${hour.precipitation ?? 0} mm`,
@@ -208,83 +145,46 @@ export const ForecastPage = () => {
         pressure: hour => formatPressure(hour.pressure)
       }
       const yPositions = [120, 85, 65, 25, 50, 100]
-      return liveChartHours.map((hour, index) => ({
+      return liveChartHours.slice(0, 6).map((hour, index) => ({
         time: new Date(hour.time).toLocaleTimeString([], { hour: 'numeric' }),
         val: chartValues[activeChartTab](hour),
         y: yPositions[index]
       }))
     }
 
-    switch (activeChartTab) {
-      case 'precipitation':
-        return [
-          { time: '6 AM', val: '0.2 mm', y: 80 },
-          { time: '9 AM', val: '1.4 mm', y: 60 },
-          { time: '12 PM', val: '2.8 mm', y: 35 },
-          { time: '3 PM', val: '4.2 mm', y: 20 },
-          { time: '6 PM', val: '2.0 mm', y: 45 },
-          { time: '9 PM', val: '0.6 mm', y: 70 }
-        ]
-      case 'wind':
-        return [
-          { time: '6 AM', val: '10 km/h', y: 75 },
-          { time: '9 AM', val: '14 km/h', y: 55 },
-          { time: '12 PM', val: '18 km/h', y: 40 },
-          { time: '3 PM', val: '22 km/h', y: 25 },
-          { time: '6 PM', val: '16 km/h', y: 50 },
-          { time: '9 PM', val: '12 km/h', y: 65 }
-        ]
-      case 'humidity':
-        return [
-          { time: '6 AM', val: '85%', y: 20 },
-          { time: '9 AM', val: '78%', y: 35 },
-          { time: '12 PM', val: '68%', y: 60 },
-          { time: '3 PM', val: '62%', y: 75 },
-          { time: '6 PM', val: '70%', y: 55 },
-          { time: '9 PM', val: '80%', y: 30 }
-        ]
-      case 'pressure':
-        return [
-          { time: '6 AM', val: '1010 hPa', y: 35 },
-          { time: '9 AM', val: '1009 hPa', y: 45 },
-          { time: '12 PM', val: '1008 hPa', y: 55 },
-          { time: '3 PM', val: '1007 hPa', y: 65 },
-          { time: '6 PM', val: '1008 hPa', y: 55 },
-          { time: '9 PM', val: '1009 hPa', y: 45 }
-        ]
-      case 'temperature':
-      default:
-        return [
-          { time: '6 AM', val: '23°', y: 75 },
-          { time: '9 AM', val: '26°', y: 55 },
-          { time: '12 PM', val: '28°', y: 45 },
-          { time: '3 PM', val: '31°', y: 20 },
-          { time: '6 PM', val: '29°', y: 35 },
-          { time: '9 PM', val: '25°', y: 65 }
-        ]
-    }
+    return []
   }
 
   const chartPoints = getChartPoints()
+  const chartX = index => [20, 112, 204, 304, 400, 480][index]
+  const chartPath = chartPoints
+    .map((point, index) => `${chartX(index)} ${point.y}`)
+    .join(' L ')
 
   // Precipitation weekly bars
-  const precipBars = [
-    { day: 'Wed', mm: 2.4, height: '20%' },
-    { day: 'Thu', mm: 8.6, height: '65%' },
-    { day: 'Fri', mm: 10.2, height: '78%' },
-    { day: 'Sat', mm: 12.4, height: '95%' },
-    { day: 'Sun', mm: 1.8, height: '15%' },
-    { day: 'Mon', mm: 0.8, height: '8%' },
-    { day: 'Tue', mm: 0.6, height: '6%' }
-  ]
+  const maxPrecipitation = Math.max(
+    ...(liveForecast?.daily?.slice(0, 7).map(day => day.precipitation ?? 0) || [
+      0
+    ]),
+    1
+  )
+  const precipBars = (liveForecast?.daily || []).slice(0, 7).map(day => ({
+    day: formatDate(day.date).split(' ')[0],
+    mm: day.precipitation ?? 0,
+    height: `${Math.max(
+      4,
+      ((day.precipitation ?? 0) / maxPrecipitation) * 100
+    )}%`
+  }))
 
   // Right sidebar locations list
-  const sidebarLocations = [
-    { id: 'loc-1', city: 'Pune, Maharashtra', active: true, isFav: true },
-    { id: 'loc-2', city: 'Mumbai, Maharashtra', active: false, isFav: false },
-    { id: 'loc-3', city: 'Nagpur, Maharashtra', active: false, isFav: false },
-    { id: 'loc-4', city: 'New Delhi, Delhi', active: false, isFav: false }
-  ]
+  const sidebarLocations = savedLocations.map(location => ({
+    id: location.id,
+    city: `${location.city}, ${
+      location.region || location.state || ''
+    }`.replace(/, $/, ''),
+    isFav: location.isFavorite
+  }))
 
   const filteredSidebarLocations = sidebarLocations.filter(l =>
     l.city.toLowerCase().includes(locationSearchQuery.toLowerCase())
@@ -341,7 +241,8 @@ export const ForecastPage = () => {
                   <ChevronDown className='w-4 h-4 text-slate-400' />
                 </div>
                 <p className='text-xs text-slate-400 pl-5.5 mt-0.5'>
-                  Lat 18.52° N, Long 73.86° E
+                  {city.lat ?? city.latitude ?? '--'}° N,{' '}
+                  {city.lng ?? city.longitude ?? '--'}° E
                 </p>
               </div>
 
@@ -361,15 +262,25 @@ export const ForecastPage = () => {
                 <Hero3DSunCloud />
                 <div>
                   <span className='text-xs font-semibold text-blue-600 dark:text-blue-400 block'>
-                    Today • 21 May 2025
+                    {liveForecast?.retrievedAt
+                      ? new Date(liveForecast.retrievedAt).toLocaleDateString(
+                          [],
+                          {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short'
+                          }
+                        )
+                      : currentForecastDay?.date
+                      ? formatDate(currentForecastDay.date)
+                      : 'Forecast unavailable'}
                   </span>
                   <div className='text-5xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5'>
-                    {formatTemp(currentForecastHour?.temperature ?? 28)}
+                    {formatTemp(currentForecast?.temperature)}
                   </div>
                   <p className='text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1'>
-                    {currentForecastHour?.precipitationProbability >= 50
-                      ? 'Rain likely'
-                      : 'Partly Cloudy'}
+                    {currentForecast?.weatherDescription ||
+                      'Weather unavailable'}
                   </p>
                   <p className='text-[11px] text-slate-400'>
                     {forecastLoading
@@ -391,7 +302,7 @@ export const ForecastPage = () => {
                       Min
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {formatTemp(currentForecastDay?.minTemperature ?? 22)}
+                      {formatTemp(currentForecastDay?.minTemperature)}
                     </span>
                   </div>
                 </div>
@@ -406,9 +317,7 @@ export const ForecastPage = () => {
                       Wind
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.windSpeed
-                        ? formatWind(currentForecastHour.windSpeed)
-                        : '16 km/h'}
+                      {formatWind(currentForecast?.windSpeed)}
                     </span>
                   </div>
                 </div>
@@ -423,7 +332,7 @@ export const ForecastPage = () => {
                       Max
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {formatTemp(currentForecastDay?.maxTemperature ?? 31)}
+                      {formatTemp(currentForecastDay?.maxTemperature)}
                     </span>
                   </div>
                 </div>
@@ -438,9 +347,7 @@ export const ForecastPage = () => {
                       Pressure
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.pressure
-                        ? formatPressure(currentForecastHour.pressure)
-                        : '1008 hPa'}
+                      {formatPressure(currentForecast?.pressure)}
                     </span>
                   </div>
                 </div>
@@ -455,7 +362,9 @@ export const ForecastPage = () => {
                       Humidity
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.humidity ?? 72}%
+                      {currentForecast?.humidity == null
+                        ? '--'
+                        : `${currentForecast.humidity}%`}
                     </span>
                   </div>
                 </div>
@@ -470,7 +379,11 @@ export const ForecastPage = () => {
                       Visibility
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      8 km
+                      {currentForecastHour?.visibility == null
+                        ? '--'
+                        : `${(currentForecastHour.visibility / 1000).toFixed(
+                            1
+                          )} km`}
                     </span>
                   </div>
                 </div>
@@ -682,145 +595,51 @@ export const ForecastPage = () => {
                     </linearGradient>
                   </defs>
 
-                  {/* Gradient Area under curve */}
-                  <path
-                    d='M 20 120 Q 100 80, 180 65 T 340 25 T 420 50 T 480 100 L 480 150 L 20 150 Z'
-                    fill='url(#chartFillGrad)'
-                  />
-
-                  {/* Line Path */}
-                  <path
-                    d='M 20 120 Q 100 80, 180 65 T 340 25 T 420 50 T 480 100'
-                    fill='none'
-                    stroke='#2563EB'
-                    strokeWidth='3.5'
-                    strokeLinecap='round'
-                  />
-
-                  {/* 6 Data points with labels */}
-                  {/* Point 1: 6 AM (23°) */}
-                  <circle
-                    cx='20'
-                    cy='120'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='20'
-                    y='105'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[0].val}
-                  </text>
-
-                  {/* Point 2: 9 AM (26°) */}
-                  <circle
-                    cx='112'
-                    cy='85'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='112'
-                    y='70'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[1].val}
-                  </text>
-
-                  {/* Point 3: 12 PM (28°) */}
-                  <circle
-                    cx='204'
-                    cy='65'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='204'
-                    y='50'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[2].val}
-                  </text>
-
-                  {/* Point 4: 3 PM (31° Peak) */}
-                  <circle
-                    cx='304'
-                    cy='25'
-                    r='5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2.5'
-                  />
-                  <text
-                    x='304'
-                    y='10'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[12px] font-black fill-blue-600 dark:fill-blue-400'
-                  >
-                    {chartPoints[3].val}
-                  </text>
-
-                  {/* Point 5: 6 PM (29°) */}
-                  <circle
-                    cx='400'
-                    cy='50'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='400'
-                    y='35'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[4].val}
-                  </text>
-
-                  {/* Point 6: 9 PM (25°) */}
-                  <circle
-                    cx='480'
-                    cy='100'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='480'
-                    y='85'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[5].val}
-                  </text>
+                  {chartPoints.length > 0 && (
+                    <>
+                      <path
+                        d={`M ${chartPath} L ${chartX(
+                          chartPoints.length - 1
+                        )} 150 L ${chartX(0)} 150 Z`}
+                        fill='url(#chartFillGrad)'
+                      />
+                      <path
+                        d={`M ${chartPath}`}
+                        fill='none'
+                        stroke='#2563EB'
+                        strokeWidth='3.5'
+                        strokeLinecap='round'
+                      />
+                      {chartPoints.map((point, index) => (
+                        <g key={`${point.time}-${index}`}>
+                          <circle
+                            cx={chartX(index)}
+                            cy={point.y}
+                            r='4.5'
+                            fill='#2563EB'
+                            stroke='#FFFFFF'
+                            strokeWidth='2'
+                          />
+                          <text
+                            x={chartX(index)}
+                            y={Math.max(10, point.y - 15)}
+                            textAnchor='middle'
+                            fill='#1E293B'
+                            className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
+                          >
+                            {point.val}
+                          </text>
+                        </g>
+                      ))}
+                    </>
+                  )}
                 </svg>
 
                 {/* X-axis labels */}
                 <div className='absolute -bottom-6 inset-x-0 flex justify-between text-[11px] font-bold text-slate-500'>
-                  <span>6 AM</span>
-                  <span>9 AM</span>
-                  <span>12 PM</span>
-                  <span>3 PM</span>
-                  <span>6 PM</span>
-                  <span>9 PM</span>
+                  {chartPoints.map(point => (
+                    <span key={point.time}>{point.time}</span>
+                  ))}
                 </div>
               </div>
 
@@ -830,7 +649,8 @@ export const ForecastPage = () => {
                   Summary
                 </h4>
                 <p className='text-xs text-slate-600 dark:text-slate-300 leading-relaxed'>
-                  Warm with partly cloudy skies. Light winds throughout the day.
+                  {currentForecastDay?.weatherDescription ||
+                    'Forecast summary unavailable.'}
                 </p>
 
                 <div className='space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-xs'>
@@ -841,7 +661,7 @@ export const ForecastPage = () => {
                         Max Temperature
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        31°C at 3:00 PM
+                        {formatTemp(currentForecastDay?.maxTemperature)}
                       </span>
                     </div>
                   </div>
@@ -853,7 +673,7 @@ export const ForecastPage = () => {
                         Min Temperature
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        22°C at 6:00 AM
+                        {formatTemp(currentForecastDay?.minTemperature)}
                       </span>
                     </div>
                   </div>
@@ -865,7 +685,9 @@ export const ForecastPage = () => {
                         Rainfall
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        2.4 mm
+                        {currentForecastDay?.precipitation == null
+                          ? '--'
+                          : `${currentForecastDay.precipitation} mm`}
                       </span>
                     </div>
                   </div>

@@ -31,7 +31,7 @@ const request = async (path, options = {}) => {
 
 export const api = {
   health: () => request('/health'),
-  
+
   // Auth
   login: credentials =>
     request('/auth/login', {
@@ -57,10 +57,10 @@ export const api = {
     }),
 
   // User profile
-  getUserProfile: () => request('/users/profile'),
+  getUserProfile: () => request('/users/me'),
   updateProfile: profile =>
-    request('/users/profile', {
-      method: 'PUT',
+    request('/users/me', {
+      method: 'PATCH',
       body: JSON.stringify(profile)
     }),
 
@@ -88,6 +88,15 @@ export const api = {
   alerts: () => request('/alerts'),
   activeAlerts: () => request('/alerts/active'),
   getAlertById: id => request(`/alerts/${id}`),
+  markAlertRead: id => request(`/alerts/${id}/read`, { method: 'PATCH' }),
+
+  // Notifications
+  notifications: () => request('/notifications'),
+  unreadNotificationCount: () => request('/notifications/unread-count'),
+  markNotificationRead: id =>
+    request(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () =>
+    request('/notifications/read-all', { method: 'PATCH' }),
 
   // Locations
   locations: () => request('/locations'),
@@ -112,7 +121,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(details)
     }),
-  deleteConversation: id => request(`/conversations/${id}`, { method: 'DELETE' }),
+  renameConversation: (id, title) =>
+    request(`/conversations/${id}/rename`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title })
+    }),
+  deleteConversation: id =>
+    request(`/conversations/${id}`, { method: 'DELETE' }),
   messages: conversationId => request(`/messages/${conversationId}`),
   sendMessage: details =>
     request('/messages', {
@@ -136,13 +151,17 @@ export const api = {
   // Climate Intelligence
   climateHistory: ({ city, startDate, endDate }) =>
     request(
-      `/climate/history?city=${encodeURIComponent(city)}&startDate=${encodeURIComponent(
+      `/climate/history?city=${encodeURIComponent(
+        city
+      )}&startDate=${encodeURIComponent(
         startDate
       )}&endDate=${encodeURIComponent(endDate)}`
     ),
   climateTrends: ({ city, startYear, endYear }) =>
     request(
-      `/climate/trends?city=${encodeURIComponent(city)}&startYear=${encodeURIComponent(
+      `/climate/trends?city=${encodeURIComponent(
+        city
+      )}&startYear=${encodeURIComponent(
         startYear
       )}&endYear=${encodeURIComponent(endYear)}`
     ),
@@ -170,7 +189,9 @@ export const api = {
   // Advisories
   cropAdvisory: ({ crop, latitude, longitude }) =>
     request(
-      `/advisories/crop?crop=${encodeURIComponent(crop)}&latitude=${encodeURIComponent(
+      `/advisories/agriculture?crop=${encodeURIComponent(
+        crop
+      )}&latitude=${encodeURIComponent(
         latitude
       )}&longitude=${encodeURIComponent(longitude)}`
     ),
@@ -178,9 +199,9 @@ export const api = {
     request(
       `/advisories/disaster?location=${encodeURIComponent(
         location || ''
-      )}&latitude=${encodeURIComponent(latitude || '')}&longitude=${encodeURIComponent(
-        longitude || ''
-      )}`
+      )}&latitude=${encodeURIComponent(
+        latitude || ''
+      )}&longitude=${encodeURIComponent(longitude || '')}`
     )
 }
 

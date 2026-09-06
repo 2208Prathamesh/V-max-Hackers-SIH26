@@ -99,8 +99,14 @@ export const SettingsPage = () => {
   ]
 
   const handleTimezoneChange = e => {
-    setSettings(prev => ({ ...prev, timeZone: e.target.value }))
-    addToast(`Time zone updated to ${e.target.value}`, 'success')
+    const timezone = e.target.value
+    setSettings(prev => ({ ...prev, timeZone: timezone }))
+    api
+      .updateProfile({ timezone })
+      .then(() => addToast(`Time zone updated to ${timezone}`, 'success'))
+      .catch(error =>
+        addToast(error.message || 'Could not update time zone', 'warning')
+      )
   }
 
   return (

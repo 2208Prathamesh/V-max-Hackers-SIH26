@@ -1,10 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef
+} from 'react'
 import {
   initialUser,
   defaultSettings,
   initialSavedLocations,
   initialConversations,
-  activeAlerts,
   allCityDatabase
 } from '../data/mockData'
 import { api } from '../services/api'
@@ -63,11 +68,14 @@ export const WeatherProvider = ({ children }) => {
   const [selectedMapLocation, setSelectedMapLocation] = useState(
     initialSavedLocations[0]
   ) // Default Pune
-  const [alerts, setAlerts] = useState(activeAlerts)
+  const [alerts, setAlerts] = useState([])
+  const [notifications, setNotifications] = useState([])
   const [weatherData, setWeatherData] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
   const [forecastData, setForecastData] = useState(null)
   const [forecastLoading, setForecastLoading] = useState(false)
+  const forecastRequestRef = useRef({ key: null, version: 0, promise: null })
+  const forecastStateRef = useRef({ key: null, data: null })
 
   // Modals state
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
@@ -115,6 +123,7 @@ export const WeatherProvider = ({ children }) => {
             setUser(prev => ({
               ...prev,
               ...userData,
+              avatarUrl: userData.profileImage || userData.avatarUrl,
               stats: {
                 ...defaultUserStats,
                 ...(prev.stats || {}),
@@ -173,6 +182,14 @@ export const WeatherProvider = ({ children }) => {
         }
       })
       .catch(() => addToast('Could not load weather alerts', 'warning'))
+
+    api
+      .notifications()
+      .then(serverNotifications => {
+        if (Array.isArray(serverNotifications))
+          setNotifications(serverNotifications)
+      })
+      .catch(() => addToast('Could not load notifications', 'warning'))
 
     // 3. Fetch Saved Locations
     api
@@ -245,7 +262,9 @@ export const WeatherProvider = ({ children }) => {
           }))
         }
       })
-      .catch(() => {})
+      .catch(error =>
+        addToast(error.message || 'Could not load your settings', 'warning')
+      )
   }, [isAuthenticated])
 
   // Load conversation messages when switching conversations
@@ -258,8 +277,21 @@ export const WeatherProvider = ({ children }) => {
       .then(msgList => {
         if (!Array.isArray(msgList)) return
         const formatted = msgList.map(message => ({
+          id: message._id,
           sender: message.sender === 'user' ? 'user' : 'assistant',
           text: message.content,
+          messageType: message.messageType,
+          metadata: message.metadata,
+          cardData: message.metadata?.current
+            ? {
+                city: message.metadata.location,
+                temp: message.metadata.current.temperature,
+                condition: message.metadata.current.condition,
+                rainProb: message.metadata.current.precipitation,
+                humidity: message.metadata.current.humidity,
+                wind: message.metadata.current.windSpeed
+              }
+            : undefined,
           time: new Date(message.createdAt).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit'
@@ -267,9 +299,7 @@ export const WeatherProvider = ({ children }) => {
         }))
         setConversations(prev =>
           prev.map(c =>
-            c.id === activeConversationId
-              ? { ...c, messages: formatted }
-              : c
+            c.id === activeConversationId ? { ...c, messages: formatted } : c
           )
         )
       })
@@ -291,17 +321,51 @@ export const WeatherProvider = ({ children }) => {
   }
 
   const refreshForecast = async (latitude = 18.5204, longitude = 73.8567) => {
-    setForecastLoading(true)
-    try {
-      const data = await api.forecast({ latitude, longitude, days: 7 })
-      setForecastData(data)
-      return data
-    } catch (error) {
-      addToast(error.message || 'Could not load forecast', 'warning')
-      return null
-    } finally {
-      setForecastLoading(false)
+    const requestKey = `${latitude}:${longitude}`
+    const activeRequest = forecastRequestRef.current
+
+    if (activeRequest.key === requestKey && activeRequest.promise) {
+      return activeRequest.promise
     }
+
+    const requestVersion = activeRequest.version + 1
+    const requestPromise = (async () => {
+      setForecastLoading(true)
+      try {
+        const data = await api.forecast({ latitude, longitude, days: 7 })
+        const latestRequest = forecastRequestRef.current
+        const currentState = forecastStateRef.current
+        const isFallback = data?.models?.openMeteo?.isFallback === true
+        const hasLiveDataForLocation =
+          currentState.key === requestKey &&
+          currentState.data?.models?.openMeteo?.isFallback !== true
+
+        if (latestRequest.version !== requestVersion) return data
+        if (isFallback && hasLiveDataForLocation) return data
+
+        forecastStateRef.current = { key: requestKey, data }
+        setForecastData(data)
+        return data
+      } catch (error) {
+        if (forecastRequestRef.current.version === requestVersion) {
+          addToast(error.message || 'Could not load forecast', 'warning')
+        }
+        return null
+      } finally {
+        if (forecastRequestRef.current.version === requestVersion) {
+          forecastRequestRef.current.promise = null
+          setForecastLoading(false)
+        }
+      }
+    })()
+
+    forecastRequestRef.current = {
+      key: requestKey,
+      version: requestVersion,
+      promise: requestPromise
+    }
+
+    return requestPromise
   }
 
   useEffect(() => {
@@ -433,9 +497,13 @@ export const WeatherProvider = ({ children }) => {
   }
 
   const toggleFavorite = async id => {
-    await api.favoriteLocation(id)
+    const favoriteLocation = await api.favoriteLocation(id)
     setSavedLocations(prev =>
-      prev.map(l => (l.id === id ? { ...l, isFavorite: !l.isFavorite } : l))
+      prev.map(location => ({
+        ...location,
+        isFavorite:
+          location.id === (favoriteLocation._id || favoriteLocation.id)
+      }))
     )
   }
 
@@ -465,8 +533,7 @@ export const WeatherProvider = ({ children }) => {
           : settings.units.windSpeed === 'ms'
           ? 'm/s'
           : settings.units.windSpeed
-      const pressureUnit =
-        key === 'pressure' ? value : settings.units.pressure
+      const pressureUnit = key === 'pressure' ? value : settings.units.pressure
       const precipitationUnit =
         key === 'precipitation' ? value : settings.units.precipitation
 
@@ -476,8 +543,8 @@ export const WeatherProvider = ({ children }) => {
         pressureUnit,
         precipitationUnit
       })
-    } catch {
-      // Local state preserved
+    } catch (error) {
+      addToast(error.message || 'Could not update weather units', 'warning')
     }
   }
 
@@ -491,20 +558,35 @@ export const WeatherProvider = ({ children }) => {
     if (!isAuthenticated) return
     try {
       await api.updateSettings({ notifications: updated })
-    } catch {
-      // Local state preserved
+    } catch (error) {
+      addToast(
+        error.message || 'Could not update notification settings',
+        'warning'
+      )
     }
   }
 
   const updateProfile = async updatedProfile => {
     if (isAuthenticated) {
       try {
-        await api.updateProfile({
+        const profile = await api.updateProfile({
           name: updatedProfile.name,
-          avatar: updatedProfile.avatar
+          language: updatedProfile.language,
+          timezone: updatedProfile.timezone,
+          profileImage: updatedProfile.profileImage
         })
+        setUser(prev => ({
+          ...prev,
+          ...profile,
+          avatarUrl:
+            profile.profileImage || profile.avatarUrl || prev.avatarUrl,
+          avatarInitials: updatedProfile.avatarInitials || prev.avatarInitials
+        }))
+        addToast('Profile updated successfully!', 'success')
+        return profile
       } catch (err) {
         addToast(err.message || 'Failed to sync profile with server', 'warning')
+        throw err
       }
     }
     setUser(prev => ({
@@ -512,70 +594,84 @@ export const WeatherProvider = ({ children }) => {
       ...updatedProfile
     }))
     addToast('Profile updated successfully!', 'success')
+    return updatedProfile
   }
 
   const sendChatMessage = async text => {
-  if (!text.trim()) return
+    if (!text.trim()) return
 
-  let convId = activeConversationId
+    let convId = activeConversationId
 
-  // Create the conversation in MongoDB if this is a new/local chat
-  if (!convId || convId.startsWith('conv-')) {
-    const conversation = await api.createConversation({
-      title: text.slice(0, 32),
-      category: 'general'
+    // Create the conversation in MongoDB if this is a new/local chat
+    if (!convId || convId.startsWith('conv-')) {
+      const conversation = await api.createConversation({
+        title: text.slice(0, 32),
+        category: 'general'
+      })
+
+      convId = conversation._id
+
+      // Replace the temporary local conversation with the real MongoDB conversation
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === activeConversationId
+            ? {
+                ...c,
+                id: convId,
+                title: conversation.title,
+                preview: text,
+                messages: []
+              }
+            : c
+        )
+      )
+
+      setActiveConversationId(convId)
+    }
+
+    const result = await api.sendMessage({
+      conversationId: convId,
+      content: text.trim()
     })
 
-    convId = conversation._id
+    const toMessage = message => ({
+      id: message._id,
+      sender: message.sender === 'user' ? 'user' : 'assistant',
+      text: message.content,
+      messageType: message.messageType,
+      metadata: message.metadata,
+      cardData: message.metadata?.current
+        ? {
+            city: message.metadata.location,
+            temp: message.metadata.current.temperature,
+            condition: message.metadata.current.condition,
+            rainProb: message.metadata.current.precipitation,
+            humidity: message.metadata.current.humidity,
+            wind: message.metadata.current.windSpeed
+          }
+        : undefined,
+      time: new Date(message.createdAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    })
 
-    // Replace the temporary local conversation with the real MongoDB conversation
     setConversations(prev =>
-      prev.map(c =>
-        c.id === activeConversationId
+      prev.map(conversation =>
+        conversation.id === convId
           ? {
-              ...c,
-              id: convId,
-              title: conversation.title,
-              preview: text,
-              messages: []
+              ...conversation,
+              messages: [
+                ...conversation.messages,
+                toMessage(result.userMessage),
+                toMessage(result.aiMessage)
+              ],
+              preview: text
             }
-          : c
+          : conversation
       )
     )
-
-    setActiveConversationId(convId)
   }
-
-  const result = await api.sendMessage({
-    conversationId: convId,
-    content: text.trim()
-  })
-
-  const toMessage = message => ({
-    sender: message.sender === 'user' ? 'user' : 'assistant',
-    text: message.content,
-    time: new Date(message.createdAt).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  })
-
-  setConversations(prev =>
-    prev.map(conversation =>
-      conversation.id === convId
-        ? {
-            ...conversation,
-            messages: [
-              ...conversation.messages,
-              toMessage(result.userMessage),
-              toMessage(result.aiMessage)
-            ],
-            preview: text
-          }
-        : conversation
-    )
-  )
-}
 
   const createNewChat = () => {
     const newId = `conv-${Date.now()}`
@@ -688,6 +784,7 @@ export const WeatherProvider = ({ children }) => {
         createNewChat,
         deleteConversation,
         alerts,
+        notifications,
         weatherData,
         weatherLoading,
         refreshWeather,

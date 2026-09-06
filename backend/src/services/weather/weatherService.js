@@ -1,7 +1,7 @@
 import { getForecast as getOpenMeteoForecast } from './openMeteo/client.js'
 import { getECMWFWeather } from './nwp/ecmwf/service.js'
-import { getECMWFForecast as getOpenMeteoECMWF } from './openMeteo/ecmwf.js'
-import { getGFSForecast } from './openMeteo/gfs.js'
+import { getGFSWeather } from './nwp/noaaGfs/service.js'
+import { getGFSForecast as getOpenMeteoGFS } from './openMeteo/gfs.js'
 import { getAirQuality } from './openMeteo/airQuality.js'
 import { getElevation } from './openMeteo/elevation.js'
 import { getFloodForecast } from './openMeteo/flood.js'
@@ -12,10 +12,15 @@ import { getStationObservations } from './imd/imdClient.js'
 import { findNearestImdStation } from './imd/imdStationLocator.js'
 import { normalizeImdObservation } from './imd/imdNormalizer.js'
 import { buildOfflineAncillaryData } from './offlineWeather.js'
+import { buildWeatherSynthesis } from './weatherSynthesis.js'
+import { buildNWPModelComparison } from './nwp/modelComparisonService.js'
 import { parseAndValidateCoordinates } from '../../utils/coordinates.js'
 // In-memory LRU-like cache for weather data
 const weatherCache = new Map()
 const inflightRequests = new Map()
+const forecastCache = new Map()
+const inflightForecastRequests = new Map()
+let ecmwfUnavailableUntil = 0
 const MAX_CACHE_ENTRIES = 300
 
 /**
@@ -46,29 +51,115 @@ function setCache (key, data) {
   weatherCache.set(key, { timestamp: Date.now(), data })
 }
 
+function getForecastCacheEntry (key) {
+  return forecastCache.get(key) || null
+}
+
+function setForecastCache (key, data) {
+  if (forecastCache.size >= MAX_CACHE_ENTRIES) {
+    forecastCache.delete(forecastCache.keys().next().value)
+  }
+
+  forecastCache.set(key, {
+    data,
+    timestamp: Date.now()
+  })
+}
+
+function withCacheMetadata (data, entry, isStale) {
+  const ageMs = Date.now() - entry.timestamp
+  return {
+    ...data,
+    cache: {
+      isCached: true,
+      isStale,
+      cachedAt: new Date(entry.timestamp).toISOString(),
+      ageMs
+    },
+    models: {
+      ...data.models,
+      openMeteo: {
+        ...data.models.openMeteo,
+        sourceType: isStale ? 'cached_stale' : 'cached',
+        retrievedAt: data.models.openMeteo.retrievedAt
+      }
+    }
+  }
+}
+
+function isValidNormalizedForecast (forecast) {
+  return Boolean(
+    forecast?.current &&
+      Array.isArray(forecast.hourly) &&
+      forecast.hourly.length > 0 &&
+      Array.isArray(forecast.daily) &&
+      forecast.daily.length > 0
+  )
+}
+
+function isUsableModelForecast (forecast) {
+  return isValidNormalizedForecast(forecast)
+}
+
+function isRateLimitedError (error) {
+  return /\b429\b|rate limit/i.test(error?.message || '')
+}
+
 /**
- * Fetch ECMWF weather with automatic fallback to Open-Meteo ECMWF
+ * Fetch native ECMWF weather. Open-Meteo remains a final forecast fallback,
+ * rather than being reported as native ECMWF.
  * @param {number} latitude
  * @param {number} longitude
  * @returns {Promise<object>}
  */
-export async function fetchECMWFWithFallback (latitude, longitude) {
+export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
+  if (Date.now() < ecmwfUnavailableUntil) {
+    return {
+      error: 'ECMWF temporarily rate limited',
+      source: 'ECMWF',
+      sourceType: 'provider_unavailable',
+      isFallback: true
+    }
+  }
+
   try {
-    return await getECMWFWeather(latitude, longitude)
+    return await getECMWFWeather(latitude, longitude, days)
   } catch (err) {
-    console.warn(
-      'Direct NWP ECMWF failed, falling back to Open-Meteo ECMWF:',
-      err.message
-    )
+    console.warn('Direct NWP ECMWF failed:', err.message)
+    if (isRateLimitedError(err)) {
+      ecmwfUnavailableUntil = Date.now() + 60 * 1000
+    }
+
+    return {
+      error: `ECMWF unavailable: ${err.message}`,
+      source: 'ECMWF-IFS',
+      sourceType: 'provider_unavailable',
+      isFallback: true
+    }
+  }
+}
+
+export async function fetchGFSWithFallback (latitude, longitude, days = 7) {
+  try {
+    return await getGFSWeather(latitude, longitude, days)
+  } catch (err) {
+    console.warn('Native NOAA GFS failed:', err.message)
     try {
-      const fallbackRaw = await getOpenMeteoECMWF(latitude, longitude)
-      return normalizeForecast(fallbackRaw, 'ECMWF (Open-Meteo)')
+      const fallbackRaw = await getOpenMeteoGFS(latitude, longitude, days)
+      return {
+        ...normalizeForecast(fallbackRaw, 'Open-Meteo GFS fallback'),
+        source: 'Open-Meteo',
+        sourceType: 'final_fallback',
+        isFallback: true,
+        fallbackFor: 'NOAA-GFS'
+      }
     } catch (fallbackErr) {
-      console.warn('Fallback ECMWF also failed:', fallbackErr.message)
-      return normalizeForecast(
-        await getOpenMeteoECMWF(latitude, longitude),
-        'WeatherGPT Offline ECMWF'
-      )
+      return {
+        error: `NOAA GFS unavailable: ${fallbackErr.message}`,
+        source: 'NOAA-GFS',
+        sourceType: 'provider_unavailable',
+        isFallback: true
+      }
     }
   }
 }
@@ -136,9 +227,9 @@ export async function getWeather (latitude, longitude) {
         marine,
         imdObservation
       ] = await Promise.all([
-        getOpenMeteoForecast(latNum, lonNum),
-        fetchECMWFWithFallback(latNum, lonNum),
-        getGFSForecast(latNum, lonNum).catch(err => ({ error: err.message })),
+        getOpenMeteoForecast(latNum, lonNum).catch(() => null),
+        fetchECMWFWithFallback(latNum, lonNum, 1),
+        fetchGFSWithFallback(latNum, lonNum, 1),
         getAirQuality(latNum, lonNum).catch(() => null),
         getElevation(latNum, lonNum).catch(() => null),
         getFloodForecast(latNum, lonNum).catch(() => null),
@@ -147,20 +238,41 @@ export async function getWeather (latitude, longitude) {
       ])
 
       const offlineAncillary = buildOfflineAncillaryData(latNum, lonNum)
+      const modelComparison = buildNWPModelComparison({
+        gfs: gfsRaw,
+        ecmwf: ecmwfData
+      })
+      const synthesis = buildWeatherSynthesis({
+        observation: imdObservation,
+        gfs: gfsRaw,
+        ecmwf: ecmwfData,
+        modelComparison
+      })
 
       const result = {
         location: {
           latitude: latNum,
           longitude: lonNum
         },
-        forecast: normalizeForecast(openMeteoRaw, 'Open-Meteo'),
+        forecast: openMeteoRaw
+          ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
+          : {
+              error: 'Open-Meteo unavailable',
+              source: 'Open-Meteo',
+              sourceType: 'provider_unavailable',
+              current: null,
+              hourly: [],
+              daily: []
+            },
         models: {
           ecmwf: ecmwfData,
-          gfs: gfsRaw?.error ? gfsRaw : normalizeForecast(gfsRaw, 'GFS')
+          gfs: gfsRaw
         },
         observations: {
           imd: imdObservation
         },
+        modelComparison,
+        synthesis,
         airQuality: airQuality || offlineAncillary.airQuality,
         elevation: elevation || offlineAncillary.elevation,
         flood: flood || offlineAncillary.flood,
@@ -189,24 +301,115 @@ export async function getForecast (latitude, longitude, days = 7) {
   const coordinates = parseAndValidateCoordinates(latitude, longitude)
   const latNum = coordinates.latitude
   const lonNum = coordinates.longitude
+  const daysNum = Math.min(Math.max(Number(days) || 7, 1), 14)
+  const cacheKey = `forecast_${latNum.toFixed(4)}_${lonNum.toFixed(
+    4
+  )}_${daysNum}`
+  const cachedEntry = getForecastCacheEntry(cacheKey)
 
-  const [openMeteoRaw, ecmwfData, gfsRaw] = await Promise.all([
-    getOpenMeteoForecast(latNum, lonNum, days),
-    fetchECMWFWithFallback(latNum, lonNum),
-    getGFSForecast(latNum, lonNum, days).catch(err => ({ error: err.message }))
-  ])
-
-  return {
-    location: {
-      latitude: latNum,
-      longitude: lonNum
-    },
-    models: {
-      openMeteo: normalizeForecast(openMeteoRaw, 'Open-Meteo'),
-      ecmwf: ecmwfData,
-      gfs: gfsRaw?.error ? gfsRaw : normalizeForecast(gfsRaw, 'GFS')
-    }
+  if (
+    cachedEntry &&
+    Date.now() - cachedEntry.timestamp <= CACHE_TTL_MS.WEATHER_FORECAST
+  ) {
+    return withCacheMetadata(cachedEntry.data, cachedEntry, false)
   }
+
+  if (inflightForecastRequests.has(cacheKey)) {
+    return await inflightForecastRequests.get(cacheKey)
+  }
+
+  const forecastPromise = (async () => {
+    try {
+      const [openMeteoResult, ecmwfResult, gfsResult] =
+        await Promise.allSettled([
+          getOpenMeteoForecast(latNum, lonNum, daysNum),
+          fetchECMWFWithFallback(latNum, lonNum, daysNum),
+          fetchGFSWithFallback(latNum, lonNum, daysNum)
+        ])
+
+      const openMeteoRaw =
+        openMeteoResult.status === 'fulfilled' ? openMeteoResult.value : null
+      const openMeteo = openMeteoRaw
+        ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
+        : {
+            error: openMeteoResult.reason?.message || 'Open-Meteo unavailable',
+            source: 'Open-Meteo',
+            sourceType: 'provider_unavailable',
+            isFallback: true
+          }
+      const cached = getForecastCacheEntry(cacheKey)
+
+      if (
+        openMeteo?.isFallback &&
+        cached &&
+        !cached.data.models.openMeteo?.isFallback
+      ) {
+        return withCacheMetadata(cached.data, cached, true)
+      }
+
+      if (!isValidNormalizedForecast(openMeteo) && cached) {
+        return withCacheMetadata(cached.data, cached, true)
+      }
+
+      const ecmwfModel =
+        ecmwfResult.status === 'fulfilled' ? ecmwfResult.value : null
+      const gfsModel = gfsResult.status === 'fulfilled' ? gfsResult.value : null
+
+      if (
+        !isUsableModelForecast(openMeteo) &&
+        !isUsableModelForecast(ecmwfModel) &&
+        !isUsableModelForecast(gfsModel)
+      ) {
+        throw (
+          openMeteoResult.reason ||
+          new Error('All forecast providers unavailable')
+        )
+      }
+
+      const result = {
+        location: {
+          latitude: latNum,
+          longitude: lonNum
+        },
+        models: {
+          openMeteo,
+          ecmwf:
+            ecmwfResult.status === 'fulfilled'
+              ? ecmwfResult.value
+              : {
+                  error: ecmwfResult.reason?.message || 'ECMWF unavailable',
+                  source: 'ECMWF',
+                  sourceType: 'provider_unavailable',
+                  isFallback: true
+                },
+          gfs:
+            gfsResult.status === 'fulfilled'
+              ? gfsResult.value
+              : {
+                  error: gfsResult.reason?.message || 'GFS unavailable',
+                  source: 'GFS',
+                  sourceType: 'provider_unavailable',
+                  isFallback: true
+                }
+        }
+      }
+
+      if (!openMeteo.isFallback) {
+        setForecastCache(cacheKey, result)
+      }
+
+      return result
+    } catch (error) {
+      const cached = getForecastCacheEntry(cacheKey)
+      if (cached) return withCacheMetadata(cached.data, cached, true)
+      throw error
+    } finally {
+      inflightForecastRequests.delete(cacheKey)
+    }
+  })()
+
+  inflightForecastRequests.set(cacheKey, forecastPromise)
+  return await forecastPromise
 }
 
 /**
@@ -242,5 +445,6 @@ export default {
   getWeather,
   getForecast,
   getHourlyForecast,
-  fetchECMWFWithFallback
+  fetchECMWFWithFallback,
+  fetchGFSWithFallback
 }

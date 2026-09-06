@@ -3,6 +3,7 @@ import { searchLocation } from './weather/openMeteo/geocoding.js'
 import imdService from './weather/imd/imdService.js'
 import advisoryService from './advisory/advisoryService.js'
 import { generateGeminiWeatherResponse } from './ai/geminiService.js'
+import { buildWeatherSynthesis } from './weather/weatherSynthesis.js'
 
 /**
  * Extract a candidate city/location name from user query
@@ -148,7 +149,14 @@ const generateResponse = async ({ conversationId, userId, message }) => {
               : null
           ])
 
-          const current = weatherData?.forecast?.current
+          const synthesis = buildWeatherSynthesis({
+            observation: weatherData?.observations?.imd,
+            alerts: imdWarning ? [imdWarning] : [],
+            gfs: weatherData?.models?.gfs,
+            ecmwf: weatherData?.models?.ecmwf,
+            modelComparison: weatherData?.modelComparison
+          })
+          const current = synthesis.current.weather || null
           const daily = weatherData?.forecast?.daily || []
 
           // Grounded AI reasoning
@@ -159,7 +167,8 @@ const generateResponse = async ({ conversationId, userId, message }) => {
               currentWeather: current,
               forecastDaily: daily,
               imdWarning,
-              agroAdvisory
+              agroAdvisory,
+              nwpComparison: weatherData?.modelComparison
             },
             language: detectedLang
           })
@@ -175,7 +184,8 @@ const generateResponse = async ({ conversationId, userId, message }) => {
               daily: daily.slice(0, 5),
               airQuality: weatherData.airQuality,
               imdWarning,
-              agroAdvisory
+              agroAdvisory,
+              synthesis
             }
           }
         } else {

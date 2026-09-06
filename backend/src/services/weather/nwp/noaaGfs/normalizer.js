@@ -1,133 +1,93 @@
-function findNearestGridPoint(data, latitude, longitude) {
-    const header = data.header;
+function normalizeLongitude (longitude) {
+  return ((((longitude + 180) % 360) + 360) % 360) - 180
+}
 
-    let nearestIndex = 0;
-    let minDistance = Infinity;
+function getNearestGridPoint (message, latitude, longitude) {
+  const latitudes = message.latlng.latitude
+  const longitudes = message.latlng.longitude
+  let nearestRow = 0
+  let nearestCol = 0
+  let minimumLatitudeDistance = Infinity
+  let minimumLongitudeDistance = Infinity
 
-    for (let index = 0; index < data.data.length; index++) {
-        const row = Math.floor(index / header.nx);
-        const col = index % header.nx;
-
-        // GRIB scanMode 64:
-        // latitude increases from la1 toward la2
-        const lat = header.la1 + row * header.dy;
-        const lon = header.lo1 + col * header.dx;
-
-        const distance =
-            Math.pow(lat - latitude, 2) +
-            Math.pow(lon - longitude, 2);
-
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearestIndex = index;
-        }
+  for (let row = 0; row < latitudes.length; row++) {
+    const distance = Math.abs(latitudes[row] - latitude)
+    if (distance < minimumLatitudeDistance) {
+      minimumLatitudeDistance = distance
+      nearestRow = row
     }
+  }
 
-    const row = Math.floor(nearestIndex / header.nx);
-    const col = nearestIndex % header.nx;
-
-    return {
-        index: nearestIndex,
-        latitude: header.la1 + row * header.dy,
-        longitude: header.lo1 + col * header.dx
-    };
-}
-
-
-function findParameter(records, parameterName) {
-    return records.find(
-        record =>
-            record.header.parameterNumberName === parameterName
-    );
-}
-
-
-function normalizeGFS(records, latitude, longitude) {
-
-    const pressure = findParameter(
-        records,
-        "Pressure_reduced_to_MSL"
-    );
-
-    const temperature = findParameter(
-        records,
-        "Temperature"
-    );
-
-    const humidity = findParameter(
-        records,
-        "Relative_humidity"
-    );
-
-    const uWind = findParameter(
-        records,
-        "U-component_of_wind"
-    );
-
-    const vWind = findParameter(
-        records,
-        "V-component_of_wind"
-    );
-
-    if (!pressure || !temperature || !humidity || !uWind || !vWind) {
-        throw new Error("Required GFS parameters are missing");
+  for (let col = 0; col < longitudes.length; col++) {
+    const gridLongitude = longitudes[col]
+    const distance = Math.min(
+      Math.abs(gridLongitude - longitude),
+      Math.abs(gridLongitude - (longitude + 360)),
+      Math.abs(gridLongitude - (longitude - 360))
+    )
+    if (distance < minimumLongitudeDistance) {
+      minimumLongitudeDistance = distance
+      nearestCol = col
     }
+  }
 
-    const gridPoint = findNearestGridPoint(
-        temperature,
-        latitude,
-        longitude
-    );
-
-    const i = gridPoint.index;
-
-    const temperatureC =
-        temperature.data[i] - 273.15;
-
-    const u = uWind.data[i];
-    const v = vWind.data[i];
-
-    const windSpeed =
-        Math.sqrt(u * u + v * v);
-
-    const windDirection =
-        (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
-
-    return {
-        source: "NOAA-GFS",
-
-        location: {
-            requestedLatitude: latitude,
-            requestedLongitude: longitude,
-            gridLatitude: gridPoint.latitude,
-            gridLongitude: gridPoint.longitude
-        },
-
-        forecast: {
-            forecastTime: temperature.header.forecastTime,
-
-            temperature: Number(temperatureC.toFixed(2)),
-
-            humidity: Number(
-                humidity.data[i].toFixed(2)
-            ),
-
-            pressure: Number(
-                pressure.data[i].toFixed(2)
-            ),
-
-            windSpeed: Number(
-                windSpeed.toFixed(2)
-            ),
-
-            windDirection: Number(
-                windDirection.toFixed(2)
-            )
-        }
-    };
+  return {
+    index: nearestRow * message.gridShape.cols + nearestCol,
+    latitude: latitudes[nearestRow],
+    longitude: normalizeLongitude(longitudes[nearestCol])
+  }
 }
 
-export {
-    findNearestGridPoint,
-    normalizeGFS
-};
+function getValue (message, location) {
+  if (!message) return null
+  const point = getNearestGridPoint(
+    message,
+    location.latitude,
+    location.longitude
+  )
+  return { value: message.data[point.index], ...point }
+}
+
+function normalizeGFS (messages, location, timestamp = null) {
+  const temperature = getValue(messages.temperature, location)
+  const humidity = getValue(messages.humidity, location)
+  const dewPoint = getValue(messages.dewPoint, location)
+  const uWind = getValue(messages.uWind, location)
+  const vWind = getValue(messages.vWind, location)
+  const pressure = getValue(messages.pressure, location)
+  const precipitation = getValue(messages.precipitation, location)
+
+  if (!temperature || !humidity || !uWind || !vWind || !pressure) {
+    throw new Error('Required NOAA GFS parameters are missing')
+  }
+
+  const u = uWind.value
+  const v = vWind.value
+  const temperatureC = temperature.value - 273.15
+  const windSpeed = Math.sqrt(u * u + v * v) * 3.6
+  const windDirection = ((Math.atan2(-u, -v) * 180) / Math.PI + 360) % 360
+
+  return {
+    timestamp,
+    source: 'NOAA-GFS',
+    location: {
+      requestedLatitude: location.latitude,
+      requestedLongitude: location.longitude,
+      gridLatitude: temperature.latitude,
+      gridLongitude: temperature.longitude
+    },
+    forecast: {
+      temperature: Number(temperatureC.toFixed(2)),
+      dewPoint: dewPoint ? Number((dewPoint.value - 273.15).toFixed(2)) : null,
+      humidity: Number(humidity.value.toFixed(1)),
+      pressure: Number((pressure.value / 100).toFixed(2)),
+      windSpeed: Number(windSpeed.toFixed(2)),
+      windDirection: Number(windDirection.toFixed(2)),
+      precipitation: precipitation
+        ? Number(Math.max(0, precipitation.value).toFixed(3))
+        : null
+    }
+  }
+}
+
+export { getNearestGridPoint, normalizeGFS, normalizeLongitude }
