@@ -3,6 +3,7 @@ import cors from 'cors'
 import env from './config/env.js'
 
 // Core routes
+import testNotificationRoutes from "./routes/testNotificationRoutes.js";
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import conversationRoutes from './routes/conversationRoutes.js'
@@ -32,6 +33,9 @@ import {
 const app = express()
 
 // Cross-Origin Resource Sharing
+
+
+
 app.use(
   cors({
     origin: env.FRONTEND_URL,
@@ -58,6 +62,11 @@ app.get('/api/health', (req, res) => {
 app.use('/api', apiLimiter)
 
 // Public Routes
+
+app.use(
+  "/api/test",
+  testNotificationRoutes
+)
 app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/weather', weatherRoutes)
 app.use('/api/alerts', alertRoutes)
