@@ -1,10 +1,9 @@
 import { parseGribIndex } from '@mattnucc/gribberish'
+import { getCachedBuffer, setCachedBuffer } from '../../../../utils/nwpCache.js'
 
 const BASE_URL = 'https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod'
 const MAX_CACHE_ENTRIES = 80
 const indexCache = new Map()
-const messageCache = new Map()
-let cachedRun = null
 let inflightRequest = null
 
 function buildForecastSteps (maxHours = 144) {
@@ -84,6 +83,17 @@ async function findLatestGFSRun (maxStep = 144) {
   throw new Error('Could not find a recent NOAA GFS forecast run')
 }
 
+async function getBuffer (date, cycle, step, name, indexEntry) {
+  const cacheKey = `${date}_${cycle}_${step}_${name}`
+  const cached = await getCachedBuffer(cacheKey)
+  if (cached) return cached
+
+  const url = buildFileUrl(date, cycle, step)
+  const buffer = await fetchRange(url, indexEntry.offset, indexEntry.length)
+  await setCachedBuffer(cacheKey, buffer)
+  return buffer
+}
+
 async function getGFSMessages ({ days = 7 } = {}) {
   if (inflightRequest) return await inflightRequest
 
@@ -92,53 +102,31 @@ async function getGFSMessages ({ days = 7 } = {}) {
       const maxHours = Math.min(Math.max(Number(days) || 7, 1), 14) * 24
       const steps = buildForecastSteps(maxHours)
       const run = await findLatestGFSRun(maxHours)
-      const cacheKey = `${run.date}-${run.cycle}-${steps.join(',')}`
+      const { date, cycle } = run
 
-      if (cachedRun?.key === cacheKey) return cachedRun.data
-
-      const fields = {
-        temperature: ['TMP', '2 m above ground'],
-        humidity: ['RH', '2 m above ground'],
-        dewPoint: ['DPT', '2 m above ground'],
-        uWind: ['UGRD', '10 m above ground'],
-        vWind: ['VGRD', '10 m above ground'],
-        pressure: ['PRMSL', 'mean sea level'],
-        precipitation: ['APCP', 'surface']
-      }
-      const messages = {}
-
-      for (const step of steps) {
-        const entries = await getIndex(run.date, run.cycle, step)
-        const url = buildFileUrl(run.date, run.cycle, step)
-        const stepMessages = {}
-
-        for (const [name, [variable, level]] of Object.entries(fields)) {
+      return {
+        date,
+        cycle,
+        steps,
+        getBuffer: async (step, name) => {
+          const entries = await getIndex(date, cycle, step)
+          const fields = {
+            temperature: ['TMP', '2 m above ground'],
+            humidity: ['RH', '2 m above ground'],
+            dewPoint: ['DPT', '2 m above ground'],
+            uWind: ['UGRD', '10 m above ground'],
+            vWind: ['VGRD', '10 m above ground'],
+            pressure: ['PRMSL', 'mean sea level'],
+            precipitation: ['APCP', 'surface']
+          }
+          const [variable, level] = fields[name]
           const entry = findEntry(entries, variable, level)
           if (!entry || entry.length == null) {
-            if (name === 'dewPoint' || name === 'precipitation') continue
-            throw new Error(
-              `NOAA GFS parameter not found: ${variable} ${level} at ${step}h`
-            )
+            throw new Error(`NOAA GFS parameter not found: ${variable} ${level} at ${step}h`)
           }
-
-          const messageKey = `${run.date}-${run.cycle}-${step}-${name}`
-          const buffer =
-            messageCache.get(messageKey) ||
-            (await fetchRange(url, entry.offset, entry.length))
-          if (!messageCache.has(messageKey)) {
-            if (messageCache.size >= MAX_CACHE_ENTRIES)
-              messageCache.delete(messageCache.keys().next().value)
-            messageCache.set(messageKey, buffer)
-          }
-          stepMessages[name] = { buffer, index: entry }
+          return getBuffer(date, cycle, step, name, entry)
         }
-        messages[step] = stepMessages
       }
-
-      const data = { ...run, messages, steps }
-      cachedRun = { key: cacheKey, data }
-      console.log(`NOAA GFS forecast steps loaded: ${steps.join(',')}`)
-      return data
     } finally {
       inflightRequest = null
     }

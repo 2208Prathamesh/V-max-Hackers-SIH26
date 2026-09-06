@@ -4,9 +4,11 @@ import { normalizeGFS } from './normalizer.js'
 
 function parseMessage (buffer, name) {
   try {
+    if (!buffer) return null
     return GribMessage.parseFromBuffer(new Uint8Array(buffer), 0)
   } catch (error) {
-    throw new Error(`Could not parse NOAA GFS ${name}: ${error.message}`)
+    console.error(`GRIB parsing error for ${name}: ${error.message}`)
+    return null
   }
 }
 
@@ -125,43 +127,43 @@ export async function getGFSWeather (latitude, longitude, days = 7) {
   if (longitude < -180 || longitude > 180)
     throw new Error('Longitude must be between -180 and 180')
 
-  const { date, cycle, messages, steps } = await getGFSMessages({ days })
+  const { date, cycle, getBuffer, steps } = await getGFSMessages({ days })
   const hourly = []
   let previousAccumulatedPrecipitation = null
   let gridLocation = null
 
   for (const step of steps) {
-    const fields = messages[step]
-    const parsed = {
-      temperature: parseMessage(fields.temperature.buffer, 'temperature'),
-      humidity: parseMessage(fields.humidity.buffer, 'humidity'),
-      dewPoint: fields.dewPoint
-        ? parseMessage(fields.dewPoint.buffer, 'dewPoint')
-        : null,
-      uWind: parseMessage(fields.uWind.buffer, 'uWind'),
-      vWind: parseMessage(fields.vWind.buffer, 'vWind'),
-      pressure: parseMessage(fields.pressure.buffer, 'pressure'),
-      precipitation: fields.precipitation
-        ? parseMessage(fields.precipitation.buffer, 'precipitation')
-        : null
-    }
-    const timestamp = buildTimestamp(parsed.temperature)
-    const normalized = normalizeGFS(parsed, { latitude, longitude }, timestamp)
-    gridLocation = gridLocation || normalized.location
-    const accumulated = normalized.forecast.precipitation
-    const intervalPrecipitation = calculateIntervalPrecipitation(
-      previousAccumulatedPrecipitation,
-      accumulated
-    )
-    previousAccumulatedPrecipitation = accumulated
-    hourly.push(
-      buildHourlyPoint(
-        step,
-        timestamp,
-        normalized.forecast,
-        intervalPrecipitation
+    try {
+      const parsed = {
+        temperature: parseMessage(await getBuffer(step, 'temperature'), 'temperature'),
+        humidity: parseMessage(await getBuffer(step, 'humidity'), 'humidity'),
+        dewPoint: parseMessage(await getBuffer(step, 'dewPoint'), 'dewPoint'),
+        uWind: parseMessage(await getBuffer(step, 'uWind'), 'uWind'),
+        vWind: parseMessage(await getBuffer(step, 'vWind'), 'vWind'),
+        pressure: parseMessage(await getBuffer(step, 'pressure'), 'pressure'),
+        precipitation: parseMessage(await getBuffer(step, 'precipitation'), 'precipitation')
+      }
+      const timestamp = buildTimestamp(parsed.temperature)
+      const normalized = normalizeGFS(parsed, { latitude, longitude }, timestamp)
+      gridLocation = gridLocation || normalized.location
+      const accumulated = normalized.forecast.precipitation
+      const intervalPrecipitation = calculateIntervalPrecipitation(
+        previousAccumulatedPrecipitation,
+        accumulated
       )
-    )
+      previousAccumulatedPrecipitation = accumulated
+      hourly.push(
+        buildHourlyPoint(
+          step,
+          timestamp,
+          normalized.forecast,
+          intervalPrecipitation
+        )
+      )
+    } catch (err) {
+      console.error(`GFS parsing failed for step ${step}: ${err.message}`)
+      // Continue to next step if one fails
+    }
   }
 
   const nwpSemantics = buildNwpSemantics(hourly)

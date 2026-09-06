@@ -5,13 +5,19 @@ import { GribMessageFactory } from '@mattnucc/gribberish'
 import { normalizeECMWF } from './normalizer.js'
 
 function parseMessage (buffer, param) {
-  const factory = GribMessageFactory.fromBuffer(new Uint8Array(buffer))
+  try {
+    if (!buffer) return null
+    const factory = GribMessageFactory.fromBuffer(new Uint8Array(buffer))
 
-  if (factory.availableMessages.length === 0) {
-    throw new Error(`No GRIB message found for ${param}`)
+    if (factory.availableMessages.length === 0) {
+      throw new Error(`No GRIB message found for ${param}`)
+    }
+
+    return factory.getMessage(factory.availableMessages[0])
+  } catch (error) {
+    console.error(`GRIB parsing error for ${param}: ${error.message}`)
+    return null
   }
-
-  return factory.getMessage(factory.availableMessages[0])
 }
 
 function buildTimestamp (date, cycle, step) {
@@ -138,41 +144,44 @@ export async function getECMWFWeather (latitude, longitude, days = 7) {
   if (longitude < -180 || longitude > 180) {
     throw new Error('Longitude must be between -180 and 180')
   }
-  const { date, cycle, messages, steps } = await getECMWFMessages({ days })
+  const { date, cycle, getBuffer, steps } = await getECMWFMessages({ days })
   const hourly = []
   let previousAccumulatedPrecipitation = null
   let gridLocation = null
   for (const step of steps) {
-    const stepMessages = messages[step]
-    const normalized = normalizeECMWF(
-      {
-        temperature: parseMessage(stepMessages['2t'].buffer, '2t'),
-        dewPoint: parseMessage(stepMessages['2d'].buffer, '2d'),
-        uWind: parseMessage(stepMessages['10u'].buffer, '10u'),
-        vWind: parseMessage(stepMessages['10v'].buffer, '10v'),
-        pressure: parseMessage(stepMessages.msl.buffer, 'msl'),
-        precipitation: stepMessages.tp
-          ? parseMessage(stepMessages.tp.buffer, 'tp')
-          : null,
-        timestamp: buildTimestamp(date, cycle, step)
-      },
-      { latitude, longitude }
-    )
-    gridLocation = gridLocation || normalized.location
-    const accumulated = normalized.forecast.precipitation
-    const intervalPrecipitation = calculateIntervalPrecipitation(
-      previousAccumulatedPrecipitation,
-      accumulated
-    )
-    previousAccumulatedPrecipitation = accumulated
-    hourly.push(
-      buildHourlyPoint(
-        step,
-        normalized.timestamp,
-        normalized.forecast,
-        intervalPrecipitation
+    try {
+      const tpBuffer = await getBuffer(step, 'tp')
+      const normalized = normalizeECMWF(
+        {
+          temperature: parseMessage(await getBuffer(step, '2t'), '2t'),
+          dewPoint: parseMessage(await getBuffer(step, '2d'), '2d'),
+          uWind: parseMessage(await getBuffer(step, '10u'), '10u'),
+          vWind: parseMessage(await getBuffer(step, '10v'), '10v'),
+          pressure: parseMessage(await getBuffer(step, 'msl'), 'msl'),
+          precipitation: tpBuffer ? parseMessage(tpBuffer, 'tp') : null,
+          timestamp: buildTimestamp(date, cycle, step)
+        },
+        { latitude, longitude }
       )
-    )
+      gridLocation = gridLocation || normalized.location
+      const accumulated = normalized.forecast.precipitation
+      const intervalPrecipitation = calculateIntervalPrecipitation(
+        previousAccumulatedPrecipitation,
+        accumulated
+      )
+      previousAccumulatedPrecipitation = accumulated
+      hourly.push(
+        buildHourlyPoint(
+          step,
+          normalized.timestamp,
+          normalized.forecast,
+          intervalPrecipitation
+        )
+      )
+    } catch (err) {
+      console.error(`ECMWF parsing failed for step ${step}: ${err.message}`)
+      // Continue to next step if one fails
+    }
   }
   const nwpSemantics = buildNwpSemantics(hourly)
   console.log(`ECMWF forecast steps loaded: ${steps.join(',')}`)

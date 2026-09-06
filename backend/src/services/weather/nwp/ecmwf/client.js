@@ -1,8 +1,7 @@
-// src/services/weather/nwp/ecmwf/client.js
+import { getCachedBuffer, setCachedBuffer } from '../../../../utils/nwpCache.js'
 
 const BASE_URL = 'https://data.ecmwf.int/forecasts'
 
-let cachedECMWFRun = null
 let inflightECMWFPromise = null
 let rateLimitedUntil = 0
 const MAX_RATE_LIMIT_RETRIES = 1
@@ -295,6 +294,21 @@ async function getECMWFIndex (date, cycle = '12', step = '0') {
   return text
 }
 
+async function getBuffer (date, cycle, step, param, indexEntry) {
+  const cacheKey = `${date}_${cycle}_${step}_${param}`
+  const cached = await getCachedBuffer(cacheKey)
+  if (cached) return cached
+
+  const gribUrl = buildForecastUrl(date, cycle, step)
+  const buffer = await fetchRange(
+    gribUrl,
+    Number(indexEntry._offset),
+    Number(indexEntry._length)
+  )
+  await setCachedBuffer(cacheKey, buffer)
+  return buffer
+}
+
 async function getECMWFMessages ({ days = 7 } = {}) {
   if (inflightECMWFPromise) {
     return await inflightECMWFPromise
@@ -310,64 +324,23 @@ async function getECMWFMessages ({ days = 7 } = {}) {
 
       const { date, cycle } = latestRun
 
-      const cacheKey = `${date}-${cycle}-${steps.join(',')}`
+      console.log(`ECMWF run identified: ${date} ${cycle}Z`)
 
-      // Reuse already downloaded fields for this ECMWF run
-      if (cachedECMWFRun && cachedECMWFRun.key === cacheKey) {
-        console.log(`Using cached ECMWF run: ${date} ${cycle}Z`)
-
-        return cachedECMWFRun.data
-      }
-
-      console.log(`Downloading ECMWF run: ${date} ${cycle}Z`)
-
-      const requiredParams = ['2t', '2d', '10u', '10v', 'msl']
-      const messages = {}
-      const loadedSteps = []
-
-      for (const step of steps) {
-        const indexText = await getECMWFIndex(date, cycle, step)
-        const index = parseIndex(indexText)
-        const gribUrl = buildForecastUrl(date, cycle, step)
-        const stepMessages = {}
-
-        const params = [...requiredParams, 'tp']
-        await mapWithConcurrency(params, RANGE_CONCURRENCY, async param => {
-          const entry = findMessage(index, param, step)
-          if (!entry) {
-            if (param === 'tp') return
-            throw new Error(
-              `ECMWF parameter not found: ${param} at step ${step}h`
-            )
-          }
-
-          const buffer = await fetchRange(
-            gribUrl,
-            Number(entry._offset),
-            Number(entry._length)
-          )
-          stepMessages[param] = { buffer, index: entry }
-        })
-
-        messages[step] = stepMessages
-        loadedSteps.push(step)
-      }
-
-      const result = {
+      return {
         date,
         cycle,
-        messages,
-        steps: loadedSteps
+        steps,
+        getBuffer: async (step, param) => {
+          const indexText = await getECMWFIndex(date, cycle, step)
+          const index = parseIndex(indexText)
+          const entry = findMessage(index, param, step)
+          if (!entry) {
+            if (param === 'tp') return null
+            throw new Error(`ECMWF parameter not found: ${param} at step ${step}h`)
+          }
+          return getBuffer(date, cycle, step, param, entry)
+        }
       }
-
-      cachedECMWFRun = {
-        key: cacheKey,
-        data: result
-      }
-
-      console.log(`ECMWF run cached: ${cacheKey}`)
-
-      return result
     } finally {
       inflightECMWFPromise = null
     }

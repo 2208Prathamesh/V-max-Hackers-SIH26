@@ -297,6 +297,15 @@ export async function getWeather (latitude, longitude) {
  * @param {number} days
  * @returns {Promise<object>}
  */
+async function withTimeout(promise, ms, timeoutError = new Error('Request timed out')) {
+  let timeoutId;
+  const timeoutPromise = new Promise(resolve => {
+    timeoutId = setTimeout(() => resolve({ timeout: true, error: timeoutError }), ms);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
 export async function getForecast (latitude, longitude, days = 7) {
   const coordinates = parseAndValidateCoordinates(latitude, longitude)
   const latNum = coordinates.latitude
@@ -320,12 +329,15 @@ export async function getForecast (latitude, longitude, days = 7) {
 
   const forecastPromise = (async () => {
     try {
-      const [openMeteoResult, ecmwfResult, gfsResult] =
-        await Promise.allSettled([
-          getOpenMeteoForecast(latNum, lonNum, daysNum),
-          fetchECMWFWithFallback(latNum, lonNum, daysNum),
-          fetchGFSWithFallback(latNum, lonNum, daysNum)
-        ])
+      // Fast path: fetch Open-Meteo and GFS in parallel
+      const [openMeteoResult, gfsResult] = await Promise.allSettled([
+        getOpenMeteoForecast(latNum, lonNum, daysNum),
+        fetchGFSWithFallback(latNum, lonNum, daysNum)
+      ])
+
+      // Background path: Trigger ECMWF download without blocking the main response
+      const ecmwfPromise = fetchECMWFWithFallback(latNum, lonNum, daysNum)
+      const ecmwfTimedResult = await withTimeout(ecmwfPromise, 2500)
 
       const openMeteoRaw =
         openMeteoResult.status === 'fulfilled' ? openMeteoResult.value : null
@@ -351,9 +363,27 @@ export async function getForecast (latitude, longitude, days = 7) {
         return withCacheMetadata(cached.data, cached, true)
       }
 
-      const ecmwfModel =
-        ecmwfResult.status === 'fulfilled' ? ecmwfResult.value : null
       const gfsModel = gfsResult.status === 'fulfilled' ? gfsResult.value : null
+
+      // Determine ECMWF result based on timeout
+      let ecmwfModel = null
+      if (ecmwfTimedResult && ecmwfTimedResult.timeout) {
+        ecmwfModel = {
+          error: 'ECMWF is still loading in background',
+          source: 'ECMWF',
+          sourceType: 'provider_loading',
+          isFallback: true
+        }
+      } else if (ecmwfTimedResult && !ecmwfTimedResult.timeout) {
+        ecmwfModel = ecmwfTimedResult
+      } else {
+        ecmwfModel = {
+          error: 'ECMWF unavailable',
+          source: 'ECMWF',
+          sourceType: 'provider_unavailable',
+          isFallback: true
+        }
+      }
 
       if (
         !isUsableModelForecast(openMeteo) &&
@@ -373,24 +403,13 @@ export async function getForecast (latitude, longitude, days = 7) {
         },
         models: {
           openMeteo,
-          ecmwf:
-            ecmwfResult.status === 'fulfilled'
-              ? ecmwfResult.value
-              : {
-                  error: ecmwfResult.reason?.message || 'ECMWF unavailable',
-                  source: 'ECMWF',
-                  sourceType: 'provider_unavailable',
-                  isFallback: true
-                },
-          gfs:
-            gfsResult.status === 'fulfilled'
-              ? gfsResult.value
-              : {
-                  error: gfsResult.reason?.message || 'GFS unavailable',
-                  source: 'GFS',
-                  sourceType: 'provider_unavailable',
-                  isFallback: true
-                }
+          ecmwf: ecmwfModel,
+          gfs: gfsModel || {
+            error: gfsResult.reason?.message || 'GFS unavailable',
+            source: 'GFS',
+            sourceType: 'provider_unavailable',
+            isFallback: true
+          }
         }
       }
 
