@@ -18,7 +18,9 @@ import {
   CloudRain,
   CloudSun,
   Cloud,
-  ArrowRight
+  ArrowRight,
+  Bot,
+  User
 } from 'lucide-react'
 
 // 3D Styled Cloud & Sun Illustration for Hero Card
@@ -154,6 +156,7 @@ export const DashboardPage = () => {
     user,
     setCurrentPage,
     sendChatMessage,
+    activeConversationId,
     setActiveConversationId,
     setIsAirQualityOpen,
     selectedMapLocation,
@@ -170,6 +173,8 @@ export const DashboardPage = () => {
   } = useWeather()
 
   const [queryText, setQueryText] = useState('')
+  const activeConversation =
+  conversations.find(c => c.id === activeConversationId) || conversations[0]
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Sid'
   const currentHour = weatherData?.forecast?.hourly?.[0]
@@ -255,18 +260,20 @@ export const DashboardPage = () => {
     'Air quality today'
   ]
 
-  const handleSearchSubmit = e => {
-    e.preventDefault()
-    if (!queryText.trim()) return
-    sendChatMessage(queryText)
-    setCurrentPage('chat')
-    setQueryText('')
-  }
+  const handleSearchSubmit = async e => {
+  e.preventDefault()
 
-  const handleChipClick = chip => {
-    sendChatMessage(chip)
-    setCurrentPage('chat')
-  }
+  if (!queryText.trim()) return
+
+  const message = queryText.trim()
+  setQueryText('')
+
+  await sendChatMessage(message)
+}
+
+const handleChipClick = async chip => {
+  await sendChatMessage(chip)
+}
 
   const handleVoiceSearch = () => {
     addToast('Listening... Speak your weather query', 'info')
@@ -415,6 +422,35 @@ export const DashboardPage = () => {
             </div>
           </div>
         </form>
+
+        {/* Small Dashboard Chat Preview */}
+{activeConversation?.messages?.length > 0 && (
+  <div className='mt-3 px-4 py-3 rounded-2xl bg-white/80 dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-700/80 shadow-sm'>
+    {activeConversation.messages.slice(-2).map((msg, index) => (
+      <div
+        key={index}
+        className='flex items-start gap-2 mb-1 last:mb-0'
+      >
+        <span
+          className={`text-[11px] font-bold shrink-0 ${
+            msg.sender === 'user'
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-slate-500 dark:text-slate-400'
+          }`}
+        >
+          {msg.sender === 'user' ? 'You:' : '🤖:'}
+        </span>
+
+        <p className='text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2'>
+          {msg.text}
+        </p>
+      </div>
+    ))}
+  </div>
+)}
+
+{/* 4 Query Suggestion Chips */}
+<div className='flex flex-wrap items-center gap-2.5 mt-3.5'></div>
 
         {/* 4 Query Suggestion Chips */}
         <div className='flex flex-wrap items-center gap-2.5 mt-3.5'>
