@@ -49,7 +49,9 @@ const getCurrentWeather = async (req, res, next) => {
   try {
     const { latitude, longitude, cityName } = await resolveCoordinates(req.query);
 
-    const weather = await weatherService.getWeather(latitude, longitude);
+    const weather = await weatherService.getWeather(latitude, longitude, {
+      includeNWP: false
+    });
     if (cityName) {
       weather.resolvedCity = cityName;
     }

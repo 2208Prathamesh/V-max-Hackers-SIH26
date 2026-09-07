@@ -212,11 +212,15 @@ async function getImdObservation (latitude, longitude) {
  * @param {number} longitude
  * @returns {Promise<object>}
  */
-export async function getWeather (latitude, longitude) {
+export async function getWeather (latitude, longitude, options = {}) {
   const coordinates = parseAndValidateCoordinates(latitude, longitude)
   const latNum = coordinates.latitude
   const lonNum = coordinates.longitude
-  const cacheKey = `weather_${latNum.toFixed(4)}_${lonNum.toFixed(4)}`
+  // ECMWF/NOAA-GFS are only awaited when the caller needs NWP data (chat, advisory,
+  // or the full service path). GET /api/weather/current opts out so the response
+  // never blocks on NWP GRIB work; the models are returned as deferred placeholders.
+  const includeNWP = options.includeNWP !== false
+  const cacheKey = `${includeNWP ? 'weather' : 'fast_weather'}_${latNum.toFixed(4)}_${lonNum.toFixed(4)}`
 
   const cached = getCached(cacheKey)
   if (cached) return cached
@@ -227,6 +231,23 @@ export async function getWeather (latitude, longitude) {
 
   const fetchPromise = (async () => {
     try {
+      const ecmwfPromise = includeNWP
+        ? fetchECMWFWithFallback(latNum, lonNum, 1)
+        : Promise.resolve(
+            buildBackgroundModelState(
+              'ECMWF',
+              'NWP models are not fetched for the current-weather response; available via /api/weather/forecast and /api/weather/compare'
+            )
+          )
+      const gfsPromise = includeNWP
+        ? fetchGFSWithFallback(latNum, lonNum, 1)
+        : Promise.resolve(
+            buildBackgroundModelState(
+              'NOAA-GFS',
+              'NWP models are not fetched for the current-weather response; available via /api/weather/forecast and /api/weather/compare'
+            )
+          )
+
       const [
         openMeteoRaw,
         ecmwfData,
@@ -238,8 +259,8 @@ export async function getWeather (latitude, longitude) {
         imdObservation
       ] = await Promise.all([
         getOpenMeteoForecast(latNum, lonNum).catch(() => null),
-        fetchECMWFWithFallback(latNum, lonNum, 1),
-        fetchGFSWithFallback(latNum, lonNum, 1),
+        ecmwfPromise,
+        gfsPromise,
         getAirQuality(latNum, lonNum).catch(() => null),
         getElevation(latNum, lonNum).catch(() => null),
         getFloodForecast(latNum, lonNum).catch(() => null),
@@ -248,16 +269,21 @@ export async function getWeather (latitude, longitude) {
       ])
 
       const offlineAncillary = buildOfflineAncillaryData(latNum, lonNum)
-      const modelComparison = buildNWPModelComparison({
-        gfs: gfsRaw,
-        ecmwf: ecmwfData
-      })
-      const synthesis = buildWeatherSynthesis({
-        observation: imdObservation,
-        gfs: gfsRaw,
-        ecmwf: ecmwfData,
-        modelComparison
-      })
+      const modelComparison = includeNWP
+        ? buildNWPModelComparison({
+            gfs: gfsRaw,
+            ecmwf: ecmwfData,
+          })
+        : null;
+
+      const synthesis = includeNWP
+        ? buildWeatherSynthesis({
+            observation: imdObservation,
+            gfs: gfsRaw,
+            ecmwf: ecmwfData,
+            modelComparison,
+          })
+        : null;
 
       const result = {
         location: {

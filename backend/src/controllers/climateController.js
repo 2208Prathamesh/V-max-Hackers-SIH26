@@ -72,7 +72,7 @@ export const getHistory = async (req, res, next) => {
     const endDate = req.query.endDate || '2023-12-31';
 
     const history = await getHistoricalWeather(lat, lon, startDate, endDate);
-    const monthly = aggregateMonthlyData(history);
+    const monthly = aggregateMonthlyData(history.daily);
     return successResponse(res, { cityName, monthly }, 'Historical weather retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -110,7 +110,7 @@ export const getFullClimateData = async (req, res, next) => {
       getClimateTrends(lat, lon)
     ]);
 
-    const monthly = aggregateMonthlyData(history);
+    const monthly = aggregateMonthlyData(history.daily);
 
     return successResponse(res, {
       cityName,

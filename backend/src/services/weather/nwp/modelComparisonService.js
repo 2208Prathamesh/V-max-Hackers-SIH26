@@ -403,8 +403,6 @@ export async function compareNWPModels (latitude, longitude) {
     },
     comparedModelsCount: models.length,
     models,
-    alignedForecasts,
-    summary,
     matchedTimestamps: nwpComparison.matchedTimestamps,
     modelAgreementScore,
     ...nwpComparison

@@ -130,47 +130,6 @@ export default function ClimateHistorical () {
   const [climateTrends, setClimateTrends] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Aggregation utility: Daily raw data -> Monthly aggregates
-  const aggregateMonthlyData = daily => {
-    if (!daily || !daily.temperature_2m_max) return []
-
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ]
-    const monthlyStats = Array.from({ length: 12 }, () => ({
-      max: [],
-      avg: [],
-      min: []
-    }))
-
-    daily.time.forEach((time, index) => {
-      const month = new Date(time).getMonth()
-      monthlyStats[month].max.push(daily.temperature_2m_max[index])
-      monthlyStats[month].avg.push(daily.temperature_2m_mean[index])
-      monthlyStats[month].min.push(daily.temperature_2m_min[index])
-    })
-
-    return months.map((month, i) => ({
-      month,
-      max: Math.max(...monthlyStats[i].max),
-      avg:
-        monthlyStats[i].avg.reduce((a, b) => a + b, 0) /
-        monthlyStats[i].avg.length,
-      min: Math.min(...monthlyStats[i].min)
-    }))
-  }
-
   useEffect(() => {
     let isMounted = true // to avoid state updates after unmount
     const timeoutPromise = ms =>
@@ -201,8 +160,8 @@ export default function ClimateHistorical () {
           timeoutPromise(10000)
         ])
         console.log('[CLIMATE DEBUG] History response received')
-        if (historyRes?.data && isMounted) {
-          setHistoricalData(aggregateMonthlyData(historyRes.data))
+        if (Array.isArray(historyRes?.monthly) && isMounted) {
+          setHistoricalData(historyRes.monthly)
           console.log('[CLIMATE DEBUG] Historical data state updated')
         }
 
@@ -213,8 +172,8 @@ export default function ClimateHistorical () {
           timeoutPromise(10000)
         ])
         console.log('[CLIMATE DEBUG] Trends response received')
-        if (trendsRes?.data && isMounted) {
-          setClimateTrends(trendsRes.data)
+        if (trendsRes && isMounted) {
+          setClimateTrends(trendsRes)
           console.log('[CLIMATE DEBUG] Climate trends state updated')
         }
       } catch (error) {
