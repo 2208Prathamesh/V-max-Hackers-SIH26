@@ -386,6 +386,21 @@ export const api = {
       )}`
     ),
 
+  fullClimateData: ({
+    city,
+    startDate,
+    endDate,
+  }) =>
+    request(
+      `/climate/full?city=${encodeURIComponent(
+        city
+      )}&startDate=${encodeURIComponent(
+        startDate
+      )}&endDate=${encodeURIComponent(
+        endDate
+      )}`
+    ),
+
   // ============================================
   // GIS & MAP LAYERS
   // ============================================

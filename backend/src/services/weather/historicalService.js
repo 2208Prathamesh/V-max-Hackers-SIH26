@@ -17,6 +17,7 @@ export async function getHistoricalWeather(latitude, longitude, startDate, endDa
   const cached = historicalCache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    console.log(`[CLIMATE] Cache hit for ${cacheKey}`);
     return cached.data;
   }
 
@@ -30,7 +31,11 @@ export async function getHistoricalWeather(latitude, longitude, startDate, endDa
   });
 
   try {
+    console.log('[CLIMATE] external API START: Open-Meteo Archive');
+    const startApi = Date.now();
     const response = await fetch(`${ARCHIVE_BASE_URL}?${params}`);
+    const endApi = Date.now();
+    console.log(`[CLIMATE] external API END: ${endApi - startApi}ms`);
 
     if (!response.ok) {
       throw new Error(`Open-Meteo Archive API error: ${response.status} (${response.statusText})`);
@@ -40,6 +45,7 @@ export async function getHistoricalWeather(latitude, longitude, startDate, endDa
     historicalCache.set(cacheKey, { timestamp: Date.now(), data });
     return data;
   } catch (error) {
+    console.log('[CLIMATE] External API failed, falling back to offline data');
     const offlineData = buildOfflineHistoricalArchive(
       Number(latitude),
       Number(longitude),
