@@ -65,6 +65,7 @@ export const WeatherProvider = ({ children }) => {
   })
 
   const [activeConversationId, setActiveConversationId] = useState('conv-1')
+  const [isSending, setIsSending] = useState(false)
   const [selectedMapLocation, setSelectedMapLocation] = useState(
     initialSavedLocations[0]
   ) // Default Pune
@@ -301,9 +302,13 @@ export const WeatherProvider = ({ children }) => {
           })
         }))
         setConversations(prev =>
-          prev.map(c =>
-            c.id === activeConversationId ? { ...c, messages: formatted } : c
-          )
+          prev.map(c => {
+            if (c.id !== activeConversationId) return c
+            // Do not overwrite if there are optimistic messages (sending/loading)
+            const hasOptimistic = c.messages.some(m => m.status === 'sending' || m.status === 'loading')
+            if (hasOptimistic) return c
+            return { ...c, messages: formatted }
+          })
         )
       })
       .catch(() => {})
@@ -506,7 +511,11 @@ export const WeatherProvider = ({ children }) => {
     setSavedLocations(updated)
     setUser(prev => ({
       ...prev,
-      stats: { ...prev.stats, locationsSaved: updated.length }
+      stats: {
+        ...defaultUserStats,
+        ...(prev.stats || {}),
+        conversations: Math.max(0, (prev.stats?.conversations ?? 0) - 1)
+      }
     }))
     addToast(`Removed ${loc ? loc.city : 'location'}`, 'info')
   }
@@ -574,10 +583,7 @@ export const WeatherProvider = ({ children }) => {
     try {
       await api.updateSettings({ notifications: updated })
     } catch (error) {
-      addToast(
-        error.message || 'Could not update notification settings',
-        'warning'
-      )
+      addToast(error.message || 'Could not update notification settings', 'warning')
     }
   }
 
@@ -612,80 +618,188 @@ export const WeatherProvider = ({ children }) => {
     return updatedProfile
   }
 
+  // State monitoring for active conversation messages
+  useEffect(() => {
+    const activeConv = conversations.find(c => c.id === activeConversationId)
+    console.log(
+      "[CHAT STATE] Active conversation messages:",
+      activeConv?.messages
+    )
+  }, [conversations, activeConversationId])
+
   const sendChatMessage = async text => {
     if (!text.trim()) return
+    if (isSending) return
 
-    let convId = activeConversationId
+    const userMessageText = text.trim()
+    const tempUserMsgId = `msg-user-${Date.now()}`
+    const tempAiMsgId = `msg-ai-${Date.now()}`
 
-    // Create the conversation in MongoDB if this is a new/local chat
-    if (!convId || convId.startsWith('conv-')) {
-      const conversation = await api.createConversation({
-        title: text.slice(0, 32),
-        category: 'general'
-      })
+    let currentConvId = activeConversationId
+    const isNewConv = !currentConvId || currentConvId.startsWith('conv-')
 
-      convId = conversation._id
+    // 1. Optimistic Update
+    setIsSending(true)
+    console.log('========== CHAT DEBUG ==========');
+    console.log('[CHAT] Sending request:', { content: userMessageText, conversationId: currentConvId });
 
-      // Replace the temporary local conversation with the real MongoDB conversation
+    const userMsg = {
+      id: tempUserMsgId,
+      sender: 'user',
+      text: userMessageText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'sending'
+    }
+
+    const aiLoadingMsg = {
+      id: tempAiMsgId,
+      sender: 'assistant',
+      text: 'Thinking...',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'loading'
+    }
+
+    if (isNewConv) {
+      const tempConvId = currentConvId || `conv-${Date.now()}`
+      const tempConv = {
+        id: tempConvId,
+        title: userMessageText.slice(0, 32),
+        preview: userMessageText,
+        tag: 'General Query',
+        tagColor: 'blue',
+        icon: 'sun-cloud',
+        messages: [userMsg, aiLoadingMsg]
+      }
+      setConversations(prev => [tempConv, ...prev])
+      setActiveConversationId(tempConvId)
+      currentConvId = tempConvId
+    } else {
       setConversations(prev =>
         prev.map(c =>
-          c.id === activeConversationId
+          c.id === currentConvId
             ? {
                 ...c,
-                id: convId,
-                title: conversation.title,
-                preview: text,
-                messages: []
+                messages: [...c.messages, userMsg, aiLoadingMsg],
+                preview: userMessageText
               }
             : c
         )
       )
-
-      setActiveConversationId(convId)
     }
 
-    const result = await api.sendMessage({
-      conversationId: convId,
-      content: text.trim()
-    })
+    let finalConvId = currentConvId
+    try {
+      // 2. Handle Conversation Creation
+      if (isNewConv) {
+        console.log('CREATE CONVERSATION START');
+        const conversation = await api.createConversation({
+          title: userMessageText.slice(0, 32),
+          category: 'general'
+        })
+        console.log('CREATE CONVERSATION COMPLETE');
+        finalConvId = conversation._id
 
-    const toMessage = message => ({
-      id: message._id,
-      sender: message.sender === 'user' ? 'user' : 'assistant',
-      text: message.content,
-      messageType: message.messageType,
-      metadata: message.metadata,
-      cardData: message.metadata?.current
-        ? {
-            city: message.metadata.location,
-            temp: message.metadata.current.temperature,
-            condition: message.metadata.current.condition,
-            rainProb: message.metadata.current.precipitation,
-            humidity: message.metadata.current.humidity,
-            wind: message.metadata.current.windSpeed
-          }
-        : undefined,
-      time: new Date(message.createdAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
+        // Update the temporary conversation with real ID
+        setConversations(prev =>
+          prev.map(c =>
+            c.id === currentConvId
+              ? { ...c, id: finalConvId }
+              : c
+          )
+        )
+        setActiveConversationId(finalConvId)
+      }
+
+      // 3. Send Message
+      console.log('SEND MESSAGE START');
+      console.log('CHAT REQUEST PAYLOAD:', { conversationId: finalConvId, content: userMessageText })
+      const result = await api.sendMessage({
+        conversationId: finalConvId,
+        content: userMessageText
       })
-    })
+      console.log('SEND MESSAGE COMPLETE');
+      console.log('[CHAT] RAW AI API RESPONSE:', result);
+      console.log('[CHAT] RESPONSE DATA:', result?.data);
+      console.log('[CHAT] RESPONSE MESSAGE:', result?.data?.message);
+      console.log('[CHAT] RESPONSE CONTENT:', result?.data?.content);
 
-    setConversations(prev =>
-      prev.map(conversation =>
-        conversation.id === convId
+      const toMessage = message => ({
+        id: message?._id || `msg-${Date.now()}`,
+        sender: message?.sender === 'user' ? 'user' : 'assistant',
+        text: message?.content || message?.text || 'No response received',
+        messageType: message?.messageType || 'text',
+        metadata: message?.metadata || {},
+        cardData: message?.metadata?.current
           ? {
-              ...conversation,
-              messages: [
-                ...conversation.messages,
-                toMessage(result.userMessage),
-                toMessage(result.aiMessage)
-              ],
-              preview: text
+              city: message.metadata.location,
+              temp: message.metadata.current.temperature,
+              condition: message.metadata.current.condition,
+              rainProb: message.metadata.current.precipitation,
+              humidity: message.metadata.current.humidity,
+              wind: message.metadata.current.windSpeed
             }
-          : conversation
+          : undefined,
+        time: message?.createdAt
+          ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      })
+
+      const assistantMsg = toMessage(result.aiMessage)
+      console.log('[CHAT] EXTRACTED AI TEXT:', assistantMsg.text);
+
+      // 4. Final Reconciliation
+      console.log('RECONCILIATION START');
+      setConversations(prev => {
+        const updated = prev.map(conversation => {
+          // Find if this conversation contains our temporary messages
+          const hasTempMessages = conversation.messages.some(m =>
+            m.id === tempUserMsgId || m.id === tempAiMsgId
+          )
+
+          if (hasTempMessages || conversation.id === finalConvId) {
+            const newMessages = conversation.messages.map(m => {
+              if (m.id === tempUserMsgId) return toMessage(result.userMessage)
+              if (m.id === tempAiMsgId) {
+                console.log('[CHAT] ASSISTANT MESSAGE TO RENDER:', assistantMsg);
+                return assistantMsg
+              }
+              return m
+            })
+            return {
+              ...conversation,
+              id: finalConvId, // Ensure it has the final ID
+              messages: newMessages
+            }
+          }
+          return conversation
+        })
+        console.log('CHAT CONVERSATIONS STATE AFTER RECONCILIATION:', updated)
+        return updated
+      })
+      console.log('RECONCILIATION COMPLETE');
+    } catch (error) {
+      console.error('CHAT SEND ERROR:', error)
+      addToast(error.message || 'Failed to send message', 'warning')
+
+      // Mark the loading message as error
+      setConversations(prev =>
+        prev.map(conversation =>
+          conversation.id === finalConvId
+            ? {
+                ...conversation,
+                messages: conversation.messages.map(m =>
+                  m.id === tempAiMsgId
+                    ? { ...m, status: 'error', text: 'Failed to send message. Please try again.', originalText: userMessageText }
+                    : m
+                )
+              }
+            : conversation
+        )
       )
-    )
+    } finally {
+      console.log('[CHAT] isSending -> false');
+      setIsSending(false)
+    }
   }
 
   const createNewChat = () => {
@@ -796,6 +910,7 @@ export const WeatherProvider = ({ children }) => {
         activeConversationId,
         setActiveConversationId,
         sendChatMessage,
+        isSending,
         createNewChat,
         deleteConversation,
         alerts,

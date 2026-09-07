@@ -12,7 +12,8 @@ import {
   Mic,
   MicOff,
   Volume2,
-  VolumeX
+  VolumeX,
+  Loader2
 } from 'lucide-react'
 
 import { WeatherIcon } from '../components/common/WeatherIcon'
@@ -28,6 +29,7 @@ export const ChatPage = () => {
     conversations,
     activeConversationId,
     sendChatMessage,
+    isSending,
     createNewChat,
     formatTemp
   } = useWeather()
@@ -529,10 +531,31 @@ export const ChatPage = () => {
                   className={`p-4 rounded-2xl text-xs leading-relaxed shadow-xs ${
                     isUser
                       ? 'bg-blue-600 text-white rounded-tr-xs'
+                      : msg.status === 'error'
+                      ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-tl-xs'
                       : 'bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
                   }`}
                 >
-                  <p className='whitespace-pre-line'>{msg.text}</p>
+                  {msg.status === 'loading' ? (
+                    <div className='flex items-center gap-1 py-1'>
+                      <div className='w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce' style={{ animationDelay: '0ms' }} />
+                      <div className='w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce' style={{ animationDelay: '150ms' }} />
+                      <div className='w-1.5 h-1.5 bg-slate-400 dark:bg-slate-500 rounded-full animate-bounce' style={{ animationDelay: '300ms' }} />
+                    </div>
+                  ) : (
+                    <div className='flex flex-col gap-2'>
+                      <p className='whitespace-pre-line'>{msg.text}</p>
+                      {msg.status === 'error' && (
+                        <button
+                          onClick={() => sendChatMessage(msg.originalText)}
+                          className='flex items-center gap-1.5 px-2 py-1 bg-red-600 text-white rounded-lg text-[10px] font-bold hover:bg-red-700 transition w-fit'
+                        >
+                          <Send className='w-3 h-3' />
+                          Retry
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* =================================================
@@ -699,6 +722,8 @@ export const ChatPage = () => {
           placeholder={
             isListening
               ? 'Listening...'
+              : isSending
+              ? 'WeatherGPT is thinking...'
               : 'Ask WeatherGPT about rainfall, forecast, temperature, or travel safety...'
           }
           value={inputText}
@@ -706,7 +731,7 @@ export const ChatPage = () => {
             setInputText(e.target.value)
             setVoiceError('')
           }}
-          disabled={isListening}
+          disabled={isListening || isSending}
           className='flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner disabled:opacity-60'
         />
 
@@ -717,11 +742,12 @@ export const ChatPage = () => {
         <button
           type='button'
           onClick={handleVoiceInput}
+          disabled={isSending}
           className={`p-3 rounded-2xl shadow-md transition ${
             isListening
               ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20'
               : 'bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950'
-          }`}
+          } disabled:opacity-50`}
           title={isListening ? 'Stop listening' : 'Ask using voice'}
         >
           {isListening ? (
@@ -737,11 +763,15 @@ export const ChatPage = () => {
 
         <button
           type='submit'
-          disabled={!inputText.trim() || isListening}
-          className='p-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl shadow-md shadow-blue-500/20 transition cursor-pointer'
+          disabled={!inputText.trim() || isListening || isSending}
+          className='p-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl shadow-md shadow-blue-500/20 transition cursor-pointer flex items-center justify-center'
           title='Send message'
         >
-          <Send className='w-4 h-4' />
+          {isSending ? (
+            <Loader2 className='w-4 h-4 animate-spin' />
+          ) : (
+            <Send className='w-4 h-4' />
+          )}
         </button>
       </form>
     </div>

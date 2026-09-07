@@ -10,6 +10,8 @@ const sendMessage = async (req, res, next) => {
   try {
     const { conversationId, content, messageType } = req.body
 
+    console.log('[BACKEND CHAT] Request received:', { conversationId, content });
+
     if (!content || !content.trim()) {
       return res.status(400).json({
         success: false,
@@ -38,14 +40,17 @@ const sendMessage = async (req, res, next) => {
       messageType: messageType || 'text'
     })
 
+    console.log('[BACKEND CHAT] Calling AI...');
     // Generate WeatherGPT response
     const aiResponse = await chatService.generateResponse({
       conversationId,
       userId: req.user._id,
       message: content.trim()
     })
+    console.log('[BACKEND CHAT] AI RESPONSE:', aiResponse);
 
     // Save AI response
+    console.log('[BACKEND CHAT] Saving assistant message...');
     const aiMessage = await Message.create({
       conversationId,
       sender: 'ai',
@@ -53,14 +58,18 @@ const sendMessage = async (req, res, next) => {
       messageType: aiResponse.messageType || 'text',
       metadata: aiResponse.metadata || {}
     })
+    console.log('[BACKEND CHAT] Assistant message saved:', aiMessage._id);
 
     // Update conversation timestamp
     conversation.updatedAt = new Date()
     await conversation.save()
 
+    const responsePayload = { userMessage, aiMessage };
+    console.log('[BACKEND CHAT] Sending response to frontend:', responsePayload);
+
     return successResponse(
       res,
-      { userMessage, aiMessage },
+      responsePayload,
       'Message sent successfully',
       201
     )

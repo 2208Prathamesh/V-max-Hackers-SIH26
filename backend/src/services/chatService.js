@@ -138,9 +138,18 @@ const generateResponse = async ({ conversationId, userId, message }) => {
             match.admin1 ? ', ' + match.admin1 : ''
           }, ${match.country}`
 
-          // Fetch verified live meteorological datasets concurrently
-          const [weatherData, imdWarning, agroAdvisory] = await Promise.all([
+          // Fetch verified live meteorological datasets with a strict timeout to prevent chat hangs
+          const weatherData = await Promise.race([
             weatherService.getWeather(match.latitude, match.longitude),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Weather fetch timeout')), 5000)
+            )
+          ]).catch(err => {
+            console.warn('[CHAT] Weather fetch timed out or failed:', err.message);
+            return {}; // Return empty object to allow AI to respond without weather data
+          });
+
+          const [imdWarning, agroAdvisory] = await Promise.all([
             imdService.getDistrictWarning(match.name).catch(() => null),
             lowerText.includes('crop') || lowerText.includes('farm')
               ? advisoryService

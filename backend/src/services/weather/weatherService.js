@@ -122,9 +122,14 @@ export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
     }
   }
 
+  const start = Date.now()
+  console.log(`[NWP] ECMWF REQUEST START - ${latitude},${longitude}`);
   try {
-    return await getECMWFWeather(latitude, longitude, days)
+    const result = await getECMWFWeather(latitude, longitude, days)
+    console.log(`[NWP] ECMWF REQUEST END - ${Date.now() - start}ms`);
+    return result
   } catch (err) {
+    console.log(`[NWP] ECMWF REQUEST END (FAILED) - ${Date.now() - start}ms`);
     console.warn('Direct NWP ECMWF failed:', err.message)
     if (isRateLimitedError(err)) {
       ecmwfUnavailableUntil = Date.now() + 60 * 1000
@@ -140,9 +145,14 @@ export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
 }
 
 export async function fetchGFSWithFallback (latitude, longitude, days = 7) {
+  const start = Date.now()
+  console.log(`[NWP] GFS REQUEST START - ${latitude},${longitude}`);
   try {
-    return await getGFSWeather(latitude, longitude, days)
+    const result = await getGFSWeather(latitude, longitude, days)
+    console.log(`[NWP] GFS REQUEST END - ${Date.now() - start}ms`);
+    return result
   } catch (err) {
+    console.log(`[NWP] GFS REQUEST END (FAILED) - ${Date.now() - start}ms`);
     console.warn('Native NOAA GFS failed:', err.message)
     try {
       const fallbackRaw = await getOpenMeteoGFS(latitude, longitude, days)

@@ -7,7 +7,7 @@ let rateLimitedUntil = 0
 const MAX_RATE_LIMIT_RETRIES = 1
 const MAX_RATE_LIMIT_WAIT_MS = 10000
 const MAX_CACHED_STEPS = 80
-const MAX_REQUEST_RETRIES = 4
+const MAX_REQUEST_RETRIES = 1
 const REQUEST_TIMEOUT_MS = 30000
 const RANGE_CONCURRENCY = 3
 const RETRY_BASE_DELAY_MS = 500
@@ -102,6 +102,8 @@ async function fetchRange (url, offset, length) {
   const start = Number(offset)
   const end = start + Number(length) - 1
 
+  const requestStart = Date.now()
+  console.log(`[NWP] ECMWF RANGE REQUEST START - ${url} [${start}-${end}]`);
   return await fetchWithRetry(
     url,
     {
@@ -118,7 +120,9 @@ async function fetchRange (url, offset, length) {
             'Range requests may not be supported.'
         )
       }
-      return Buffer.from(await response.arrayBuffer())
+      const buffer = Buffer.from(await response.arrayBuffer())
+      console.log(`[NWP] ECMWF RANGE REQUEST END - ${Date.now() - requestStart}ms`);
+      return buffer
     },
     'range request'
   )
