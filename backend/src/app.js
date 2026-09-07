@@ -21,6 +21,7 @@ import advisoryRoutes from './routes/advisoryRoutes.js'
 import mapRoutes from './routes/mapRoutes.js'
 import voiceRoutes from './routes/voiceRoutes.js'
 import satelliteRoutes from './routes/satelliteRoutes.js'
+import authorityRoutes from './routes/authorityRoutes.js'
 
 import errorMiddleware from './middleware/errorMiddleware.js'
 
@@ -84,6 +85,7 @@ app.use('/api/messages', chatLimiter, messageRoutes)
 app.use('/api/locations', locationRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/settings', settingsRoutes)
+app.use('/api/authority', authorityRoutes)
 
 // 404 Fallback Handler for Unknown Routes
 app.use((req, res) => {

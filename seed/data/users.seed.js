@@ -25,5 +25,14 @@ export const usersSeedData = [
     language: 'en',
     timezone: 'UTC',
     isVerified: true
+  },
+  {
+    name: 'Authority Admin',
+    email: 'authority@weathergpt.com',
+    password: 'AuthorityPassword123!',
+    language: 'en',
+    timezone: 'Asia/Kolkata',
+    isVerified: true,
+    role: 'authority'
   }
 ]
