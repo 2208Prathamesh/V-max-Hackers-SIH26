@@ -17,7 +17,8 @@ import {
   Moon, 
   LogOut,
   User as UserIcon,
-  SunMedium
+  SunMedium,
+  CloudSun
 } from 'lucide-react';
 
 // 3D Styled Cloud & Sun Logo for Sidebar
@@ -72,6 +73,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { id: 'forecast', label: 'Forecast', icon: Calendar },
     { id: 'history', label: 'History', icon: Clock },
     { id: 'saved-locations', label: 'Saved Locations', icon: Star },
+    { id: 'climate-historical', label: 'Climate Historical', icon: CloudSun },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
