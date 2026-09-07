@@ -72,8 +72,11 @@ export const WeatherProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([])
   const [weatherData, setWeatherData] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
+  const [weatherError, setWeatherError] = useState(null)
   const [forecastData, setForecastData] = useState(null)
   const [forecastLoading, setForecastLoading] = useState(false)
+  const [forecastError, setForecastError] = useState(null)
+  const weatherRequestRef = useRef({ key: null, version: 0 })
   const forecastRequestRef = useRef({ key: null, version: 0, promise: null })
   const forecastStateRef = useRef({ key: null, data: null })
 
@@ -307,16 +310,28 @@ export const WeatherProvider = ({ children }) => {
   }, [isAuthenticated, activeConversationId])
 
   const refreshWeather = async (latitude = 18.5204, longitude = 73.8567) => {
+    const requestKey = `${latitude}:${longitude}`
+    const requestVersion = weatherRequestRef.current.version + 1
+    weatherRequestRef.current = { key: requestKey, version: requestVersion }
     setWeatherLoading(true)
+    setWeatherError(null)
+    setWeatherData(null)
     try {
       const data = await api.weather({ latitude, longitude })
-      setWeatherData(data)
+      if (weatherRequestRef.current.version === requestVersion) {
+        setWeatherData(data)
+      }
       return data
     } catch (error) {
-      addToast(error.message || 'Could not load current weather', 'warning')
+      if (weatherRequestRef.current.version === requestVersion) {
+        setWeatherError(error.message || 'Could not load current weather')
+        addToast(error.message || 'Could not load current weather', 'warning')
+      }
       return null
     } finally {
-      setWeatherLoading(false)
+      if (weatherRequestRef.current.version === requestVersion) {
+        setWeatherLoading(false)
+      }
     }
   }
 
@@ -331,6 +346,8 @@ export const WeatherProvider = ({ children }) => {
     const requestVersion = activeRequest.version + 1
     const requestPromise = (async () => {
       setForecastLoading(true)
+      setForecastError(null)
+      setForecastData(null)
       try {
         const data = await api.forecast({ latitude, longitude, days: 7 })
         const latestRequest = forecastRequestRef.current
@@ -348,6 +365,7 @@ export const WeatherProvider = ({ children }) => {
         return data
       } catch (error) {
         if (forecastRequestRef.current.version === requestVersion) {
+          setForecastError(error.message || 'Could not load forecast')
           addToast(error.message || 'Could not load forecast', 'warning')
         }
         return null
@@ -369,15 +387,12 @@ export const WeatherProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    if (isAuthenticated) refreshWeather()
-  }, [isAuthenticated])
-
-  useEffect(() => {
     if (!isAuthenticated) return
 
     const latitude = selectedMapLocation?.lat ?? selectedMapLocation?.latitude
     const longitude = selectedMapLocation?.lng ?? selectedMapLocation?.longitude
     if (latitude !== undefined && longitude !== undefined) {
+      refreshWeather(latitude, longitude)
       refreshForecast(latitude, longitude)
     }
   }, [isAuthenticated, selectedMapLocation])
@@ -787,9 +802,11 @@ export const WeatherProvider = ({ children }) => {
         notifications,
         weatherData,
         weatherLoading,
+        weatherError,
         refreshWeather,
         forecastData,
         forecastLoading,
+        forecastError,
         refreshForecast,
         formatTemp,
         formatTempRaw,

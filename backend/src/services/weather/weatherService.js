@@ -297,13 +297,29 @@ export async function getWeather (latitude, longitude) {
  * @param {number} days
  * @returns {Promise<object>}
  */
-async function withTimeout(promise, ms, timeoutError = new Error('Request timed out')) {
-  let timeoutId;
-  const timeoutPromise = new Promise(resolve => {
-    timeoutId = setTimeout(() => resolve({ timeout: true, error: timeoutError }), ms);
-  });
+function buildBackgroundModelState (providerName, reason) {
+  return {
+    error: reason,
+    source: providerName,
+    sourceType: 'provider_loading',
+    isFallback: true
+  }
+}
 
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+function updateForecastCacheWithBackgroundModel (cacheKey, providerName, modelData) {
+  const cachedEntry = getForecastCacheEntry(cacheKey)
+  if (!cachedEntry) return null
+
+  const nextData = {
+    ...cachedEntry.data,
+    models: {
+      ...cachedEntry.data.models,
+      [providerName]: modelData
+    }
+  }
+
+  setForecastCache(cacheKey, nextData)
+  return nextData
 }
 
 export async function getForecast (latitude, longitude, days = 7) {
@@ -329,70 +345,39 @@ export async function getForecast (latitude, longitude, days = 7) {
 
   const forecastPromise = (async () => {
     try {
-      // Fast path: fetch Open-Meteo and GFS in parallel
-      const [openMeteoResult, gfsResult] = await Promise.allSettled([
-        getOpenMeteoForecast(latNum, lonNum, daysNum),
-        fetchGFSWithFallback(latNum, lonNum, daysNum)
-      ])
-
-      // Background path: Trigger ECMWF download without blocking the main response
-      const ecmwfPromise = fetchECMWFWithFallback(latNum, lonNum, daysNum)
-      const ecmwfTimedResult = await withTimeout(ecmwfPromise, 2500)
-
-      const openMeteoRaw =
-        openMeteoResult.status === 'fulfilled' ? openMeteoResult.value : null
+      const openMeteoRaw = await getOpenMeteoForecast(latNum, lonNum, daysNum).catch(
+        () => null
+      )
       const openMeteo = openMeteoRaw
         ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
         : {
-            error: openMeteoResult.reason?.message || 'Open-Meteo unavailable',
+            error: 'Open-Meteo unavailable',
             source: 'Open-Meteo',
             sourceType: 'provider_unavailable',
             isFallback: true
           }
-      const cached = getForecastCacheEntry(cacheKey)
 
+      const warmCache = getForecastCacheEntry(cacheKey)
       if (
         openMeteo?.isFallback &&
-        cached &&
-        !cached.data.models.openMeteo?.isFallback
+        warmCache &&
+        !warmCache.data.models.openMeteo?.isFallback
       ) {
-        return withCacheMetadata(cached.data, cached, true)
+        return withCacheMetadata(warmCache.data, warmCache, true)
       }
 
-      if (!isValidNormalizedForecast(openMeteo) && cached) {
-        return withCacheMetadata(cached.data, cached, true)
+      if (!isValidNormalizedForecast(openMeteo) && warmCache) {
+        return withCacheMetadata(warmCache.data, warmCache, true)
       }
 
-      const gfsModel = gfsResult.status === 'fulfilled' ? gfsResult.value : null
-
-      // Determine ECMWF result based on timeout
-      let ecmwfModel = null
-      if (ecmwfTimedResult && ecmwfTimedResult.timeout) {
-        ecmwfModel = {
-          error: 'ECMWF is still loading in background',
-          source: 'ECMWF',
-          sourceType: 'provider_loading',
-          isFallback: true
-        }
-      } else if (ecmwfTimedResult && !ecmwfTimedResult.timeout) {
-        ecmwfModel = ecmwfTimedResult
-      } else {
-        ecmwfModel = {
-          error: 'ECMWF unavailable',
-          source: 'ECMWF',
-          sourceType: 'provider_unavailable',
-          isFallback: true
-        }
-      }
-
-      if (
-        !isUsableModelForecast(openMeteo) &&
-        !isUsableModelForecast(ecmwfModel) &&
-        !isUsableModelForecast(gfsModel)
-      ) {
-        throw (
-          openMeteoResult.reason ||
-          new Error('All forecast providers unavailable')
+      const loadingModels = {
+        ecmwf: buildBackgroundModelState(
+          'ECMWF',
+          'ECMWF is still loading in background'
+        ),
+        gfs: buildBackgroundModelState(
+          'GFS',
+          'NOAA GFS is still loading in background'
         )
       }
 
@@ -403,15 +388,50 @@ export async function getForecast (latitude, longitude, days = 7) {
         },
         models: {
           openMeteo,
-          ecmwf: ecmwfModel,
-          gfs: gfsModel || {
-            error: gfsResult.reason?.message || 'GFS unavailable',
-            source: 'GFS',
-            sourceType: 'provider_unavailable',
-            isFallback: true
-          }
+          ...loadingModels
         }
       }
+
+      // Background refresh: direct NWP should continue independently without blocking the initial response.
+      void (async () => {
+        const [gfsResult, ecmwfResult] = await Promise.allSettled([
+          fetchGFSWithFallback(latNum, lonNum, daysNum),
+          fetchECMWFWithFallback(latNum, lonNum, daysNum)
+        ])
+
+        const nextModels = {
+          ...loadingModels,
+          gfs:
+            gfsResult.status === 'fulfilled'
+              ? gfsResult.value
+              : {
+                  error: gfsResult.reason?.message || 'GFS unavailable',
+                  source: 'GFS',
+                  sourceType: 'provider_unavailable',
+                  isFallback: true
+                },
+          ecmwf:
+            ecmwfResult.status === 'fulfilled'
+              ? ecmwfResult.value
+              : {
+                  error: ecmwfResult.reason?.message || 'ECMWF unavailable',
+                  source: 'ECMWF',
+                  sourceType: 'provider_unavailable',
+                  isFallback: true
+                }
+        }
+
+        const currentEntry = getForecastCacheEntry(cacheKey)
+        if (!currentEntry) {
+          if (!openMeteo.isFallback) {
+            setForecastCache(cacheKey, { ...result, models: { ...result.models, ...nextModels } })
+          }
+          return
+        }
+
+        updateForecastCacheWithBackgroundModel(cacheKey, 'gfs', nextModels.gfs)
+        updateForecastCacheWithBackgroundModel(cacheKey, 'ecmwf', nextModels.ecmwf)
+      })()
 
       if (!openMeteo.isFallback) {
         setForecastCache(cacheKey, result)

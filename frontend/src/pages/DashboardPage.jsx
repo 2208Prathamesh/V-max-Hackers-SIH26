@@ -173,8 +173,20 @@ export const DashboardPage = () => {
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Sid'
   const currentHour = weatherData?.forecast?.hourly?.[0]
-  const forecastCurrent = forecastData?.models?.openMeteo?.current
-  const forecastHour = forecastData?.models?.openMeteo?.hourly?.[0]
+  const liveForecast = [
+    forecastData?.models?.ecmwf,
+    forecastData?.models?.gfs,
+    forecastData?.models?.openMeteo
+  ].find(
+    model =>
+      model?.current &&
+      Array.isArray(model.hourly) &&
+      model.hourly.length > 0 &&
+      Array.isArray(model.daily) &&
+      model.daily.length > 0
+  )
+  const forecastCurrent = liveForecast?.current
+  const forecastHour = liveForecast?.hourly?.[0]
   const currentConditions =
     weatherData?.forecast?.current?.temperature != null
       ? weatherData.forecast.current
@@ -183,7 +195,17 @@ export const DashboardPage = () => {
       : forecastCurrent?.temperature != null
       ? forecastCurrent
       : forecastHour
-  const forecastHours = forecastData?.models?.openMeteo?.hourly || []
+  const forecastHours = liveForecast?.hourly || []
+  const locationTimezone = liveForecast?.location?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  const hourlyStartIndex = liveForecast?.hourly?.findIndex(
+    hour => new Date(hour.time) >= new Date()
+  ) ?? 0
+
+  const hourlySlice = liveForecast?.hourly
+    ? liveForecast.hourly.slice(hourlyStartIndex, hourlyStartIndex + 7)
+    : []
+
 
   const weatherIcon = precipitationProbability => {
     if (precipitationProbability >= 50) return 'rain'
@@ -263,15 +285,16 @@ export const DashboardPage = () => {
     { time: '1 PM', temp: '30°', pop: '60%', icon: 'cloud' },
     { time: '2 PM', temp: '29°', pop: '40%', icon: 'cloud' }
   ]
-  const hourlyData = forecastHours.length
-    ? forecastHours.slice(0, 7).map((hour, index) => ({
+  const hourlyData = hourlySlice.length
+    ? hourlySlice.map((hour, index) => ({
         time:
           index === 0
             ? 'Now'
-            : new Date(hour.time).toLocaleTimeString([], {
+            : new Intl.DateTimeFormat('en-US', {
                 hour: 'numeric',
-                minute: '2-digit'
-              }),
+                minute: '2-digit',
+                timeZone: locationTimezone
+              }).format(new Date(hour.time)),
         temp:
           formatTemp(hour.temperature).replace('°C', '').replace('°F', '') +
           '°',

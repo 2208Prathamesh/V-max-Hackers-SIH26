@@ -66,6 +66,7 @@ export const ForecastPage = () => {
     addToast,
     forecastData,
     forecastLoading,
+    forecastError,
     formatTemp,
     formatWind,
     formatPressure
@@ -78,17 +79,31 @@ export const ForecastPage = () => {
 
   const city = selectedMapLocation ||
     savedLocations[0] || { city: 'Pune', region: 'Maharashtra' }
-  const liveForecast =
-    forecastData?.models?.ecmwf?.current &&
-    forecastData.models.ecmwf.isFallback !== true
-      ? forecastData.models.ecmwf
-      : forecastData?.models?.gfs?.current &&
-        forecastData.models.gfs.isFallback !== true
-      ? forecastData.models.gfs
-      : forecastData?.models?.openMeteo
+  const liveForecast = [
+    forecastData?.models?.ecmwf,
+    forecastData?.models?.gfs,
+    forecastData?.models?.openMeteo
+  ].find(
+    model =>
+      model?.current &&
+      Array.isArray(model.hourly) &&
+      model.hourly.length > 0 &&
+      Array.isArray(model.daily) &&
+      model.daily.length > 0
+  )
   const currentForecast = liveForecast?.current
   const currentForecastHour = liveForecast?.hourly?.[0]
   const currentForecastDay = liveForecast?.daily?.[0]
+
+  const locationTimezone = liveForecast?.location?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  const hourlyStartIndex = liveForecast?.hourly?.findIndex(
+    hour => new Date(hour.time) >= new Date()
+  ) ?? 0
+
+  const hourlySlice = liveForecast?.hourly
+    ? liveForecast.hourly.slice(hourlyStartIndex, hourlyStartIndex + 9)
+    : []
 
   const formatDate = date =>
     new Date(`${date}T12:00:00`).toLocaleDateString([], {
@@ -103,7 +118,6 @@ export const ForecastPage = () => {
     return 'sun'
   }
 
-  const liveChartHours = liveForecast?.hourly?.slice(0, 6)
 
   const sevenDayForecast = liveForecast?.daily?.length
     ? liveForecast.daily.slice(0, 7).map(day => ({
@@ -119,15 +133,16 @@ export const ForecastPage = () => {
       }))
     : []
 
-  const nineHourForecast = liveForecast?.hourly?.length
-    ? liveForecast.hourly.slice(0, 9).map((hour, index) => ({
+  const nineHourForecast = hourlySlice.length
+    ? hourlySlice.map((hour, index) => ({
         time:
           index === 0
             ? 'Now'
-            : new Date(hour.time).toLocaleTimeString([], {
+            : new Intl.DateTimeFormat('en-US', {
                 hour: 'numeric',
-                minute: '2-digit'
-              }),
+                minute: '2-digit',
+                timeZone: locationTimezone
+              }).format(new Date(hour.time)),
         temp: formatTemp(hour.temperature),
         pop: `${Math.round(hour.precipitationProbability ?? 0)}%`,
         icon: weatherIcon(hour.precipitationProbability ?? 0)
@@ -136,7 +151,7 @@ export const ForecastPage = () => {
 
   // Chart data based on active tab
   const getChartPoints = () => {
-    if (liveChartHours?.length) {
+    if (hourlySlice.length) {
       const chartValues = {
         temperature: hour => formatTemp(hour.temperature),
         precipitation: hour => `${hour.precipitation ?? 0} mm`,
@@ -145,8 +160,11 @@ export const ForecastPage = () => {
         pressure: hour => formatPressure(hour.pressure)
       }
       const yPositions = [120, 85, 65, 25, 50, 100]
-      return liveChartHours.slice(0, 6).map((hour, index) => ({
-        time: new Date(hour.time).toLocaleTimeString([], { hour: 'numeric' }),
+      return hourlySlice.slice(0, 6).map((hour, index) => ({
+        time: new Intl.DateTimeFormat('en-US', {
+          hour: 'numeric',
+          timeZone: locationTimezone
+        }).format(new Date(hour.time)),
         val: chartValues[activeChartTab](hour),
         y: yPositions[index]
       }))
@@ -262,7 +280,11 @@ export const ForecastPage = () => {
                 <Hero3DSunCloud />
                 <div>
                   <span className='text-xs font-semibold text-blue-600 dark:text-blue-400 block'>
-                    {liveForecast?.retrievedAt
+                    {forecastLoading
+                      ? 'Loading forecast...'
+                      : forecastError
+                      ? 'Forecast unavailable'
+                      : liveForecast?.retrievedAt
                       ? new Date(liveForecast.retrievedAt).toLocaleDateString(
                           [],
                           {
@@ -285,7 +307,11 @@ export const ForecastPage = () => {
                   <p className='text-[11px] text-slate-400'>
                     {forecastLoading
                       ? 'Loading forecast...'
-                      : 'Live forecast from WeatherGPT'}
+                      : forecastError
+                      ? forecastError
+                      : liveForecast
+                      ? `Live forecast from ${liveForecast.source || 'WeatherGPT'}`
+                      : 'Forecast unavailable'}
                   </p>
                 </div>
               </div>

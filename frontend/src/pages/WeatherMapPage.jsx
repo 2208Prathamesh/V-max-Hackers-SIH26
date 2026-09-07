@@ -309,7 +309,7 @@ export const WeatherMapPage = () => {
             <div className="absolute right-4 bottom-4 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-2.5 shadow-2xl text-[10px] text-slate-200 flex flex-col items-center gap-1">
               <span className="font-bold text-slate-300 text-[10px] mb-1">Rainfall (mm)</span>
               <div className="flex items-center gap-2">
-                <div className="w-3.5 h-36 rounded-md bg-gradient-to-t from-transparent via-cyan-500 via-green-500 via-yellow-400 via-orange-500 to-purple-600 border border-slate-700" />
+                <div className="w-3.5 h-36 rounded-md bg-gradient-to-t from-transparent via-cyan-500 to-purple-600 border border-slate-700" />
                 <div className="flex flex-col justify-between h-36 font-semibold text-[9px] text-slate-300">
                   <span>200+</span>
                   <span>100</span>
