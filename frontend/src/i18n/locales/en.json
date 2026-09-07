@@ -1,0 +1,191 @@
+{
+  "common": {
+    "search": "Search",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "update": "Update",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "welcome": "Welcome",
+    "logout": "Logout",
+    "viewAll": "View All",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "pressure": "Pressure",
+    "min": "Min",
+    "max": "Max"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "forgotPassword": "Forgot password?",
+    "createAccount": "Create an account"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "forecast": "Forecast",
+    "alerts": "Alerts",
+    "climate": "Climate",
+    "locations": "Saved Locations",
+    "settings": "Settings",
+    "chat": "Chat"
+  },
+  "dashboard": {
+    "greeting": "Good morning, {{name}}!",
+    "overview": "Here's your weather overview",
+    "searchPlaceholder": "Ask WeatherGPT anything...",
+    "voiceListening": "Listening... Speak your weather query",
+    "suggestion1": "Will it rain tomorrow?",
+    "suggestion2": "Weather in Mumbai",
+    "suggestion3": "Cyclone update",
+    "suggestion4": "Air quality today",
+    "currentLocation": "Current location",
+    "condition": {
+      "rain": "Rain nearby",
+      "humid": "Humid conditions",
+      "default": "Current conditions"
+    },
+    "weatherUnavailable": "Weather data unavailable",
+    "activeAlerts": "Active Alerts",
+    "noAlerts": "No active alerts",
+    "todayForecast": "Today's Forecast",
+    "viewFullForecast": "View Full Forecast",
+    "quickActions": "Quick Actions",
+    "action": {
+      "forecast": "Weather Forecast",
+      "map": "Weather Map",
+      "alerts": "Alerts",
+      "airQuality": "Air Quality"
+    },
+    "recentConversations": "Recent Conversations",
+    "savedLocations": "Saved Locations",
+    "locationStatus": {
+      "current": "Current Location",
+      "favorite": "Favorite location",
+      "saved": "Saved location"
+    },
+    "didYouKnow": {
+      "title": "Did you know?",
+      "text": "Trees can reduce the surrounding air temperature by up to 5°C. Plant more trees and stay cool!"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "general": "General",
+      "units": "Units & Format",
+      "notifications": "Notifications",
+      "weatherPrefs": "Weather Preferences",
+      "privacy": "Privacy & Data",
+      "appearance": "Appearance",
+      "language": "Language",
+      "connected": "Connected Accounts",
+      "about": "About"
+    },
+    "general": {
+      "profileInfo": "Profile Information",
+      "profileDesc": "Update your name, email and profile picture.",
+      "editProfile": "Edit Profile",
+      "changePassword": "Change Password",
+      "changePasswordDesc": "Update your password to keep your account secure.",
+      "changeBtn": "Change",
+      "timeZone": "Time Zone",
+      "timeZoneDesc": "Set your default time zone for accurate updates."
+    },
+    "units": {
+      "title": "Units & Format",
+      "temperature": "Temperature",
+      "temperatureDesc": "Choose your preferred temperature unit.",
+      "wind": "Wind Speed",
+      "windDesc": "Choose your preferred wind speed unit.",
+      "pressure": "Pressure",
+      "pressureDesc": "Choose your preferred pressure unit.",
+      "precipitation": "Precipitation",
+      "precipitationDesc": "Choose your preferred precipitation unit."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "weatherAlerts": "Weather Alerts",
+      "weatherAlertsDesc": "Receive severe weather alerts and warnings.",
+      "dailyForecast": "Daily Forecast",
+      "dailyForecastDesc": "Get your daily weather forecast every morning.",
+      "weeklySummary": "Weekly Summary",
+      "weeklySummaryDesc": "Receive weekly weather summary and outlook.",
+      "breakingNews": "Breaking News",
+      "breakingNewsDesc": "Important weather news and updates."
+    },
+    "account": {
+      "summary": "Account Summary",
+      "memberSince": "Member Since",
+      "locationsSaved": "Locations Saved",
+      "conversations": "Conversations",
+      "alertsSet": "Alerts Set",
+      "manageSubscription": "Manage Subscription"
+    },
+    "privacy": {
+      "title": "Data & Privacy",
+      "desc": "We respect your privacy and keep your data secure.",
+      "manageData": "Manage Data",
+      "downloadData": "Download My Data",
+      "privacyPolicy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "help": {
+      "title": "Need Help?",
+      "desc": "We're here to help you with any questions.",
+      "center": "Help Center",
+      "support": "Contact Support",
+      "feedback": "Send Feedback"
+    },
+    "danger": {
+      "deleteAccount": "Delete Account",
+      "deleteDesc": "Permanently delete your account and all your data.",
+      "confirmDelete": "Confirm Account Deletion",
+      "deleteConfirmDesc": "Are you sure you want to permanently delete your account? All saved locations, chat history, and alerts will be lost forever.",
+      "deleteBtn": "Permanently Delete"
+    },
+    "passwordModal": {
+      "title": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "updateBtn": "Update Password",
+      "cancel": "Cancel"
+    }
+  },
+  "chat": {
+    "user": "You:",
+    "bot": "🤖:",
+    "placeholder": "Ask WeatherGPT anything...",
+    "welcome": "Hello! I am WeatherGPT. Ask me anything about current weather conditions, multi-day forecasts, rainfall chances, wind speeds, agricultural crop advisories, or air quality for any city in the world."
+  },
+  "alerts": {
+    "title": "Alerts",
+    "subtitle": "Stay informed and stay safe. Real-time weather alerts and warnings.",
+    "active": "Active Alerts",
+    "viewAll": "View All",
+    "noAlerts": "No active alerts"
+  },
+  "forecast": {
+    "title": "Forecast",
+    "today": "Today's Forecast",
+    "viewFull": "View Full Forecast",
+    "loading": "Loading forecast...",
+    "unavailable": "Forecast unavailable"
+  },
+  "climate": {
+    "title": "Climate Intelligence",
+    "history": "Climate History"
+  },
+  "locations": {
+    "title": "Saved Locations",
+    "add": "Add Location",
+    "manage": "Manage Locations"
+  }
+}

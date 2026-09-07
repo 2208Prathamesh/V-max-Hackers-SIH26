@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useWeather } from '../context/WeatherContext'
+import { useTranslation } from 'react-i18next'
 import {
   MapPin,
   ChevronDown,
@@ -56,6 +57,7 @@ const Hero3DSunCloud = () => (
 )
 
 export const ForecastPage = () => {
+  const { t } = useTranslation()
   const {
     selectedMapLocation,
     savedLocations,
@@ -95,11 +97,14 @@ export const ForecastPage = () => {
   const currentForecastHour = liveForecast?.hourly?.[0]
   const currentForecastDay = liveForecast?.daily?.[0]
 
-  const locationTimezone = liveForecast?.location?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+  const locationTimezone =
+    liveForecast?.location?.timezone ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone
 
-  const hourlyStartIndex = liveForecast?.hourly?.findIndex(
-    hour => new Date(hour.time) >= new Date()
-  ) ?? 0
+  const hourlyStartIndex =
+    liveForecast?.hourly?.findIndex(
+      hour => new Date(hour.time) >= new Date()
+    ) ?? 0
 
   const hourlySlice = liveForecast?.hourly
     ? liveForecast.hourly.slice(hourlyStartIndex, hourlyStartIndex + 9)
@@ -117,7 +122,6 @@ export const ForecastPage = () => {
     if (precipitationProbability >= 25) return 'sun-cloud'
     return 'sun'
   }
-
 
   const sevenDayForecast = liveForecast?.daily?.length
     ? liveForecast.daily.slice(0, 7).map(day => ({
@@ -231,10 +235,10 @@ export const ForecastPage = () => {
           ========================================================================= */}
       <div>
         <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
-          Forecast
+          {t('navigation.forecast')}
         </h1>
         <p className='text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1'>
-          Plan ahead with accurate weather forecasts
+          {t('dashboard.overview')}
         </p>
       </div>
 
@@ -269,7 +273,7 @@ export const ForecastPage = () => {
                 className='px-3.5 py-1.5 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs'
               >
                 <RefreshCw className='w-3.5 h-3.5' />
-                <span>Change Location</span>
+                <span> {t('common.update')} </span>
               </button>
             </div>
 
@@ -281,9 +285,9 @@ export const ForecastPage = () => {
                 <div>
                   <span className='text-xs font-semibold text-blue-600 dark:text-blue-400 block'>
                     {forecastLoading
-                      ? 'Loading forecast...'
+                      ? t('forecast.loading')
                       : forecastError
-                      ? 'Forecast unavailable'
+                      ? t('forecast.unavailable')
                       : liveForecast?.retrievedAt
                       ? new Date(liveForecast.retrievedAt).toLocaleDateString(
                           [],
@@ -295,7 +299,7 @@ export const ForecastPage = () => {
                         )
                       : currentForecastDay?.date
                       ? formatDate(currentForecastDay.date)
-                      : 'Forecast unavailable'}
+                      : t('forecast.unavailable')}
                   </span>
                   <div className='text-5xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5'>
                     {formatTemp(currentForecast?.temperature)}
@@ -310,7 +314,9 @@ export const ForecastPage = () => {
                       : forecastError
                       ? forecastError
                       : liveForecast
-                      ? `Live forecast from ${liveForecast.source || 'WeatherGPT'}`
+                      ? `Live forecast from ${
+                          liveForecast.source || 'WeatherGPT'
+                        }`
                       : 'Forecast unavailable'}
                   </p>
                 </div>
@@ -325,7 +331,7 @@ export const ForecastPage = () => {
                   </div>
                   <div>
                     <span className='text-[11px] text-slate-400 block'>
-                      Min
+                      {t('common.min')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
                       {formatTemp(currentForecastDay?.minTemperature)}
@@ -355,7 +361,7 @@ export const ForecastPage = () => {
                   </div>
                   <div>
                     <span className='text-[11px] text-slate-400 block'>
-                      Max
+                      {t('common.max')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
                       {formatTemp(currentForecastDay?.maxTemperature)}
@@ -370,7 +376,7 @@ export const ForecastPage = () => {
                   </div>
                   <div>
                     <span className='text-[11px] text-slate-400 block'>
-                      Pressure
+                      {t('common.pressure')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
                       {formatPressure(currentForecast?.pressure)}
@@ -385,7 +391,7 @@ export const ForecastPage = () => {
                   </div>
                   <div>
                     <span className='text-[11px] text-slate-400 block'>
-                      Humidity
+                      {t('common.humidity')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
                       {currentForecast?.humidity == null
@@ -402,7 +408,7 @@ export const ForecastPage = () => {
                   </div>
                   <div>
                     <span className='text-[11px] text-slate-400 block'>
-                      Visibility
+                      {t('common.visibility')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
                       {currentForecastHour?.visibility == null
@@ -421,7 +427,7 @@ export const ForecastPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-base font-bold text-slate-900 dark:text-white'>
-                7-Day Forecast
+                {t('forecast.today')}
               </h3>
               <button
                 onClick={() =>
@@ -429,7 +435,7 @@ export const ForecastPage = () => {
                 }
                 className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-0.5'
               >
-                <span>View full 7-day forecast</span>
+                <span> {t('forecast.viewFull')} </span>
                 <ChevronRight className='w-3.5 h-3.5' />
               </button>
             </div>
@@ -499,7 +505,7 @@ export const ForecastPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-base font-bold text-slate-900 dark:text-white'>
-                Hourly Forecast
+                {t('forecast.today')}
               </h3>
               <div className='w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 cursor-pointer hover:text-slate-600'>
                 <ChevronRight className='w-4 h-4' />
@@ -548,17 +554,20 @@ export const ForecastPage = () => {
           {/* Card 4: Detailed Forecast & Curve Graph */}
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5'>
             <h3 className='text-base font-bold text-slate-900 dark:text-white'>
-              Detailed Forecast
+              {t('forecast.title')}
             </h3>
 
             {/* 5 Metric Tabs */}
             <div className='flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto scrollbar-none pb-2'>
               {[
-                { id: 'temperature', label: 'Temperature' },
+                {
+                  id: 'temperature',
+                  label: t('common.temperature') || 'Temperature'
+                },
                 { id: 'precipitation', label: 'Precipitation' },
-                { id: 'wind', label: 'Wind' },
-                { id: 'humidity', label: 'Humidity' },
-                { id: 'pressure', label: 'Pressure' }
+                { id: 'wind', label: t('common.wind') },
+                { id: 'humidity', label: t('common.humidity') },
+                { id: 'pressure', label: t('common.pressure') }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -672,7 +681,7 @@ export const ForecastPage = () => {
               {/* Right Summary Box (Span 4) */}
               <div className='md:col-span-4 p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3'>
                 <h4 className='text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider'>
-                  Summary
+                  {t('common.save')}
                 </h4>
                 <p className='text-xs text-slate-600 dark:text-slate-300 leading-relaxed'>
                   {currentForecastDay?.weatherDescription ||
@@ -684,7 +693,7 @@ export const ForecastPage = () => {
                     <Thermometer className='w-4 h-4 text-rose-500 shrink-0' />
                     <div>
                       <span className='text-[10px] text-slate-400 block'>
-                        Max Temperature
+                        {t('settings.units.temperature')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
                         {formatTemp(currentForecastDay?.maxTemperature)}
@@ -696,7 +705,7 @@ export const ForecastPage = () => {
                     <Thermometer className='w-4 h-4 text-blue-500 shrink-0' />
                     <div>
                       <span className='text-[10px] text-slate-400 block'>
-                        Min Temperature
+                        {t('settings.units.temperature')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
                         {formatTemp(currentForecastDay?.minTemperature)}
@@ -708,7 +717,7 @@ export const ForecastPage = () => {
                     <Droplets className='w-4 h-4 text-sky-500 shrink-0' />
                     <div>
                       <span className='text-[10px] text-slate-400 block'>
-                        Rainfall
+                        {t('common.humidity')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
                         {currentForecastDay?.precipitation == null
@@ -730,11 +739,10 @@ export const ForecastPage = () => {
               </div>
               <div>
                 <h4 className='text-sm font-bold text-slate-900 dark:text-white'>
-                  Plan Your Day Better
+                  {t('dashboard.didYouKnow.title')}
                 </h4>
                 <p className='text-xs text-slate-600 dark:text-slate-300 mt-0.5'>
-                  Get detailed 7-day forecasts, hourly updates and severe
-                  weather alerts with WeatherGPT Premium.
+                  {t('dashboard.didYouKnow.text')}
                 </p>
               </div>
             </div>
@@ -744,7 +752,7 @@ export const ForecastPage = () => {
               className='px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-blue-50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer'
             >
               <Crown className='w-4 h-4 text-amber-500 fill-amber-400' />
-              <span>Upgrade to Premium</span>
+              <span> {t('common.update')} </span>
             </button>
           </div>
         </div>
@@ -756,14 +764,14 @@ export const ForecastPage = () => {
           {/* Card 1: Select Location Search & List */}
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4'>
             <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-              Select Location
+              {t('dashboard.savedLocations')}
             </h3>
 
             {/* Search Box */}
             <div className='relative'>
               <input
                 type='text'
-                placeholder='Search location...'
+                placeholder={t('dashboard.searchPlaceholder')}
                 value={locationSearchQuery}
                 onChange={e => setLocationSearchQuery(e.target.value)}
                 className='w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -811,7 +819,7 @@ export const ForecastPage = () => {
               onClick={() => setCurrentPage('saved-locations')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline block pt-1 cursor-pointer'
             >
-              View all locations
+              {t('common.viewAll')}
             </button>
           </div>
 
@@ -819,7 +827,7 @@ export const ForecastPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4'>
             <div>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Precipitation Summary
+                {t('common.humidity')}
               </h3>
               <p className='text-[11px] text-slate-400'>Next 7 Days</p>
             </div>
@@ -830,7 +838,7 @@ export const ForecastPage = () => {
                 <span className='text-sm font-bold text-slate-500'>mm</span>
               </div>
               <p className='text-[11px] text-slate-400 mt-0.5'>
-                Total Rainfall
+                {t('common.humidity')}
               </p>
             </div>
 
@@ -863,7 +871,7 @@ export const ForecastPage = () => {
             <div className='flex items-center justify-between'>
               <div>
                 <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                  UV Index
+                  {t('common.visibility')}
                 </h3>
                 <p className='text-[11px] text-slate-400'>Today</p>
               </div>
@@ -906,7 +914,7 @@ export const ForecastPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3'>
             <div>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Air Quality Index
+                {t('dashboard.action.airQuality')}
               </h3>
               <p className='text-[11px] text-slate-400'>Today</p>
             </div>
@@ -963,7 +971,7 @@ export const ForecastPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3'>
             <div>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Compare Locations
+                {t('common.update')}
               </h3>
               <p className='text-[11px] text-slate-500 dark:text-slate-400 mt-0.5'>
                 Compare weather between different locations.
@@ -975,7 +983,7 @@ export const ForecastPage = () => {
               className='w-full py-2.5 px-3 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs'
             >
               <Plus className='w-4 h-4' />
-              <span>Add Location to Compare</span>
+              <span> {t('common.update')} </span>
             </button>
           </div>
         </div>

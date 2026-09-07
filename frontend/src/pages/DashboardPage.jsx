@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useWeather } from '../context/WeatherContext'
+import { useTranslation } from 'react-i18next'
 import {
   MapPin,
   Droplets,
@@ -152,6 +153,7 @@ const TreesIllustration = () => (
 )
 
 export const DashboardPage = () => {
+  const { t } = useTranslation()
   const {
     user,
     setCurrentPage,
@@ -174,7 +176,7 @@ export const DashboardPage = () => {
 
   const [queryText, setQueryText] = useState('')
   const activeConversation =
-  conversations.find(c => c.id === activeConversationId) || conversations[0]
+    conversations.find(c => c.id === activeConversationId) || conversations[0]
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Sid'
   const currentHour = weatherData?.forecast?.hourly?.[0]
@@ -201,16 +203,18 @@ export const DashboardPage = () => {
       ? forecastCurrent
       : forecastHour
   const forecastHours = liveForecast?.hourly || []
-  const locationTimezone = liveForecast?.location?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+  const locationTimezone =
+    liveForecast?.location?.timezone ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone
 
-  const hourlyStartIndex = liveForecast?.hourly?.findIndex(
-    hour => new Date(hour.time) >= new Date()
-  ) ?? 0
+  const hourlyStartIndex =
+    liveForecast?.hourly?.findIndex(
+      hour => new Date(hour.time) >= new Date()
+    ) ?? 0
 
   const hourlySlice = liveForecast?.hourly
     ? liveForecast.hourly.slice(hourlyStartIndex, hourlyStartIndex + 7)
     : []
-
 
   const weatherIcon = precipitationProbability => {
     if (precipitationProbability >= 50) return 'rain'
@@ -254,26 +258,26 @@ export const DashboardPage = () => {
 
   const formattedCurrentTemperature = formatTemp(currentConditions?.temperature)
   const suggestionChips = [
-    'Will it rain tomorrow?',
-    'Weather in Mumbai',
-    'Cyclone update',
-    'Air quality today'
+    t('dashboard.suggestion1'),
+    t('dashboard.suggestion2'),
+    t('dashboard.suggestion3'),
+    t('dashboard.suggestion4')
   ]
 
   const handleSearchSubmit = async e => {
-  e.preventDefault()
+    e.preventDefault()
 
-  if (!queryText.trim()) return
+    if (!queryText.trim()) return
 
-  const message = queryText.trim()
-  setQueryText('')
+    const message = queryText.trim()
+    setQueryText('')
 
-  await sendChatMessage(message)
-}
+    await sendChatMessage(message)
+  }
 
-const handleChipClick = async chip => {
-  await sendChatMessage(chip)
-}
+  const handleChipClick = async chip => {
+    await sendChatMessage(chip)
+  }
 
   const handleVoiceSearch = () => {
     addToast('Listening... Speak your weather query', 'info')
@@ -383,12 +387,12 @@ const handleChipClick = async chip => {
       <div>
         <div className='flex items-center gap-2'>
           <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
-            Good morning, {userName}!
+            {t('dashboard.greeting', { name: userName })}
           </h1>
           <span className='text-2xl sm:text-3xl animate-bounce'>👋</span>
         </div>
         <p className='text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1'>
-          Here's your weather overview
+          {t('dashboard.overview')}
         </p>
 
         {/* AI Query Input Bar */}
@@ -396,7 +400,7 @@ const handleChipClick = async chip => {
           <div className='relative flex items-center w-full rounded-full bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-700/80 shadow-sm hover:border-blue-300 dark:hover:border-slate-600 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition p-1.5 pl-6'>
             <input
               type='text'
-              placeholder='Ask WeatherGPT anything...'
+              placeholder={t('dashboard.searchPlaceholder')}
               value={queryText}
               onChange={e => setQueryText(e.target.value)}
               className='w-full bg-transparent text-sm sm:text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none pr-3'
@@ -424,33 +428,33 @@ const handleChipClick = async chip => {
         </form>
 
         {/* Small Dashboard Chat Preview */}
-{activeConversation?.messages?.length > 0 && (
-  <div className='mt-3 px-4 py-3 rounded-2xl bg-white/80 dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-700/80 shadow-sm'>
-    {activeConversation.messages.slice(-2).map((msg, index) => (
-      <div
-        key={index}
-        className='flex items-start gap-2 mb-1 last:mb-0'
-      >
-        <span
-          className={`text-[11px] font-bold shrink-0 ${
-            msg.sender === 'user'
-              ? 'text-blue-600 dark:text-blue-400'
-              : 'text-slate-500 dark:text-slate-400'
-          }`}
-        >
-          {msg.sender === 'user' ? 'You:' : '🤖:'}
-        </span>
+        {activeConversation?.messages?.length > 0 && (
+          <div className='mt-3 px-4 py-3 rounded-2xl bg-white/80 dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-700/80 shadow-sm'>
+            {activeConversation.messages.slice(-2).map((msg, index) => (
+              <div
+                key={index}
+                className='flex items-start gap-2 mb-1 last:mb-0'
+              >
+                <span
+                  className={`text-[11px] font-bold shrink-0 ${
+                    msg.sender === 'user'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {msg.sender === 'user' ? 'You:' : '🤖:'}
+                </span>
 
-        <p className='text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2'>
-          {msg.text}
-        </p>
-      </div>
-    ))}
-  </div>
-)}
+                <p className='text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2'>
+                  {msg.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
-{/* 4 Query Suggestion Chips */}
-<div className='flex flex-wrap items-center gap-2.5 mt-3.5'></div>
+        {/* 4 Query Suggestion Chips */}
+        <div className='flex flex-wrap items-center gap-2.5 mt-3.5'></div>
 
         {/* 4 Query Suggestion Chips */}
         <div className='flex flex-wrap items-center gap-2.5 mt-3.5'>
@@ -523,7 +527,7 @@ const handleChipClick = async chip => {
                 <Droplets className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Humidity
+                {t('common.humidity')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {currentConditions?.humidity ?? '--'}
@@ -537,7 +541,7 @@ const handleChipClick = async chip => {
                 <Wind className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Wind
+                {t('common.wind')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {currentConditions?.windSpeed == null
@@ -552,7 +556,7 @@ const handleChipClick = async chip => {
                 <Gauge className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Pressure
+                {t('common.pressure')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {currentConditions?.pressure == null
@@ -567,7 +571,7 @@ const handleChipClick = async chip => {
                 <Eye className='w-4 h-4' />
               </div>
               <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                Visibility
+                {t('common.visibility')}
               </span>
               <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
                 {formattedVisibility}
@@ -580,13 +584,13 @@ const handleChipClick = async chip => {
         <div className='lg:col-span-5 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between space-y-4'>
           <div className='flex items-center justify-between'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Active Alerts
+              {t('dashboard.activeAlerts')}
             </h2>
             <button
               onClick={() => setCurrentPage('alerts')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View All
+              {t('common.viewAll')}
             </button>
           </div>
 
@@ -640,7 +644,7 @@ const handleChipClick = async chip => {
             </div>
           ) : (
             <p className='text-xs text-slate-500 dark:text-slate-400'>
-              No active alerts
+              {t('dashboard.noAlerts')}
             </p>
           )}
         </div>
@@ -654,13 +658,13 @@ const handleChipClick = async chip => {
         <div className='lg:col-span-7 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4'>
           <div className='flex items-center justify-between'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Today's Forecast
+              {t('dashboard.todayForecast')}
             </h2>
             <button
               onClick={() => setCurrentPage('forecast')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View Full Forecast
+              {t('dashboard.viewFullForecast')}
             </button>
           </div>
 
@@ -719,7 +723,7 @@ const handleChipClick = async chip => {
         {/* Right: Quick Actions (2x2 Grid) - Span 5 */}
         <div className='lg:col-span-5 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4'>
           <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-            Quick Actions
+            {t('dashboard.quickActions')}
           </h2>
 
           <div className='grid grid-cols-2 gap-3.5 pt-1'>
@@ -732,7 +736,7 @@ const handleChipClick = async chip => {
                 <CalendarDays className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-blue-900 dark:text-blue-200'>
-                Weather Forecast
+                {t('dashboard.action.forecast')}
               </span>
             </button>
 
@@ -745,7 +749,7 @@ const handleChipClick = async chip => {
                 <Map className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-emerald-900 dark:text-emerald-200'>
-                Weather Map
+                {t('dashboard.action.map')}
               </span>
             </button>
 
@@ -758,7 +762,7 @@ const handleChipClick = async chip => {
                 <AlertTriangle className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-rose-900 dark:text-rose-200'>
-                Alerts
+                {t('dashboard.action.alerts')}
               </span>
             </button>
 
@@ -771,7 +775,7 @@ const handleChipClick = async chip => {
                 <Wind className='w-5 h-5' />
               </div>
               <span className='text-xs font-bold text-purple-900 dark:text-purple-200'>
-                Air Quality
+                {t('dashboard.action.airQuality')}
               </span>
             </button>
           </div>
@@ -786,13 +790,13 @@ const handleChipClick = async chip => {
         <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-3'>
           <div className='flex items-center justify-between pb-1'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Recent Conversations
+              {t('dashboard.recentConversations')}
             </h2>
             <button
               onClick={() => setCurrentPage('history')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View All
+              {t('common.viewAll')}
             </button>
           </div>
 
@@ -821,13 +825,13 @@ const handleChipClick = async chip => {
         <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-3'>
           <div className='flex items-center justify-between pb-1'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Saved Locations
+              {t('dashboard.savedLocations')}
             </h2>
             <button
               onClick={() => setCurrentPage('saved-locations')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View All
+              {t('common.viewAll')}
             </button>
           </div>
 
@@ -885,11 +889,10 @@ const handleChipClick = async chip => {
           </div>
           <div>
             <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight'>
-              Did you know?
+              {t('dashboard.didYouKnow.title')}
             </h3>
             <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed'>
-              Trees can reduce the surrounding air temperature by up to 5°C.
-              Plant more trees and stay cool!
+              {t('dashboard.didYouKnow.text')}
             </p>
           </div>
         </div>

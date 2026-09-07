@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useWeather } from '../context/WeatherContext'
 import { useTheme } from '../context/ThemeContext'
+import { useTranslation } from 'react-i18next'
 import {
   User,
   Lock,
@@ -42,8 +43,10 @@ export const SettingsPage = () => {
     addToast
   } = useWeather()
   const { theme, toggleTheme } = useTheme()
+  const { t, i18n } = useTranslation()
 
   const [activeTab, setActiveTab] = useState('general')
+
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [passwordForm, setPasswordForm] = useState({
@@ -86,16 +89,27 @@ export const SettingsPage = () => {
     }
   }
 
+  const handleLanguageChange = async (lang) => {
+    try {
+      await i18n.changeLanguage(lang)
+      await api.updateSettings({ language: lang })
+      setSettings(prev => ({ ...prev, language: lang }))
+      addToast(t('common.success'), 'success')
+    } catch (err) {
+      addToast(err.message || 'Could not update language', 'warning')
+    }
+  }
+
   const navTabs = [
-    { id: 'general', label: 'General', icon: Sliders },
-    { id: 'units', label: 'Units & Format', icon: Thermometer },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'weather-prefs', label: 'Weather Preferences', icon: Cloud },
-    { id: 'privacy', label: 'Privacy & Data', icon: Lock },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'language', label: 'Language', icon: Globe },
-    { id: 'connected', label: 'Connected Accounts', icon: LinkIcon },
-    { id: 'about', label: 'About', icon: Info }
+    { id: 'general', label: t('settings.tabs.general'), icon: Sliders },
+    { id: 'units', label: t('settings.tabs.units'), icon: Thermometer },
+    { id: 'notifications', label: t('settings.tabs.notifications'), icon: Bell },
+    { id: 'weather-prefs', label: t('settings.tabs.weatherPrefs'), icon: Cloud },
+    { id: 'privacy', label: t('settings.tabs.privacy'), icon: Lock },
+    { id: 'appearance', label: t('settings.tabs.appearance'), icon: Palette },
+    { id: 'language', label: t('settings.tabs.language'), icon: Globe },
+    { id: 'connected', label: t('settings.tabs.connected'), icon: LinkIcon },
+    { id: 'about', label: t('settings.tabs.about'), icon: Info }
   ]
 
   const handleTimezoneChange = e => {
@@ -140,7 +154,7 @@ export const SettingsPage = () => {
           {/* 1. General Section Card */}
           <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6'>
             <h2 className='text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200'>
-              General
+              {t('settings.tabs.general')}
             </h2>
 
             <div className='space-y-5 divide-y divide-slate-100 dark:divide-slate-800/60'>
@@ -152,10 +166,10 @@ export const SettingsPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm font-semibold text-slate-900 dark:text-white'>
-                      Profile Information
+                      {t('settings.general.profileInfo')}
                     </h3>
                     <p className='text-xs text-slate-500 dark:text-slate-400'>
-                      Update your name, email and profile picture.
+                      {t('settings.general.profileDesc')}
                     </p>
                   </div>
                 </div>
@@ -163,7 +177,7 @@ export const SettingsPage = () => {
                   onClick={() => setIsEditProfileOpen(true)}
                   className='px-4 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl transition'
                 >
-                  Edit Profile
+                  {t('settings.general.editProfile')}
                 </button>
               </div>
 
@@ -175,10 +189,10 @@ export const SettingsPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm font-semibold text-slate-900 dark:text-white'>
-                      Change Password
+                      {t('settings.general.changePassword')}
                     </h3>
                     <p className='text-xs text-slate-500 dark:text-slate-400'>
-                      Update your password to keep your account secure.
+                      {t('settings.general.changePasswordDesc')}
                     </p>
                   </div>
                 </div>
@@ -186,7 +200,7 @@ export const SettingsPage = () => {
                   onClick={() => setShowPasswordModal(true)}
                   className='px-4 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl transition'
                 >
-                  Change
+                  {t('settings.general.changeBtn')}
                 </button>
               </div>
 
@@ -198,10 +212,10 @@ export const SettingsPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm font-semibold text-slate-900 dark:text-white'>
-                      Time Zone
+                      {t('settings.general.timeZone')}
                     </h3>
                     <p className='text-xs text-slate-500 dark:text-slate-400'>
-                      Set your default time zone for accurate updates.
+                      {t('settings.general.timeZoneDesc')}
                     </p>
                   </div>
                 </div>
@@ -233,7 +247,7 @@ export const SettingsPage = () => {
           {/* 2. Units & Format Section Card */}
           <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6'>
             <h2 className='text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200'>
-              Units & Format
+              {t('settings.tabs.units')}
             </h2>
 
             <div className='space-y-5 divide-y divide-slate-100 dark:divide-slate-800/60'>
@@ -245,10 +259,10 @@ export const SettingsPage = () => {
                   </div>
                   <div>
                     <h3 className='text-sm font-semibold text-slate-900 dark:text-white'>
-                      Temperature
+                      {t('settings.units.temperature')}
                     </h3>
                     <p className='text-xs text-slate-500 dark:text-slate-400'>
-                      Choose your preferred temperature unit.
+                      {t('settings.units.temperatureDesc')}
                     </p>
                   </div>
                 </div>
@@ -433,6 +447,41 @@ export const SettingsPage = () => {
                   onChange={val => updateNotifications('breakingNews', val)}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Language Selection Section */}
+          <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6'>
+            <h2 className='text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200'>
+              Language
+            </h2>
+
+            <div className='flex items-center justify-between pt-1'>
+              <div className='flex items-center gap-3.5'>
+                <div className='w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0'>
+                  <Globe className='w-5 h-5' />
+                </div>
+                <div>
+                  <h3 className='text-sm font-semibold text-slate-900 dark:text-white'>
+                    Interface Language
+                  </h3>
+                  <p className='text-xs text-slate-500 dark:text-slate-400'>
+                    Choose your preferred language for the application UI.
+                  </p>
+                </div>
+              </div>
+              <select
+                value={settings.language || 'en'}
+                onChange={e => handleLanguageChange(e.target.value)}
+                className='px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition cursor-pointer'
+              >
+                <option value='en'>English</option>
+                <option value='hi'>हिन्दी (Hindi)</option>
+                <option value='mr'>मराठी (Marathi)</option>
+                <option value='ta'>தமிழ் (Tamil)</option>
+                <option value='te'>తెలుగు (Telugu)</option>
+                <option value='kn'>ಕನ್ನಡ (Kannada)</option>
+              </select>
             </div>
           </div>
 

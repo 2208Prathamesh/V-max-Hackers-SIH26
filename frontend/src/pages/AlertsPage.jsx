@@ -1,5 +1,6 @@
 import React, { useState,useEffect, useMemo } from 'react'
 import { useWeather } from '../context/WeatherContext'
+import { useTranslation } from 'react-i18next'
 import {
   ShieldCheck,
   AlertTriangle,
@@ -85,6 +86,7 @@ const SunArt = () => (
 )
 
 export const AlertsPage = () => {
+  const { t } = useTranslation()
   const {
     setCurrentPage,
     addToast,
@@ -344,7 +346,7 @@ export const AlertsPage = () => {
           <ShieldCheck className='w-6 h-6 text-blue-600 fill-blue-50' />
         </div>
         <p className='text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1'>
-          Stay informed and stay safe. Real-time weather alerts and warnings.
+          {t('alerts.subtitle')}
         </p>
 
         {/* 5 Filter Tabs */}
@@ -358,7 +360,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            All Alerts
+            <span> {t('alerts.active')} </span>
           </button>
 
           {/* Tab 2: Active (3) */}
@@ -370,7 +372,7 @@ export const AlertsPage = () => {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <span>Active</span>
+            <span> {t('alerts.active')} </span>
             <span className='w-4.5 h-4.5 rounded-full bg-[#EF4444] text-white text-[10px] flex items-center justify-center font-bold'>
               3
             </span>
@@ -434,13 +436,13 @@ export const AlertsPage = () => {
           {/* Active Alerts Subheading */}
           <div className='flex items-center justify-between'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              Active Alerts ({filteredActiveAlerts.length})
+              {t('alerts.active')} ({filteredActiveAlerts.length})
             </h2>
             <button
               onClick={() => setActiveTab('active')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              View all active
+              {t('common.viewAll')}
             </button>
           </div>
 
@@ -575,7 +577,7 @@ export const AlertsPage = () => {
                           : 'border-yellow-400 text-yellow-700 hover:bg-yellow-100/60 bg-white dark:bg-slate-900'
                       }`}
                     >
-                      <span>View Details</span>
+                      <span> {t('common.viewAll')} </span>
                       <ChevronRight className='w-3.5 h-3.5' />
                     </button>
                   </div>
@@ -588,7 +590,7 @@ export const AlertsPage = () => {
           <div className='space-y-3 pt-4'>
             <div className='flex items-center justify-between'>
               <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-                Recent Alerts
+                {t('alerts.active')}
               </h2>
               <button
                 onClick={() =>
@@ -599,7 +601,7 @@ export const AlertsPage = () => {
                 }
                 className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
               >
-                View all
+                {t('common.viewAll')}
               </button>            </div>
 
             <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 shadow-2xs overflow-hidden'>
@@ -644,7 +646,7 @@ export const AlertsPage = () => {
           <div className='flex items-center justify-center gap-1.5 pt-4 text-xs text-slate-400 dark:text-slate-500'>
             <ShieldCheck className='w-4 h-4 text-slate-400' />
             <span>
-              Alerts are provided by India Meteorological Department (IMD)
+              {t('alerts.title')} are provided by India Meteorological Department (IMD)
             </span>
           </div>
         </div>
@@ -657,14 +659,14 @@ export const AlertsPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5'>
             <div className='flex items-center justify-between'>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Alert Filters
+                {t('alerts.active')}
               </h3>
               <SlidersHorizontal className='w-4 h-4 text-slate-400' />            </div>
 
             {/* Location Selector */}
             <div>
               <label className='block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5'>
-                Location
+                {t('common.search')}
               </label>
               <div className='relative'>
                 <MapPin className='w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2' />
@@ -686,7 +688,7 @@ export const AlertsPage = () => {
             {/* Alert Type Checkboxes */}
             <div className='space-y-2'>
               <label className='block text-xs font-bold text-slate-700 dark:text-slate-300'>
-                Alert Type
+                {t('alerts.active')}
               </label>
               <div className='space-y-2'>
                 <label className='flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer'>
@@ -701,7 +703,7 @@ export const AlertsPage = () => {
                     }
                     className='w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600'
                   />
-                  <span>All Types</span>
+                  <span> {t('alerts.active')} </span>
                 </label>
 
                 <label className='flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer'>
@@ -753,7 +755,7 @@ export const AlertsPage = () => {
             {/* Severity Checkboxes */}
             <div className='space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800'>
               <label className='block text-xs font-bold text-slate-700 dark:text-slate-300'>
-                Severity
+                {t('alerts.active')}
               </label>
               <div className='space-y-2'>
                 <label className='flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer'>
@@ -823,7 +825,7 @@ export const AlertsPage = () => {
               className='w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer'
             >
               <RotateCcw className='w-3.5 h-3.5' />
-              <span>Clear Filters</span>
+              <span> {t('common.cancel')} </span>
             </button>
           </div>
 
@@ -831,13 +833,13 @@ export const AlertsPage = () => {
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3'>
             <div className='flex items-center justify-between'>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Alert Map
+                {t('dashboard.action.map')}
               </h3>
               <button
                 onClick={() => setCurrentPage('weather-map')}
                 className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
               >
-                View full map
+                {t('common.viewAll')}
               </button>            </div>
 
             {/* Interactive Map Visual Container */}
@@ -956,7 +958,7 @@ export const AlertsPage = () => {
             <div className='flex items-center gap-2'>
               <Bell className='w-4 h-4 text-slate-600 dark:text-slate-400' />
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                Alert Subscriptions
+                {t('alerts.active')}
               </h3>            </div>
             <p className='text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed'>
               Get notified about alerts in your selected locations.
@@ -994,7 +996,7 @@ export const AlertsPage = () => {
               ))}
               {userSubscriptions.length === 0 && (
                 <p className='text-xs text-slate-500 dark:text-slate-400 italic text-center py-2'>
-                  No saved locations found.
+                  {t('dashboard.noAlerts')}
                 </p>
               )}
 
@@ -1006,7 +1008,7 @@ export const AlertsPage = () => {
               className='w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-2'
             >
               <SettingsIcon className='w-3.5 h-3.5' />
-              <span>Manage Subscriptions</span>
+              <span> {t('common.update')} </span>
             </button>
           </div>
         </div>

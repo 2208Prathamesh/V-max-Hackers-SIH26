@@ -25,7 +25,7 @@ const AppContent = () => {
         <ToastContainer />
       </>
     );
-  }
+  };
 
   const renderCurrentPage = () => {
     switch (currentPage) {
