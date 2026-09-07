@@ -220,6 +220,12 @@ export const api = {
   alerts: () =>
     request("/alerts"),
 
+  myAlerts: () =>
+    request("/alerts/my-alerts"),
+
+  activeAlerts: () =>
+    request("/alerts/active"),
+
   activeAlerts: () =>
     request("/alerts/active"),
 
@@ -257,6 +263,19 @@ export const api = {
         method: "PATCH",
       }
     ),
+
+  getSubscriptions: () =>
+    request("/subscriptions"),
+
+  toggleSubscription: (id, enabled) =>
+    request(
+      `/subscriptions/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ enabled }),
+      }
+    ),
+
 
   // ============================================
   // LOCATIONS

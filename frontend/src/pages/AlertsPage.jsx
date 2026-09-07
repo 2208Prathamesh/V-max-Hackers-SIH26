@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState,useEffect, useMemo } from 'react'
 import { useWeather } from '../context/WeatherContext'
 import {
   ShieldCheck,
@@ -85,9 +85,14 @@ const SunArt = () => (
 )
 
 export const AlertsPage = () => {
-  const { alerts, setCurrentPage, addToast } = useWeather()
+  const {
+    setCurrentPage,
+    addToast,
+    isAuthenticated
+  } = useWeather()
 
-  // Active Tab state: 'all' | 'active' | 'warnings' | 'watch' | 'information'
+  const [myAlerts, setMyAlerts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
 
   // Filters State
@@ -105,20 +110,49 @@ export const AlertsPage = () => {
     info: true
   })
 
+  useEffect(() => {
+    const fetchMyAlerts = async () => {
+      setIsLoading(true)
+      try {
+        if (!isAuthenticated) {
+          setMyAlerts([])
+          return
+        }
+        const data = await api.myAlerts()
+        setMyAlerts(Array.isArray(data) ? data : [])
+      } catch (error) {
+        addToast(error.message || 'Could not load your alerts', 'warning')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMyAlerts()
+  }, [isAuthenticated])
+
   // Modal State
   const [selectedAlertForDetails, setSelectedAlertForDetails] = useState(null)
 
-  // Subscriptions Toggle state
-  const [subscriptions, setSubscriptions] = useState({
-    pune: true,
-    mumbai: true,
-    nagpur: false
-  })
+  // Subscriptions State
+  const [userSubscriptions, setUserSubscriptions] = useState([])
+
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        if (!isAuthenticated) return
+        const data = await api.getSubscriptions()
+        setUserSubscriptions(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Failed to fetch subscriptions:', error)
+      }
+    }
+    fetchSubscriptions()
+  }, [isAuthenticated])
 
   // Dynamic alerts mapping from backend alerts
   const activeAlertsList = useMemo(() => {
-    if (!Array.isArray(alerts)) return []
-    return alerts.map((alert, idx) => {
+    if (!Array.isArray(myAlerts)) return []
+    return myAlerts.map((alert, idx) => {
       const sev = String(
         alert.severity || alert.warningLevel || 'Moderate'
       ).toLowerCase()
@@ -188,7 +222,7 @@ export const AlertsPage = () => {
         colorDetails: alert.colorDetails
       }
     })
-  }, [alerts])
+  }, [myAlerts])
 
   const recentAlertsList = []
 
@@ -266,17 +300,27 @@ export const AlertsPage = () => {
     addToast('Filters reset to default', 'info')
   }
 
-  const handleSubscriptionToggle = cityKey => {
-    setSubscriptions(prev => {
-      const updated = { ...prev, [cityKey]: !prev[cityKey] }
+  const handleSubscriptionToggle = async (locationId, currentStatus) => {
+    try {
+      const newStatus = !currentStatus
+      await api.toggleSubscription(locationId, newStatus)
+
+      setUserSubscriptions(prev =>
+        prev.map(loc =>
+          loc._id === locationId ? { ...loc, notificationsEnabled: newStatus } : loc
+        )
+      )
+
+      const locationName = userSubscriptions.find(l => l._id === locationId)?.name || 'Location'
       addToast(
-        `${cityKey.toUpperCase()} alert subscription ${
-          updated[cityKey] ? 'enabled' : 'disabled'
+        `${locationName} alert subscription ${
+          newStatus ? 'enabled' : 'disabled'
         }`,
         'info'
       )
-      return updated
-    })
+    } catch (error) {
+      addToast(error.message || 'Could not update subscription', 'warning')
+    }
   }
 
   return (
@@ -556,8 +600,7 @@ export const AlertsPage = () => {
                 className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
               >
                 View all
-              </button>
-            </div>
+              </button>            </div>
 
             <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 shadow-2xs overflow-hidden'>
               {recentAlertsList.map(recent => (
@@ -594,8 +637,7 @@ export const AlertsPage = () => {
                     <ChevronRight className='w-4 h-4 text-slate-400 group-hover:text-slate-600 transition' />
                   </div>
                 </div>
-              ))}
-            </div>
+              ))}            </div>
           </div>
 
           {/* Footer Citation */}
@@ -617,8 +659,7 @@ export const AlertsPage = () => {
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
                 Alert Filters
               </h3>
-              <SlidersHorizontal className='w-4 h-4 text-slate-400' />
-            </div>
+              <SlidersHorizontal className='w-4 h-4 text-slate-400' />            </div>
 
             {/* Location Selector */}
             <div>
@@ -640,8 +681,7 @@ export const AlertsPage = () => {
                   <option value='Delhi'>Delhi, India</option>
                 </select>
                 <ChevronDown className='w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none' />
-              </div>
-            </div>
+              </div>            </div>
 
             {/* Alert Type Checkboxes */}
             <div className='space-y-2'>
@@ -708,8 +748,7 @@ export const AlertsPage = () => {
                   />
                   <span>Information</span>
                 </label>
-              </div>
-            </div>
+              </div>            </div>
 
             {/* Severity Checkboxes */}
             <div className='space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800'>
@@ -776,8 +815,7 @@ export const AlertsPage = () => {
                   />
                   <span>Info</span>
                 </label>
-              </div>
-            </div>
+              </div>            </div>
 
             {/* Clear Filters Button */}
             <button
@@ -800,8 +838,7 @@ export const AlertsPage = () => {
                 className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
               >
                 View full map
-              </button>
-            </div>
+              </button>            </div>
 
             {/* Interactive Map Visual Container */}
             <div
@@ -911,8 +948,7 @@ export const AlertsPage = () => {
                 >
                   <Minus className='w-3.5 h-3.5 text-slate-600 dark:text-slate-300' />
                 </button>
-              </div>
-            </div>
+              </div>            </div>
           </div>
 
           {/* Card 3: Alert Subscriptions */}
@@ -921,88 +957,47 @@ export const AlertsPage = () => {
               <Bell className='w-4 h-4 text-slate-600 dark:text-slate-400' />
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
                 Alert Subscriptions
-              </h3>
-            </div>
+              </h3>            </div>
             <p className='text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed'>
               Get notified about alerts in your selected locations.
             </p>
 
             {/* Subscribed Locations List */}
             <div className='space-y-3 pt-1'>
-              {/* Pune, Maharashtra */}
-              <div className='flex items-center justify-between'>
-                <div>
-                  <h4 className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                    Pune, Maharashtra
-                  </h4>
-                  <p className='text-[10px] text-slate-400'>Push, Email</p>
-                </div>
-                <button
-                  type='button'
-                  onClick={() => handleSubscriptionToggle('pune')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                    subscriptions.pune
-                      ? 'bg-blue-600'
-                      : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
-                      subscriptions.pune ? 'translate-x-4.5' : 'translate-x-1'
+              {/* Dynamic Subscriptions Mapping */}
+              {userSubscriptions.map(loc => (
+                <div key={loc._id} className='flex items-center justify-between'>
+                  <div>
+                    <h4 className='text-xs font-bold text-slate-800 dark:text-slate-200'>
+                      {loc.name}
+                    </h4>
+                    <p className='text-[10px] text-slate-400'>
+                      {loc.city}, {loc.state}
+                    </p>
+                  </div>
+                  <button
+                    type='button'
+                    onClick={() => handleSubscriptionToggle(loc._id, loc.notificationsEnabled)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
+                      loc.notificationsEnabled
+                        ? 'bg-blue-600'
+                        : 'bg-slate-300 dark:bg-slate-700'
                     }`}
-                  />
-                </button>
-              </div>
+                  >
+                    <span
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
+                        loc.notificationsEnabled ? 'translate-x-4.5' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))}
+              {userSubscriptions.length === 0 && (
+                <p className='text-xs text-slate-500 dark:text-slate-400 italic text-center py-2'>
+                  No saved locations found.
+                </p>
+              )}
 
-              {/* Mumbai, Maharashtra */}
-              <div className='flex items-center justify-between'>
-                <div>
-                  <h4 className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                    Mumbai, Maharashtra
-                  </h4>
-                  <p className='text-[10px] text-slate-400'>Push</p>
-                </div>
-                <button
-                  type='button'
-                  onClick={() => handleSubscriptionToggle('mumbai')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                    subscriptions.mumbai
-                      ? 'bg-blue-600'
-                      : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
-                      subscriptions.mumbai ? 'translate-x-4.5' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Nagpur, Maharashtra */}
-              <div className='flex items-center justify-between'>
-                <div>
-                  <h4 className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                    Nagpur, Maharashtra
-                  </h4>
-                  <p className='text-[10px] text-slate-400'>Email</p>
-                </div>
-                <button
-                  type='button'
-                  onClick={() => handleSubscriptionToggle('nagpur')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                    subscriptions.nagpur
-                      ? 'bg-blue-600'
-                      : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
-                      subscriptions.nagpur ? 'translate-x-4.5' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
             </div>
 
             {/* Manage Subscriptions Button */}

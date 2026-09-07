@@ -131,7 +131,7 @@ async function notifyMatchedUsers(alert) {
      Get saved locations
      --------------------------------------------------------- */
 
-  const savedLocations = await SavedLocation.find({});
+  const savedLocations = await SavedLocation.find({ notificationsEnabled: true });
 
   const matchingLocations = savedLocations.filter(
     (location) => {
@@ -596,6 +596,41 @@ const updateAlertStatus = async (
 };
 
 /* =========================================================
+   LOCATION MATCHING LOGIC
+   ========================================================= */
+
+async function matchAlertsToLocations(locations) {
+  if (!locations || locations.length === 0) return [];
+
+  const matchTerms = [];
+  locations.forEach(loc => {
+    if (loc.city) matchTerms.push(loc.city.toLowerCase());
+    if (loc.state) matchTerms.push(loc.state.toLowerCase());
+    if (loc.name) matchTerms.push(loc.name.toLowerCase());
+  });
+
+  const activeAlerts = await Alert.find({
+    status: 'active',
+    endTime: { $gte: new Date() }
+  });
+
+  return activeAlerts.filter(alert => {
+    const alertLocation = (alert.location || '').toLowerCase();
+    const alertAreas = (alert.affectedAreas || []).map(a => a.toLowerCase());
+
+    return matchTerms.some(term =>
+      alertLocation.includes(term) ||
+      alertAreas.some(area => area.includes(term))
+    );
+  });
+}
+
+const getAlertsForUser = async (userId) => {
+  const locations = await SavedLocation.find({ userId });
+  return await matchAlertsToLocations(locations);
+};
+
+/* =========================================================
    EXPORTS
    ========================================================= */
 
@@ -605,7 +640,8 @@ export {
   getActiveAlerts,
   createAlert,
   updateAlertStatus,
-  syncOfficialAlerts
+  syncOfficialAlerts,
+  getAlertsForUser
 };
 
 export default {
@@ -614,5 +650,6 @@ export default {
   getActiveAlerts,
   createAlert,
   updateAlertStatus,
-  syncOfficialAlerts
+  syncOfficialAlerts,
+  getAlertsForUser
 };

@@ -54,6 +54,10 @@ const savedLocationSchema = new mongoose.Schema(
     isFavorite: {
       type: Boolean,
       default: false
+    },
+    notificationsEnabled: {
+      type: Boolean,
+      default: true
     }
   },
   {

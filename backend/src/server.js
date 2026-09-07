@@ -1,8 +1,8 @@
 import http from "http";
-
 import env from "./config/env.js";
 import { connectDB, disconnectDB } from "./config/db.js";
 import { initializeSocket } from "./config/socket.js";
+import Scheduler from "./services/scheduler.js";
 import app from "./app.js";
 
 const PORT = env.PORT;
@@ -28,6 +28,7 @@ initializeSocket(httpServer);
 async function startServer() {
   try {
     await connectDB();
+    Scheduler.init();
 
     server = httpServer.listen(PORT, () => {
       console.log(

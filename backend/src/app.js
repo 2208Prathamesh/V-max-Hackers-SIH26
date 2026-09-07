@@ -11,6 +11,7 @@ import messageRoutes from './routes/messageRoutes.js'
 import locationRoutes from './routes/locationRoutes.js'
 import alertRoutes from './routes/alertRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import subscriptionRoutes from './routes/subscriptionRoutes.js'
 import weatherRoutes from './routes/weatherRoutes.js'
 import settingsRoutes from './routes/settingsRoutes.js'
 
@@ -84,6 +85,7 @@ app.use('/api/conversations', conversationRoutes)
 app.use('/api/messages', chatLimiter, messageRoutes)
 app.use('/api/locations', locationRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/subscriptions', subscriptionRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/authority', authorityRoutes)
 

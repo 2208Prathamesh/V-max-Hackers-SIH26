@@ -1,5 +1,6 @@
 import Alert from '../models/Alert.js';
 import Notification from '../models/Notification.js';
+import SavedLocation from '../models/SavedLocation.js';
 import { successResponse } from '../utils/response.js';
 import alertService from '../services/alertService.js';
 
@@ -11,7 +12,6 @@ import alertService from '../services/alertService.js';
  */
 const getAlerts = async (req, res, next) => {
   try {
-    await alertService.syncOfficialAlerts().catch(() => null);
     const alerts = await Alert.find().sort({ createdAt: -1 });
     return successResponse(res, alerts, 'Alerts retrieved successfully', 200);
   } catch (error) {
@@ -27,7 +27,6 @@ const getAlerts = async (req, res, next) => {
  */
 const getAlert = async (req, res, next) => {
   try {
-    await alertService.syncOfficialAlerts().catch(() => null);
     const { id } = req.params;
     const alert = await Alert.findById(id);
 
@@ -52,7 +51,6 @@ const getAlert = async (req, res, next) => {
  */
 const getActiveAlerts = async (req, res, next) => {
   try {
-    await alertService.syncOfficialAlerts().catch(() => null);
     const now = new Date();
 
     const alerts = await Alert.find({
@@ -111,5 +109,15 @@ const markAlertRead = async (req, res, next) => {
   }
 };
 
-export { getAlerts, getAlert, getActiveAlerts, markAlertRead };
-export default { getAlerts, getAlert, getActiveAlerts, markAlertRead };
+const getMyAlerts = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const alerts = await alertService.getAlertsForUser(userId);
+    return successResponse(res, alerts, 'Your relevant alerts retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getAlerts, getAlert, getActiveAlerts, markAlertRead, getMyAlerts };
+export default { getAlerts, getAlert, getActiveAlerts, markAlertRead, getMyAlerts };
