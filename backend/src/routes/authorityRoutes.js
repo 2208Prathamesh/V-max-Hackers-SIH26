@@ -1,10 +1,27 @@
-import express from 'express';
-import authMiddleware from '../middleware/authMiddleware.js';
-import { requireRole } from '../middleware/authMiddleware.js';
-import { getMe } from '../controllers/authorityController.js';
+import express from 'express'
+import authMiddleware, { requireRole } from '../middleware/authMiddleware.js'
+import {
+  getMe,
+  getAlerts,
+  getAlertById,
+  createAlert,
+  updateAlert,
+  publishAlert,
+  cancelAlert
+} from '../controllers/authorityController.js'
 
-const router = express.Router();
+const router = express.Router()
 
-router.get('/me', authMiddleware, requireRole('authority'), getMe);
+// Enforce authMiddleware and requireRole('authority') on all authority routes
+router.use(authMiddleware)
+router.use(requireRole('authority'))
 
-export default router;
+router.get('/me', getMe)
+router.get('/alerts', getAlerts)
+router.get('/alerts/:id', getAlertById)
+router.post('/alerts', createAlert)
+router.put('/alerts/:id', updateAlert)
+router.post('/alerts/:id/publish', publishAlert)
+router.post('/alerts/:id/cancel', cancelAlert)
+
+export default router

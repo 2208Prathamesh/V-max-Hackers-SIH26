@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { ALERT_TYPES, SEVERITY_LEVELS } from '../config/constants.js';
+import mongoose from 'mongoose'
+import { ALERT_TYPES, SEVERITY_LEVELS } from '../config/constants.js'
 
 /**
  * Weather Alert Schema
@@ -122,22 +122,48 @@ const alertSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['active', 'expired', 'cancelled'],
+      enum: ['draft', 'active', 'expired', 'cancelled'],
       default: 'active',
       index: true
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true
+    },
+
+    publishedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+
+    publishedAt: {
+      type: Date,
+      default: null
+    },
+
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+
+    cancelledAt: {
+      type: Date,
+      default: null
     }
   },
   {
-    timestamps: {
-      createdAt: true,
-      updatedAt: false
-    }
+    timestamps: true
   }
-);
+)
 
-alertSchema.index({ status: 1, startTime: 1, endTime: 1 });
-alertSchema.index({ severity: 1, createdAt: -1 });
+alertSchema.index({ status: 1, startTime: 1, endTime: 1 })
+alertSchema.index({ severity: 1, createdAt: -1 })
 
-const Alert = mongoose.model('Alert', alertSchema);
+const Alert = mongoose.model('Alert', alertSchema)
 
-export default Alert;
+export default Alert

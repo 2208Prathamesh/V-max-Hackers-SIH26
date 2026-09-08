@@ -4,208 +4,240 @@ import React, {
   useState,
   useEffect,
   useRef
-} from 'react';
-import { DEFAULT_SETTINGS, DEFAULT_USER_STATS, DEFAULT_LOCATION } from '../config/defaults';
-import { api } from '../services/api';
+} from 'react'
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_USER_STATS,
+  DEFAULT_LOCATION
+} from '../config/defaults'
+import { api } from '../services/api'
 
-const WeatherContext = createContext();
+const WeatherContext = createContext()
 
-const normalizeUser = (user) => ({
+const normalizeUser = user => ({
   ...user,
   stats: {
     ...DEFAULT_USER_STATS,
     ...(user?.stats || {})
   }
-});
+})
 
 export const WeatherProvider = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('dashboard')
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('weathergpt_token') !== null;
-  });
+    return localStorage.getItem('weathergpt_token') !== null
+  })
 
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_user');
+    const saved = localStorage.getItem('weathergpt_user')
     try {
-      return saved ? normalizeUser(JSON.parse(saved)) : null;
+      return saved ? normalizeUser(JSON.parse(saved)) : null
     } catch {
-      return null;
+      return null
     }
-  });
+  })
 
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_settings');
+    const saved = localStorage.getItem('weathergpt_settings')
     try {
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS
     } catch {
-      return DEFAULT_SETTINGS;
+      return DEFAULT_SETTINGS
     }
-  });
+  })
 
   const [savedLocations, setSavedLocations] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_saved_locations');
+    const saved = localStorage.getItem('weathergpt_saved_locations')
     try {
-      return saved ? JSON.parse(saved) : [];
+      return saved ? JSON.parse(saved) : []
     } catch {
-      return [];
+      return []
     }
-  });
+  })
 
   const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_conversations');
+    const saved = localStorage.getItem('weathergpt_conversations')
     try {
-      return saved ? JSON.parse(saved) : [];
+      return saved ? JSON.parse(saved) : []
     } catch {
-      return [];
+      return []
     }
-  });
+  })
 
-  const [activeConversationId, setActiveConversationId] = useState(null);
-  const [isSending, setIsSending] = useState(false);
+  const [activeConversationId, setActiveConversationId] = useState(null)
+  const [isSending, setIsSending] = useState(false)
   const [selectedMapLocation, setSelectedMapLocation] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_selected_location');
+    const saved = localStorage.getItem('weathergpt_selected_location')
     try {
-      return saved ? JSON.parse(saved) : DEFAULT_LOCATION;
+      return saved ? JSON.parse(saved) : DEFAULT_LOCATION
     } catch {
-      return DEFAULT_LOCATION;
+      return DEFAULT_LOCATION
     }
-  });
-  const [alerts, setAlerts] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  })
+  const [alerts, setAlerts] = useState([])
+  const [notifications, setNotifications] = useState([])
 
-  const [weatherData, setWeatherData] = useState(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState(null);
+  const [weatherData, setWeatherData] = useState(null)
+  const [weatherLoading, setWeatherLoading] = useState(false)
+  const [weatherError, setWeatherError] = useState(null)
 
-  const [forecastData, setForecastData] = useState(null);
-  const [forecastLoading, setForecastLoading] = useState(false);
-  const [forecastError, setForecastError] = useState(null);
-  const [dataLoading, setDataLoading] = useState(false);
+  const [forecastData, setForecastData] = useState(null)
+  const [forecastLoading, setForecastLoading] = useState(false)
+  const [forecastError, setForecastError] = useState(null)
+  const [dataLoading, setDataLoading] = useState(false)
 
-  const weatherRequestRef = useRef({ key: null, version: 0 });
-  const forecastRequestRef = useRef({ key: null, version: 0, promise: null });
-  const forecastStateRef = useRef({ key: null, data: null });
+  const weatherRequestRef = useRef({ key: null, version: 0 })
+  const forecastRequestRef = useRef({ key: null, version: 0, promise: null })
+  const forecastStateRef = useRef({ key: null, data: null })
 
   // Modals state
-  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [isAirQualityOpen, setIsAirQualityOpen] = useState(false);
-  const [toasts, setToasts] = useState([]);
+  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
+  const [isAirQualityOpen, setIsAirQualityOpen] = useState(false)
+  const [toasts, setToasts] = useState([])
 
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false)
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem('weathergpt_auth', JSON.stringify(isAuthenticated));
-  }, [isAuthenticated]);
+    localStorage.setItem('weathergpt_auth', JSON.stringify(isAuthenticated))
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('weathergpt_user', JSON.stringify(user));
+      localStorage.setItem('weathergpt_user', JSON.stringify(user))
     }
-  }, [user]);
+  }, [user])
 
   useEffect(() => {
-    localStorage.setItem('weathergpt_settings', JSON.stringify(settings));
-  }, [settings]);
+    localStorage.setItem('weathergpt_settings', JSON.stringify(settings))
+  }, [settings])
 
   useEffect(() => {
-    localStorage.setItem('weathergpt_saved_locations', JSON.stringify(savedLocations));
-  }, [savedLocations]);
+    localStorage.setItem(
+      'weathergpt_saved_locations',
+      JSON.stringify(savedLocations)
+    )
+  }, [savedLocations])
 
   useEffect(() => {
-    localStorage.setItem('weathergpt_conversations', JSON.stringify(conversations));
-  }, [conversations]);
+    localStorage.setItem(
+      'weathergpt_conversations',
+      JSON.stringify(conversations)
+    )
+  }, [conversations])
 
   useEffect(() => {
     if (selectedMapLocation) {
-      localStorage.setItem('weathergpt_selected_location', JSON.stringify(selectedMapLocation));
+      localStorage.setItem(
+        'weathergpt_selected_location',
+        JSON.stringify(selectedMapLocation)
+      )
     }
-  }, [selectedMapLocation]);
+  }, [selectedMapLocation])
 
   // Legit GPS & Reverse Geocoding Detection
   const detectCurrentLocation = async (showToast = true) => {
-    setIsDetectingLocation(true);
+    setIsDetectingLocation(true)
 
     const resolveAndApply = async (coords = null) => {
       try {
         const resolved = await api.reverseGeocode(
-          coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}
-        );
+          coords
+            ? { latitude: coords.latitude, longitude: coords.longitude }
+            : {}
+        )
         if (resolved && (resolved.city || resolved.lat)) {
           const loc = {
             city: resolved.city || 'Current Location',
             region: resolved.region || '',
             country: resolved.country || 'India',
-            lat: resolved.latitude || resolved.lat || coords?.latitude || DEFAULT_LOCATION.lat,
-            lng: resolved.longitude || resolved.lng || coords?.longitude || DEFAULT_LOCATION.lng
-          };
-          setSelectedMapLocation(loc);
-          if (showToast) {
-            addToast(`📍 ${loc.city}${loc.region ? `, ${loc.region}` : ''}`, 'success');
+            lat:
+              resolved.latitude ||
+              resolved.lat ||
+              coords?.latitude ||
+              DEFAULT_LOCATION.lat,
+            lng:
+              resolved.longitude ||
+              resolved.lng ||
+              coords?.longitude ||
+              DEFAULT_LOCATION.lng
           }
-          return loc;
+          setSelectedMapLocation(loc)
+          if (showToast) {
+            addToast(
+              `📍 ${loc.city}${loc.region ? `, ${loc.region}` : ''}`,
+              'success'
+            )
+          }
+          return loc
         }
       } catch (err) {
-        console.warn('Reverse geocode error:', err.message);
+        console.warn('Reverse geocode error:', err.message)
       }
-      return null;
-    };
+      return null
+    }
 
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          await resolveAndApply(pos.coords);
-          setIsDetectingLocation(false);
+        async pos => {
+          await resolveAndApply(pos.coords)
+          setIsDetectingLocation(false)
         },
-        async (err) => {
-          console.warn('Browser geolocation denied or timed out, falling back to network IP location:', err.message);
-          await resolveAndApply(null);
-          setIsDetectingLocation(false);
+        async err => {
+          console.warn(
+            'Browser geolocation denied or timed out, falling back to network IP location:',
+            err.message
+          )
+          await resolveAndApply(null)
+          setIsDetectingLocation(false)
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-      );
+      )
     } else {
-      await resolveAndApply(null);
-      setIsDetectingLocation(false);
+      await resolveAndApply(null)
+      setIsDetectingLocation(false)
     }
-  };
+  }
 
   // Initial detection if no prior location is set in localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('weathergpt_selected_location');
+    const saved = localStorage.getItem('weathergpt_selected_location')
     if (!saved) {
-      detectCurrentLocation(false);
+      detectCurrentLocation(false)
     }
-  }, []);
+  }, [])
 
   const refreshAlerts = async () => {
     try {
-      const serverAlerts = await api.alerts();
+      const token = localStorage.getItem('weathergpt_token')
+      const serverAlerts = token
+        ? await api.myAlerts().catch(() => api.alerts())
+        : await api.alerts()
       if (Array.isArray(serverAlerts)) {
-        setAlerts(serverAlerts);
+        setAlerts(serverAlerts)
       }
     } catch (err) {
-      console.warn('Could not refresh alerts from API:', err);
+      console.warn('Could not refresh alerts from API:', err)
     }
-  };
+  }
 
   // Load live alerts from database on mount
   useEffect(() => {
-    refreshAlerts();
-  }, []);
+    refreshAlerts()
+  }, [])
 
   // Hydrate auth status and user profile from backend on initial mount
   useEffect(() => {
-    const token = localStorage.getItem('weathergpt_token');
+    const token = localStorage.getItem('weathergpt_token')
     if (token) {
       api
         .currentUser()
-        .then((userData) => {
-          setIsAuthenticated(true);
+        .then(userData => {
+          setIsAuthenticated(true)
           if (userData) {
-            setUser((prev) => ({
+            setUser(prev => ({
               ...prev,
               ...userData,
               avatarUrl: userData.profileImage || userData.avatarUrl,
@@ -214,37 +246,41 @@ export const WeatherProvider = ({ children }) => {
                 ...(prev?.stats || {}),
                 ...(userData.stats || {})
               }
-            }));
+            }))
           }
         })
-        .catch((err) => {
+        .catch(err => {
           // 401 Unauthorized is handled globally by api.js via 'weathergpt:unauthorized'.
           // Transient network errors or rate limits should not kick the user out.
-          console.warn('Could not hydrate user profile from backend:', err?.message || err);
-        });
+          console.warn(
+            'Could not hydrate user profile from backend:',
+            err?.message || err
+          )
+        })
     }
 
     const handleUnauthorized = () => {
-      setIsAuthenticated(false);
-      addToast('Session expired. Please log in again.', 'warning');
-    };
-    window.addEventListener('weathergpt:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('weathergpt:unauthorized', handleUnauthorized);
-  }, []);
+      setIsAuthenticated(false)
+      addToast('Session expired. Please log in again.', 'warning')
+    }
+    window.addEventListener('weathergpt:unauthorized', handleUnauthorized)
+    return () =>
+      window.removeEventListener('weathergpt:unauthorized', handleUnauthorized)
+  }, [])
 
   // Load initial user data once authenticated
   useEffect(() => {
-    if (!isAuthenticated) return;
-    setDataLoading(true);
+    if (!isAuthenticated) return
+    setDataLoading(true)
 
     // 1. Fetch Conversations
     api
       .conversations()
-      .then((serverConversations) => {
-        if (!Array.isArray(serverConversations)) return;
-        setConversations((prevConvs) =>
-          serverConversations.map((conversation) => {
-            const existing = prevConvs.find((c) => c.id === conversation._id);
+      .then(serverConversations => {
+        if (!Array.isArray(serverConversations)) return
+        setConversations(prevConvs =>
+          serverConversations.map(conversation => {
+            const existing = prevConvs.find(c => c.id === conversation._id)
             return {
               id: conversation._id,
               title: conversation.title,
@@ -253,29 +289,29 @@ export const WeatherProvider = ({ children }) => {
               tagColor: 'blue',
               icon: 'sun-cloud',
               messages: existing?.messages?.length ? existing.messages : []
-            };
+            }
           })
-        );
+        )
       })
       .catch(() => {})
-      .finally(() => setDataLoading(false));
+      .finally(() => setDataLoading(false))
 
     // 2. Fetch Notifications
     api
       .notifications()
-      .then((serverNotifications) => {
+      .then(serverNotifications => {
         if (Array.isArray(serverNotifications)) {
-          setNotifications(serverNotifications);
+          setNotifications(serverNotifications)
         }
       })
-      .catch(() => {});
+      .catch(() => {})
 
     // 3. Fetch Saved Locations
     api
       .locations()
-      .then((serverLocations) => {
-        if (!Array.isArray(serverLocations)) return;
-        const locations = serverLocations.map((location) => ({
+      .then(serverLocations => {
+        if (!Array.isArray(serverLocations)) return
+        const locations = serverLocations.map(location => ({
           ...location,
           id: location._id || location.id,
           region: location.region || location.state,
@@ -290,25 +326,28 @@ export const WeatherProvider = ({ children }) => {
           humidity: location.humidity ?? null,
           windSpeedKmh: location.windSpeedKmh ?? null,
           windDirection: location.windDirection || '',
-          forecast3Day: Array.isArray(location.forecast3Day) ? location.forecast3Day : []
-        }));
-        setSavedLocations(locations);
+          forecast3Day: Array.isArray(location.forecast3Day)
+            ? location.forecast3Day
+            : []
+        }))
+        setSavedLocations(locations)
         if (locations.length > 0 && !selectedMapLocation) {
-          setSelectedMapLocation(locations[0]);
+          setSelectedMapLocation(locations[0])
         }
       })
-      .catch(() => {});
+      .catch(() => {})
 
     // 4. Fetch User Settings
     api
       .getSettings()
-      .then((serverSettings) => {
+      .then(serverSettings => {
         if (serverSettings) {
-          setSettings((prev) => ({
+          setSettings(prev => ({
             ...prev,
             ...serverSettings,
             units: {
-              temperature: serverSettings.temperatureUnit === 'fahrenheit' ? 'F' : 'C',
+              temperature:
+                serverSettings.temperatureUnit === 'fahrenheit' ? 'F' : 'C',
               windSpeed:
                 serverSettings.windUnit === 'mph'
                   ? 'mph'
@@ -325,22 +364,22 @@ export const WeatherProvider = ({ children }) => {
               ...prev.notifications,
               ...(serverSettings.notifications || {})
             }
-          }));
+          }))
         }
       })
-      .catch(() => {});
-  }, [isAuthenticated]);
+      .catch(() => {})
+  }, [isAuthenticated])
 
   // Load conversation messages when switching conversations
   useEffect(() => {
-    if (!isAuthenticated || !activeConversationId) return;
-    if (activeConversationId.startsWith('conv-')) return; // local new unsaved chat
+    if (!isAuthenticated || !activeConversationId) return
+    if (activeConversationId.startsWith('conv-')) return // local new unsaved chat
 
     api
       .messages(activeConversationId)
-      .then((msgList) => {
-        if (!Array.isArray(msgList)) return;
-        const formatted = msgList.map((message) => ({
+      .then(msgList => {
+        if (!Array.isArray(msgList)) return
+        const formatted = msgList.map(message => ({
           id: message._id,
           sender: message.sender === 'user' ? 'user' : 'assistant',
           text: message.content,
@@ -360,179 +399,182 @@ export const WeatherProvider = ({ children }) => {
             hour: '2-digit',
             minute: '2-digit'
           })
-        }));
-        setConversations((prev) =>
-          prev.map((c) => {
-            if (c.id !== activeConversationId) return c;
+        }))
+        setConversations(prev =>
+          prev.map(c => {
+            if (c.id !== activeConversationId) return c
             const hasOptimistic = c.messages.some(
-              (m) => m.status === 'sending' || m.status === 'loading'
-            );
-            if (hasOptimistic) return c;
-            return { ...c, messages: formatted };
+              m => m.status === 'sending' || m.status === 'loading'
+            )
+            if (hasOptimistic) return c
+            return { ...c, messages: formatted }
           })
-        );
+        )
       })
-      .catch(() => {});
-  }, [isAuthenticated, activeConversationId]);
+      .catch(() => {})
+  }, [isAuthenticated, activeConversationId])
 
   const refreshWeather = async (latitude = 18.5204, longitude = 73.8567) => {
-    const requestKey = `${latitude}:${longitude}`;
-    const requestVersion = weatherRequestRef.current.version + 1;
-    weatherRequestRef.current = { key: requestKey, version: requestVersion };
+    const requestKey = `${latitude}:${longitude}`
+    const requestVersion = weatherRequestRef.current.version + 1
+    weatherRequestRef.current = { key: requestKey, version: requestVersion }
 
-    setWeatherLoading(true);
-    setWeatherError(null);
+    setWeatherLoading(true)
+    setWeatherError(null)
     try {
-      const data = await api.weather({ latitude, longitude });
+      const data = await api.weather({ latitude, longitude })
       if (weatherRequestRef.current.version === requestVersion) {
-        setWeatherData(data);
+        setWeatherData(data)
       }
-      return data;
+      return data
     } catch (error) {
       if (weatherRequestRef.current.version === requestVersion) {
-        setWeatherError(error.message || 'Could not load current weather');
-        addToast(error.message || 'Could not load current weather', 'warning');
+        setWeatherError(error.message || 'Could not load current weather')
+        addToast(error.message || 'Could not load current weather', 'warning')
       }
-      return null;
+      return null
     } finally {
       if (weatherRequestRef.current.version === requestVersion) {
-        setWeatherLoading(false);
+        setWeatherLoading(false)
       }
     }
-  };
+  }
 
   const refreshForecast = async (latitude = 18.5204, longitude = 73.8567) => {
-    const requestKey = `${latitude}:${longitude}`;
-    const activeRequest = forecastRequestRef.current;
+    const requestKey = `${latitude}:${longitude}`
+    const activeRequest = forecastRequestRef.current
 
     if (activeRequest.key === requestKey && activeRequest.promise) {
-      return activeRequest.promise;
+      return activeRequest.promise
     }
 
-    const requestVersion = activeRequest.version + 1;
+    const requestVersion = activeRequest.version + 1
     const requestPromise = (async () => {
-      setForecastLoading(true);
-      setForecastError(null);
+      setForecastLoading(true)
+      setForecastError(null)
       try {
-        const data = await api.forecast({ latitude, longitude, days: 7 });
-        const latestRequest = forecastRequestRef.current;
-        const currentState = forecastStateRef.current;
-        const isFallback = data?.models?.openMeteo?.isFallback === true;
+        const data = await api.forecast({ latitude, longitude, days: 7 })
+        const latestRequest = forecastRequestRef.current
+        const currentState = forecastStateRef.current
+        const isFallback = data?.models?.openMeteo?.isFallback === true
         const hasLiveDataForLocation =
           currentState.key === requestKey &&
-          currentState.data?.models?.openMeteo?.isFallback !== true;
+          currentState.data?.models?.openMeteo?.isFallback !== true
 
-        if (latestRequest.version !== requestVersion) return data;
-        if (isFallback && hasLiveDataForLocation) return data;
+        if (latestRequest.version !== requestVersion) return data
+        if (isFallback && hasLiveDataForLocation) return data
 
-        forecastStateRef.current = { key: requestKey, data };
-        setForecastData(data);
-        return data;
+        forecastStateRef.current = { key: requestKey, data }
+        setForecastData(data)
+        return data
       } catch (error) {
         if (forecastRequestRef.current.version === requestVersion) {
-          setForecastError(error.message || 'Could not load forecast');
-          addToast(error.message || 'Could not load forecast', 'warning');
+          setForecastError(error.message || 'Could not load forecast')
+          addToast(error.message || 'Could not load forecast', 'warning')
         }
-        return null;
+        return null
       } finally {
         if (forecastRequestRef.current.version === requestVersion) {
-          forecastRequestRef.current.promise = null;
-          setForecastLoading(false);
+          forecastRequestRef.current.promise = null
+          setForecastLoading(false)
         }
       }
-    })();
+    })()
 
     forecastRequestRef.current = {
       key: requestKey,
       version: requestVersion,
       promise: requestPromise
-    };
+    }
 
-    return requestPromise;
-  };
+    return requestPromise
+  }
 
   // Fetch weather whenever location changes or on mount
   useEffect(() => {
-    const loc = selectedMapLocation || DEFAULT_LOCATION;
-    const latitude = loc?.lat ?? loc?.latitude ?? DEFAULT_LOCATION.lat;
-    const longitude = loc?.lng ?? loc?.longitude ?? DEFAULT_LOCATION.lng;
+    const loc = selectedMapLocation || DEFAULT_LOCATION
+    const latitude = loc?.lat ?? loc?.latitude ?? DEFAULT_LOCATION.lat
+    const longitude = loc?.lng ?? loc?.longitude ?? DEFAULT_LOCATION.lng
     if (latitude !== undefined && longitude !== undefined) {
-      refreshWeather(latitude, longitude);
-      refreshForecast(latitude, longitude);
+      refreshWeather(latitude, longitude)
+      refreshForecast(latitude, longitude)
     }
-  }, [selectedMapLocation]);
+  }, [selectedMapLocation])
 
   // Toast Notification helper
   const addToast = (message, type = 'info') => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    const id = Date.now() + Math.random()
+    setToasts(prev => [...prev, { id, message, type }])
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
-  };
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 3500)
+  }
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  const removeToast = id => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }
 
   // Temperature unit conversion
-  const formatTemp = (tempInCelsius) => {
-    if (tempInCelsius === undefined || tempInCelsius === null) return '--';
+  const formatTemp = tempInCelsius => {
+    if (tempInCelsius === undefined || tempInCelsius === null) return '--'
     if (settings?.units?.temperature === 'F') {
-      const f = Math.round((tempInCelsius * 9) / 5 + 32);
-      return `${f}°F`;
+      const f = Math.round((tempInCelsius * 9) / 5 + 32)
+      return `${f}°F`
     }
-    return `${Math.round(tempInCelsius)}°C`;
-  };
+    return `${Math.round(tempInCelsius)}°C`
+  }
 
-  const formatTempRaw = (tempInCelsius) => {
-    if (tempInCelsius === undefined || tempInCelsius === null) return '--';
+  const formatTempRaw = tempInCelsius => {
+    if (tempInCelsius === undefined || tempInCelsius === null) return '--'
     if (settings?.units?.temperature === 'F') {
-      return Math.round((tempInCelsius * 9) / 5 + 32);
+      return Math.round((tempInCelsius * 9) / 5 + 32)
     }
-    return Math.round(tempInCelsius);
-  };
+    return Math.round(tempInCelsius)
+  }
 
   // Wind speed conversion
-  const formatWind = (speedKmh) => {
-    if (speedKmh === undefined || speedKmh === null) return '--';
-    const unit = settings?.units?.windSpeed;
+  const formatWind = speedKmh => {
+    if (speedKmh === undefined || speedKmh === null) return '--'
+    const unit = settings?.units?.windSpeed
     if (unit === 'mph') {
-      return `${Math.round(speedKmh * 0.621371)} mph`;
+      return `${Math.round(speedKmh * 0.621371)} mph`
     }
     if (unit === 'ms') {
-      return `${Math.round(speedKmh / 3.6)} m/s`;
+      return `${Math.round(speedKmh / 3.6)} m/s`
     }
     if (unit === 'knots') {
-      return `${Math.round(speedKmh * 0.539957)} kn`;
+      return `${Math.round(speedKmh * 0.539957)} kn`
     }
-    return `${speedKmh} km/h`;
-  };
+    return `${speedKmh} km/h`
+  }
 
   // Pressure conversion
-  const formatPressure = (pressureHpa) => {
-    if (!pressureHpa) return '--';
-    const unit = settings?.units?.pressure;
+  const formatPressure = pressureHpa => {
+    if (!pressureHpa) return '--'
+    const unit = settings?.units?.pressure
     if (unit === 'inHg') {
-      return `${(pressureHpa * 0.02953).toFixed(2)} inHg`;
+      return `${(pressureHpa * 0.02953).toFixed(2)} inHg`
     }
     if (unit === 'mmHg') {
-      return `${Math.round(pressureHpa * 0.750062)} mmHg`;
+      return `${Math.round(pressureHpa * 0.750062)} mmHg`
     }
     if (unit === 'bar') {
-      return `${(pressureHpa / 1000).toFixed(3)} bar`;
+      return `${(pressureHpa / 1000).toFixed(3)} bar`
     }
-    return `${pressureHpa} hPa`;
-  };
+    return `${pressureHpa} hPa`
+  }
 
   // Saved location actions
-  const addLocation = async (cityData) => {
+  const addLocation = async cityData => {
     const exists = savedLocations.some(
-      (l) => l.city.toLowerCase() === cityData.city.toLowerCase()
-    );
+      l => l.city.toLowerCase() === cityData.city.toLowerCase()
+    )
     if (exists) {
-      addToast(`${cityData.city} is already in your saved locations!`, 'warning');
-      return;
+      addToast(
+        `${cityData.city} is already in your saved locations!`,
+        'warning'
+      )
+      return
     }
     const newLoc = await api.addLocation({
       name: cityData.name || `${cityData.city} Location`,
@@ -542,7 +584,7 @@ export const WeatherProvider = ({ children }) => {
       latitude: Number(cityData.lat ?? cityData.latitude ?? 18.5204),
       longitude: Number(cityData.lng ?? cityData.longitude ?? 73.8567),
       isFavorite: Boolean(cityData.isFavorite)
-    });
+    })
     const updatedLocation = {
       ...cityData,
       ...newLoc,
@@ -551,26 +593,26 @@ export const WeatherProvider = ({ children }) => {
       lat: newLoc.latitude,
       lng: newLoc.longitude,
       updatedTime: 'Just now'
-    };
-    const updated = [...savedLocations, updatedLocation];
-    setSavedLocations(updated);
-    setUser((prev) =>
+    }
+    const updated = [...savedLocations, updatedLocation]
+    setSavedLocations(updated)
+    setUser(prev =>
       prev
         ? {
             ...prev,
             stats: { ...prev.stats, locationsSaved: updated.length }
           }
         : prev
-    );
-    addToast(`${cityData.city} added to saved locations!`, 'success');
-  };
+    )
+    addToast(`${cityData.city} added to saved locations!`, 'success')
+  }
 
-  const removeLocation = async (id) => {
-    const loc = savedLocations.find((l) => l.id === id);
-    await api.deleteLocation(id);
-    const updated = savedLocations.filter((l) => l.id !== id);
-    setSavedLocations(updated);
-    setUser((prev) =>
+  const removeLocation = async id => {
+    const loc = savedLocations.find(l => l.id === id)
+    await api.deleteLocation(id)
+    const updated = savedLocations.filter(l => l.id !== id)
+    setSavedLocations(updated)
+    setUser(prev =>
       prev
         ? {
             ...prev,
@@ -581,29 +623,30 @@ export const WeatherProvider = ({ children }) => {
             }
           }
         : prev
-    );
-    addToast(`Removed ${loc ? loc.city : 'location'}`, 'info');
-  };
+    )
+    addToast(`Removed ${loc ? loc.city : 'location'}`, 'info')
+  }
 
-  const toggleFavorite = async (id) => {
-    const favoriteLocation = await api.favoriteLocation(id);
-    setSavedLocations((prev) =>
-      prev.map((location) => ({
+  const toggleFavorite = async id => {
+    const favoriteLocation = await api.favoriteLocation(id)
+    setSavedLocations(prev =>
+      prev.map(location => ({
         ...location,
-        isFavorite: location.id === (favoriteLocation._id || favoriteLocation.id)
+        isFavorite:
+          location.id === (favoriteLocation._id || favoriteLocation.id)
       }))
-    );
-  };
+    )
+  }
 
   // Settings update helpers connected to backend
   const updateUnits = async (key, value) => {
-    setSettings((prev) => ({
+    setSettings(prev => ({
       ...prev,
       units: { ...prev.units, [key]: value }
-    }));
-    addToast(`Updated unit: ${key} to ${value}`, 'info');
+    }))
+    addToast(`Updated unit: ${key} to ${value}`, 'info')
 
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) return
     try {
       const tempUnit =
         key === 'temperature'
@@ -612,7 +655,7 @@ export const WeatherProvider = ({ children }) => {
             : 'celsius'
           : settings.units.temperature === 'F'
           ? 'fahrenheit'
-          : 'celsius';
+          : 'celsius'
       const windUnit =
         key === 'windSpeed'
           ? value === 'ms'
@@ -620,38 +663,41 @@ export const WeatherProvider = ({ children }) => {
             : value
           : settings.units.windSpeed === 'ms'
           ? 'm/s'
-          : settings.units.windSpeed;
-      const pressureUnit = key === 'pressure' ? value : settings.units.pressure;
+          : settings.units.windSpeed
+      const pressureUnit = key === 'pressure' ? value : settings.units.pressure
       const precipitationUnit =
-        key === 'precipitation' ? value : settings.units.precipitation;
+        key === 'precipitation' ? value : settings.units.precipitation
 
       await api.updateSettings({
         temperatureUnit: tempUnit,
         windUnit,
         pressureUnit,
         precipitationUnit
-      });
+      })
     } catch (error) {
-      addToast(error.message || 'Could not update weather units', 'warning');
+      addToast(error.message || 'Could not update weather units', 'warning')
     }
-  };
+  }
 
   const updateNotifications = async (key, value) => {
-    const updated = { ...settings.notifications, [key]: value };
-    setSettings((prev) => ({
+    const updated = { ...settings.notifications, [key]: value }
+    setSettings(prev => ({
       ...prev,
       notifications: updated
-    }));
+    }))
 
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) return
     try {
-      await api.updateSettings({ notifications: updated });
+      await api.updateSettings({ notifications: updated })
     } catch (error) {
-      addToast(error.message || 'Could not update notification settings', 'warning');
+      addToast(
+        error.message || 'Could not update notification settings',
+        'warning'
+      )
     }
-  };
+  }
 
-  const updateProfile = async (updatedProfile) => {
+  const updateProfile = async updatedProfile => {
     if (isAuthenticated) {
       try {
         const profile = await api.updateProfile({
@@ -659,63 +705,70 @@ export const WeatherProvider = ({ children }) => {
           language: updatedProfile.language,
           timezone: updatedProfile.timezone,
           profileImage: updatedProfile.profileImage
-        });
-        setUser((prev) => ({
+        })
+        setUser(prev => ({
           ...prev,
           ...profile,
-          avatarUrl: profile.profileImage || profile.avatarUrl || prev?.avatarUrl,
+          avatarUrl:
+            profile.profileImage || profile.avatarUrl || prev?.avatarUrl,
           avatarInitials: updatedProfile.avatarInitials || prev?.avatarInitials
-        }));
-        addToast('Profile updated successfully!', 'success');
-        return profile;
+        }))
+        addToast('Profile updated successfully!', 'success')
+        return profile
       } catch (err) {
-        addToast(err.message || 'Failed to sync profile with server', 'warning');
-        throw err;
+        addToast(err.message || 'Failed to sync profile with server', 'warning')
+        throw err
       }
     }
-    setUser((prev) =>
+    setUser(prev =>
       prev
         ? {
             ...prev,
             ...updatedProfile
           }
         : updatedProfile
-    );
-    addToast('Profile updated successfully!', 'success');
-    return updatedProfile;
-  };
+    )
+    addToast('Profile updated successfully!', 'success')
+    return updatedProfile
+  }
 
-  const sendChatMessage = async (text) => {
-    if (!text.trim() || isSending) return;
+  const sendChatMessage = async text => {
+    if (!text.trim() || isSending) return
 
-    const userMessageText = text.trim();
-    const tempUserMsgId = `msg-user-${Date.now()}`;
-    const tempAiMsgId = `msg-ai-${Date.now()}`;
+    const userMessageText = text.trim()
+    const tempUserMsgId = `msg-user-${Date.now()}`
+    const tempAiMsgId = `msg-ai-${Date.now()}`
 
-    let currentConvId = activeConversationId;
-    const isNewConv = !currentConvId || currentConvId.startsWith('conv-');
+    let currentConvId = activeConversationId
+    const isNewConv = !currentConvId || currentConvId.startsWith('conv-')
 
     // 1. Optimistic Update
-    setIsSending(true);
+    setIsSending(true)
 
     const userMsg = {
       id: tempUserMsgId,
       sender: 'user',
       text: userMessageText,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       status: 'sending'
-    };
+    }
 
     const aiLoadingMsg = {
       id: tempAiMsgId,
       sender: 'assistant',
       text: 'Thinking...',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       status: 'loading'
-    };
+    }
 
     if (isNewConv) {
-      const tempConvId = currentConvId || `conv-${Date.now()}`;
+      const tempConvId = currentConvId || `conv-${Date.now()}`
       const tempConv = {
         id: tempConvId,
         title: userMessageText.slice(0, 32),
@@ -724,13 +777,13 @@ export const WeatherProvider = ({ children }) => {
         tagColor: 'blue',
         icon: 'sun-cloud',
         messages: [userMsg, aiLoadingMsg]
-      };
-      setConversations((prev) => [tempConv, ...prev]);
-      setActiveConversationId(tempConvId);
-      currentConvId = tempConvId;
+      }
+      setConversations(prev => [tempConv, ...prev])
+      setActiveConversationId(tempConvId)
+      currentConvId = tempConvId
     } else {
-      setConversations((prev) =>
-        prev.map((c) =>
+      setConversations(prev =>
+        prev.map(c =>
           c.id === currentConvId
             ? {
                 ...c,
@@ -739,32 +792,34 @@ export const WeatherProvider = ({ children }) => {
               }
             : c
         )
-      );
+      )
     }
 
-    let finalConvId = currentConvId;
+    let finalConvId = currentConvId
     try {
       // 2. Handle Conversation Creation
       if (isNewConv) {
         const conversation = await api.createConversation({
           title: userMessageText.slice(0, 32),
           category: 'general'
-        });
-        finalConvId = conversation._id;
+        })
+        finalConvId = conversation._id
 
-        setConversations((prev) =>
-          prev.map((c) => (c.id === currentConvId ? { ...c, id: finalConvId } : c))
-        );
-        setActiveConversationId(finalConvId);
+        setConversations(prev =>
+          prev.map(c =>
+            c.id === currentConvId ? { ...c, id: finalConvId } : c
+          )
+        )
+        setActiveConversationId(finalConvId)
       }
 
       // 3. Send Message
       const result = await api.sendMessage({
         conversationId: finalConvId,
         content: userMessageText
-      });
+      })
 
-      const toMessage = (message) => ({
+      const toMessage = message => ({
         id: message?._id || `msg-${Date.now()}`,
         sender: message?.sender === 'user' ? 'user' : 'assistant',
         text: message?.content || message?.text || 'No response received',
@@ -785,43 +840,46 @@ export const WeatherProvider = ({ children }) => {
               hour: '2-digit',
               minute: '2-digit'
             })
-          : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
+          : new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+      })
 
-      const assistantMsg = toMessage(result.aiMessage);
+      const assistantMsg = toMessage(result.aiMessage)
 
       // 4. Final Reconciliation
-      setConversations((prev) => {
-        return prev.map((conversation) => {
+      setConversations(prev => {
+        return prev.map(conversation => {
           const hasTempMessages = conversation.messages.some(
-            (m) => m.id === tempUserMsgId || m.id === tempAiMsgId
-          );
+            m => m.id === tempUserMsgId || m.id === tempAiMsgId
+          )
 
           if (hasTempMessages || conversation.id === finalConvId) {
-            const newMessages = conversation.messages.map((m) => {
-              if (m.id === tempUserMsgId) return toMessage(result.userMessage);
-              if (m.id === tempAiMsgId) return assistantMsg;
-              return m;
-            });
+            const newMessages = conversation.messages.map(m => {
+              if (m.id === tempUserMsgId) return toMessage(result.userMessage)
+              if (m.id === tempAiMsgId) return assistantMsg
+              return m
+            })
             return {
               ...conversation,
               id: finalConvId,
               messages: newMessages
-            };
+            }
           }
-          return conversation;
-        });
-      });
+          return conversation
+        })
+      })
     } catch (error) {
-      console.error('CHAT SEND ERROR:', error);
-      addToast(error.message || 'Failed to send message', 'warning');
+      console.error('CHAT SEND ERROR:', error)
+      addToast(error.message || 'Failed to send message', 'warning')
 
-      setConversations((prev) =>
-        prev.map((conversation) =>
+      setConversations(prev =>
+        prev.map(conversation =>
           conversation.id === finalConvId
             ? {
                 ...conversation,
-                messages: conversation.messages.map((m) =>
+                messages: conversation.messages.map(m =>
                   m.id === tempAiMsgId
                     ? {
                         ...m,
@@ -834,15 +892,15 @@ export const WeatherProvider = ({ children }) => {
               }
             : conversation
         )
-      );
+      )
     } finally {
-      setIsSending(false);
+      setIsSending(false)
     }
-  };
+  }
 
   const createNewChat = () => {
-    const newId = `conv-${Date.now()}`;
-    const now = new Date();
+    const newId = `conv-${Date.now()}`
+    const now = new Date()
     const newConv = {
       id: newId,
       dateGroup: now.toLocaleDateString('en-IN', {
@@ -861,24 +919,24 @@ export const WeatherProvider = ({ children }) => {
       tagColor: 'blue',
       icon: 'sun-cloud',
       messages: []
-    };
-    setConversations((prev) => [newConv, ...prev]);
-    setActiveConversationId(newId);
-    setCurrentPage('chat');
-    addToast('Started new chat session', 'info');
-  };
+    }
+    setConversations(prev => [newConv, ...prev])
+    setActiveConversationId(newId)
+    setCurrentPage('chat')
+    addToast('Started new chat session', 'info')
+  }
 
-  const deleteConversation = async (id) => {
+  const deleteConversation = async id => {
     if (isAuthenticated && !id.startsWith('conv-')) {
       try {
-        await api.deleteConversation(id);
+        await api.deleteConversation(id)
       } catch {
         // Continue local cleanup
       }
     }
-    setConversations((prev) => prev.filter((c) => c.id !== id));
+    setConversations(prev => prev.filter(c => c.id !== id))
 
-    setUser((prev) =>
+    setUser(prev =>
       prev
         ? {
             ...prev,
@@ -889,61 +947,64 @@ export const WeatherProvider = ({ children }) => {
             }
           }
         : prev
-    );
+    )
 
-    addToast('Conversation deleted', 'info');
-  };
+    addToast('Conversation deleted', 'info')
+  }
 
   // Auth methods
   const login = async (email, password) => {
-    const result = await api.login({ email, password });
-    localStorage.setItem('weathergpt_token', result.token);
-    const normalized = normalizeUser(result.user);
-    setUser(normalized);
+    const result = await api.login({ email, password })
+    localStorage.setItem('weathergpt_token', result.token)
+    const normalized = normalizeUser(result.user)
+    setUser(normalized)
     if (result.user?.language) {
-      localStorage.setItem('weathergpt_language', result.user.language);
-      setSettings((prev) => ({ ...prev, language: result.user.language }));
+      localStorage.setItem('weathergpt_language', result.user.language)
+      setSettings(prev => ({ ...prev, language: result.user.language }))
     }
-    setIsAuthenticated(true);
-    setCurrentPage('dashboard');
-    addToast(`Welcome back to WeatherGPT!`, 'success');
-    return result;
-  };
+    setIsAuthenticated(true)
+    setCurrentPage('dashboard')
+    addToast(`Welcome back to WeatherGPT!`, 'success')
+    return result
+  }
 
   const signUp = async ({ name, email, password, language }) => {
-    const lang = language || localStorage.getItem('weathergpt_language') || 'en';
-    const result = await api.register({ name, email, password, language: lang });
-    localStorage.setItem('weathergpt_token', result.token);
-    const normalized = normalizeUser(result.user);
-    setUser(normalized);
-    localStorage.setItem('weathergpt_language', lang);
-    setSettings((prev) => ({ ...prev, language: lang }));
-    setIsAuthenticated(true);
-    setCurrentPage('dashboard');
-    addToast(`Account created successfully! Welcome, ${result.user.name}`, 'success');
-    return result;
-  };
+    const lang = language || localStorage.getItem('weathergpt_language') || 'en'
+    const result = await api.register({ name, email, password, language: lang })
+    localStorage.setItem('weathergpt_token', result.token)
+    const normalized = normalizeUser(result.user)
+    setUser(normalized)
+    localStorage.setItem('weathergpt_language', lang)
+    setSettings(prev => ({ ...prev, language: lang }))
+    setIsAuthenticated(true)
+    setCurrentPage('dashboard')
+    addToast(
+      `Account created successfully! Welcome, ${result.user.name}`,
+      'success'
+    )
+    return result
+  }
 
   const logout = async () => {
     try {
-      await api.logout();
+      await api.logout()
     } catch {
       // A stateless token can still be cleared when the API is unavailable.
     }
-    localStorage.removeItem('weathergpt_token');
-    localStorage.removeItem('weathergpt_user');
-    setUser(null);
-    setSavedLocations([]);
-    setConversations([]);
-    setAlerts([]);
-    setWeatherData(null);
-    setForecastData(null);
-    setSelectedMapLocation(null);
-    setActiveConversationId(null);
-    setIsAuthenticated(false);
-    setCurrentPage('login');
-    addToast('Logged out successfully', 'info');
-  };
+    localStorage.removeItem('weathergpt_token')
+    localStorage.removeItem('weathergpt_user')
+    setUser(null)
+    setSavedLocations([])
+    setConversations([])
+    setAlerts([])
+    setWeatherData(null)
+    setForecastData(null)
+    setSelectedMapLocation(null)
+    setActiveConversationId(null)
+    setIsAuthenticated(false)
+    setCurrentPage('login')
+    addToast('Logged out successfully', 'info')
+  }
 
   return (
     <WeatherContext.Provider
@@ -1009,14 +1070,14 @@ export const WeatherProvider = ({ children }) => {
     >
       {children}
     </WeatherContext.Provider>
-  );
-};
+  )
+}
 
 export const useWeather = () => {
-  const context = useContext(WeatherContext);
+  const context = useContext(WeatherContext)
   if (!context) {
-    throw new Error('useWeather must be used within a WeatherProvider');
+    throw new Error('useWeather must be used within a WeatherProvider')
   }
-  return context;
-};
-export default WeatherContext;
+  return context
+}
+export default WeatherContext
