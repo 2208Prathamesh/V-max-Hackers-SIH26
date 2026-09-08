@@ -21,24 +21,15 @@ import {
   SunMedium,
   Sprout,
   CloudSun,
-<<<<<<< HEAD
+  Newspaper,
   BarChart2,
   Shield
 } from 'lucide-react';
 
 // 3D Styled Cloud & Sun Logo for Sidebar
-const WeatherGPTSidebarLogo = ({ isAuthority }) => (
-  <div className="flex items-center gap-2.5 select-none">
-    <div className="relative w-9 h-8 flex items-center justify-center">
-=======
-  Newspaper
-} from 'lucide-react';
-
-// 3D Styled Cloud & Sun Logo for Sidebar
-const WeatherGPTSidebarLogo = ({ collapsed }) => (
+const WeatherGPTSidebarLogo = ({ collapsed, isAuthority }) => (
   <div className="flex items-center gap-2.5 select-none min-w-0">
     <div className="relative w-9 h-8 flex items-center justify-center shrink-0">
->>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
       {/* Golden Glowing Sun behind cloud */}
       <div className="absolute top-0 right-0.5 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-yellow-200 shadow-[0_0_8px_rgba(250,204,21,0.7)] flex items-center justify-center">
         <SunMedium className="w-3 h-3 text-amber-800/40" />
@@ -60,24 +51,18 @@ const WeatherGPTSidebarLogo = ({ collapsed }) => (
         </svg>
       </div>
     </div>
-<<<<<<< HEAD
-    <div>
-      <span className="text-xl font-bold tracking-tight text-[#2563EB] dark:text-blue-400 font-sans leading-none block">
-        WeatherGPT
-      </span>
-      {isAuthority && (
-        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase">
-          Authority
-        </span>
-      )}
-    </div>
-=======
     {!collapsed && (
-      <span className="text-xl font-bold tracking-tight text-[#2563EB] dark:text-blue-400 font-sans truncate">
-        WeatherGPT
-      </span>
+      <div>
+        <span className="text-xl font-bold tracking-tight text-[#2563EB] dark:text-blue-400 font-sans leading-none block truncate">
+          WeatherGPT
+        </span>
+        {isAuthority && (
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase">
+            Authority
+          </span>
+        )}
+      </div>
     )}
->>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
   </div>
 );
 
@@ -130,6 +115,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUserMenuOpen]);
+
 
   const isAuthority = user?.role === 'authority';
 
@@ -187,21 +173,13 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
       {/* Top Section: Logo & Main Navigation */}
       <div className={`py-5 space-y-5 overflow-y-auto overflow-x-hidden flex-1 ${collapsed ? 'px-2.5' : 'px-4'}`}>
         {/* Brand Header */}
-<<<<<<< HEAD
-        <div 
-          onClick={() => handleNavClick('dashboard')}
-          className="px-2 cursor-pointer transition hover:opacity-90"
-        >
-          <WeatherGPTSidebarLogo />
-          <WeatherGPTSidebarLogo isAuthority={isAuthority} />
-=======
         <div className="flex items-center justify-between px-1.5 min-h-[36px]">
           <div 
             onClick={() => handleNavClick('dashboard')}
             className={`cursor-pointer transition hover:opacity-90 flex items-center gap-2.5 min-w-0 ${collapsed ? 'mx-auto' : ''}`}
             title="WeatherGPT"
           >
-            <WeatherGPTSidebarLogo collapsed={collapsed} />
+            <WeatherGPTSidebarLogo collapsed={collapsed} isAuthority={isAuthority} />
           </div>
 
           {!collapsed && (
@@ -214,7 +192,6 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
               <ChevronLeft className="w-4 h-4" />
             </button>
           )}
->>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
         </div>
 
         {/* Navigation Items */}
@@ -280,50 +257,8 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
           })}
         </nav>
 
-<<<<<<< HEAD
-        {/* Middle Section: For User -> Recent Chats; For Authority -> Emergency Center Info */}
-        {!isAuthority ? (
-=======
-        {/* Recent Conversations (Only shown when expanded) */}
-        {!collapsed && recentChats.length > 0 && (
->>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60">
-            <div className="flex items-center justify-between px-2 mb-2">
-              <span className="text-[11px] font-bold text-slate-900 dark:text-slate-200 tracking-tight">
-                {t('recentConversations')}
-              </span>
-            </div>
-            <div className="space-y-1">
-              {recentChats.map((chat) => (
-                <button
-                  key={chat.id}
-                  onClick={() => handleRecentChatClick(chat.id)}
-<<<<<<< HEAD
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition group flex items-start justify-between gap-1"
-=======
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition group flex items-start justify-between gap-1 cursor-pointer"
->>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
-                >
-                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                    {chat.title}
-                  </p>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
-                    {chat.time}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => handleNavClick('history')}
-              className="flex items-center gap-1 px-2.5 py-1 mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-            >
-              <span>{t('viewAll')}</span>
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
-<<<<<<< HEAD
-        ) : (
-          /* Authority Operational Status Box */
+        {/* Middle Section: For User -> Recent Chats; For Authority -> State Advisory System */}
+        {!collapsed && isAuthority && (
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 space-y-3">
             <div className="p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40 space-y-2">
               <div className="flex items-center gap-1.5">
@@ -343,7 +278,38 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
           </div>
         )}
 
-=======
+        {/* Recent Conversations (Only shown when expanded & not authority) */}
+        {!collapsed && !isAuthority && recentChats.length > 0 && (
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <span className="text-[11px] font-bold text-slate-900 dark:text-slate-200 tracking-tight">
+                {t('recentConversations')}
+              </span>
+            </div>
+            <div className="space-y-1">
+              {recentChats.map((chat) => (
+                <button
+                  key={chat.id}
+                  onClick={() => handleRecentChatClick(chat.id)}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition group flex items-start justify-between gap-1 cursor-pointer"
+                >
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    {chat.title}
+                  </p>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
+                    {chat.time}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => handleNavClick('history')}
+              className="flex items-center gap-1 px-2.5 py-1 mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            >
+              <span>{t('viewAll')}</span>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
         )}
 
         {/* Expand Button (Only shown when collapsed) */}
@@ -363,7 +329,6 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
             </button>
           </div>
         )}
->>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
       </div>
 
       {/* Bottom User Profile Section */}
@@ -387,14 +352,13 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                {user?.avatarInitials || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'SP')}
                 {user?.avatarInitials || (isAuthority ? 'AA' : (user?.name ? user.name.slice(0, 2).toUpperCase() : 'SP'))}
               </div>
             )}
 
             {!isUserMenuOpen && (
               <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xl whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 border border-slate-700/60">
-                <span>{user?.name || 'Account & Profile'}</span>
+                <span>{user?.name || (isAuthority ? 'Authority Admin' : 'Account & Profile')}</span>
                 <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900 dark:border-r-slate-800" />
               </div>
             )}
@@ -413,16 +377,21 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
-                  {user?.avatarInitials || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'SP')}
+                  {user?.avatarInitials || (isAuthority ? 'AA' : (user?.name ? user.name.slice(0, 2).toUpperCase() : 'SP'))}
                 </div>
               )}
               <div className="text-left min-w-0">
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                  {user?.name || 'Guest User'}
+                  {user?.name || (isAuthority ? 'Dr. A. Sharma' : 'Guest User')}
                 </p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
-                  {user?.email || 'guest@weathergpt.in'}
+                  {isAuthority ? (user?.state || 'Maharashtra State') : (user?.email || 'guest@weathergpt.in')}
                 </p>
+                {isAuthority && (
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-md shadow-xs">
+                    Authority
+                  </span>
+                )}
               </div>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 shrink-0" />
@@ -441,17 +410,10 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen, isCollapsed, setIsColla
             <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
               <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
                 {user?.name || 'Guest User'}
-                {user?.name || (isAuthority ? 'Dr. A. Sharma' : 'Guest User')}
               </p>
               <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
                 {user?.email || 'guest@weathergpt.in'}
-                {isAuthority ? (user?.state || 'Maharashtra State') : (user?.email || 'guest@weathergpt.in')}
               </p>
-              {isAuthority && (
-                <span className="inline-block mt-1 px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-md shadow-xs">
-                  Authority
-                </span>
-              )}
             </div>
             <button
               onClick={() => {
