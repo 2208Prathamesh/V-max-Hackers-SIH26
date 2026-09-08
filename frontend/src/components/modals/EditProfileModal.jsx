@@ -6,16 +6,26 @@ import { X, User, Mail, Camera } from 'lucide-react';
 export const EditProfileModal = () => {
   const { isEditProfileOpen, setIsEditProfileOpen, user, updateProfile } = useWeather();
   const { t } = useLanguage();
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+  const [name, setName] = useState(user?.name || '');
 
   if (!isEditProfileOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'SP';
-    updateProfile({ name, email, avatarInitials: initials });
-    setIsEditProfileOpen(false);
+    const initials =
+      name
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase() || 'SP';
+    try {
+      await updateProfile({ name, avatarInitials: initials });
+      setIsEditProfileOpen(false);
+    } catch {
+      // The context reports the backend validation error.
+    }
   };
 
   return (
@@ -38,11 +48,11 @@ export const EditProfileModal = () => {
           <div className="flex flex-col items-center gap-2">
             <div className="relative group">
               <div className="w-20 h-20 rounded-full bg-blue-600 text-white font-bold text-2xl flex items-center justify-center shadow-md">
-                {user.avatarInitials || 'SP'}
+                {user?.avatarInitials || (name ? name.slice(0, 2).toUpperCase() : 'SP')}
               </div>
               <button
                 type="button"
-                className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md border-2 border-white dark:border-slate-900 transition"
+                className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md border-2 border-white dark:border-slate-900 transition cursor-pointer"
               >
                 <Camera className="w-3.5 h-3.5" />
               </button>
@@ -60,7 +70,7 @@ export const EditProfileModal = () => {
                 type="text"
                 required
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -75,8 +85,8 @@ export const EditProfileModal = () => {
               <input
                 type="email"
                 required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                value={user?.email || ''}
+                readOnly
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

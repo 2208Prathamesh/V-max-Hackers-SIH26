@@ -1,60 +1,86 @@
-import weatherService from './weather/weatherService.js';
-import { searchLocation } from './weather/openMeteo/geocoding.js';
-import imdService from './imd/imdService.js';
-import advisoryService from './advisory/advisoryService.js';
-import { generateGeminiWeatherResponse } from './ai/geminiService.js';
+import weatherService from './weather/weatherService.js'
+import { searchLocation } from './weather/openMeteo/geocoding.js'
+import imdService from './weather/imd/imdService.js'
+import advisoryService from './advisory/advisoryService.js'
+import { generateGeminiWeatherResponse } from './ai/geminiService.js'
+import { buildWeatherSynthesis } from './weather/weatherSynthesis.js'
 
 /**
  * Extract a candidate city/location name from user query
  * @param {string} text - User message input
  * @returns {string|null} - Extracted candidate location
  */
-function extractLocationQuery(text) {
-  const clean = (text || '').replace(/[?!.,]/g, ' ').trim();
+function extractLocationQuery (text) {
+  const clean = (text || '').replace(/[?!.,]/g, ' ').trim()
 
   // 1. Look for "in/for/at/near/around/of <location>" at the end
-  const prepEndMatch = clean.match(/\b(?:in|for|at|near|around|of)\s+([a-zA-Z\s]+)$/i);
+  const prepEndMatch = clean.match(
+    /\b(?:in|for|at|near|around|of)\s+([a-zA-Z\s]+)$/i
+  )
   if (prepEndMatch && prepEndMatch[1]) {
     const candidate = prepEndMatch[1]
-      .replace(/\b(today|tomorrow|tonight|now|this week|please|currently)\b/gi, '')
-      .trim();
-    if (candidate.length >= 2) return candidate;
+      .replace(
+        /\b(today|tomorrow|tonight|now|this week|please|currently)\b/gi,
+        ''
+      )
+      .trim()
+    if (candidate.length >= 2) return candidate
   }
 
   // 2. Look for "in/for/at/near/around/of <location> (today|tomorrow|weather|forecast...)"
-  const prepMiddleMatch = clean.match(/\b(?:in|for|at|near|around|of)\s+([a-zA-Z\s]+?)\s+(?:today|tomorrow|tonight|now|this week|weather|forecast|temperature|temp|rain|climate)/i);
+  const prepMiddleMatch = clean.match(
+    /\b(?:in|for|at|near|around|of)\s+([a-zA-Z\s]+?)\s+(?:today|tomorrow|tonight|now|this week|weather|forecast|temperature|temp|rain|climate)/i
+  )
   if (prepMiddleMatch && prepMiddleMatch[1]) {
-    const candidate = prepMiddleMatch[1].trim();
-    if (candidate.length >= 2) return candidate;
+    const candidate = prepMiddleMatch[1].trim()
+    if (candidate.length >= 2) return candidate
   }
 
   // 3. Look for "<location> weather/forecast" at the start
-  const cityBeforeWeather = clean.match(/^([a-zA-Z\s]{2,30})\s+(?:weather|forecast|temperature|temp|climate|rain)/i);
+  const cityBeforeWeather = clean.match(
+    /^([a-zA-Z\s]{2,30})\s+(?:weather|forecast|temperature|temp|climate|rain)/i
+  )
   if (cityBeforeWeather && cityBeforeWeather[1]) {
-    return cityBeforeWeather[1].trim();
+    return cityBeforeWeather[1].trim()
   }
 
   // 4. Remove common question filler words and check remaining text
   const stripped = clean
-    .replace(/\b(what|is|the|how|weather|forecast|temperature|temp|climate|rain|raining|rainy|condition|conditions|like|will|it|today|tomorrow|tonight|now|this|week|please|tell|me|about|give|get|show|check|current|any|in|for|at|of)\b/gi, ' ')
+    .replace(
+      /\b(what|is|the|how|weather|forecast|temperature|temp|climate|rain|raining|rainy|condition|conditions|like|will|it|today|tomorrow|tonight|now|this|week|please|tell|me|about|give|get|show|check|current|any|in|for|at|of)\b/gi,
+      ' '
+    )
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 
   if (stripped.length >= 2 && stripped.length <= 40) {
-    return stripped;
+    return stripped
   }
 
-  return null;
+  return null
 }
 
 /**
  * Detect language from query
  */
-function detectLanguage(text) {
-  const t = (text || '').toLowerCase();
-  if (t.includes('काय') || t.includes('आहे') || t.includes('पुण्यात') || t.includes('मुंबईत')) return 'mr';
-  if (t.includes('kaisa') || t.includes('hogi') || t.includes('mausam') || t.includes('baarish') || t.includes('kya')) return 'hi';
-  return 'en';
+function detectLanguage (text) {
+  const t = (text || '').toLowerCase()
+  if (
+    t.includes('काय') ||
+    t.includes('आहे') ||
+    t.includes('पुण्यात') ||
+    t.includes('मुंबईत')
+  )
+    return 'mr'
+  if (
+    t.includes('kaisa') ||
+    t.includes('hogi') ||
+    t.includes('mausam') ||
+    t.includes('baarish') ||
+    t.includes('kya')
+  )
+    return 'hi'
+  return 'en'
 }
 
 /**
@@ -66,15 +92,15 @@ function detectLanguage(text) {
  * @returns {Promise<{ content: string, messageType: string, metadata: object }>}
  */
 const generateResponse = async ({ conversationId, userId, message }) => {
-  const text = (message || '').trim();
-  const lowerText = text.toLowerCase();
-  const detectedLang = detectLanguage(text);
+  const text = (message || '').trim()
+  const lowerText = text.toLowerCase()
+  const detectedLang = detectLanguage(text)
 
   let response = {
     content: '',
     messageType: 'text',
     metadata: {}
-  };
+  }
 
   const isWeatherQuestion =
     lowerText.includes('weather') ||
@@ -97,30 +123,50 @@ const generateResponse = async ({ conversationId, userId, message }) => {
     lowerText.includes('mausam') ||
     lowerText.includes('baarish') ||
     lowerText.includes('हवामान') ||
-    lowerText.includes('पाऊस');
+    lowerText.includes('पाऊस')
 
   if (isWeatherQuestion) {
-    const locationCandidate = extractLocationQuery(text);
+    const locationCandidate = extractLocationQuery(text)
 
     if (locationCandidate) {
       try {
-        const geoResult = await searchLocation(locationCandidate);
+        const geoResult = await searchLocation(locationCandidate)
 
         if (geoResult?.results && geoResult.results.length > 0) {
-          const match = geoResult.results[0];
-          const locationName = `${match.name}${match.admin1 ? ', ' + match.admin1 : ''}, ${match.country}`;
+          const match = geoResult.results[0]
+          const locationName = `${match.name}${
+            match.admin1 ? ', ' + match.admin1 : ''
+          }, ${match.country}`
 
-          // Fetch verified live meteorological datasets concurrently
-          const [weatherData, imdWarning, agroAdvisory] = await Promise.all([
+          // Fetch verified live meteorological datasets with a strict timeout to prevent chat hangs
+          const weatherData = await Promise.race([
             weatherService.getWeather(match.latitude, match.longitude),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Weather fetch timeout')), 5000)
+            )
+          ]).catch(err => {
+            console.warn('[CHAT] Weather fetch timed out or failed:', err.message);
+            return {}; // Return empty object to allow AI to respond without weather data
+          });
+
+          const [imdWarning, agroAdvisory] = await Promise.all([
             imdService.getDistrictWarning(match.name).catch(() => null),
             lowerText.includes('crop') || lowerText.includes('farm')
-              ? advisoryService.getAgricultureAdvisory(match.latitude, match.longitude).catch(() => null)
+              ? advisoryService
+                  .getAgricultureAdvisory(match.latitude, match.longitude)
+                  .catch(() => null)
               : null
-          ]);
+          ])
 
-          const current = weatherData?.forecast?.current;
-          const daily = weatherData?.forecast?.daily || [];
+          const synthesis = buildWeatherSynthesis({
+            observation: weatherData?.observations?.imd,
+            alerts: imdWarning ? [imdWarning] : [],
+            gfs: weatherData?.models?.gfs,
+            ecmwf: weatherData?.models?.ecmwf,
+            modelComparison: weatherData?.modelComparison
+          })
+          const current = synthesis.current.weather || null
+          const daily = weatherData?.forecast?.daily || []
 
           // Grounded AI reasoning
           const aiText = await generateGeminiWeatherResponse({
@@ -130,10 +176,11 @@ const generateResponse = async ({ conversationId, userId, message }) => {
               currentWeather: current,
               forecastDaily: daily,
               imdWarning,
-              agroAdvisory
+              agroAdvisory,
+              nwpComparison: weatherData?.modelComparison
             },
             language: detectedLang
-          });
+          })
 
           response = {
             content: aiText,
@@ -146,26 +193,28 @@ const generateResponse = async ({ conversationId, userId, message }) => {
               daily: daily.slice(0, 5),
               airQuality: weatherData.airQuality,
               imdWarning,
-              agroAdvisory
+              agroAdvisory,
+              synthesis
             }
-          };
+          }
         } else {
-          response.content = `I couldn't locate "${locationCandidate}". Please check the spelling or provide the city and state name.`;
+          response.content = `I couldn't locate "${locationCandidate}". Please check the spelling or provide the city and state name.`
         }
       } catch (err) {
-        console.error('Chat weather fetch error:', err.message);
-        response.content = `I encountered an issue fetching live weather for "${locationCandidate}". Please try again shortly.`;
+        console.error('Chat weather fetch error:', err.message)
+        response.content = `I encountered an issue fetching live weather for "${locationCandidate}". Please try again shortly.`
       }
     } else {
-      response.content = 'Which city or location would you like the weather forecast for?';
+      response.content =
+        'Which city or location would you like the weather forecast for?'
     }
   } else {
     response.content =
-      'Hello! I am WeatherGPT. Ask me anything about current weather conditions, multi-day forecasts, rainfall chances, wind speeds, agricultural crop advisories, or air quality for any city in the world.';
+      'Hello! I am WeatherGPT. Ask me anything about current weather conditions, multi-day forecasts, rainfall chances, wind speeds, agricultural crop advisories, or air quality for any city in the world.'
   }
 
-  return response;
-};
+  return response
+}
 
-export { generateResponse, extractLocationQuery };
-export default { generateResponse, extractLocationQuery };
+export { generateResponse, extractLocationQuery }
+export default { generateResponse, extractLocationQuery }

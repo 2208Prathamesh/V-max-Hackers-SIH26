@@ -21,14 +21,21 @@
   "dependencies": {
     "@mattnucc/gribberish": "^1.7.0",
     "@weacast/grib2json": "^2.3.1",
+    "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
+    "fast-xml-parser": "^5.11.1",
+    "i18next": "^26.4.2",
+    "i18next-browser-languagedetector": "^8.2.1",
     "joi": "^18.2.5",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.9.3"
+    "mongoose": "^9.9.3",
+    "node-cron": "^4.6.0",
+    "react-i18next": "^17.0.13",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

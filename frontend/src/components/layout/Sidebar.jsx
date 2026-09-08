@@ -18,7 +18,8 @@ import {
   LogOut,
   User as UserIcon,
   SunMedium,
-  Sprout
+  Sprout,
+  CloudSun
 } from 'lucide-react';
 
 // 3D Styled Cloud & Sun Logo for Sidebar
@@ -73,6 +74,7 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { id: 'alerts', label: t('alerts'), icon: Bell, badge: '3' },
     { id: 'weather-map', label: t('weatherMap'), icon: Map },
     { id: 'forecast', label: t('forecast'), icon: Calendar },
+    { id: 'climate-historical', label: t('climateHistorical') || 'Climate Historical', icon: CloudSun },
     { id: 'history', label: t('history'), icon: Clock },
     { id: 'saved-locations', label: t('savedLocations'), icon: Star },
     { id: 'settings', label: t('settings'), icon: Settings },
@@ -186,23 +188,23 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
           className="w-full flex items-center justify-between p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer"
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            {user.avatarUrl ? (
+            {user?.avatarUrl ? (
               <img
                 src={user.avatarUrl}
-                alt={user.name}
+                alt={user?.name || 'User'}
                 className="w-8 h-8 rounded-full object-cover shadow-xs shrink-0"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
-                {user.avatarInitials || 'SP'}
+                {user?.avatarInitials || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'SP')}
               </div>
             )}
             <div className="text-left min-w-0">
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                {user.name}
+                {user?.name || 'Guest User'}
               </p>
               <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
-                {user.email}
+                {user?.email || 'guest@weathergpt.in'}
               </p>
             </div>
           </div>

@@ -10,7 +10,9 @@ const SHORT_TTL_MS = 30 * 1000; // 30 seconds for live alerts
 const MAX_CACHE_ENTRIES = 120;
 
 const getTtlForPath = (path) => {
-  if (path.includes('/alerts') || path.includes('/warnings')) return SHORT_TTL_MS;
+  if (path.includes('/alerts') || path.includes('/warnings') || path.includes('/notifications')) {
+    return SHORT_TTL_MS;
+  }
   return DEFAULT_TTL_MS;
 };
 
@@ -34,6 +36,13 @@ const request = async (path, options = {}) => {
       ...options,
       headers
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem('weathergpt_token');
+      localStorage.removeItem('weathergpt_user');
+      window.dispatchEvent(new CustomEvent('weathergpt:unauthorized'));
+    }
+
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       throw new Error(payload.message || 'Request failed');
@@ -65,6 +74,12 @@ const request = async (path, options = {}) => {
         ...options,
         headers
       });
+
+      if (response.status === 401) {
+        localStorage.removeItem('weathergpt_token');
+        localStorage.removeItem('weathergpt_user');
+        window.dispatchEvent(new CustomEvent('weathergpt:unauthorized'));
+      }
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -98,6 +113,7 @@ const request = async (path, options = {}) => {
 export const api = {
   // Cache Management
   clearCache: invalidateCache,
+
   // Liveness
   health: () => request('/health'),
 
@@ -113,128 +129,105 @@ export const api = {
       body: JSON.stringify(details)
     }),
   currentUser: () => request('/auth/me'),
-  logout: () => request('/auth/logout', { method: 'POST' }),
+  logout: () =>
+    request('/auth/logout', {
+      method: 'POST'
+    }),
+  forgotPassword: (email) =>
+    request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+  resetPassword: ({ token, password, confirmPassword }) =>
+    request(`/auth/reset-password/${token}`, {
+      method: 'POST',
+      body: JSON.stringify({ password, confirmPassword })
+    }),
+  getUserProfile: () => request('/users/profile'),
+  updateProfile: (profile) =>
+    request('/users/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profile)
+    }),
 
-  // Live Weather & Forecasts
+  // Weather & Forecast
   weather: ({ latitude, longitude, city }) => {
     const params = new URLSearchParams();
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
     if (city) params.set('city', city);
-    return request(`/weather/current?${params}`);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    return request(`/weather/current?${params.toString()}`);
   },
   forecast: ({ latitude, longitude, city, days = 7 }) => {
     const params = new URLSearchParams({ days: String(days) });
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
     if (city) params.set('city', city);
-    return request(`/weather/forecast?${params}`);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    return request(`/weather/forecast?${params.toString()}`);
   },
   hourly: ({ latitude, longitude, city, hours = 24 }) => {
     const params = new URLSearchParams({ hours: String(hours) });
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
     if (city) params.set('city', city);
-    return request(`/weather/hourly?${params}`);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    return request(`/weather/hourly?${params.toString()}`);
   },
   compareModels: ({ latitude, longitude, city }) => {
     const params = new URLSearchParams();
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
     if (city) params.set('city', city);
-    return request(`/weather/compare?${params}`);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    return request(`/weather/compare?${params.toString()}`);
   },
   searchLocations: (query) => request(`/weather/search?q=${encodeURIComponent(query)}`),
 
-  // IMD Official Alerts & Warnings
+  // Alerts & IMD
+  alerts: () => request('/alerts'),
+  myAlerts: () => request('/alerts/my-alerts'),
+  activeAlerts: () => request('/alerts/active'),
+  getAlertById: (id) => request(`/alerts/${id}`),
   imdWarnings: () => request('/imd/warnings'),
   imdDistrictWarning: (name) => request(`/imd/warnings/district?name=${encodeURIComponent(name)}`),
   imdBulletin: () => request('/imd/bulletin'),
-  alerts: () => request('/alerts'),
 
-  // Climate & 20-Year Historical Trends
-  climateHistory: ({ city, latitude, longitude, startDate, endDate }) => {
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
-    if (startDate) params.set('startDate', startDate);
-    if (endDate) params.set('endDate', endDate);
-    return request(`/climate/history?${params}`);
-  },
-  climateTrends: ({ city, latitude, longitude, startYear, endYear }) => {
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
-    if (startYear) params.set('startYear', startYear);
-    if (endYear) params.set('endYear', endYear);
-    return request(`/climate/trends?${params}`);
-  },
-
-  // Agriculture & Disaster Decision Support
-  agricultureAdvisory: ({ city, latitude, longitude, crop }) => {
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
-    if (crop) params.set('crop', crop);
-    return request(`/advisories/agriculture?${params}`);
-  },
-  disasterAdvisory: ({ city, latitude, longitude }) => {
-    const params = new URLSearchParams();
-    if (city) params.set('city', city);
-    if (latitude && longitude) {
-      params.set('latitude', latitude);
-      params.set('longitude', longitude);
-    }
-    return request(`/advisories/disaster?${params}`);
-  },
-
-  // GIS Map Layers
-  mapWeatherLayer: (layer = 'temperature') => request(`/maps/layers/weather?layer=${layer}`),
-  mapAlertsLayer: () => request('/maps/layers/alerts'),
-  mapFloodRiskLayer: () => request('/maps/layers/flood-risk'),
-
-  // Voice Assistance
-  voiceTranscribe: (data) =>
-    request('/voice/transcribe', {
-      method: 'POST',
-      body: JSON.stringify(data)
+  // Notifications & Subscriptions
+  notifications: () => request('/notifications'),
+  unreadNotificationCount: () => request('/notifications/unread-count'),
+  markNotificationAsRead: (id) =>
+    request(`/notifications/${id}/read`, {
+      method: 'PATCH'
     }),
-  voiceSynthesize: (data) =>
-    request('/voice/synthesize', {
-      method: 'POST',
-      body: JSON.stringify(data)
+  markAllNotificationsAsRead: () =>
+    request('/notifications/read-all', {
+      method: 'PATCH'
+    }),
+  getSubscriptions: () => request('/subscriptions'),
+  toggleSubscription: (id, enabled) =>
+    request(`/subscriptions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled })
     }),
 
-  // Satellite & WMO WIS 2.0 Metadata
-  satelliteLayers: () => request('/satellite/layers'),
-  satelliteCycloneTracks: () => request('/satellite/cyclone-tracks'),
-
-  // Saved Locations
+  // Locations
   locations: () => request('/locations'),
   addLocation: (location) =>
     request('/locations', {
       method: 'POST',
       body: JSON.stringify(location)
     }),
-  deleteLocation: (id) => request(`/locations/${id}`, { method: 'DELETE' }),
-  favoriteLocation: (id) => request(`/locations/${id}/favorite`, { method: 'PATCH' }),
+  updateLocation: (id, location) =>
+    request(`/locations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(location)
+    }),
+  deleteLocation: (id) =>
+    request(`/locations/${id}`, {
+      method: 'DELETE'
+    }),
+  favoriteLocation: (id) =>
+    request(`/locations/${id}/favorite`, {
+      method: 'PATCH'
+    }),
 
   // Conversations & AI Messages
   conversations: () => request('/conversations'),
@@ -243,6 +236,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(details)
     }),
+  deleteConversation: (id) =>
+    request(`/conversations/${id}`, {
+      method: 'DELETE'
+    }),
   messages: (conversationId) => request(`/messages/${conversationId}`),
   sendMessage: (details) =>
     request('/messages', {
@@ -250,8 +247,9 @@ export const api = {
       body: JSON.stringify(details)
     }),
 
-  // User Settings
+  // Settings & Preferences
   settings: () => request('/settings'),
+  getSettings: () => request('/settings'),
   updateSettings: (settings) =>
     request('/settings', {
       method: 'PUT',
@@ -261,7 +259,93 @@ export const api = {
     request('/settings/password', {
       method: 'PUT',
       body: JSON.stringify(passwords)
-    })
+    }),
+
+  // Climate Intelligence
+  climateHistory: ({ city, latitude, longitude, startDate, endDate }) => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    return request(`/climate/history?${params.toString()}`);
+  },
+  climateTrends: ({ city, latitude, longitude, startYear, endYear }) => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    if (startYear) params.set('startYear', String(startYear));
+    if (endYear) params.set('endYear', String(endYear));
+    return request(`/climate/trends?${params.toString()}`);
+  },
+  fullClimateData: ({ city, startDate, endDate }) => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    return request(`/climate/full?${params.toString()}`);
+  },
+
+  // GIS Map Layers
+  weatherMapLayer: (layer = 'temperature') =>
+    request(`/maps/layers/weather?layer=${encodeURIComponent(layer)}`),
+  mapWeatherLayer: (layer = 'temperature') =>
+    request(`/maps/layers/weather?layer=${encodeURIComponent(layer)}`),
+  alertsMapLayer: () => request('/maps/layers/alerts'),
+  mapAlertsLayer: () => request('/maps/layers/alerts'),
+  floodRiskMapLayer: () => request('/maps/layers/flood-risk'),
+  mapFloodRiskLayer: () => request('/maps/layers/flood-risk'),
+  satelliteLayers: () => request('/satellite/layers'),
+  cycloneTracks: () => request('/satellite/cyclone-tracks'),
+  satelliteCycloneTracks: () => request('/satellite/cyclone-tracks'),
+
+  // Voice Assistance
+  transcribeVoice: ({ audioBase64, mimeType, language }) =>
+    request('/voice/transcribe', {
+      method: 'POST',
+      body: JSON.stringify({ audioBase64, mimeType, language })
+    }),
+  voiceTranscribe: (data) =>
+    request('/voice/transcribe', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  synthesizeVoice: ({ text, language }) =>
+    request('/voice/synthesize', {
+      method: 'POST',
+      body: JSON.stringify({ text, language })
+    }),
+  voiceSynthesize: (data) =>
+    request('/voice/synthesize', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  // Advisories
+  agricultureAdvisory: ({ city, latitude, longitude, crop }) => {
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    if (crop) params.set('crop', crop);
+    return request(`/advisories/agriculture?${params.toString()}`);
+  },
+  cropAdvisory: ({ crop, latitude, longitude }) =>
+    request(
+      `/advisories/crop?crop=${encodeURIComponent(crop || '')}&latitude=${encodeURIComponent(
+        latitude || ''
+      )}&longitude=${encodeURIComponent(longitude || '')}`
+    ),
+  disasterAdvisory: ({ city, location, latitude, longitude }) => {
+    const params = new URLSearchParams();
+    const loc = city || location;
+    if (loc) params.set('location', loc);
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    return request(`/advisories/disaster?${params.toString()}`);
+  }
 };
 
 export default api;

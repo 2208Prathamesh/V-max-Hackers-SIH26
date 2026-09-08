@@ -1,0 +1,191 @@
+{
+  "common": {
+    "search": "खोजें",
+    "submit": "जमा करें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "update": "अपडेट करें",
+    "delete": "हटाएं",
+    "error": "एक त्रुटि हुई",
+    "success": "सफलता",
+    "welcome": "स्वागत है",
+    "logout": "लॉग आउट",
+    "viewAll": "सभी देखें",
+    "humidity": "आर्द्रता",
+    "wind": "हवा",
+    "pressure": "दबाव",
+    "visibility": "दृश्यता",
+    "min": "न्यूनतम",
+    "max": "अधिकतम"
+  },
+  "auth": {
+    "login": "लॉगिन",
+    "register": "रजिस्टर",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "submit": "साइन इन करें",
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "createAccount": "खाता बनाएं"
+  },
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "forecast": "पूर्वानुमान",
+    "alerts": "अलर्ट",
+    "climate": "जलवायु",
+    "locations": "सहेजी गई जगहें",
+    "settings": "सेटिंग्स",
+    "chat": "चैट"
+  },
+  "dashboard": {
+    "greeting": "सुप्रभात, {{name}}!",
+    "overview": "यहाँ आपका मौसम विवरण है",
+    "searchPlaceholder": "WeatherGPT से कुछ भी पूछें...",
+    "voiceListening": "सुन रहा हूँ... अपना मौसम प्रश्न बोलें",
+    "suggestion1": "क्या कल बारिश होगी?",
+    "suggestion2": "मुंबई में मौसम",
+    "suggestion3": "चक्रवात अपडेट",
+    "suggestion4": "आज की वायु गुणवत्ता",
+    "currentLocation": "वर्तमान स्थान",
+    "condition": {
+      "rain": "आस-पास बारिश",
+      "humid": "नम स्थितियाँ",
+      "default": "वर्तमान स्थितियाँ"
+    },
+    "weatherUnavailable": "मौसम डेटा उपलब्ध नहीं है",
+    "activeAlerts": "सक्रिय अलर्ट",
+    "noAlerts": "कोई सक्रिय अलर्ट नहीं",
+    "todayForecast": "आज का पूर्वानुमान",
+    "viewFullForecast": "पूर्ण पूर्वानुमान देखें",
+    "quickActions": "त्वरित कार्य",
+    "action": {
+      "forecast": "मौसम पूर्वानुमान",
+      "map": "मौसम मानचित्र",
+      "alerts": "अलर्ट",
+      "airQuality": "वायु गुणवत्ता"
+    },
+    "recentConversations": "हाल की बातचीत",
+    "savedLocations": "सहेजी गई जगहें",
+    "locationStatus": {
+      "current": "वर्तमान स्थान",
+      "favorite": "पसंदीदा स्थान",
+      "saved": "सहेजी गई जगह"
+    },
+    "didYouKnow": {
+      "title": "क्या आप जानते हैं?",
+      "text": "पेड़ आसपास के हवा के तापमान को 5°C तक कम कर सकते हैं। अधिक पेड़ लगाएं और ठंडे रहें!"
+    }
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "tabs": {
+      "general": "सामान्य",
+      "units": "इकाइयाँ और प्रारूप",
+      "notifications": "सूचनाएं",
+      "weatherPrefs": "मौसम प्राथमिकताएं",
+      "privacy": "गोपनीयता और डेटा",
+      "appearance": "दिखावट",
+      "language": "भाषा",
+      "connected": "जुड़े हुए खाते",
+      "about": "के बारे में"
+    },
+    "general": {
+      "profileInfo": "प्रोफ़ाइल जानकारी",
+      "profileDesc": "अपना नाम, ईमेल और प्रोफ़ाइल चित्र अपडेट करें।",
+      "editProfile": "प्रोफ़ाइल संपादित करें",
+      "changePassword": "पासवर्ड बदलें",
+      "changePasswordDesc": "अपने खाते को सुरक्षित रखने के लिए अपना पासवर्ड अपडेट करें।",
+      "changeBtn": "बदलें",
+      "timeZone": "समय क्षेत्र",
+      "timeZoneDesc": "सटीक अपडेट के लिए अपना डिफ़ॉल्ट समय क्षेत्र सेट करें।"
+    },
+    "units": {
+      "title": "इकाइयाँ और प्रारूप",
+      "temperature": "तापमान",
+      "temperatureDesc": "अपनी पसंदीदा तापमान इकाई चुनें।",
+      "wind": "हवा की गति",
+      "windDesc": "अपनी पसंदीदा हवा की गति इकाई चुनें।",
+      "pressure": "दबाव",
+      "pressureDesc": "अपनी पसंदीदा दबाव इकाई चुनें।",
+      "precipitation": "वर्षण",
+      "precipitationDesc": "अपनी पसंदीदा वर्षण इकाई चुनें।"
+    },
+    "notifications": {
+      "title": "सूचनाएं",
+      "weatherAlerts": "मौसम अलर्ट",
+      "weatherAlertsDesc": "गंभीर मौसम अलर्ट और चेतावनियाँ प्राप्त करें।",
+      "dailyForecast": "दैनिक पूर्वानुमान",
+      "dailyForecastDesc": "हर सुबह अपना दैनिक मौसम पूर्वानुमान प्राप्त करें।",
+      "weeklySummary": "साप्ताहिक सारांश",
+      "weeklySummaryDesc": "साप्ताहिक मौसम सारांश और आउटलुक प्राप्त करें।",
+      "breakingNews": "ब्रेकिंग न्यूज़",
+      "breakingNewsDesc": "महत्वपूर्ण मौसम समाचार और अपडेट।"
+    },
+    "account": {
+      "summary": "खाता सारांश",
+      "memberSince": "सदस्य since",
+      "locationsSaved": "सहेजी गई जगहें",
+      "conversations": "बातचीत",
+      "alertsSet": "सेट अलर्ट",
+      "manageSubscription": "सब्सक्रिप्शन प्रबंधित करें"
+    },
+    "privacy": {
+      "title": "डेटा और गोपनीयता",
+      "desc": "हम आपकी गोपनीयता का सम्मान करते हैं और आपके डेटा को सुरक्षित रखते हैं।",
+      "manageData": "डेटा प्रबंधित करें",
+      "downloadData": "मेरा डेटा डाउनलोड करें",
+      "privacyPolicy": "गोपनीयता नीति",
+      "terms": "सेवा की शर्तें"
+    },
+    "help": {
+      "title": "सहायता चाहिए?",
+      "desc": "हम किसी भी प्रश्न के साथ आपकी सहायता के लिए यहाँ हैं।",
+      "center": "सहायता केंद्र",
+      "support": "सपोर्ट से संपर्क करें",
+      "feedback": "फीडबैक भेजें"
+    },
+    "danger": {
+      "deleteAccount": "खाता हटाएं",
+      "deleteDesc": "अपने खाते और अपने सभी डेटा को स्थायी रूप से हटाएं।",
+      "confirmDelete": "खाता हटाने की पुष्टि करें",
+      "deleteConfirmDesc": "क्या आप वाकई अपना खाता स्थायी रूप से हटाना चाहते हैं? सभी सहेजी गई जगहें, चैट इतिहास और अलर्ट हमेशा के लिए खो जाएंगे।",
+      "deleteBtn": "स्थायी रूप से हटाएं"
+    },
+    "passwordModal": {
+      "title": "पासवर्ड बदलें",
+      "currentPassword": "वर्तमान पासवर्ड",
+      "newPassword": "नया पासवर्ड",
+      "confirmPassword": "पासवर्ड की पुष्टि करें",
+      "updateBtn": "पासवर्ड अपडेट करें",
+      "cancel": "रद्द करें"
+    }
+  },
+  "chat": {
+    "user": "आप:",
+    "bot": "🤖:",
+    "placeholder": "WeatherGPT से कुछ भी पूछें...",
+    "welcome": "नमस्ते! मैं WeatherGPT हूँ। मुझसे दुनिया के किसी भी शहर के वर्तमान मौसम, बहु-दिवसीय पूर्वानुमान, बारिश की संभावना, हवा की गति, कृषि फसल सलाह या वायु गुणवत्ता के बारे में कुछ भी पूछें।"
+  },
+  "alerts": {
+    "title": "अलर्ट",
+    "subtitle": "सूचित रहें और सुरक्षित रहें। रीयल-टाइम मौसम अलर्ट और चेतावनियाँ।",
+    "active": "सक्रिय अलर्ट",
+    "viewAll": "सभी देखें",
+    "noAlerts": "कोई सक्रिय अलर्ट नहीं"
+  },
+  "forecast": {
+    "loading": "पूर्वानुमान लोड हो रहा है...",
+    "unavailable": "पूर्वानुमान उपलब्ध नहीं है",
+    "title": "पूर्वानुमान",
+    "today": "आज का पूर्वानुमान",
+    "viewFull": "पूर्ण पूर्वानुमान देखें"
+  },
+  "climate": {
+    "title": "जलवायु इंटेलिजेंस",
+    "history": "जलवायु इतिहास"
+  },
+  "locations": {
+    "title": "सहेजी गई जगहें",
+    "add": "जगह जोड़ें",
+    "manage": "जगहें प्रबंधित करें"
+  }
+}

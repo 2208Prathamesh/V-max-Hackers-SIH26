@@ -285,6 +285,34 @@ export const AlertsPage = () => {
     });
   }, [activeAlertsStream, activeTab, selectedLocation, severityFilters]);
 
+  const handleAlertDetails = async (alert) => {
+    setSelectedAlertForDetails(alert);
+    if (!/^[a-f\d]{24}$/i.test(String(alert.id))) return;
+
+    try {
+      const detail = await api.getAlertById(alert.id);
+      setSelectedAlertForDetails((current) => ({
+        ...current,
+        description: detail.description || current.description,
+        effectiveTime: detail.startTime
+          ? new Date(detail.startTime).toLocaleString([], {
+              dateStyle: 'medium',
+              timeStyle: 'short'
+            })
+          : current.effectiveTime,
+        untilTime: detail.endTime
+          ? new Date(detail.endTime).toLocaleString([], {
+              dateStyle: 'medium',
+              timeStyle: 'short'
+            })
+          : current.untilTime,
+        source: detail.source || current.source
+      }));
+    } catch {
+      // Keep existing alert details if offline or mock
+    }
+  };
+
   const handleClearFilters = () => {
     setSelectedLocation('All');
     setActiveTab('all');
@@ -655,7 +683,7 @@ export const AlertsPage = () => {
 
                     {/* View Details Button */}
                     <button
-                      onClick={() => setSelectedAlertForDetails(alert)}
+                      onClick={() => handleAlertDetails(alert)}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer border ${
                         isSevere
                           ? 'border-rose-300 text-rose-600 hover:bg-rose-100/60 bg-white dark:bg-slate-900'
@@ -691,7 +719,7 @@ export const AlertsPage = () => {
               {recentAlertsStream.map((recent) => (
                 <div
                   key={recent.id}
-                  onClick={() => setSelectedAlertForDetails(recent)}
+                  onClick={() => handleAlertDetails(recent)}
                   className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer group"
                 >
                   <div className="flex items-center gap-3.5 min-w-0">

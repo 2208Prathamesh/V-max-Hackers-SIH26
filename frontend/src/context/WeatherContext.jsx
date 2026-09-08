@@ -1,301 +1,477 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { DEFAULT_SETTINGS, DEFAULT_USER_STATS } from '../config/defaults'
-import { api } from '../services/api'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef
+} from 'react';
+import { DEFAULT_SETTINGS, DEFAULT_USER_STATS } from '../config/defaults';
+import { api } from '../services/api';
 
-const WeatherContext = createContext()
+const WeatherContext = createContext();
 
-const normalizeUser = user => ({
+const normalizeUser = (user) => ({
   ...user,
   stats: {
     ...DEFAULT_USER_STATS,
     ...(user?.stats || {})
   }
-})
+});
 
 export const WeatherProvider = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState('dashboard')
+  const [currentPage, setCurrentPage] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('weathergpt_token') !== null
-  })
+    return localStorage.getItem('weathergpt_token') !== null;
+  });
 
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_user')
+    const saved = localStorage.getItem('weathergpt_user');
     try {
-      return saved ? normalizeUser(JSON.parse(saved)) : null
+      return saved ? normalizeUser(JSON.parse(saved)) : null;
     } catch {
-      return null
+      return null;
     }
-  })
+  });
 
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_settings')
+    const saved = localStorage.getItem('weathergpt_settings');
     try {
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
     } catch {
-      return DEFAULT_SETTINGS
+      return DEFAULT_SETTINGS;
     }
-  })
+  });
 
-  const [savedLocations, setSavedLocations] = useState([])
-  const [conversations, setConversations] = useState([])
-  const [activeConversationId, setActiveConversationId] = useState(null)
-  const [selectedMapLocation, setSelectedMapLocation] = useState(null)
-  const [alerts, setAlerts] = useState([])
-  const [weatherData, setWeatherData] = useState(null)
-  const [weatherLoading, setWeatherLoading] = useState(false)
-  const [forecastData, setForecastData] = useState(null)
-  const [forecastLoading, setForecastLoading] = useState(false)
-  const [dataLoading, setDataLoading] = useState(true)
+  const [savedLocations, setSavedLocations] = useState(() => {
+    const saved = localStorage.getItem('weathergpt_saved_locations');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [conversations, setConversations] = useState(() => {
+    const saved = localStorage.getItem('weathergpt_conversations');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [isSending, setIsSending] = useState(false);
+  const [selectedMapLocation, setSelectedMapLocation] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState(null);
+
+  const [forecastData, setForecastData] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [forecastError, setForecastError] = useState(null);
+  const [dataLoading, setDataLoading] = useState(false);
+
+  const weatherRequestRef = useRef({ key: null, version: 0 });
+  const forecastRequestRef = useRef({ key: null, version: 0, promise: null });
+  const forecastStateRef = useRef({ key: null, data: null });
 
   // Modals state
-  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
-  const [isAirQualityOpen, setIsAirQualityOpen] = useState(false)
-  const [toasts, setToasts] = useState([])
+  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isAirQualityOpen, setIsAirQualityOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem('weathergpt_auth', JSON.stringify(isAuthenticated))
-  }, [isAuthenticated])
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('weathergpt_user', JSON.stringify(user))
-    }
-  }, [user])
+    localStorage.setItem('weathergpt_auth', JSON.stringify(isAuthenticated));
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    localStorage.setItem('weathergpt_settings', JSON.stringify(settings))
-  }, [settings])
+    if (user) {
+      localStorage.setItem('weathergpt_user', JSON.stringify(user));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('weathergpt_settings', JSON.stringify(settings));
+  }, [settings]);
+
+  useEffect(() => {
+    localStorage.setItem('weathergpt_saved_locations', JSON.stringify(savedLocations));
+  }, [savedLocations]);
+
+  useEffect(() => {
+    localStorage.setItem('weathergpt_conversations', JSON.stringify(conversations));
+  }, [conversations]);
 
   const refreshAlerts = async () => {
     try {
-      const serverAlerts = await api.alerts()
+      const serverAlerts = await api.alerts();
       if (Array.isArray(serverAlerts)) {
-        setAlerts(serverAlerts)
+        setAlerts(serverAlerts);
       }
     } catch (err) {
-      console.warn('Could not refresh alerts from API:', err)
+      console.warn('Could not refresh alerts from API:', err);
     }
-  }
+  };
 
   // Load live alerts from database on mount
   useEffect(() => {
-    refreshAlerts()
-  }, [])
+    refreshAlerts();
+  }, []);
 
+  // Hydrate auth status and user profile from backend on initial mount
   useEffect(() => {
-    if (!isAuthenticated) {
-      setDataLoading(false)
-      return
+    const token = localStorage.getItem('weathergpt_token');
+    if (token) {
+      api
+        .currentUser()
+        .then((userData) => {
+          setIsAuthenticated(true);
+          if (userData) {
+            setUser((prev) => ({
+              ...prev,
+              ...userData,
+              avatarUrl: userData.profileImage || userData.avatarUrl,
+              stats: {
+                ...DEFAULT_USER_STATS,
+                ...(prev?.stats || {}),
+                ...(userData.stats || {})
+              }
+            }));
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('weathergpt_token');
+          localStorage.removeItem('weathergpt_user');
+          setIsAuthenticated(false);
+        });
     }
 
-    setDataLoading(true)
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false);
+      addToast('Session expired. Please log in again.', 'warning');
+    };
+    window.addEventListener('weathergpt:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('weathergpt:unauthorized', handleUnauthorized);
+  }, []);
 
-    const loadData = async () => {
-      try {
-        // Load conversations
-        const serverConversations = await api.conversations().catch(() => [])
-        if (Array.isArray(serverConversations)) {
-          setConversations(
-            serverConversations.map(conversation => ({
+  // Load initial user data once authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    setDataLoading(true);
+
+    // 1. Fetch Conversations
+    api
+      .conversations()
+      .then((serverConversations) => {
+        if (!Array.isArray(serverConversations)) return;
+        setConversations((prevConvs) =>
+          serverConversations.map((conversation) => {
+            const existing = prevConvs.find((c) => c.id === conversation._id);
+            return {
               id: conversation._id,
               title: conversation.title,
               preview: conversation.title,
               tag: conversation.category || 'General Query',
               tagColor: 'blue',
               icon: 'sun-cloud',
-              messages: []
-            }))
-          )
-        }
+              messages: existing?.messages?.length ? existing.messages : []
+            };
+          })
+        );
+      })
+      .catch(() => {})
+      .finally(() => setDataLoading(false));
 
-        // Load locations
-        const serverLocations = await api.locations().catch(() => [])
-        if (Array.isArray(serverLocations) && serverLocations.length > 0) {
-          const locations = serverLocations.map(location => ({
-            ...location,
-            id: location._id || location.id,
-            region: location.region || location.state,
-            lat: location.lat ?? location.latitude,
-            lng: location.lng ?? location.longitude,
-            condition:
-              location.condition && location.condition !== 'Unknown'
-                ? location.condition
-                : 'Weather unavailable',
-            tempC: location.tempC ?? null,
-            feelsLikeC: location.feelsLikeC ?? null,
-            humidity: location.humidity ?? null,
-            windSpeedKmh: location.windSpeedKmh ?? null,
-            windDirection: location.windDirection || '',
-            forecast3Day:
-              Array.isArray(location.forecast3Day) &&
-              location.forecast3Day.some(day => day.temp != null)
-                ? location.forecast3Day
-                : []
-          }))
-          setSavedLocations(locations)
-          setSelectedMapLocation(locations[0])
+    // 2. Fetch Notifications
+    api
+      .notifications()
+      .then((serverNotifications) => {
+        if (Array.isArray(serverNotifications)) {
+          setNotifications(serverNotifications);
         }
+      })
+      .catch(() => {});
 
-        // Load settings
-        const serverSettings = await api.settings().catch(() => null)
+    // 3. Fetch Saved Locations
+    api
+      .locations()
+      .then((serverLocations) => {
+        if (!Array.isArray(serverLocations)) return;
+        const locations = serverLocations.map((location) => ({
+          ...location,
+          id: location._id || location.id,
+          region: location.region || location.state,
+          lat: location.lat ?? location.latitude,
+          lng: location.lng ?? location.longitude,
+          condition:
+            location.condition && location.condition !== 'Unknown'
+              ? location.condition
+              : 'Weather unavailable',
+          tempC: location.tempC ?? null,
+          feelsLikeC: location.feelsLikeC ?? null,
+          humidity: location.humidity ?? null,
+          windSpeedKmh: location.windSpeedKmh ?? null,
+          windDirection: location.windDirection || '',
+          forecast3Day: Array.isArray(location.forecast3Day) ? location.forecast3Day : []
+        }));
+        setSavedLocations(locations);
+        if (locations.length > 0 && !selectedMapLocation) {
+          setSelectedMapLocation(locations[0]);
+        }
+      })
+      .catch(() => {});
+
+    // 4. Fetch User Settings
+    api
+      .getSettings()
+      .then((serverSettings) => {
         if (serverSettings) {
-          setSettings(prev => ({
+          setSettings((prev) => ({
             ...prev,
             ...serverSettings,
             units: {
-              ...prev.units,
-              ...(serverSettings.units || {})
+              temperature: serverSettings.temperatureUnit === 'fahrenheit' ? 'F' : 'C',
+              windSpeed:
+                serverSettings.windUnit === 'mph'
+                  ? 'mph'
+                  : serverSettings.windUnit === 'm/s'
+                  ? 'ms'
+                  : serverSettings.windUnit === 'knots'
+                  ? 'knots'
+                  : 'kmh',
+              pressure: serverSettings.pressureUnit || 'hPa',
+              precipitation: serverSettings.precipitationUnit || 'mm'
+            },
+            appearance: serverSettings.appearance || 'system',
+            notifications: {
+              ...prev.notifications,
+              ...(serverSettings.notifications || {})
             }
-          }))
-          if (serverSettings.language) {
-            localStorage.setItem('weathergpt_language', serverSettings.language)
-          }
+          }));
         }
-      } catch (err) {
-        console.warn('Error loading initial data:', err)
-      } finally {
-        setDataLoading(false)
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
+
+  // Load conversation messages when switching conversations
+  useEffect(() => {
+    if (!isAuthenticated || !activeConversationId) return;
+    if (activeConversationId.startsWith('conv-')) return; // local new unsaved chat
+
+    api
+      .messages(activeConversationId)
+      .then((msgList) => {
+        if (!Array.isArray(msgList)) return;
+        const formatted = msgList.map((message) => ({
+          id: message._id,
+          sender: message.sender === 'user' ? 'user' : 'assistant',
+          text: message.content,
+          messageType: message.messageType,
+          metadata: message.metadata,
+          cardData: message.metadata?.current
+            ? {
+                city: message.metadata.location,
+                temp: message.metadata.current.temperature,
+                condition: message.metadata.current.condition,
+                rainProb: message.metadata.current.precipitation,
+                humidity: message.metadata.current.humidity,
+                wind: message.metadata.current.windSpeed
+              }
+            : undefined,
+          time: new Date(message.createdAt).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        }));
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== activeConversationId) return c;
+            const hasOptimistic = c.messages.some(
+              (m) => m.status === 'sending' || m.status === 'loading'
+            );
+            if (hasOptimistic) return c;
+            return { ...c, messages: formatted };
+          })
+        );
+      })
+      .catch(() => {});
+  }, [isAuthenticated, activeConversationId]);
+
+  const refreshWeather = async (latitude = 18.5204, longitude = 73.8567) => {
+    const requestKey = `${latitude}:${longitude}`;
+    const requestVersion = weatherRequestRef.current.version + 1;
+    weatherRequestRef.current = { key: requestKey, version: requestVersion };
+
+    setWeatherLoading(true);
+    setWeatherError(null);
+    try {
+      const data = await api.weather({ latitude, longitude });
+      if (weatherRequestRef.current.version === requestVersion) {
+        setWeatherData(data);
+      }
+      return data;
+    } catch (error) {
+      if (weatherRequestRef.current.version === requestVersion) {
+        setWeatherError(error.message || 'Could not load current weather');
+        addToast(error.message || 'Could not load current weather', 'warning');
+      }
+      return null;
+    } finally {
+      if (weatherRequestRef.current.version === requestVersion) {
+        setWeatherLoading(false);
       }
     }
+  };
 
-    loadData()
-  }, [isAuthenticated])
+  const refreshForecast = async (latitude = 18.5204, longitude = 73.8567) => {
+    const requestKey = `${latitude}:${longitude}`;
+    const activeRequest = forecastRequestRef.current;
 
-  const refreshWeather = async (latitude, longitude) => {
-    if (latitude === undefined || longitude === undefined) return null
-    setWeatherLoading(true)
-    try {
-      const data = await api.weather({ latitude, longitude })
-      setWeatherData(data)
-      return data
-    } catch (error) {
-      addToast(
-        settings.language === 'mr' ? 'हवामान डेटा लोड होऊ शकला नाही' :
-        settings.language === 'hi' ? 'मौसम डेटा लोड नहीं हो सका' :
-        (error.message || 'Could not load current weather'), 'warning'
-      )
-      return null
-    } finally {
-      setWeatherLoading(false)
+    if (activeRequest.key === requestKey && activeRequest.promise) {
+      return activeRequest.promise;
     }
-  }
 
-  const refreshForecast = async (latitude, longitude) => {
-    if (latitude === undefined || longitude === undefined) return null
-    setForecastLoading(true)
-    try {
-      const data = await api.forecast({ latitude, longitude, days: 7 })
-      setForecastData(data)
-      return data
-    } catch (error) {
-      addToast(
-        settings.language === 'mr' ? 'हवामान अंदाज लोड होऊ शकला नाही' :
-        settings.language === 'hi' ? 'पूर्वानुमान लोड नहीं हो सका' :
-        (error.message || 'Could not load forecast'), 'warning'
-      )
-      return null
-    } finally {
-      setForecastLoading(false)
-    }
-  }
+    const requestVersion = activeRequest.version + 1;
+    const requestPromise = (async () => {
+      setForecastLoading(true);
+      setForecastError(null);
+      try {
+        const data = await api.forecast({ latitude, longitude, days: 7 });
+        const latestRequest = forecastRequestRef.current;
+        const currentState = forecastStateRef.current;
+        const isFallback = data?.models?.openMeteo?.isFallback === true;
+        const hasLiveDataForLocation =
+          currentState.key === requestKey &&
+          currentState.data?.models?.openMeteo?.isFallback !== true;
+
+        if (latestRequest.version !== requestVersion) return data;
+        if (isFallback && hasLiveDataForLocation) return data;
+
+        forecastStateRef.current = { key: requestKey, data };
+        setForecastData(data);
+        return data;
+      } catch (error) {
+        if (forecastRequestRef.current.version === requestVersion) {
+          setForecastError(error.message || 'Could not load forecast');
+          addToast(error.message || 'Could not load forecast', 'warning');
+        }
+        return null;
+      } finally {
+        if (forecastRequestRef.current.version === requestVersion) {
+          forecastRequestRef.current.promise = null;
+          setForecastLoading(false);
+        }
+      }
+    })();
+
+    forecastRequestRef.current = {
+      key: requestKey,
+      version: requestVersion,
+      promise: requestPromise
+    };
+
+    return requestPromise;
+  };
 
   // Fetch weather when location is selected
   useEffect(() => {
-    if (!isAuthenticated || !selectedMapLocation) return
-    const latitude = selectedMapLocation?.lat ?? selectedMapLocation?.latitude
-    const longitude = selectedMapLocation?.lng ?? selectedMapLocation?.longitude
+    if (!isAuthenticated) return;
+    const latitude = selectedMapLocation?.lat ?? selectedMapLocation?.latitude;
+    const longitude = selectedMapLocation?.lng ?? selectedMapLocation?.longitude;
     if (latitude !== undefined && longitude !== undefined) {
-      refreshWeather(latitude, longitude)
-      refreshForecast(latitude, longitude)
+      refreshWeather(latitude, longitude);
+      refreshForecast(latitude, longitude);
     }
-  }, [isAuthenticated, selectedMapLocation])
+  }, [isAuthenticated, selectedMapLocation]);
 
   // Toast Notification helper
   const addToast = (message, type = 'info') => {
-    const id = Date.now() + Math.random()
-    setToasts(prev => [...prev, { id, message, type }])
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id))
-    }, 3500)
-  }
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
 
-  const removeToast = id => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Temperature unit conversion
-  const formatTemp = tempInCelsius => {
-    if (tempInCelsius === undefined || tempInCelsius === null) return '--'
-    if (settings.units.temperature === 'F') {
-      const f = Math.round((tempInCelsius * 9) / 5 + 32)
-      return `${f}°F`
+  const formatTemp = (tempInCelsius) => {
+    if (tempInCelsius === undefined || tempInCelsius === null) return '--';
+    if (settings?.units?.temperature === 'F') {
+      const f = Math.round((tempInCelsius * 9) / 5 + 32);
+      return `${f}°F`;
     }
-    return `${Math.round(tempInCelsius)}°C`
-  }
+    return `${Math.round(tempInCelsius)}°C`;
+  };
 
-  const formatTempRaw = tempInCelsius => {
-    if (tempInCelsius === undefined || tempInCelsius === null) return '--'
-    if (settings.units.temperature === 'F') {
-      return Math.round((tempInCelsius * 9) / 5 + 32)
+  const formatTempRaw = (tempInCelsius) => {
+    if (tempInCelsius === undefined || tempInCelsius === null) return '--';
+    if (settings?.units?.temperature === 'F') {
+      return Math.round((tempInCelsius * 9) / 5 + 32);
     }
-    return Math.round(tempInCelsius)
-  }
+    return Math.round(tempInCelsius);
+  };
 
   // Wind speed conversion
-  const formatWind = speedKmh => {
-    if (speedKmh === undefined || speedKmh === null) return '--'
-    const unit = settings.units.windSpeed
+  const formatWind = (speedKmh) => {
+    if (speedKmh === undefined || speedKmh === null) return '--';
+    const unit = settings?.units?.windSpeed;
     if (unit === 'mph') {
-      return `${Math.round(speedKmh * 0.621371)} mph`
+      return `${Math.round(speedKmh * 0.621371)} mph`;
     }
     if (unit === 'ms') {
-      return `${Math.round(speedKmh / 3.6)} m/s`
+      return `${Math.round(speedKmh / 3.6)} m/s`;
     }
     if (unit === 'knots') {
-      return `${Math.round(speedKmh * 0.539957)} kn`
+      return `${Math.round(speedKmh * 0.539957)} kn`;
     }
-    return `${speedKmh} km/h`
-  }
+    return `${speedKmh} km/h`;
+  };
 
   // Pressure conversion
-  const formatPressure = pressureHpa => {
-    if (!pressureHpa) return '--'
-    const unit = settings.units.pressure
+  const formatPressure = (pressureHpa) => {
+    if (!pressureHpa) return '--';
+    const unit = settings?.units?.pressure;
     if (unit === 'inHg') {
-      return `${(pressureHpa * 0.02953).toFixed(2)} inHg`
+      return `${(pressureHpa * 0.02953).toFixed(2)} inHg`;
     }
     if (unit === 'mmHg') {
-      return `${Math.round(pressureHpa * 0.750062)} mmHg`
+      return `${Math.round(pressureHpa * 0.750062)} mmHg`;
     }
     if (unit === 'bar') {
-      return `${(pressureHpa / 1000).toFixed(3)} bar`
+      return `${(pressureHpa / 1000).toFixed(3)} bar`;
     }
-    return `${pressureHpa} hPa`
-  }
+    return `${pressureHpa} hPa`;
+  };
 
   // Saved location actions
-  const addLocation = async cityData => {
+  const addLocation = async (cityData) => {
     const exists = savedLocations.some(
-      l => l.city.toLowerCase() === cityData.city.toLowerCase()
-    )
+      (l) => l.city.toLowerCase() === cityData.city.toLowerCase()
+    );
     if (exists) {
-      addToast(
-        `${cityData.city} is already in your saved locations!`,
-        'warning'
-      )
-      return
+      addToast(`${cityData.city} is already in your saved locations!`, 'warning');
+      return;
     }
     const newLoc = await api.addLocation({
       name: cityData.name || `${cityData.city} Location`,
       city: cityData.city,
-      state: cityData.region || cityData.state,
-      country: cityData.country,
-      latitude: cityData.lat ?? cityData.latitude,
-      longitude: cityData.lng ?? cityData.longitude,
-      isFavorite: cityData.isFavorite || false
-    })
+      state: cityData.region || cityData.state || '',
+      country: cityData.country || 'India',
+      latitude: Number(cityData.lat ?? cityData.latitude ?? 18.5204),
+      longitude: Number(cityData.lng ?? cityData.longitude ?? 73.8567),
+      isFavorite: Boolean(cityData.isFavorite)
+    });
     const updatedLocation = {
       ...cityData,
       ...newLoc,
@@ -304,120 +480,306 @@ export const WeatherProvider = ({ children }) => {
       lat: newLoc.latitude,
       lng: newLoc.longitude,
       updatedTime: 'Just now'
-    }
-    const updated = [...savedLocations, updatedLocation]
-    setSavedLocations(updated)
-    setUser(prev => prev ? ({
-      ...prev,
-      stats: { ...prev.stats, locationsSaved: updated.length }
-    }) : prev)
-    addToast(`${cityData.city} added to saved locations!`, 'success')
-  }
+    };
+    const updated = [...savedLocations, updatedLocation];
+    setSavedLocations(updated);
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            stats: { ...prev.stats, locationsSaved: updated.length }
+          }
+        : prev
+    );
+    addToast(`${cityData.city} added to saved locations!`, 'success');
+  };
 
-  const removeLocation = async id => {
-    const loc = savedLocations.find(l => l.id === id)
-    await api.deleteLocation(id)
-    const updated = savedLocations.filter(l => l.id !== id)
-    setSavedLocations(updated)
-    setUser(prev => prev ? ({
-      ...prev,
-      stats: { ...prev.stats, locationsSaved: updated.length }
-    }) : prev)
-    addToast(`Removed ${loc ? loc.city : 'location'}`, 'info')
-  }
+  const removeLocation = async (id) => {
+    const loc = savedLocations.find((l) => l.id === id);
+    await api.deleteLocation(id);
+    const updated = savedLocations.filter((l) => l.id !== id);
+    setSavedLocations(updated);
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            stats: {
+              ...DEFAULT_USER_STATS,
+              ...(prev.stats || {}),
+              locationsSaved: Math.max(0, (prev.stats?.locationsSaved ?? 1) - 1)
+            }
+          }
+        : prev
+    );
+    addToast(`Removed ${loc ? loc.city : 'location'}`, 'info');
+  };
 
-  const toggleFavorite = async id => {
-    await api.favoriteLocation(id)
-    setSavedLocations(prev =>
-      prev.map(l => (l.id === id ? { ...l, isFavorite: !l.isFavorite } : l))
-    )
-  }
+  const toggleFavorite = async (id) => {
+    const favoriteLocation = await api.favoriteLocation(id);
+    setSavedLocations((prev) =>
+      prev.map((location) => ({
+        ...location,
+        isFavorite: location.id === (favoriteLocation._id || favoriteLocation.id)
+      }))
+    );
+  };
 
-  // Settings update helpers
-  const updateUnits = (key, value) => {
-    setSettings(prev => ({
+  // Settings update helpers connected to backend
+  const updateUnits = async (key, value) => {
+    setSettings((prev) => ({
       ...prev,
       units: { ...prev.units, [key]: value }
-    }))
-    addToast(`Updated unit: ${key} to ${value}`, 'info')
-  }
+    }));
+    addToast(`Updated unit: ${key} to ${value}`, 'info');
 
-  const updateNotifications = (key, value) => {
-    setSettings(prev => ({
+    if (!isAuthenticated) return;
+    try {
+      const tempUnit =
+        key === 'temperature'
+          ? value === 'F'
+            ? 'fahrenheit'
+            : 'celsius'
+          : settings.units.temperature === 'F'
+          ? 'fahrenheit'
+          : 'celsius';
+      const windUnit =
+        key === 'windSpeed'
+          ? value === 'ms'
+            ? 'm/s'
+            : value
+          : settings.units.windSpeed === 'ms'
+          ? 'm/s'
+          : settings.units.windSpeed;
+      const pressureUnit = key === 'pressure' ? value : settings.units.pressure;
+      const precipitationUnit =
+        key === 'precipitation' ? value : settings.units.precipitation;
+
+      await api.updateSettings({
+        temperatureUnit: tempUnit,
+        windUnit,
+        pressureUnit,
+        precipitationUnit
+      });
+    } catch (error) {
+      addToast(error.message || 'Could not update weather units', 'warning');
+    }
+  };
+
+  const updateNotifications = async (key, value) => {
+    const updated = { ...settings.notifications, [key]: value };
+    setSettings((prev) => ({
       ...prev,
-      notifications: { ...prev.notifications, [key]: value }
-    }))
-  }
+      notifications: updated
+    }));
 
-  const updateProfile = updatedProfile => {
-    setUser(prev => prev ? ({
-      ...prev,
-      ...updatedProfile
-    }) : updatedProfile)
-    addToast('Profile updated successfully!', 'success')
-  }
+    if (!isAuthenticated) return;
+    try {
+      await api.updateSettings({ notifications: updated });
+    } catch (error) {
+      addToast(error.message || 'Could not update notification settings', 'warning');
+    }
+  };
 
-  const sendChatMessage = async text => {
-    if (!text.trim()) return
+  const updateProfile = async (updatedProfile) => {
+    if (isAuthenticated) {
+      try {
+        const profile = await api.updateProfile({
+          name: updatedProfile.name,
+          language: updatedProfile.language,
+          timezone: updatedProfile.timezone,
+          profileImage: updatedProfile.profileImage
+        });
+        setUser((prev) => ({
+          ...prev,
+          ...profile,
+          avatarUrl: profile.profileImage || profile.avatarUrl || prev?.avatarUrl,
+          avatarInitials: updatedProfile.avatarInitials || prev?.avatarInitials
+        }));
+        addToast('Profile updated successfully!', 'success');
+        return profile;
+      } catch (err) {
+        addToast(err.message || 'Failed to sync profile with server', 'warning');
+        throw err;
+      }
+    }
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            ...updatedProfile
+          }
+        : updatedProfile
+    );
+    addToast('Profile updated successfully!', 'success');
+    return updatedProfile;
+  };
 
-    let convId = activeConversationId
-    if (!convId || !conversations.some(conversation => conversation.id === convId)) {
-      const conversation = await api.createConversation({
-        title: text.slice(0, 32),
-        category: 'general'
-      })
-      convId = conversation._id
-      setActiveConversationId(convId)
-      setConversations(prev => [
-        {
-          id: convId,
-          title: conversation.title,
-          preview: text,
-          tag: 'General Query',
-          tagColor: 'blue',
-          icon: 'sun-cloud',
-          messages: []
-        },
-        ...prev
-      ])
+  const sendChatMessage = async (text) => {
+    if (!text.trim() || isSending) return;
+
+    const userMessageText = text.trim();
+    const tempUserMsgId = `msg-user-${Date.now()}`;
+    const tempAiMsgId = `msg-ai-${Date.now()}`;
+
+    let currentConvId = activeConversationId;
+    const isNewConv = !currentConvId || currentConvId.startsWith('conv-');
+
+    // 1. Optimistic Update
+    setIsSending(true);
+
+    const userMsg = {
+      id: tempUserMsgId,
+      sender: 'user',
+      text: userMessageText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'sending'
+    };
+
+    const aiLoadingMsg = {
+      id: tempAiMsgId,
+      sender: 'assistant',
+      text: 'Thinking...',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'loading'
+    };
+
+    if (isNewConv) {
+      const tempConvId = currentConvId || `conv-${Date.now()}`;
+      const tempConv = {
+        id: tempConvId,
+        title: userMessageText.slice(0, 32),
+        preview: userMessageText,
+        tag: 'General Query',
+        tagColor: 'blue',
+        icon: 'sun-cloud',
+        messages: [userMsg, aiLoadingMsg]
+      };
+      setConversations((prev) => [tempConv, ...prev]);
+      setActiveConversationId(tempConvId);
+      currentConvId = tempConvId;
+    } else {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === currentConvId
+            ? {
+                ...c,
+                messages: [...c.messages, userMsg, aiLoadingMsg],
+                preview: userMessageText
+              }
+            : c
+        )
+      );
     }
 
-    const result = await api.sendMessage({
-      conversationId: convId,
-      content: text.trim()
-    })
-    const toMessage = message => ({
-      sender: message.sender === 'user' ? 'user' : 'assistant',
-      text: message.content,
-      time: new Date(message.createdAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    })
+    let finalConvId = currentConvId;
+    try {
+      // 2. Handle Conversation Creation
+      if (isNewConv) {
+        const conversation = await api.createConversation({
+          title: userMessageText.slice(0, 32),
+          category: 'general'
+        });
+        finalConvId = conversation._id;
 
-    setConversations(prev =>
-      prev.map(conversation =>
-        conversation.id === convId
+        setConversations((prev) =>
+          prev.map((c) => (c.id === currentConvId ? { ...c, id: finalConvId } : c))
+        );
+        setActiveConversationId(finalConvId);
+      }
+
+      // 3. Send Message
+      const result = await api.sendMessage({
+        conversationId: finalConvId,
+        content: userMessageText
+      });
+
+      const toMessage = (message) => ({
+        id: message?._id || `msg-${Date.now()}`,
+        sender: message?.sender === 'user' ? 'user' : 'assistant',
+        text: message?.content || message?.text || 'No response received',
+        messageType: message?.messageType || 'text',
+        metadata: message?.metadata || {},
+        cardData: message?.metadata?.current
           ? {
-              ...conversation,
-              messages: [
-                ...conversation.messages,
-                toMessage(result.userMessage),
-                toMessage(result.aiMessage)
-              ],
-              preview: text
+              city: message.metadata.location,
+              temp: message.metadata.current.temperature,
+              condition: message.metadata.current.condition,
+              rainProb: message.metadata.current.precipitation,
+              humidity: message.metadata.current.humidity,
+              wind: message.metadata.current.windSpeed
             }
-          : conversation
-      )
-    )
-  }
+          : undefined,
+        time: message?.createdAt
+          ? new Date(message.createdAt).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      const assistantMsg = toMessage(result.aiMessage);
+
+      // 4. Final Reconciliation
+      setConversations((prev) => {
+        return prev.map((conversation) => {
+          const hasTempMessages = conversation.messages.some(
+            (m) => m.id === tempUserMsgId || m.id === tempAiMsgId
+          );
+
+          if (hasTempMessages || conversation.id === finalConvId) {
+            const newMessages = conversation.messages.map((m) => {
+              if (m.id === tempUserMsgId) return toMessage(result.userMessage);
+              if (m.id === tempAiMsgId) return assistantMsg;
+              return m;
+            });
+            return {
+              ...conversation,
+              id: finalConvId,
+              messages: newMessages
+            };
+          }
+          return conversation;
+        });
+      });
+    } catch (error) {
+      console.error('CHAT SEND ERROR:', error);
+      addToast(error.message || 'Failed to send message', 'warning');
+
+      setConversations((prev) =>
+        prev.map((conversation) =>
+          conversation.id === finalConvId
+            ? {
+                ...conversation,
+                messages: conversation.messages.map((m) =>
+                  m.id === tempAiMsgId
+                    ? {
+                        ...m,
+                        status: 'error',
+                        text: 'Failed to send message. Please try again.',
+                        originalText: userMessageText
+                      }
+                    : m
+                )
+              }
+            : conversation
+        )
+      );
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const createNewChat = () => {
-    const newId = `conv-${Date.now()}`
-    const now = new Date()
+    const newId = `conv-${Date.now()}`;
+    const now = new Date();
     const newConv = {
       id: newId,
-      dateGroup: now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }),
+      dateGroup: now.toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }),
       time: now.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit'
@@ -428,81 +790,89 @@ export const WeatherProvider = ({ children }) => {
       tagColor: 'blue',
       icon: 'sun-cloud',
       messages: []
-    }
-    setConversations(prev => [newConv, ...prev])
-    setActiveConversationId(newId)
-    setCurrentPage('chat')
-    addToast('Started new chat session', 'info')
-  }
+    };
+    setConversations((prev) => [newConv, ...prev]);
+    setActiveConversationId(newId);
+    setCurrentPage('chat');
+    addToast('Started new chat session', 'info');
+  };
 
-  const deleteConversation = id => {
-    setConversations(prev => prev.filter(c => c.id !== id))
-
-    setUser(prev => prev ? ({
-      ...prev,
-      stats: {
-        ...DEFAULT_USER_STATS,
-        ...(prev.stats || {}),
-        conversations: Math.max(0, (prev.stats?.conversations ?? 0) - 1)
+  const deleteConversation = async (id) => {
+    if (isAuthenticated && !id.startsWith('conv-')) {
+      try {
+        await api.deleteConversation(id);
+      } catch {
+        // Continue local cleanup
       }
-    }) : prev)
+    }
+    setConversations((prev) => prev.filter((c) => c.id !== id));
 
-    addToast('Conversation deleted', 'info')
-  }
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            stats: {
+              ...DEFAULT_USER_STATS,
+              ...(prev.stats || {}),
+              conversations: Math.max(0, (prev.stats?.conversations ?? 0) - 1)
+            }
+          }
+        : prev
+    );
+
+    addToast('Conversation deleted', 'info');
+  };
 
   // Auth methods
   const login = async (email, password) => {
-    const result = await api.login({ email, password })
-    localStorage.setItem('weathergpt_token', result.token)
-    const normalized = normalizeUser(result.user)
-    setUser(normalized)
+    const result = await api.login({ email, password });
+    localStorage.setItem('weathergpt_token', result.token);
+    const normalized = normalizeUser(result.user);
+    setUser(normalized);
     if (result.user?.language) {
-      localStorage.setItem('weathergpt_language', result.user.language)
-      setSettings(prev => ({ ...prev, language: result.user.language }))
+      localStorage.setItem('weathergpt_language', result.user.language);
+      setSettings((prev) => ({ ...prev, language: result.user.language }));
     }
-    setIsAuthenticated(true)
-    setCurrentPage('dashboard')
-    addToast(`Welcome back to WeatherGPT!`, 'success')
-    return result
-  }
+    setIsAuthenticated(true);
+    setCurrentPage('dashboard');
+    addToast(`Welcome back to WeatherGPT!`, 'success');
+    return result;
+  };
 
   const signUp = async ({ name, email, password, language }) => {
-    const lang = language || localStorage.getItem('weathergpt_language') || 'en'
-    const result = await api.register({ name, email, password, language: lang })
-    localStorage.setItem('weathergpt_token', result.token)
-    const normalized = normalizeUser(result.user)
-    setUser(normalized)
-    localStorage.setItem('weathergpt_language', lang)
-    setSettings(prev => ({ ...prev, language: lang }))
-    setIsAuthenticated(true)
-    setCurrentPage('dashboard')
-    addToast(
-      `Account created successfully! Welcome, ${result.user.name}`,
-      'success'
-    )
-    return result
-  }
+    const lang = language || localStorage.getItem('weathergpt_language') || 'en';
+    const result = await api.register({ name, email, password, language: lang });
+    localStorage.setItem('weathergpt_token', result.token);
+    const normalized = normalizeUser(result.user);
+    setUser(normalized);
+    localStorage.setItem('weathergpt_language', lang);
+    setSettings((prev) => ({ ...prev, language: lang }));
+    setIsAuthenticated(true);
+    setCurrentPage('dashboard');
+    addToast(`Account created successfully! Welcome, ${result.user.name}`, 'success');
+    return result;
+  };
 
   const logout = async () => {
     try {
-      await api.logout()
+      await api.logout();
     } catch {
       // A stateless token can still be cleared when the API is unavailable.
     }
-    localStorage.removeItem('weathergpt_token')
-    localStorage.removeItem('weathergpt_user')
-    setUser(null)
-    setSavedLocations([])
-    setConversations([])
-    setAlerts([])
-    setWeatherData(null)
-    setForecastData(null)
-    setSelectedMapLocation(null)
-    setActiveConversationId(null)
-    setIsAuthenticated(false)
-    setCurrentPage('login')
-    addToast('Logged out successfully', 'info')
-  }
+    localStorage.removeItem('weathergpt_token');
+    localStorage.removeItem('weathergpt_user');
+    setUser(null);
+    setSavedLocations([]);
+    setConversations([]);
+    setAlerts([]);
+    setWeatherData(null);
+    setForecastData(null);
+    setSelectedMapLocation(null);
+    setActiveConversationId(null);
+    setIsAuthenticated(false);
+    setCurrentPage('login');
+    addToast('Logged out successfully', 'info');
+  };
 
   return (
     <WeatherContext.Provider
@@ -531,15 +901,19 @@ export const WeatherProvider = ({ children }) => {
         activeConversationId,
         setActiveConversationId,
         sendChatMessage,
+        isSending,
         createNewChat,
         deleteConversation,
         alerts,
         refreshAlerts,
+        notifications,
         weatherData,
         weatherLoading,
+        weatherError,
         refreshWeather,
         forecastData,
         forecastLoading,
+        forecastError,
         refreshForecast,
         dataLoading,
         formatTemp,
@@ -562,13 +936,14 @@ export const WeatherProvider = ({ children }) => {
     >
       {children}
     </WeatherContext.Provider>
-  )
-}
+  );
+};
 
 export const useWeather = () => {
-  const context = useContext(WeatherContext)
+  const context = useContext(WeatherContext);
   if (!context) {
-    throw new Error('useWeather must be used within a WeatherProvider')
+    throw new Error('useWeather must be used within a WeatherProvider');
   }
-  return context
-}
+  return context;
+};
+export default WeatherContext;

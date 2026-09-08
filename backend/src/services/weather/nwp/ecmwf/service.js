@@ -1,120 +1,216 @@
-import {
-    getECMWFMessages
-} from "./client.js";
+import { getECMWFMessages } from './client.js'
 
-import {
-    GribMessageFactory
-} from "@mattnucc/gribberish";
+import { GribMessageFactory } from '@mattnucc/gribberish'
 
-import {
-    normalizeECMWF
-} from "./normalizer.js";
+import { normalizeECMWF } from './normalizer.js'
 
+function parseMessage (buffer, param) {
+  try {
+    if (!buffer) return null
+    const factory = GribMessageFactory.fromBuffer(new Uint8Array(buffer))
 
-function parseMessage(buffer, param) {
-    const factory =
-        GribMessageFactory.fromBuffer(
-            new Uint8Array(buffer)
-        );
-
-    if (
-        factory.availableMessages.length === 0
-    ) {
-        throw new Error(
-            `No GRIB message found for ${param}`
-        );
+    if (factory.availableMessages.length === 0) {
+      throw new Error(`No GRIB message found for ${param}`)
     }
 
-    return factory.getMessage(
-        factory.availableMessages[0]
-    );
+    return factory.getMessage(factory.availableMessages[0])
+  } catch (error) {
+    console.error(`GRIB parsing error for ${param}: ${error.message}`)
+    return null
+  }
 }
 
+function buildTimestamp (date, cycle, step) {
+  const timestamp = new Date(
+    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(
+      6,
+      8
+    )}T${cycle}:00:00.000Z`
+  )
+  timestamp.setUTCHours(timestamp.getUTCHours() + Number(step))
+  return timestamp.toISOString()
+}
 
-export async function getECMWFWeather(
-    latitude,
-    longitude
-) {
-    if (
-        typeof latitude !== "number" ||
-        typeof longitude !== "number"
-    ) {
-        throw new Error(
-            "Latitude and longitude must be numbers"
-        );
+function buildRunMetadata (date, cycle, steps, now = new Date()) {
+  const runTime = new Date(
+    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(
+      6,
+      8
+    )}T${cycle}:00:00.000Z`
+  )
+  const ageHours = Number.isNaN(runTime.getTime())
+    ? null
+    : Math.max(0, (now.getTime() - runTime.getTime()) / 3600000)
+
+  return {
+    date,
+    cycle,
+    runTime: Number.isNaN(runTime.getTime()) ? null : runTime.toISOString(),
+    model: 'ECMWF-IFS',
+    forecastHorizonHours: steps.length ? Number(steps.at(-1)) : null,
+    ageHours
+  }
+}
+
+function buildDailyForecast (hourly) {
+  const grouped = new Map()
+  for (const point of hourly) {
+    const date = point.timestamp.slice(0, 10)
+    const day = grouped.get(date) || {
+      date,
+      temperatures: [],
+      precipitation: 0,
+      hasPrecipitation: false,
+      windSpeeds: []
     }
-
-    if (
-        latitude < -90 ||
-        latitude > 90
-    ) {
-        throw new Error(
-            "Latitude must be between -90 and 90"
-        );
+    if (point.temperature != null) day.temperatures.push(point.temperature)
+    if (point.precipitation != null) {
+      day.precipitation += point.precipitation
+      day.hasPrecipitation = true
     }
+    if (point.windSpeed != null) day.windSpeeds.push(point.windSpeed)
+    grouped.set(date, day)
+  }
+  return [...grouped.values()].map(day => ({
+    date: day.date,
+    maxTemperature: day.temperatures.length
+      ? Math.max(...day.temperatures)
+      : null,
+    minTemperature: day.temperatures.length
+      ? Math.min(...day.temperatures)
+      : null,
+    precipitation: day.hasPrecipitation
+      ? Number(day.precipitation.toFixed(3))
+      : null,
+    precipitationSum: day.hasPrecipitation
+      ? Number(day.precipitation.toFixed(3))
+      : null,
+    precipitationProbability: null,
+    maxWindSpeed: day.windSpeeds.length ? Math.max(...day.windSpeeds) : null,
+    weatherCode: null,
+    weatherDescription: 'Weather data available'
+  }))
+}
 
-    if (
-        longitude < -180 ||
-        longitude > 180
-    ) {
-        throw new Error(
-            "Longitude must be between -180 and 180"
-        );
-    }
+function calculateIntervalPrecipitation (previousAccumulated, accumulated) {
+  if (previousAccumulated == null || accumulated == null) return null
+  return Math.max(0, accumulated - previousAccumulated)
+}
 
-    const {
-        date,
-        cycle,
-        messages
-    } = await getECMWFMessages();
+function buildHourlyPoint (step, timestamp, forecast, precipitation) {
+  return {
+    time: timestamp,
+    timestamp,
+    leadTimeHours: Number(step),
+    temperature: forecast.temperature,
+    dewPoint: forecast.dewPoint,
+    humidity: forecast.humidity,
+    pressure: forecast.pressure,
+    windSpeed: forecast.windSpeed,
+    windDirection: forecast.windDirection,
+    precipitation,
+    precipitationProbability: null,
+    weatherCode: null,
+    weatherDescription: 'Weather data available'
+  }
+}
 
-
-    const normalized =
-        normalizeECMWF(
-            {
-                temperature:
-                    parseMessage(
-                        messages["2t"].buffer,
-                        "2t"
-                    ),
-
-                dewPoint:
-                    parseMessage(
-                        messages["2d"].buffer,
-                        "2d"
-                    ),
-
-                uWind:
-                    parseMessage(
-                        messages["10u"].buffer,
-                        "10u"
-                    ),
-
-                vWind:
-                    parseMessage(
-                        messages["10v"].buffer,
-                        "10v"
-                    ),
-
-                pressure:
-                    parseMessage(
-                        messages["msl"].buffer,
-                        "msl"
-                    )
-            },
-            {
-                latitude,
-                longitude
-            }
-        );
-
-
-    return {
-        ...normalized,
-
-        run: {
-            date,
-            cycle
+function buildNwpSemantics (hourly) {
+  const initialCondition = hourly[0] || null
+  return {
+    dataType: 'nwp_forecast',
+    initialConditionType: 'model_initial_condition',
+    initialCondition: initialCondition
+      ? { ...initialCondition, condition: 'Weather data available' }
+      : null,
+    current: initialCondition
+      ? {
+          ...initialCondition,
+          condition: 'Weather data available',
+          dataType: 'nwp_forecast',
+          initialConditionType: 'model_initial_condition'
         }
-    };
+      : null
+  }
+}
+
+export async function getECMWFWeather (latitude, longitude, days = 7) {
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    throw new Error('Latitude and longitude must be numbers')
+  }
+  if (latitude < -90 || latitude > 90) {
+    throw new Error('Latitude must be between -90 and 90')
+  }
+  if (longitude < -180 || longitude > 180) {
+    throw new Error('Longitude must be between -180 and 180')
+  }
+  const { date, cycle, getBuffer, steps } = await getECMWFMessages({ days })
+  const hourly = []
+  let previousAccumulatedPrecipitation = null
+  let gridLocation = null
+  for (const step of steps) {
+    try {
+      const tpBuffer = await getBuffer(step, 'tp')
+      const normalized = normalizeECMWF(
+        {
+          temperature: parseMessage(await getBuffer(step, '2t'), '2t'),
+          dewPoint: parseMessage(await getBuffer(step, '2d'), '2d'),
+          uWind: parseMessage(await getBuffer(step, '10u'), '10u'),
+          vWind: parseMessage(await getBuffer(step, '10v'), '10v'),
+          pressure: parseMessage(await getBuffer(step, 'msl'), 'msl'),
+          precipitation: tpBuffer ? parseMessage(tpBuffer, 'tp') : null,
+          timestamp: buildTimestamp(date, cycle, step)
+        },
+        { latitude, longitude }
+      )
+      gridLocation = gridLocation || normalized.location
+      const accumulated = normalized.forecast.precipitation
+      const intervalPrecipitation = calculateIntervalPrecipitation(
+        previousAccumulatedPrecipitation,
+        accumulated
+      )
+      previousAccumulatedPrecipitation = accumulated
+      hourly.push(
+        buildHourlyPoint(
+          step,
+          normalized.timestamp,
+          normalized.forecast,
+          intervalPrecipitation
+        )
+      )
+    } catch (err) {
+      console.error(`ECMWF parsing failed for step ${step}: ${err.message}`)
+      // Continue to next step if one fails
+    }
+  }
+  const nwpSemantics = buildNwpSemantics(hourly)
+  console.log(`ECMWF forecast steps loaded: ${steps.join(',')}`)
+  return {
+    source: 'ECMWF-IFS',
+    sourceType: 'provider',
+    isFallback: false,
+    ...nwpSemantics,
+    retrievedAt: new Date().toISOString(),
+    location: {
+      latitude,
+      longitude,
+      timezone: 'UTC',
+      gridLatitude: gridLocation?.gridLatitude ?? null,
+      gridLongitude: gridLocation?.gridLongitude ?? null
+    },
+    hourly,
+    daily: buildDailyForecast(hourly),
+    run: buildRunMetadata(date, cycle, steps),
+    steps
+  }
+}
+
+export {
+  buildDailyForecast,
+  buildTimestamp,
+  buildRunMetadata,
+  buildHourlyPoint,
+  buildNwpSemantics,
+  calculateIntervalPrecipitation,
+  parseMessage
 }

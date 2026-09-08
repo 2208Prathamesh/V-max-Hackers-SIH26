@@ -1,18 +1,36 @@
+import mongoose from 'mongoose';
 import Station from '../../models/Station.js';
 import FloodZone from '../../models/FloodZone.js';
 import { getAllIMDWarnings } from '../imd/imdService.js';
 import weatherService from '../weather/weatherService.js';
+import { stationsSeedData } from '../../../../seed/data/stations.seed.js';
+import { floodZonesSeedData } from '../../../../seed/data/flood-zones.seed.js';
 
 /**
  * Generate GeoJSON FeatureCollection for interactive weather layers
- * Reads station coordinates from MongoDB, enriches with live weather from Open-Meteo
+ * Reads station coordinates from MongoDB (or seed fallback), enriches with live weather from Open-Meteo
  * @param {'temperature'|'precipitation'|'wind'|'clouds'} layerType
  * @returns {Promise<object>} GeoJSON FeatureCollection
  */
 export async function getWeatherGeoJSON(layerType = 'temperature') {
-  const stations = await Station.find({ isActive: true });
+  let stations = [];
+  if (mongoose.connection.readyState === 1) {
+    try {
+      stations = await Station.find({ isActive: true });
+    } catch {
+      stations = [];
+    }
+  }
 
-  // Fetch live weather for all stations concurrently
+  if (!stations || stations.length === 0) {
+    stations = stationsSeedData.map(s => ({
+      name: s.name,
+      latitude: s.latitude,
+      longitude: s.longitude
+    }));
+  }
+
+  // Fetch live weather for all stations concurrently using free Open-Meteo API
   const enrichedStations = await Promise.all(
     stations.map(async (station) => {
       try {
@@ -96,10 +114,24 @@ export async function getWeatherGeoJSON(layerType = 'temperature') {
  * @returns {Promise<object>} GeoJSON FeatureCollection
  */
 export async function getAlertsGeoJSON() {
-  const [imdWarnings, stations] = await Promise.all([
-    getAllIMDWarnings(),
-    Station.find({ isActive: true })
-  ]);
+  let stations = [];
+  if (mongoose.connection.readyState === 1) {
+    try {
+      stations = await Station.find({ isActive: true });
+    } catch {
+      stations = [];
+    }
+  }
+
+  if (!stations || stations.length === 0) {
+    stations = stationsSeedData.map(s => ({
+      name: s.name,
+      latitude: s.latitude,
+      longitude: s.longitude
+    }));
+  }
+
+  const imdWarnings = await getAllIMDWarnings();
 
   const colorMap = {
     Red: '#EF4444',
@@ -149,11 +181,29 @@ export async function getAlertsGeoJSON() {
 
 /**
  * Generate GeoJSON FeatureCollection for Flood & Coastal Inundation Risk
- * Reads flood zones from MongoDB FloodZone collection
+ * Reads flood zones from MongoDB FloodZone collection (or seed fallback)
  * @returns {Promise<object>} GeoJSON FeatureCollection
  */
 export async function getFloodRiskGeoJSON() {
-  const floodZones = await FloodZone.find({ isActive: true });
+  let floodZones = [];
+  if (mongoose.connection.readyState === 1) {
+    try {
+      floodZones = await FloodZone.find({ isActive: true });
+    } catch {
+      floodZones = [];
+    }
+  }
+
+  if (!floodZones || floodZones.length === 0) {
+    floodZones = floodZonesSeedData.map(z => ({
+      name: z.name,
+      latitude: z.latitude,
+      longitude: z.longitude,
+      riskLevel: z.riskLevel,
+      estimatedFloodDepthM: z.estimatedFloodDepthM,
+      advisory: z.advisory
+    }));
+  }
 
   const features = floodZones.map((zone) => ({
     type: 'Feature',

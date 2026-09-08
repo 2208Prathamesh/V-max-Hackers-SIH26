@@ -128,7 +128,8 @@ async function runSeeder() {
       passwordHash,
       language: userData.language,
       timezone: userData.timezone,
-      isVerified: userData.isVerified
+      isVerified: userData.isVerified,
+      role: userData.role || 'user'
     })
 
     console.log(`\n👤 Created user: ${user.email} (Password: ${userData.password})`)

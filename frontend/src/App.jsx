@@ -10,6 +10,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ChatPage } from './pages/ChatPage';
 import { AlertsPage } from './pages/AlertsPage';
+import ClimateHistorical from './pages/ClimateHistorical';
 import { ForecastPage } from './pages/ForecastPage';
 import { AdvisoryPage } from './pages/AdvisoryPage';
 import { LoginPage } from './pages/LoginPage';
@@ -35,7 +36,7 @@ const AppContent = () => {
         <ToastContainer />
       </>
     );
-  }
+  };
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -55,6 +56,9 @@ const AppContent = () => {
         return <SavedLocationsPage />;
       case 'history':
         return <HistoryPage />;
+      case 'climate-historical':
+        return <ClimateHistorical />;
+
       case 'settings':
         return <SettingsPage />;
       default:

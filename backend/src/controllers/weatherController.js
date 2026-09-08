@@ -2,6 +2,7 @@ import weatherService from '../services/weather/weatherService.js';
 import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
 import { compareNWPModels } from '../services/weather/nwp/modelComparisonService.js';
 import { successResponse } from '../utils/response.js';
+import { parseAndValidateCoordinates } from '../utils/coordinates.js';
 
 /**
  * Helper to resolve coordinates from query (either city name or lat/lon)
@@ -13,7 +14,10 @@ const resolveCoordinates = async (query) => {
   let lon = longitude !== undefined && longitude !== '' ? Number(longitude) : undefined;
 
   if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
-    return { latitude: lat, longitude: lon, cityName: city || null };
+    return {
+      ...parseAndValidateCoordinates(lat, lon),
+      cityName: city || null
+    };
   }
 
   if (city && city.trim()) {
@@ -45,7 +49,9 @@ const getCurrentWeather = async (req, res, next) => {
   try {
     const { latitude, longitude, cityName } = await resolveCoordinates(req.query);
 
-    const weather = await weatherService.getWeather(latitude, longitude);
+    const weather = await weatherService.getWeather(latitude, longitude, {
+      includeNWP: false
+    });
     if (cityName) {
       weather.resolvedCity = cityName;
     }

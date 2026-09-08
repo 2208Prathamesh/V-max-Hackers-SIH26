@@ -1,6 +1,7 @@
 import advisoryService from '../services/advisory/advisoryService.js';
 import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
 import { successResponse } from '../utils/response.js';
+import { parseAndValidateCoordinates } from '../utils/coordinates.js';
 
 /**
  * Resolve coordinates helper
@@ -9,7 +10,12 @@ async function resolveCoords(req) {
   const { city, latitude, longitude } = req.query;
 
   if (latitude && longitude && !Number.isNaN(Number(latitude)) && !Number.isNaN(Number(longitude))) {
-    return { lat: Number(latitude), lon: Number(longitude), cityName: city || 'Custom Coordinates' };
+    const coordinates = parseAndValidateCoordinates(latitude, longitude);
+    return {
+      lat: coordinates.latitude,
+      lon: coordinates.longitude,
+      cityName: city || 'Custom Coordinates'
+    };
   }
 
   if (city && city.trim()) {
@@ -22,6 +28,10 @@ async function resolveCoords(req) {
         cityName: `${match.name}, ${match.country}`
       };
     }
+
+    const error = new Error(`Location not found: "${city.trim()}"`);
+    error.statusCode = 404;
+    throw error;
   }
 
   const error = new Error('City name or latitude and longitude are required');

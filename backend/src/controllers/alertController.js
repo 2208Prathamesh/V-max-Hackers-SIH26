@@ -1,6 +1,8 @@
 import Alert from '../models/Alert.js';
 import Notification from '../models/Notification.js';
+import SavedLocation from '../models/SavedLocation.js';
 import { successResponse } from '../utils/response.js';
+import alertService from '../services/alertService.js';
 
 /**
  * Get all alerts
@@ -107,5 +109,15 @@ const markAlertRead = async (req, res, next) => {
   }
 };
 
-export { getAlerts, getAlert, getActiveAlerts, markAlertRead };
-export default { getAlerts, getAlert, getActiveAlerts, markAlertRead };
+const getMyAlerts = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const alerts = await alertService.getAlertsForUser(userId);
+    return successResponse(res, alerts, 'Your relevant alerts retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getAlerts, getAlert, getActiveAlerts, markAlertRead, getMyAlerts };
+export default { getAlerts, getAlert, getActiveAlerts, markAlertRead, getMyAlerts };

@@ -1,6 +1,7 @@
 import { getHistoricalWeather, getClimateTrends } from '../services/weather/historicalService.js';
 import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
 import { successResponse } from '../utils/response.js';
+import { parseAndValidateCoordinates } from '../utils/coordinates.js';
 
 /**
  * Helper to resolve coordinates
@@ -9,7 +10,8 @@ async function resolveCoords(req) {
   const { city, latitude, longitude } = req.query;
 
   if (latitude && longitude && !Number.isNaN(Number(latitude)) && !Number.isNaN(Number(longitude))) {
-    return { lat: Number(latitude), lon: Number(longitude), cityName: city || null };
+    const coordinates = parseAndValidateCoordinates(latitude, longitude);
+    return { lat: coordinates.latitude, lon: coordinates.longitude, cityName: city || null };
   }
 
   if (city && city.trim()) {
@@ -22,11 +24,43 @@ async function resolveCoords(req) {
         cityName: `${match.name}, ${match.country}`
       };
     }
+
+    const error = new Error(`Location not found: "${city.trim()}"`);
+    error.statusCode = 404;
+    throw error;
   }
 
   const error = new Error('City name or latitude and longitude are required');
   error.statusCode = 400;
   throw error;
+}
+
+/**
+ * Aggregate daily historical data into monthly summaries
+ */
+function aggregateMonthlyData(daily) {
+  if (!daily || !daily.temperature_2m_max) return [];
+
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthlyStats = Array.from({ length: 12 }, () => ({
+    max: [],
+    avg: [],
+    min: []
+  }));
+
+  daily.time.forEach((time, index) => {
+    const month = new Date(time).getMonth();
+    monthlyStats[month].max.push(daily.temperature_2m_max[index]);
+    monthlyStats[month].avg.push(daily.temperature_2m_mean[index]);
+    monthlyStats[month].min.push(daily.temperature_2m_min[index]);
+  });
+
+  return months.map((month, i) => ({
+    month,
+    max: monthlyStats[i].max.length > 0 ? Math.max(...monthlyStats[i].max) : null,
+    avg: monthlyStats[i].avg.length > 0 ? monthlyStats[i].avg.reduce((a, b) => a + b, 0) / monthlyStats[i].avg.length : null,
+    min: monthlyStats[i].min.length > 0 ? Math.min(...monthlyStats[i].min) : null,
+  }));
 }
 
 /**
@@ -39,7 +73,8 @@ export const getHistory = async (req, res, next) => {
     const endDate = req.query.endDate || '2023-12-31';
 
     const history = await getHistoricalWeather(lat, lon, startDate, endDate);
-    return successResponse(res, { cityName, ...history }, 'Historical weather retrieved successfully', 200);
+    const monthly = aggregateMonthlyData(history.daily);
+    return successResponse(res, { cityName, monthly }, 'Historical weather retrieved successfully', 200);
   } catch (error) {
     next(error);
   }
@@ -61,7 +96,35 @@ export const getTrends = async (req, res, next) => {
   }
 };
 
+/**
+ * Get full climate data (history + trends) in one call
+ */
+export const getFullClimateData = async (req, res, next) => {
+  try {
+    const { lat, lon, cityName } = await resolveCoords(req);
+    const startDate = req.query.startDate || '2024-01-01';
+    const endDate = req.query.endDate || '2024-12-31';
+
+    // Parallel fetch for efficiency
+    const [history, trends] = await Promise.all([
+      getHistoricalWeather(lat, lon, startDate, endDate),
+      getClimateTrends(lat, lon)
+    ]);
+
+    const monthly = aggregateMonthlyData(history.daily);
+
+    return successResponse(res, {
+      cityName,
+      history: monthly,
+      trends: trends
+    }, 'Full climate data retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getHistory,
-  getTrends
+  getTrends,
+  getFullClimateData
 };

@@ -27,7 +27,8 @@ const DETAIL_TABS = [
 export function ForecastScreen ({
   isDark = false,
   unit = 'C',
-  backendReady = false
+  backendReady = false,
+  onNavigate
 }) {
   const c = getColors(isDark)
   const { width } = useWindowDimensions()
@@ -497,6 +498,7 @@ export function ForecastScreen ({
               </Text>
             </View>
             <Pressable
+              onPress={() => onNavigate && onNavigate('premium')}
               style={[
                 styles.upgradeBtn,
                 { backgroundColor: c.card, borderColor: '#F59E0B' }
@@ -721,6 +723,7 @@ export function ForecastScreen ({
               Compare weather between different locations.
             </Text>
             <Pressable
+              onPress={() => onNavigate && onNavigate('compare')}
               style={[
                 styles.compareBtn,
                 { backgroundColor: c.cardAlt, borderColor: c.border }

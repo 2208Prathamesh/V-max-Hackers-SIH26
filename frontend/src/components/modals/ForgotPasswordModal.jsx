@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWeather } from '../../context/WeatherContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { api } from '../../services/api';
 import { X, Mail, ArrowLeft, CheckCircle2, Send } from 'lucide-react';
 
 export const ForgotPasswordModal = () => {
@@ -12,16 +13,28 @@ export const ForgotPasswordModal = () => {
 
   if (!isForgotPasswordOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email.trim()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      if (api?.forgotPassword) {
+        await api.forgotPassword(email.trim());
+      }
       setIsSubmitted(true);
-      addToast(language === 'mr' ? `${email} वर पासवर्ड रीसेट लिंक पाठवली आहे` : language === 'hi' ? `${email} पर पासवर्ड रीसेट लिंक भेजी गई है` : `Reset instructions sent to ${email}`, 'success');
-    }, 900);
+      const successMsg =
+        language === 'mr'
+          ? `${email} वर पासवर्ड रीसेट लिंक पाठवली आहे`
+          : language === 'hi'
+          ? `${email} पर पासवर्ड रीसेट लिंक भेजी गई है`
+          : `Reset instructions sent to ${email}`;
+      addToast(successMsg, 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to send reset instructions', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -60,10 +73,14 @@ export const ForgotPasswordModal = () => {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-                  {language === 'mr' ? 'सूचना पाठवण्यात आल्या!' : language === 'hi' ? 'निर्देश भेज दिए गए!' : 'Instructions Sent!'}
+                  {language === 'mr'
+                    ? 'सूचना पाठवण्यात आल्या!'
+                    : language === 'hi'
+                    ? 'निर्देश भेज दिए गए!'
+                    : 'Instructions Sent!'}
                 </h4>
                 <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                  {language === 'mr' 
+                  {language === 'mr'
                     ? `आम्ही पासवर्ड रीसेट लिंक ${email} वर पाठवली आहे. कृपया तुमचा इनबॉक्स तपासा.`
                     : language === 'hi'
                     ? `हमने पासवर्ड रीसेट लिंक ${email} पर भेज दी है। कृपया अपना इनबॉक्स देखें।`

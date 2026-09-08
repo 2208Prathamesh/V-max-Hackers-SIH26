@@ -65,6 +65,36 @@ export function Header ({
           title: 'Saved Locations',
           subtitle: 'Live weather updates for your bookmarked places'
         }
+      case 'air-quality':
+        return {
+          title: 'Air Quality Index',
+          subtitle: 'Live atmospheric sensor readings & pollutant levels'
+        }
+      case 'compare':
+        return {
+          title: 'Compare Locations',
+          subtitle: 'Side-by-side multi-city meteorological comparison'
+        }
+      case 'add-location':
+        return {
+          title: 'Add New Location',
+          subtitle: 'Search and bookmark cities across India'
+        }
+      case 'alert-details':
+        return {
+          title: 'Emergency Alert Bulletin',
+          subtitle: 'Official IMD warning & precautionary guidelines'
+        }
+      case 'premium':
+        return {
+          title: 'WeatherGPT Pro',
+          subtitle: 'Upgrade for advanced Doppler radar & SMS alerts'
+        }
+      case 'profile':
+        return {
+          title: 'User Profile',
+          subtitle: 'Account details, tier & saved preferences'
+        }
       case 'settings':
         return {
           title: 'Settings',
@@ -356,6 +386,30 @@ export function Header ({
                   sidpatil@gmail.com
                 </Text>
               </View>
+
+              <Pressable
+                onPress={() => {
+                  setIsProfileOpen(false)
+                  onNavigate && onNavigate('profile')
+                }}
+                style={styles.dropdownItem}
+              >
+                <Text style={[styles.dropdownItemText, { color: c.ink }]}>
+                  👤 My Profile
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  setIsProfileOpen(false)
+                  onNavigate && onNavigate('premium')
+                }}
+                style={styles.dropdownItem}
+              >
+                <Text style={[styles.dropdownItemText, { color: '#F59E0B', fontWeight: '700' }]}>
+                  👑 Upgrade to Pro
+                </Text>
+              </Pressable>
 
               <Pressable
                 onPress={() => {

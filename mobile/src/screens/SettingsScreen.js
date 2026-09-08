@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -6,9 +6,9 @@ import {
   StyleSheet,
   ScrollView,
   useWindowDimensions
-} from 'react-native';
-import { Switch } from '../components/Switch';
-import { getColors } from '../theme/colors';
+} from 'react-native'
+import { Switch } from '../components/Switch'
+import { getColors } from '../theme/colors'
 
 const SETTINGS_TABS = [
   'General',
@@ -20,9 +20,11 @@ const SETTINGS_TABS = [
   'Language',
   'Connected Accounts',
   'About'
-];
+]
 
-export function SettingsScreen({
+import { api } from '../services/api'
+
+export function SettingsScreen ({
   isDark = false,
   onToggleTheme,
   unit = 'C',
@@ -30,20 +32,66 @@ export function SettingsScreen({
   language = 'en',
   onSelectLanguage,
   onLogout,
-  onNotification
+  onNotification,
+  backendReady = false
 }) {
-  const c = getColors(isDark);
-  const { width } = useWindowDimensions();
-  const isWide = width > 768;
+  const c = getColors(isDark)
+  const { width } = useWindowDimensions()
+  const isWide = width > 768
 
-  const [activeTab, setActiveTab] = useState('General');
-  const [weatherAlerts, setWeatherAlerts] = useState(true);
-  const [dailyForecast, setDailyForecast] = useState(true);
-  const [weeklySummary, setWeeklySummary] = useState(false);
-  const [breakingNews, setBreakingNews] = useState(true);
-  const [windUnit, setWindUnit] = useState('km/h');
-  const [pressureUnit, setPressureUnit] = useState('hPa');
-  const [precipUnit, setPrecipUnit] = useState('mm');
+  const [activeTab, setActiveTab] = useState('General')
+  const [weatherAlerts, setWeatherAlerts] = useState(true)
+  const [dailyForecast, setDailyForecast] = useState(true)
+  const [weeklySummary, setWeeklySummary] = useState(false)
+  const [breakingNews, setBreakingNews] = useState(true)
+  const [windUnit, setWindUnit] = useState('km/h')
+  const [pressureUnit, setPressureUnit] = useState('hPa')
+  const [precipUnit, setPrecipUnit] = useState('mm')
+
+  useEffect(() => {
+    if (!backendReady) return
+    let isMounted = true
+    api
+      .getSettings()
+      .then(serverSettings => {
+        if (!isMounted || !serverSettings) return
+        if (serverSettings.notifications) {
+          if (serverSettings.notifications.weatherAlerts !== undefined)
+            setWeatherAlerts(serverSettings.notifications.weatherAlerts)
+          if (serverSettings.notifications.dailyForecast !== undefined)
+            setDailyForecast(serverSettings.notifications.dailyForecast)
+          if (serverSettings.notifications.weeklySummary !== undefined)
+            setWeeklySummary(serverSettings.notifications.weeklySummary)
+          if (serverSettings.notifications.breakingNews !== undefined)
+            setBreakingNews(serverSettings.notifications.breakingNews)
+        }
+        if (serverSettings.windUnit) setWindUnit(serverSettings.windUnit)
+        if (serverSettings.pressureUnit)
+          setPressureUnit(serverSettings.pressureUnit)
+        if (serverSettings.precipitationUnit)
+          setPrecipUnit(serverSettings.precipitationUnit)
+        if (serverSettings.temperatureUnit && onToggleUnit) {
+          onToggleUnit(
+            serverSettings.temperatureUnit === 'fahrenheit' ? 'F' : 'C'
+          )
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      isMounted = false
+    }
+  }, [backendReady])
+
+  const handleUpdatePreference = async (key, val) => {
+    if (backendReady) {
+      try {
+        await api.updateSettings({ [key]: val })
+      } catch {
+        // preserve local change
+      }
+    }
+  }
 
   return (
     <ScrollView
@@ -58,14 +106,17 @@ export function SettingsScreen({
         contentContainerStyle={styles.tabsRow}
       >
         {SETTINGS_TABS.map(tab => {
-          const isActive = activeTab === tab;
+          const isActive = activeTab === tab
           return (
             <Pressable
               key={tab}
               onPress={() => setActiveTab(tab)}
               style={[
                 styles.tabItem,
-                isActive && { backgroundColor: c.blueLight, borderColor: c.blue }
+                isActive && {
+                  backgroundColor: c.blueLight,
+                  borderColor: c.blue
+                }
               ]}
             >
               <Text
@@ -78,7 +129,7 @@ export function SettingsScreen({
                 {tab}
               </Text>
             </Pressable>
-          );
+          )
         })}
       </ScrollView>
 
@@ -87,15 +138,24 @@ export function SettingsScreen({
         {/* Left Column: General, Units, Notifications, Delete */}
         <View style={[styles.col, isWide && styles.colLeft]}>
           {/* General Section */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <Text style={[styles.sectionTitle, { color: c.ink }]}>General</Text>
 
             {/* Profile Information Row */}
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>👤</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Profile Information</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Profile Information
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Update your name, email and profile picture.
                   </Text>
@@ -103,20 +163,29 @@ export function SettingsScreen({
               </View>
               <Pressable
                 onPress={() => {
-                  if (onNotification) onNotification('Edit Profile modal');
+                  if (onNotification) onNotification('Edit Profile modal')
                 }}
-                style={[styles.smallActionBtn, { backgroundColor: c.cardAlt, borderColor: c.border }]}
+                style={[
+                  styles.smallActionBtn,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
               >
-                <Text style={[styles.smallActionBtnText, { color: c.blue }]}>Edit Profile</Text>
+                <Text style={[styles.smallActionBtnText, { color: c.blue }]}>
+                  Edit Profile
+                </Text>
               </Pressable>
             </View>
 
             {/* Change Password Row */}
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>🔒</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Change Password</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Change Password
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Update your password to keep your account secure.
                   </Text>
@@ -124,11 +193,16 @@ export function SettingsScreen({
               </View>
               <Pressable
                 onPress={() => {
-                  if (onNotification) onNotification('Change Password modal');
+                  if (onNotification) onNotification('Change Password modal')
                 }}
-                style={[styles.smallActionBtn, { backgroundColor: c.cardAlt, borderColor: c.border }]}
+                style={[
+                  styles.smallActionBtn,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
               >
-                <Text style={[styles.smallActionBtnText, { color: c.blue }]}>Change</Text>
+                <Text style={[styles.smallActionBtnText, { color: c.blue }]}>
+                  Change
+                </Text>
               </Pressable>
             </View>
 
@@ -137,13 +211,20 @@ export function SettingsScreen({
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>🕒</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Time Zone</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Time Zone
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Set your default time zone for accurate updates.
                   </Text>
                 </View>
               </View>
-              <View style={[styles.dropdownPill, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+              <View
+                style={[
+                  styles.dropdownPill,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
+              >
                 <Text style={[styles.dropdownPillText, { color: c.ink }]}>
                   (UTC+05:30) Asia/Kolkata
                 </Text>
@@ -153,15 +234,26 @@ export function SettingsScreen({
           </View>
 
           {/* Units & Format Section */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.sectionTitle, { color: c.ink }]}>Units & Format</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: c.ink }]}>
+              Units & Format
+            </Text>
 
             {/* Temperature */}
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>🌡️</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Temperature</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Temperature
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Choose your preferred temperature unit.
                   </Text>
@@ -169,7 +261,10 @@ export function SettingsScreen({
               </View>
               <Pressable
                 onPress={() => onToggleUnit(unit === 'C' ? 'F' : 'C')}
-                style={[styles.dropdownPill, { backgroundColor: c.cardAlt, borderColor: c.border }]}
+                style={[
+                  styles.dropdownPill,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
               >
                 <Text style={[styles.dropdownPillText, { color: c.ink }]}>
                   {unit === 'C' ? '°C (Celsius)' : '°F (Fahrenheit)'}
@@ -179,35 +274,57 @@ export function SettingsScreen({
             </View>
 
             {/* Wind Speed */}
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>💨</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Wind Speed</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Wind Speed
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Choose your preferred wind speed unit.
                   </Text>
                 </View>
               </View>
-              <View style={[styles.dropdownPill, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-                <Text style={[styles.dropdownPillText, { color: c.ink }]}>{windUnit}</Text>
+              <View
+                style={[
+                  styles.dropdownPill,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
+              >
+                <Text style={[styles.dropdownPillText, { color: c.ink }]}>
+                  {windUnit}
+                </Text>
                 <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
               </View>
             </View>
 
             {/* Pressure */}
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>⏲️</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Pressure</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Pressure
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Choose your preferred pressure unit.
                   </Text>
                 </View>
               </View>
-              <View style={[styles.dropdownPill, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-                <Text style={[styles.dropdownPillText, { color: c.ink }]}>{pressureUnit}</Text>
+              <View
+                style={[
+                  styles.dropdownPill,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
+              >
+                <Text style={[styles.dropdownPillText, { color: c.ink }]}>
+                  {pressureUnit}
+                </Text>
                 <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
               </View>
             </View>
@@ -217,28 +334,48 @@ export function SettingsScreen({
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>💧</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Precipitation</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Precipitation
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Choose your preferred precipitation unit.
                   </Text>
                 </View>
               </View>
-              <View style={[styles.dropdownPill, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-                <Text style={[styles.dropdownPillText, { color: c.ink }]}>{precipUnit}</Text>
+              <View
+                style={[
+                  styles.dropdownPill,
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
+                ]}
+              >
+                <Text style={[styles.dropdownPillText, { color: c.ink }]}>
+                  {precipUnit}
+                </Text>
                 <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
               </View>
             </View>
           </View>
 
           {/* Notifications Section */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.sectionTitle, { color: c.ink }]}>Notifications</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: c.ink }]}>
+              Notifications
+            </Text>
 
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>⚠️</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Weather Alerts</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Weather Alerts
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Receive severe weather alerts and warnings.
                   </Text>
@@ -247,11 +384,15 @@ export function SettingsScreen({
               <Switch checked={weatherAlerts} onChange={setWeatherAlerts} />
             </View>
 
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>📅</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Daily Forecast</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Daily Forecast
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Get your daily weather forecast every morning.
                   </Text>
@@ -260,11 +401,15 @@ export function SettingsScreen({
               <Switch checked={dailyForecast} onChange={setDailyForecast} />
             </View>
 
-            <View style={[styles.settingRow, { borderBottomColor: c.borderLight }]}>
+            <View
+              style={[styles.settingRow, { borderBottomColor: c.borderLight }]}
+            >
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>✉️</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Weekly Summary</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Weekly Summary
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Receive weekly weather summary and outlook.
                   </Text>
@@ -277,7 +422,9 @@ export function SettingsScreen({
               <View style={styles.settingRowLeft}>
                 <Text style={styles.settingIcon}>⚡</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.settingLabel, { color: c.ink }]}>Breaking News</Text>
+                  <Text style={[styles.settingLabel, { color: c.ink }]}>
+                    Breaking News
+                  </Text>
                   <Text style={[styles.settingSub, { color: c.muted }]}>
                     Important weather news and updates.
                   </Text>
@@ -288,7 +435,15 @@ export function SettingsScreen({
           </View>
 
           {/* Delete Account Card */}
-          <View style={[styles.deleteAccountCard, { backgroundColor: isDark ? '#3D1C1B' : '#FEF2F2', borderColor: '#FCA5A5' }]}>
+          <View
+            style={[
+              styles.deleteAccountCard,
+              {
+                backgroundColor: isDark ? '#3D1C1B' : '#FEF2F2',
+                borderColor: '#FCA5A5'
+              }
+            ]}
+          >
             <View style={{ flex: 1 }}>
               <Text style={styles.deleteTitle}>Delete Account</Text>
               <Text style={[styles.deleteSub, { color: c.muted }]}>
@@ -297,7 +452,8 @@ export function SettingsScreen({
             </View>
             <Pressable
               onPress={() => {
-                if (onNotification) onNotification('Delete Account confirmation');
+                if (onNotification)
+                  onNotification('Delete Account confirmation')
               }}
               style={styles.deleteBtn}
             >
@@ -309,70 +465,121 @@ export function SettingsScreen({
         {/* Right Column: Account Summary, Data & Privacy, Need Help */}
         <View style={[styles.col, isWide && styles.colRight]}>
           {/* Account Summary Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-            <Text style={[styles.cardTitle, { color: c.ink }]}>Account Summary</Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: c.ink }]}>
+              Account Summary
+            </Text>
 
             <View style={styles.accountHeaderRow}>
               <View style={styles.accountAvatar}>
                 <Text style={styles.accountAvatarText}>SP</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.accountName, { color: c.ink }]}>Sid Patil</Text>
-                <Text style={[styles.accountEmail, { color: c.muted }]}>sidpatil@gmail.com</Text>
+                <Text style={[styles.accountName, { color: c.ink }]}>
+                  Sid Patil
+                </Text>
+                <Text style={[styles.accountEmail, { color: c.muted }]}>
+                  sidpatil@gmail.com
+                </Text>
                 <View style={styles.freePlanBadge}>
                   <Text style={styles.freePlanText}>Free Plan</Text>
                 </View>
               </View>
             </View>
 
-            <View style={[styles.accountStatsList, { borderTopColor: c.borderLight }]}>
+            <View
+              style={[
+                styles.accountStatsList,
+                { borderTopColor: c.borderLight }
+              ]}
+            >
               <View style={styles.accountStatRow}>
-                <Text style={[styles.accountStatLabel, { color: c.muted }]}>Member Since</Text>
-                <Text style={[styles.accountStatVal, { color: c.ink }]}>May 12, 2024</Text>
+                <Text style={[styles.accountStatLabel, { color: c.muted }]}>
+                  Member Since
+                </Text>
+                <Text style={[styles.accountStatVal, { color: c.ink }]}>
+                  May 12, 2024
+                </Text>
               </View>
               <View style={styles.accountStatRow}>
-                <Text style={[styles.accountStatLabel, { color: c.muted }]}>Locations Saved</Text>
+                <Text style={[styles.accountStatLabel, { color: c.muted }]}>
+                  Locations Saved
+                </Text>
                 <Text style={[styles.accountStatVal, { color: c.ink }]}>5</Text>
               </View>
               <View style={styles.accountStatRow}>
-                <Text style={[styles.accountStatLabel, { color: c.muted }]}>Conversations</Text>
-                <Text style={[styles.accountStatVal, { color: c.ink }]}>48</Text>
+                <Text style={[styles.accountStatLabel, { color: c.muted }]}>
+                  Conversations
+                </Text>
+                <Text style={[styles.accountStatVal, { color: c.ink }]}>
+                  48
+                </Text>
               </View>
               <View style={styles.accountStatRow}>
-                <Text style={[styles.accountStatLabel, { color: c.muted }]}>Alerts Set</Text>
+                <Text style={[styles.accountStatLabel, { color: c.muted }]}>
+                  Alerts Set
+                </Text>
                 <Text style={[styles.accountStatVal, { color: c.ink }]}>3</Text>
               </View>
             </View>
           </View>
 
           {/* Data & Privacy Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.privacyHeaderRow}>
               <Text style={styles.privacyIcon}>🛡️</Text>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Data & Privacy</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Data & Privacy
+              </Text>
             </View>
             <Text style={[styles.privacySub, { color: c.muted }]}>
               We respect your privacy and keep your data secure.
             </Text>
 
             <View style={styles.linksList}>
-              {['Manage Data', 'Download My Data', 'Privacy Policy', 'Terms of Service'].map(link => (
+              {[
+                'Manage Data',
+                'Download My Data',
+                'Privacy Policy',
+                'Terms of Service'
+              ].map(link => (
                 <Pressable
                   key={link}
                   style={[styles.linkRow, { borderBottomColor: c.borderLight }]}
                 >
-                  <Text style={[styles.linkText, { color: c.inkSecondary }]}>{link}</Text>
-                  <Text style={[styles.linkChevron, { color: c.muted }]}>›</Text>
+                  <Text style={[styles.linkText, { color: c.inkSecondary }]}>
+                    {link}
+                  </Text>
+                  <Text style={[styles.linkChevron, { color: c.muted }]}>
+                    ›
+                  </Text>
                 </Pressable>
               ))}
             </View>
           </View>
 
           {/* Need Help? Card */}
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
             <View style={styles.privacyHeaderRow}>
               <Text style={styles.privacyIcon}>🎧</Text>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Need Help?</Text>
+              <Text style={[styles.cardTitle, { color: c.ink }]}>
+                Need Help?
+              </Text>
             </View>
             <Text style={[styles.privacySub, { color: c.muted }]}>
               We're here to help you with any questions.
@@ -384,7 +591,9 @@ export function SettingsScreen({
                   key={link}
                   style={[styles.linkRow, { borderBottomColor: c.borderLight }]}
                 >
-                  <Text style={[styles.linkText, { color: c.blue }]}>{link}</Text>
+                  <Text style={[styles.linkText, { color: c.blue }]}>
+                    {link}
+                  </Text>
                   <Text style={[styles.linkChevron, { color: c.blue }]}>↗</Text>
                 </Pressable>
               ))}
@@ -393,7 +602,7 @@ export function SettingsScreen({
         </View>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -620,4 +829,4 @@ const styles = StyleSheet.create({
   linkChevron: {
     fontSize: 14
   }
-});
+})
