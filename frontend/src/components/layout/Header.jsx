@@ -75,6 +75,41 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
   };
 
   const getPageInfo = () => {
+    if (user?.role === 'authority') {
+      switch (currentPage) {
+        case 'dashboard':
+          return {
+            title: t('authorityDashboardTitle') || `Welcome, ${user?.name || 'Dr. A. Sharma'}`,
+            subtitle: t('authorityDashboardSubtitle') || `${user?.state || 'Maharashtra State'} Authority • Live Overview`
+          };
+        case 'alerts':
+          return {
+            title: t('authorityAlertsTitle') || 'Weather Alerts',
+            subtitle: t('authorityAlertsSubtitle') || 'View and manage all active and past alerts'
+          };
+        case 'weather-map':
+          return {
+            title: t('authorityWeatherMap') || 'Weather Map',
+            subtitle: t('mapSubtitle') || 'Real-time weather conditions, alerts and forecasts'
+          };
+        case 'analytics':
+          return {
+            title: t('authorityAnalyticsTitle') || 'Analytics',
+            subtitle: t('authorityAnalyticsSubtitle') || 'Insights and trends for better decision making'
+          };
+        case 'settings':
+          return {
+            title: t('authoritySettings') || 'Authority Settings',
+            subtitle: t('settingsSubtitle') || 'Manage administrative preferences and authority profile'
+          };
+        default:
+          return {
+            title: 'WeatherGPT Authority',
+            subtitle: 'State Disaster Management Operations'
+          };
+      }
+    }
+
     switch (currentPage) {
       case 'settings':
         return { title: t('settings'), subtitle: t('settingsSubtitle') };
@@ -95,6 +130,7 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
       case 'forecast':
         return { title: t('forecast'), subtitle: t('forecastSubtitle') };
       case 'climate':
+      case 'climate-historical':
         return { title: t('climate') || 'Climate Analysis', subtitle: t('climateSubtitle') || 'Historical climate & environmental trends' };
       default:
         return { title: 'WeatherGPT', subtitle: t('dashboardSubtitle') };

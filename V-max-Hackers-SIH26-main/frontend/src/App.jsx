@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ThemeProvider } from './context/ThemeContext';
-import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { WeatherProvider, useWeather } from './context/WeatherContext';
 import { Layout } from './components/layout/Layout';
 import { WeatherMapPage } from './pages/WeatherMapPage';
@@ -10,9 +9,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ChatPage } from './pages/ChatPage';
 import { AlertsPage } from './pages/AlertsPage';
-import ClimateHistorical from './pages/ClimateHistorical';
 import { ForecastPage } from './pages/ForecastPage';
-import { AdvisoryPage } from './pages/AdvisoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthorityDashboardPage } from './pages/authority/AuthorityDashboardPage';
 import { AuthorityAlertsPage } from './pages/authority/AuthorityAlertsPage';
@@ -21,16 +18,7 @@ import { AuthorityAnalyticsPage } from './pages/authority/AuthorityAnalyticsPage
 import { ToastContainer } from './components/common/Toast';
 
 const AppContent = () => {
-  const { currentPage, isAuthenticated, user, settings } = useWeather();
-  const { language, setLanguage } = useLanguage();
-
-  // Keep language in sync with authenticated user's preferred language
-  useEffect(() => {
-    const preferred = user?.language || settings?.language;
-    if (preferred && preferred !== language) {
-      setLanguage(preferred);
-    }
-  }, [user?.language, settings?.language]);
+  const { currentPage, isAuthenticated, user } = useWeather();
 
   // If not authenticated or on login page, display the WeatherGPT Login Page
   if (!isAuthenticated || currentPage === 'login') {
@@ -40,7 +28,7 @@ const AppContent = () => {
         <ToastContainer />
       </>
     );
-  };
+  }
 
   const renderCurrentPage = () => {
     const isAuthority = user?.role === 'authority';
@@ -69,8 +57,6 @@ const AppContent = () => {
         return <DashboardPage />;
       case 'chat':
         return <ChatPage />;
-      case 'advisory':
-        return <AdvisoryPage />;
       case 'alerts':
         return <AlertsPage />;
       case 'weather-map':
@@ -81,9 +67,6 @@ const AppContent = () => {
         return <SavedLocationsPage />;
       case 'history':
         return <HistoryPage />;
-      case 'climate-historical':
-        return <ClimateHistorical />;
-
       case 'settings':
         return <SettingsPage />;
       default:
@@ -97,11 +80,10 @@ const AppContent = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <LanguageProvider>
-        <WeatherProvider>
-          <AppContent />
-        </WeatherProvider>
-      </LanguageProvider>
+      <WeatherProvider>
+        <AppContent />
+      </WeatherProvider>
     </ThemeProvider>
   );
 }
+

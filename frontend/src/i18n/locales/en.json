@@ -34,7 +34,12 @@
     "climate": "Climate",
     "locations": "Saved Locations",
     "settings": "Settings",
-    "chat": "Chat"
+    "chat": "Chat",
+    "authorityDashboard": "Dashboard",
+    "authorityAlerts": "Alerts",
+    "authorityWeatherMap": "Weather Map",
+    "authorityAnalytics": "Analytics",
+    "authoritySettings": "Authority Settings"
   },
   "dashboard": {
     "greeting": "Good morning, {{name}}!",
