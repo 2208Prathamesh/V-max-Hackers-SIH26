@@ -94,6 +94,8 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
         return { title: t('alerts'), subtitle: t('alertsSubtitle') };
       case 'forecast':
         return { title: t('forecast'), subtitle: t('forecastSubtitle') };
+      case 'news':
+        return { title: t('newsTitle') || 'Weather & Climate News', subtitle: t('newsSubtitle') || 'Trending meteorological dispatches, severe weather reports & global climate intelligence' };
       case 'climate':
         return { title: t('climate') || 'Climate Analysis', subtitle: t('climateSubtitle') || 'Historical climate & environmental trends' };
       default:

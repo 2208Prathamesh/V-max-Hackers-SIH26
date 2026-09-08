@@ -14,6 +14,7 @@ import ClimateHistorical from './pages/ClimateHistorical';
 import { ForecastPage } from './pages/ForecastPage';
 import { AdvisoryPage } from './pages/AdvisoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { NewsPage } from './pages/NewsPage';
 import { ToastContainer } from './components/common/Toast';
 
 const AppContent = () => {
@@ -58,7 +59,8 @@ const AppContent = () => {
         return <HistoryPage />;
       case 'climate-historical':
         return <ClimateHistorical />;
-
+      case 'news':
+        return <NewsPage />;
       case 'settings':
         return <SettingsPage />;
       default:

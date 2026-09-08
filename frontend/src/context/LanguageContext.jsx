@@ -15,6 +15,7 @@ export const TRANSLATIONS = {
     alerts: 'Official Alerts',
     weatherMap: 'Weather Map',
     forecast: 'Forecast & Models',
+    news: 'Weather News',
     climateHistorical: 'Climate & History',
     history: 'Climate & History',
     savedLocations: 'Saved Locations',
@@ -45,6 +46,15 @@ export const TRANSLATIONS = {
     alertsSubtitle: 'Stay informed and stay safe. Real-time weather alerts and warnings.',
     forecastTitle: 'NWP Multi-Model Weather Forecast',
     forecastSubtitle: 'High-resolution extended forecast comparing ECMWF IFS and NOAA GFS models',
+    newsTitle: 'Weather & Climate News',
+    newsSubtitle: 'Trending meteorological dispatches, severe weather reports & global climate intelligence',
+    indiaNews: 'India News',
+    globalNews: 'Global News',
+    allNews: 'All News',
+    breakingNews: 'Breaking Weather News',
+    readSource: 'Read Full Source',
+    newsSource: 'Verified Source',
+    searchNews: 'Search weather news, keywords, locations...',
     mapTitle: 'Interactive GIS Weather & Radar Map',
     mapSubtitle: 'Live OpenStreetMap layers, Doppler radar precipitation & ISRO satellite telemetry',
     historyTitle: 'Historical Climate Analysis',
@@ -516,6 +526,7 @@ export const TRANSLATIONS = {
     alerts: 'हवामान इशारे व चेतावणी',
     weatherMap: 'हवामान नकाशा (रडार)',
     forecast: 'हवामान अंदाज व मॉडेल्स',
+    news: 'हवामान बातम्या',
     climateHistorical: 'हवामान इतिहास व नोंदी',
     history: 'हवामान इतिहास व नोंदी',
     savedLocations: 'जतन केलेली शहरे',
@@ -546,6 +557,15 @@ export const TRANSLATIONS = {
     alertsSubtitle: 'सावध राहा आणि सुरक्षित राहा. थेट हवामान इशारे व अधिकृत चेतावणी.',
     forecastTitle: 'एनडब्ल्यूपी बहु-मॉडेल हवामान अंदाज',
     forecastSubtitle: 'युरोपियन (ECMWF) आणि अमेरिकन (GFS) मॉडेल्सची तुलना व ७ ते १४ दिवसांचा अंदाज',
+    newsTitle: 'हवामान व पर्यावरण बातम्या',
+    newsSubtitle: 'भारतातील व जागतिक ताज्या हवामान घडामोडी, मान्सून अंदाज आणि हवामान बदल वृत्तांत',
+    indiaNews: 'भारत बातम्या',
+    globalNews: 'जागतिक बातम्या',
+    allNews: 'सर्व बातम्या',
+    breakingNews: 'ताजी हवामान बातमी',
+    readSource: 'मूळ बातमी वाचा',
+    newsSource: 'प्रमाणित स्रोत',
+    searchNews: 'हवामान बातम्या, विषय किंवा ठिकाण शोधा...',
     mapTitle: 'थेट परस्परसंवादी हवामान व रडार नकाशा',
     mapSubtitle: 'ओपन-स्ट्रीट-मॅप थर, पाऊस रडार आणि इस्रो उपग्रह थेट चित्रण',
     historyTitle: '२० वर्षांचे हवामान विश्लेषण व इतिहास',
@@ -1017,6 +1037,7 @@ export const TRANSLATIONS = {
     alerts: 'सरकारी मौसम चेतावनियां',
     weatherMap: 'मौसम मानचित्र (रडार)',
     forecast: 'पूर्वानुमान एवं मॉडल',
+    news: 'मौसम समाचार',
     climateHistorical: 'जलवायु एवं इतिहास',
     history: 'जलवायु एवं इतिहास',
     savedLocations: 'सहेजे गए स्थान',
@@ -1047,6 +1068,15 @@ export const TRANSLATIONS = {
     alertsSubtitle: 'सावधान रहें और सुरक्षित रहें। रीयल-टाइम मौसम चेतावनियां।',
     forecastTitle: 'एनडब्ल्यूपी मल्टी-मॉडल मौसम पूर्वानुमान',
     forecastSubtitle: 'यूरोपीय (ECMWF) और अमेरिकी (GFS) मॉडल्स की तुलना एवं 7-14 दिन का पूर्वानुमान',
+    newsTitle: 'मौसम एवं जलवायु समाचार',
+    newsSubtitle: 'भारत और वैश्विक मौसम की ताज़ा खबरें, मानसूनी चेतावनियां और जलवायु विश्लेषण',
+    indiaNews: 'भारत समाचार',
+    globalNews: 'वैश्विक समाचार',
+    allNews: 'सभी समाचार',
+    breakingNews: 'ताज़ा मौसम समाचार',
+    readSource: 'मूल स्रोत पढ़ें',
+    newsSource: 'सत्यापित स्रोत',
+    searchNews: 'मौसम समाचार, विषय या स्थान खोजें...',
     mapTitle: 'लाइव इंटरएक्टिव मौसम और रडार मैप',
     mapSubtitle: 'ओपन-स्ट्रीट-मैप लेयर्स, वर्षा रडार और इसरो उपग्रह टेलीमेट्री',
     historyTitle: '20-वर्षीय ऐतिहासिक जलवायु विश्लेषण',
@@ -2133,6 +2163,12 @@ export const LanguageProvider = ({ children }) => {
   const translateCondition = (conditionText) => {
     if (!conditionText) return t('clearSky');
     const lower = String(conditionText).toLowerCase();
+    if (lower.includes('clear night') || (lower.includes('night') && (lower.includes('clear') || lower.includes('sunny')))) {
+      return language === 'mr' ? 'निरभ्र रात्र' : language === 'hi' ? 'साफ़ रात' : 'Clear Night';
+    }
+    if (lower.includes('partly') && lower.includes('night')) {
+      return language === 'mr' ? 'अंशतः ढगाळ रात्र' : language === 'hi' ? 'हल्के बादलों वाली रात' : 'Partly Cloudy Night';
+    }
     if (lower.includes('thunder') || lower.includes('storm')) return t('thunderstorm');
     if (lower.includes('heavy rain') || lower.includes('downpour')) return t('heavyRain');
     if (lower.includes('light rain') || lower.includes('drizzle')) return t('lightRain');

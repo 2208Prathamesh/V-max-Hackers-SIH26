@@ -85,7 +85,7 @@ function normalizeGFS (messages, location, timestamp = null) {
       windDirection: Number(windDirection.toFixed(2)),
       precipitation: precipitation
         ? Number(Math.max(0, precipitation.value).toFixed(3))
-        : null
+        : 0
     }
   }
 }

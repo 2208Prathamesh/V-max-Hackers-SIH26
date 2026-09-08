@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="rainSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="40%" stop-color="#64748B" />
+      <stop offset="70%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#CBD5E1" />
+    </linearGradient>
+    <linearGradient id="valleyGreen1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#15803D" />
+      <stop offset="100%" stop-color="#166534" />
+    </linearGradient>
+    <linearGradient id="valleyGreen2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E" />
+      <stop offset="100%" stop-color="#15803D" />
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="400" height="300" fill="url(#rainSky)" />
+
+  <!-- Rain Clouds -->
+  <path d="M-20,60 Q30,20 80,50 T180,30 T280,45 T380,30 T420,50 L420,120 L-20,120 Z" fill="#334155" opacity="0.8" />
+  <path d="M20,80 Q80,50 140,75 T260,65 T360,70 T420,65 L420,130 L20,130 Z" fill="#475569" opacity="0.85" />
+
+  <!-- Diagonal Rain Streaks -->
+  <g stroke="#93C5FD" stroke-width="1.2" opacity="0.65" stroke-dasharray="8 12">
+    <line x1="30" y1="90" x2="10" y2="240" />
+    <line x1="70" y1="80" x2="50" y2="230" />
+    <line x1="120" y1="85" x2="100" y2="235" />
+    <line x1="160" y1="75" x2="140" y2="225" />
+    <line x1="200" y1="90" x2="180" y2="240" />
+    <line x1="250" y1="80" x2="230" y2="230" />
+    <line x1="300" y1="85" x2="280" y2="235" />
+    <line x1="350" y1="75" x2="330" y2="225" />
+    <line x1="390" y1="90" x2="370" y2="240" />
+  </g>
+
+  <!-- Rolling Lush Green Hills -->
+  <path d="M-20,210 Q80,140 180,190 T380,160 T420,180 L420,300 L-20,300 Z" fill="#14532D" />
+  <path d="M0,230 Q120,175 240,215 T420,195 L420,300 L0,300 Z" fill="url(#valleyGreen1)" />
+  <path d="M-10,250 Q100,210 220,240 T420,225 L420,300 L-10,300 Z" fill="url(#valleyGreen2)" />
+
+  <!-- Pine Trees on Hills -->
+  <polygon points="50,190 44,215 56,215" fill="#064E3B" />
+  <polygon points="70,180 63,205 77,205" fill="#064E3B" />
+  <polygon points="120,195 113,220 127,220" fill="#064E3B" />
+  <polygon points="280,175 273,200 287,200" fill="#064E3B" />
+  <polygon points="310,185 304,210 316,210" fill="#064E3B" />
+  <polygon points="360,180 353,205 367,205" fill="#064E3B" />
+
+  <!-- Petrichor Aerosol Mist Rising from Ground -->
+  <path d="M0,280 Q50,265 100,275 T200,268 T300,272 T400,265 L400,300 L0,300 Z" fill="#FFFFFF" opacity="0.3" />
+  <path d="M30,288 Q110,272 190,282 T350,278 L350,300 L30,300 Z" fill="#BBF7D0" opacity="0.35" />
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="rainbowSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#7DD3FC" />
+      <stop offset="100%" stop-color="#E0F2FE" />
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="400" height="300" fill="url(#rainbowSky)" />
+
+  <!-- Sun Rays -->
+  <circle cx="50" cy="50" r="28" fill="#FDE047" opacity="0.9" />
+  <circle cx="50" cy="50" r="45" fill="#FEF08A" opacity="0.4" />
+
+  <!-- Rainbow Arcs -->
+  <g fill="none" stroke-width="5" opacity="0.85">
+    <ellipse cx="200" cy="270" rx="170" ry="170" stroke="#EF4444" />
+    <ellipse cx="200" cy="270" rx="165" ry="165" stroke="#F97316" />
+    <ellipse cx="200" cy="270" rx="160" ry="160" stroke="#FACC15" />
+    <ellipse cx="200" cy="270" rx="155" ry="155" stroke="#22C55E" />
+    <ellipse cx="200" cy="270" rx="150" ry="150" stroke="#3B82F6" />
+    <ellipse cx="200" cy="270" rx="145" ry="145" stroke="#6366F1" />
+    <ellipse cx="200" cy="270" rx="140" ry="140" stroke="#A855F7" />
+  </g>
+
+  <!-- Fluffy White Cumulus Clouds overlapping rainbow ends -->
+  <path d="M-10,210 Q20,170 60,195 Q90,160 130,190 Q160,175 190,210 Z" fill="#FFFFFF" opacity="0.9" />
+  <path d="M220,220 Q260,175 300,200 Q340,165 380,195 Q400,180 420,220 Z" fill="#FFFFFF" opacity="0.9" />
+
+  <!-- Rolling Green Countryside -->
+  <path d="M0,230 Q120,185 240,225 T400,210 L400,300 L0,300 Z" fill="#15803D" />
+  <path d="M-20,250 Q100,215 220,245 T420,230 L420,300 L-20,300 Z" fill="#22C55E" />
+
+  <!-- Small Country Cottage -->
+  <rect x="260" y="225" width="22" height="16" fill="#F8FAFC" />
+  <polygon points="257,225 271,212 285,225" fill="#B91C1C" />
+  <rect x="268" y="232" width="6" height="9" fill="#92400E" />
+</svg>

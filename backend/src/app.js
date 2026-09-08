@@ -23,12 +23,12 @@ import mapRoutes from './routes/mapRoutes.js'
 import voiceRoutes from './routes/voiceRoutes.js'
 import satelliteRoutes from './routes/satelliteRoutes.js'
 import authorityRoutes from './routes/authorityRoutes.js'
+import newsRoutes from './routes/newsRoutes.js'
 
 import errorMiddleware from './middleware/errorMiddleware.js'
 
 import {
   apiLimiter,
-  authLimiter,
   chatLimiter
 } from './middleware/rateLimitMiddleware.js'
 
@@ -69,7 +69,7 @@ app.use(
   "/api/test",
   testNotificationRoutes
 )
-app.use('/api/auth', authLimiter, authRoutes)
+app.use('/api/auth', authRoutes)
 app.use('/api/weather', weatherRoutes)
 app.use('/api/alerts', alertRoutes)
 app.use('/api/imd', imdRoutes)
@@ -79,6 +79,7 @@ app.use('/api/advisories', advisoryRoutes)
 app.use('/api/maps', mapRoutes)
 app.use('/api/voice', voiceRoutes)
 app.use('/api/satellite', satelliteRoutes)
+app.use('/api/news', newsRoutes)
 
 // Protected Routes
 app.use('/api/users', userRoutes)
