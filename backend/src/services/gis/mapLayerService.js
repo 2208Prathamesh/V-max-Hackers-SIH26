@@ -30,34 +30,41 @@ export async function getWeatherGeoJSON(layerType = 'temperature') {
     }));
   }
 
-  // Fetch live weather for all stations concurrently using free Open-Meteo API
-  const enrichedStations = await Promise.all(
-    stations.map(async (station) => {
-      try {
-        const weather = await weatherService.getWeather(station.latitude, station.longitude);
-        const current = weather?.forecast?.current || {};
+  // Fetch live weather for all stations in a single fast Open-Meteo batch call
+  let enrichedStations = [];
+  try {
+    const lats = stations.map(s => s.latitude).join(',');
+    const lngs = stations.map(s => s.longitude).join(',');
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_speed_10m,cloud_cover`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const batchData = await res.json();
+      const list = Array.isArray(batchData) ? batchData : [batchData];
+      enrichedStations = stations.map((station, idx) => {
+        const cur = list[idx]?.current || {};
         return {
           name: station.name,
           lat: station.latitude,
           lng: station.longitude,
-          temp: current.temperature ?? null,
-          rain: current.precipitation ?? 0,
-          wind: current.windSpeed ?? null,
-          clouds: current.cloudCover ?? null
+          temp: cur.temperature_2m ?? null,
+          rain: cur.precipitation ?? 0,
+          wind: cur.wind_speed_10m ?? null,
+          clouds: cur.cloud_cover ?? null
         };
-      } catch {
-        return {
-          name: station.name,
-          lat: station.latitude,
-          lng: station.longitude,
-          temp: null,
-          rain: null,
-          wind: null,
-          clouds: null
-        };
-      }
-    })
-  );
+      });
+    }
+  } catch (err) {
+    console.warn('Fast batch station weather query failed, using station metadata:', err.message);
+    enrichedStations = stations.map(station => ({
+      name: station.name,
+      lat: station.latitude,
+      lng: station.longitude,
+      temp: null,
+      rain: null,
+      wind: null,
+      clouds: null
+    }));
+  }
 
   const features = enrichedStations.map((station) => {
     let value = station.temp;

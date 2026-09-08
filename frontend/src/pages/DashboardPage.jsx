@@ -23,7 +23,8 @@ import {
   CalendarDays,
   Gauge,
   Eye,
-  Star
+  Star,
+  Crosshair
 } from 'lucide-react'
 
 export const DashboardPage = () => {
@@ -35,6 +36,8 @@ export const DashboardPage = () => {
     setIsAirQualityOpen,
     selectedMapLocation,
     setSelectedMapLocation,
+    isDetectingLocation,
+    detectCurrentLocation,
     savedLocations,
     addToast,
     conversations,
@@ -72,8 +75,14 @@ export const DashboardPage = () => {
       : forecastCurrent?.temperature != null
       ? forecastCurrent
       : forecastHour
-  const forecastHours = forecastData?.models?.openMeteo?.hourly || []
-  const dailyForecastData = forecastData?.models?.openMeteo?.daily || []
+  const forecastHours =
+    forecastData?.models?.openMeteo?.hourly?.length
+      ? forecastData.models.openMeteo.hourly
+      : weatherData?.forecast?.hourly || []
+  const dailyForecastData =
+    forecastData?.models?.openMeteo?.daily?.length
+      ? forecastData.models.openMeteo.daily
+      : weatherData?.forecast?.daily || []
 
   const weatherIcon = precipitationProbability => {
     if (precipitationProbability >= 50) return 'rain'
@@ -366,12 +375,26 @@ export const DashboardPage = () => {
           <div className='absolute -top-24 -right-24 w-80 h-80 rounded-full bg-sky-400/20 blur-3xl pointer-events-none' />
 
           {/* Top: Location & Switcher */}
-          <div className='flex items-center justify-between relative z-10'>
-            <div className='flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15'>
-              <MapPin className='w-4 h-4 text-sky-300' />
-              <span className='text-xs sm:text-sm font-bold tracking-wide'>
-                {locationLabel}
-              </span>
+          <div className='flex items-center justify-between relative z-10 flex-wrap gap-2'>
+            <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15'>
+                <MapPin className='w-4 h-4 text-sky-300' />
+                <span className='text-xs sm:text-sm font-bold tracking-wide'>
+                  {locationLabel}
+                </span>
+              </div>
+              <button
+                type='button'
+                onClick={() => detectCurrentLocation(true)}
+                disabled={isDetectingLocation}
+                className='flex items-center gap-1.5 text-xs font-semibold bg-white/15 hover:bg-white/25 active:scale-95 px-3 py-1.5 rounded-full transition cursor-pointer backdrop-blur-xs border border-white/15 disabled:opacity-50'
+                title='Detect live GPS / network location'
+              >
+                <Crosshair className={`w-3.5 h-3.5 text-sky-200 ${isDetectingLocation ? 'animate-spin text-amber-300' : ''}`} />
+                <span className='text-[11px] font-bold'>
+                  {isDetectingLocation ? 'Detecting...' : 'My Location'}
+                </span>
+              </button>
             </div>
 
             <button

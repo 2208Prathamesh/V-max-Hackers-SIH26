@@ -28,3 +28,12 @@ export const DEFAULT_USER_STATS = {
   storageUsedPercent: 0,
   locationsSaved: 0
 };
+
+export const DEFAULT_LOCATION = {
+  city: 'Pune',
+  region: 'Maharashtra',
+  country: 'India',
+  lat: 18.5204,
+  lng: 73.8567
+};
+

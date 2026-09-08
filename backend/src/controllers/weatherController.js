@@ -169,5 +169,38 @@ const searchLocations = async (req, res, next) => {
   }
 };
 
-export { getCurrentWeather, getForecast, getHourlyForecast, compareModels, searchLocations };
-export default { getCurrentWeather, getForecast, getHourlyForecast, compareModels, searchLocations };
+/**
+ * Legit reverse geocoding for GPS or IP location
+ * GET /api/weather/reverse-geocode?latitude=18.5204&longitude=73.8567
+ */
+const reverseGeocode = async (req, res, next) => {
+  try {
+    const { latitude, longitude } = req.query;
+    let url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en';
+    if (latitude && longitude) {
+      url += `&latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`;
+    }
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) {
+      throw new Error(`Reverse geocode failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    const result = {
+      city: data.city || data.locality || data.principalSubdivision || 'Current Location',
+      locality: data.locality || '',
+      region: data.principalSubdivision || '',
+      country: data.countryName || 'India',
+      countryCode: data.countryCode || 'IN',
+      latitude: Number(data.latitude) || (latitude ? Number(latitude) : 18.5204),
+      longitude: Number(data.longitude) || (longitude ? Number(longitude) : 73.8567),
+      lat: Number(data.latitude) || (latitude ? Number(latitude) : 18.5204),
+      lng: Number(data.longitude) || (longitude ? Number(longitude) : 73.8567)
+    };
+    return successResponse(res, result, 'Location resolved', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getCurrentWeather, getForecast, getHourlyForecast, compareModels, searchLocations, reverseGeocode };
+export default { getCurrentWeather, getForecast, getHourlyForecast, compareModels, searchLocations, reverseGeocode };

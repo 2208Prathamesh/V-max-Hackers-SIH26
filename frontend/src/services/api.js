@@ -180,6 +180,13 @@ export const api = {
     return request(`/weather/compare?${params.toString()}`);
   },
   searchLocations: (query) => request(`/weather/search?q=${encodeURIComponent(query)}`),
+  reverseGeocode: ({ latitude, longitude } = {}) => {
+    const params = new URLSearchParams();
+    if (latitude !== undefined) params.set('latitude', String(latitude));
+    if (longitude !== undefined) params.set('longitude', String(longitude));
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request(`/weather/reverse-geocode${qs}`);
+  },
 
   // Alerts & IMD
   alerts: () => request('/alerts'),

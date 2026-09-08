@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useRef
 } from 'react';
-import { DEFAULT_SETTINGS, DEFAULT_USER_STATS } from '../config/defaults';
+import { DEFAULT_SETTINGS, DEFAULT_USER_STATS, DEFAULT_LOCATION } from '../config/defaults';
 import { api } from '../services/api';
 
 const WeatherContext = createContext();
@@ -62,7 +62,14 @@ export const WeatherProvider = ({ children }) => {
 
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [isSending, setIsSending] = useState(false);
-  const [selectedMapLocation, setSelectedMapLocation] = useState(null);
+  const [selectedMapLocation, setSelectedMapLocation] = useState(() => {
+    const saved = localStorage.getItem('weathergpt_selected_location');
+    try {
+      return saved ? JSON.parse(saved) : DEFAULT_LOCATION;
+    } catch {
+      return DEFAULT_LOCATION;
+    }
+  });
   const [alerts, setAlerts] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
@@ -86,6 +93,8 @@ export const WeatherProvider = ({ children }) => {
   const [isAirQualityOpen, setIsAirQualityOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
   // Sync to local storage
   useEffect(() => {
     localStorage.setItem('weathergpt_auth', JSON.stringify(isAuthenticated));
@@ -108,6 +117,68 @@ export const WeatherProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('weathergpt_conversations', JSON.stringify(conversations));
   }, [conversations]);
+
+  useEffect(() => {
+    if (selectedMapLocation) {
+      localStorage.setItem('weathergpt_selected_location', JSON.stringify(selectedMapLocation));
+    }
+  }, [selectedMapLocation]);
+
+  // Legit GPS & Reverse Geocoding Detection
+  const detectCurrentLocation = async (showToast = true) => {
+    setIsDetectingLocation(true);
+
+    const resolveAndApply = async (coords = null) => {
+      try {
+        const resolved = await api.reverseGeocode(
+          coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}
+        );
+        if (resolved && (resolved.city || resolved.lat)) {
+          const loc = {
+            city: resolved.city || 'Current Location',
+            region: resolved.region || '',
+            country: resolved.country || 'India',
+            lat: resolved.latitude || resolved.lat || coords?.latitude || DEFAULT_LOCATION.lat,
+            lng: resolved.longitude || resolved.lng || coords?.longitude || DEFAULT_LOCATION.lng
+          };
+          setSelectedMapLocation(loc);
+          if (showToast) {
+            addToast(`📍 ${loc.city}${loc.region ? `, ${loc.region}` : ''}`, 'success');
+          }
+          return loc;
+        }
+      } catch (err) {
+        console.warn('Reverse geocode error:', err.message);
+      }
+      return null;
+    };
+
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          await resolveAndApply(pos.coords);
+          setIsDetectingLocation(false);
+        },
+        async (err) => {
+          console.warn('Browser geolocation denied or timed out, falling back to network IP location:', err.message);
+          await resolveAndApply(null);
+          setIsDetectingLocation(false);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    } else {
+      await resolveAndApply(null);
+      setIsDetectingLocation(false);
+    }
+  };
+
+  // Initial detection if no prior location is set in localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('weathergpt_selected_location');
+    if (!saved) {
+      detectCurrentLocation(false);
+    }
+  }, []);
 
   const refreshAlerts = async () => {
     try {
@@ -380,16 +451,16 @@ export const WeatherProvider = ({ children }) => {
     return requestPromise;
   };
 
-  // Fetch weather when location is selected
+  // Fetch weather whenever location changes or on mount
   useEffect(() => {
-    if (!isAuthenticated) return;
-    const latitude = selectedMapLocation?.lat ?? selectedMapLocation?.latitude;
-    const longitude = selectedMapLocation?.lng ?? selectedMapLocation?.longitude;
+    const loc = selectedMapLocation || DEFAULT_LOCATION;
+    const latitude = loc?.lat ?? loc?.latitude ?? DEFAULT_LOCATION.lat;
+    const longitude = loc?.lng ?? loc?.longitude ?? DEFAULT_LOCATION.lng;
     if (latitude !== undefined && longitude !== undefined) {
       refreshWeather(latitude, longitude);
       refreshForecast(latitude, longitude);
     }
-  }, [isAuthenticated, selectedMapLocation]);
+  }, [selectedMapLocation]);
 
   // Toast Notification helper
   const addToast = (message, type = 'info') => {
@@ -897,6 +968,8 @@ export const WeatherProvider = ({ children }) => {
         toggleFavorite,
         selectedMapLocation,
         setSelectedMapLocation,
+        isDetectingLocation,
+        detectCurrentLocation,
         conversations,
         activeConversationId,
         setActiveConversationId,
