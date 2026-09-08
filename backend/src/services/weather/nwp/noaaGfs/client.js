@@ -122,6 +122,9 @@ async function getGFSMessages ({ days = 7 } = {}) {
           const [variable, level] = fields[name]
           const entry = findEntry(entries, variable, level)
           if (!entry || entry.length == null) {
+            if (name === 'precipitation' && step === 0) {
+              return null
+            }
             throw new Error(`NOAA GFS parameter not found: ${variable} ${level} at ${step}h`)
           }
           return getBuffer(date, cycle, step, name, entry)

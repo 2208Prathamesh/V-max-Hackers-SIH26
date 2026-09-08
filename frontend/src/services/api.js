@@ -197,6 +197,16 @@ export const api = {
   imdDistrictWarning: (name) => request(`/imd/warnings/district?name=${encodeURIComponent(name)}`),
   imdBulletin: () => request('/imd/bulletin'),
 
+  // Weather & Climate News
+  getNews: ({ scope = 'all', category = 'all', query = '' } = {}) => {
+    const params = new URLSearchParams();
+    if (scope && scope !== 'all') params.set('scope', scope);
+    if (category && category !== 'all') params.set('category', category);
+    if (query && query.trim()) params.set('q', query.trim());
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return request(`/news${qs}`);
+  },
+
   // Notifications & Subscriptions
   notifications: () => request('/notifications'),
   unreadNotificationCount: () => request('/notifications/unread-count'),

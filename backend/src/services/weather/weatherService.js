@@ -21,7 +21,15 @@ const inflightRequests = new Map()
 const forecastCache = new Map()
 const inflightForecastRequests = new Map()
 let ecmwfUnavailableUntil = 0
-const MAX_CACHE_ENTRIES = 300
+const MAX_CACHE_ENTRIES = 300 // Max entries cache
+
+// Sequential queue for background NWP tasks to prevent parallel GRIB2 allocations from exhausting memory
+let nwpQueue = Promise.resolve()
+function enqueueNWP (task) {
+  const run = () => task().catch(err => console.warn('Background NWP error:', err.message))
+  nwpQueue = nwpQueue.then(run, run)
+  return nwpQueue
+}
 
 /**
  * Retrieve cached weather data if not expired
@@ -428,8 +436,8 @@ export async function getForecast (latitude, longitude, days = 7) {
         }
       }
 
-      // Background refresh: direct NWP should continue independently without blocking the initial response.
-      void (async () => {
+      // Background refresh: serialize NWP requests so multiple parallel requests never exhaust memory
+      enqueueNWP(async () => {
         const [gfsResult, ecmwfResult] = await Promise.allSettled([
           fetchGFSWithFallback(latNum, lonNum, daysNum),
           fetchECMWFWithFallback(latNum, lonNum, daysNum)
@@ -467,7 +475,7 @@ export async function getForecast (latitude, longitude, days = 7) {
 
         updateForecastCacheWithBackgroundModel(cacheKey, 'gfs', nextModels.gfs)
         updateForecastCacheWithBackgroundModel(cacheKey, 'ecmwf', nextModels.ecmwf)
-      })()
+      })
 
       if (!openMeteo.isFallback) {
         setForecastCache(cacheKey, result)

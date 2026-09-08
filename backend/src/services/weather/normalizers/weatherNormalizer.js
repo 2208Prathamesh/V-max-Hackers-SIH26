@@ -51,6 +51,8 @@ function normalizeForecast (data, source) {
       windGust: data.current?.wind_gusts_10m ?? null,
       pressure: data.current?.surface_pressure ?? null,
       precipitation: data.current?.precipitation ?? null,
+      isDay: data.current?.is_day ?? null,
+      is_day: data.current?.is_day ?? null,
       visibility: data.current?.visibility ?? data.hourly?.visibility?.[0] ?? null,
       uvIndex: data.current?.uv_index ?? data.hourly?.uv_index?.[0] ?? null,
       weatherCode: data.current?.weather_code ?? null,

@@ -5,7 +5,7 @@ import { initializeSocket } from "./config/socket.js";
 import Scheduler from "./services/scheduler.js";
 import app from "./app.js";
 
-const PORT = env.PORT;
+const PORT = env.PORT; // Restart 1
 
 let server;
 

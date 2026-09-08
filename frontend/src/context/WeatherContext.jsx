@@ -217,10 +217,10 @@ export const WeatherProvider = ({ children }) => {
             }));
           }
         })
-        .catch(() => {
-          localStorage.removeItem('weathergpt_token');
-          localStorage.removeItem('weathergpt_user');
-          setIsAuthenticated(false);
+        .catch((err) => {
+          // 401 Unauthorized is handled globally by api.js via 'weathergpt:unauthorized'.
+          // Transient network errors or rate limits should not kick the user out.
+          console.warn('Could not hydrate user profile from backend:', err?.message || err);
         });
     }
 

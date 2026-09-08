@@ -30,6 +30,14 @@ export const env = {
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   
+  // Automated News Crawler & Trending Topics
+  NEWS_INDIA_QUERY: process.env.NEWS_INDIA_QUERY || 'India weather OR monsoon OR flood OR cyclone OR cloudburst OR IMD',
+  NEWS_GLOBAL_QUERY: process.env.NEWS_GLOBAL_QUERY || 'extreme weather OR cyclone OR hurricane OR typhoon OR heatwave OR flood disaster OR climate emergency',
+  NEWS_TRENDING_TOPICS: (process.env.NEWS_TRENDING_TOPICS || 'monsoon,flood,cyclone,cloudburst,heatwave,hurricane,typhoon,landslide,drought,wildfire,storm')
+    .split(',')
+    .map(t => t.trim().toLowerCase())
+    .filter(Boolean),
+
   // Environment Flags
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
   IS_DEVELOPMENT: (process.env.NODE_ENV || 'development') === 'development',

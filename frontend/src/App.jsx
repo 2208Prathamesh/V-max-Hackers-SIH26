@@ -14,10 +14,14 @@ import ClimateHistorical from './pages/ClimateHistorical';
 import { ForecastPage } from './pages/ForecastPage';
 import { AdvisoryPage } from './pages/AdvisoryPage';
 import { LoginPage } from './pages/LoginPage';
+<<<<<<< HEAD
 import { AuthorityDashboardPage } from './pages/authority/AuthorityDashboardPage';
 import { AuthorityAlertsPage } from './pages/authority/AuthorityAlertsPage';
 import { AuthorityWeatherMapPage } from './pages/authority/AuthorityWeatherMapPage';
 import { AuthorityAnalyticsPage } from './pages/authority/AuthorityAnalyticsPage';
+=======
+import { NewsPage } from './pages/NewsPage';
+>>>>>>> d55472b6f3372486c9b67169682caa0f93fcdf11
 import { ToastContainer } from './components/common/Toast';
 
 const AppContent = () => {
@@ -83,7 +87,8 @@ const AppContent = () => {
         return <HistoryPage />;
       case 'climate-historical':
         return <ClimateHistorical />;
-
+      case 'news':
+        return <NewsPage />;
       case 'settings':
         return <SettingsPage />;
       default:
