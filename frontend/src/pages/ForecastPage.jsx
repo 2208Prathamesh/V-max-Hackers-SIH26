@@ -74,7 +74,7 @@ export const ForecastPage = () => {
     formatWind,
     formatPressure
   } = useWeather()
-  const { t, formatDay, formatHour, language, translateCity, translateRegion } = useLanguage()
+  const { t, formatDay, formatHour, language, translateCity, translateRegion } =useLanguage()
 
   const [activeChartTab, setActiveChartTab] = useState('temperature') // 'temperature' | 'precipitation' | 'wind' | 'humidity' | 'pressure'
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false)
@@ -103,7 +103,8 @@ export const ForecastPage = () => {
   const currentForecastHour = liveForecast?.hourly?.[0]
   const currentForecastDay = liveForecast?.daily?.[0]
 
-  const currentLocale = language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN'
+  const currentLocale =
+    language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN'
 
   const formatDate = date =>
     new Date(`${date}T12:00:00`).toLocaleDateString(currentLocale, {
@@ -127,7 +128,8 @@ export const ForecastPage = () => {
           `${formatDate(day.date).split(' ')[0]} `,
           ''
         ),
-        high: day.maxTemperature != null ? formatTemp(day.maxTemperature) : '--',
+        high:
+          day.maxTemperature != null ? formatTemp(day.maxTemperature) : '--',
         low: day.minTemperature != null ? formatTemp(day.minTemperature) : '--',
         pop: `${Math.round(day.precipitationProbability ?? 0)}%`,
         icon: weatherIcon(day.precipitationProbability ?? 0)
@@ -153,11 +155,14 @@ export const ForecastPage = () => {
   const getChartPoints = () => {
     if (!liveChartHours || liveChartHours.length < 6) return []
     const chartValues = {
-      temperature: hour => (hour.temperature != null ? formatTemp(hour.temperature) : '--'),
+      temperature: hour =>
+        hour.temperature != null ? formatTemp(hour.temperature) : '--',
       precipitation: hour => `${hour.precipitation ?? 0} mm`,
-      wind: hour => (hour.windSpeed != null ? formatWind(hour.windSpeed) : '--'),
+      wind: hour =>
+        hour.windSpeed != null ? formatWind(hour.windSpeed) : '--',
       humidity: hour => `${hour.humidity ?? 0}%`,
-      pressure: hour => (hour.pressure != null ? formatPressure(hour.pressure) : '--')
+      pressure: hour =>
+        hour.pressure != null ? formatPressure(hour.pressure) : '--'
     }
     const rawValues = {
       temperature: hour => hour.temperature ?? 25,
@@ -201,9 +206,13 @@ export const ForecastPage = () => {
   // Right sidebar locations list — dynamic from savedLocations context
   const sidebarLocations = savedLocations.map(loc => ({
     id: loc.id || loc._id,
-    city: `${translateCity(loc.city)}, ${translateRegion(loc.region || loc.state || loc.country || '')}`,
+    city: `${translateCity(loc.city)}, ${translateRegion(
+      loc.region || loc.state || loc.country || ''
+    )}`,
     rawCity: loc.city,
-    active: (selectedMapLocation?.city || city?.city)?.toLowerCase() === loc.city.toLowerCase(),
+    active:
+      (selectedMapLocation?.city || city?.city)?.toLowerCase() ===
+      loc.city.toLowerCase(),
     isFav: !!loc.isFavorite
   }))
 
@@ -212,9 +221,11 @@ export const ForecastPage = () => {
   )
 
   const handleSelectLocation = (locId, rawCity) => {
-    const found = savedLocations.find(l =>
-      (l.id === locId || l._id === locId) ||
-      l.city.toLowerCase() === (rawCity || '').toLowerCase()
+    const found = savedLocations.find(
+      l =>
+        l.id === locId ||
+        l._id === locId ||
+        l.city.toLowerCase() === (rawCity || '').toLowerCase()
     )
     if (found) {
       setSelectedMapLocation(found)
@@ -228,7 +239,6 @@ export const ForecastPage = () => {
       )
     }
   }
-
 
   return (
     <div className='space-y-6 pb-10 select-none'>
@@ -266,13 +276,23 @@ export const ForecastPage = () => {
                 <div className='flex items-center gap-1.5 cursor-pointer group'>
                   <MapPin className='w-4 h-4 text-blue-600' />
                   <h2 className='text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition'>
-                    {city ? `${translateCity(city.city)}${city.region ? `, ${translateRegion(city.region)}` : ''}` : t('selectLocation')}
+                    {city
+                      ? `${translateCity(city.city)}${
+                          city.region ? `, ${translateRegion(city.region)}` : ''
+                        }`
+                      : t('selectLocation')}
                   </h2>
                   <ChevronDown className='w-4 h-4 text-slate-400' />
                 </div>
                 <p className='text-xs text-slate-400 pl-5.5 mt-0.5'>
                   {city?.lat != null
-                    ? `Lat ${Math.abs(city.lat).toFixed(2)}° ${city.lat >= 0 ? 'N' : 'S'}, Long ${Math.abs(city.lng ?? city.longitude ?? 0).toFixed(2)}° ${(city.lng ?? city.longitude ?? 0) >= 0 ? 'E' : 'W'}`
+                    ? `Lat ${Math.abs(city.lat).toFixed(2)}° ${
+                        city.lat >= 0 ? 'N' : 'S'
+                      }, Long ${Math.abs(
+                        city.lng ?? city.longitude ?? 0
+                      ).toFixed(2)}° ${
+                        (city.lng ?? city.longitude ?? 0) >= 0 ? 'E' : 'W'
+                      }`
                     : '--'}
                 </p>
               </div>
@@ -293,10 +313,20 @@ export const ForecastPage = () => {
                 <Hero3DSunCloud />
                 <div>
                   <span className='text-xs font-semibold text-blue-600 dark:text-blue-400 block'>
-                    {t('today')} • {new Date().toLocaleDateString(language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {t('today')} •{' '}
+                    {new Date().toLocaleDateString(
+                      language === 'mr'
+                        ? 'mr-IN'
+                        : language === 'hi'
+                        ? 'hi-IN'
+                        : 'en-IN',
+                      { day: 'numeric', month: 'short', year: 'numeric' }
+                    )}
                   </span>
                   <div className='text-5xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5'>
-                    {currentForecastHour?.temperature != null ? formatTemp(currentForecastHour.temperature) : '--'}
+                    {currentForecastHour?.temperature != null
+                      ? formatTemp(currentForecastHour.temperature)
+                      : '--'}
                   </div>
                   <p className='text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1'>
                     {currentForecastHour?.precipitationProbability >= 50
@@ -323,7 +353,9 @@ export const ForecastPage = () => {
                       {t('minTemp')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastDay?.minTemperature != null ? formatTemp(currentForecastDay.minTemperature) : '--'}
+                      {currentForecastDay?.minTemperature != null
+                        ? formatTemp(currentForecastDay.minTemperature)
+                        : '--'}
                     </span>
                   </div>
                 </div>
@@ -355,7 +387,9 @@ export const ForecastPage = () => {
                       {t('maxTemp')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastDay?.maxTemperature != null ? formatTemp(currentForecastDay.maxTemperature) : '--'}
+                      {currentForecastDay?.maxTemperature != null
+                        ? formatTemp(currentForecastDay.maxTemperature)
+                        : '--'}
                     </span>
                   </div>
                 </div>
@@ -387,7 +421,9 @@ export const ForecastPage = () => {
                       {t('humidity')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.humidity != null ? `${currentForecastHour.humidity}%` : '--'}
+                      {currentForecastHour?.humidity != null
+                        ? `${currentForecastHour.humidity}%`
+                        : '--'}
                     </span>
                   </div>
                 </div>
@@ -403,7 +439,9 @@ export const ForecastPage = () => {
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
                       {currentForecastHour?.visibility != null
-                        ? `${(currentForecastHour.visibility / 1000).toFixed(1)} km`
+                        ? `${(currentForecastHour.visibility / 1000).toFixed(
+                            1
+                          )} km`
                         : '--'}
                     </span>
                   </div>
@@ -419,9 +457,7 @@ export const ForecastPage = () => {
                 {t('sevenDayForecast')}
               </h3>
               <button
-                onClick={() =>
-                  addToast(t('viewFull7Day'), 'info')
-                }
+                onClick={() => addToast(t('viewFull7Day'), 'info')}
                 className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-0.5'
               >
                 <span>{t('viewFull7Day')}</span>
@@ -489,7 +525,11 @@ export const ForecastPage = () => {
                 })}
               </div>
             ) : (
-              <p className='text-xs text-slate-400 py-6 text-center'>{forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'No 7-day forecast data'}</p>
+              <p className='text-xs text-slate-400 py-6 text-center'>
+                {forecastLoading
+                  ? t('loadingForecast')
+                  : t('noDataAvailable') || 'No 7-day forecast data'}
+              </p>
             )}
           </div>
 
@@ -543,7 +583,11 @@ export const ForecastPage = () => {
                 ))}
               </div>
             ) : (
-              <p className='text-xs text-slate-400 py-6 text-center'>{forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'No hourly forecast data'}</p>
+              <p className='text-xs text-slate-400 py-6 text-center'>
+                {forecastLoading
+                  ? t('loadingForecast')
+                  : t('noDataAvailable') || 'No hourly forecast data'}
+              </p>
             )}
           </div>
 
@@ -663,7 +707,11 @@ export const ForecastPage = () => {
                             y={Math.max(10, p.y - 15)}
                             textAnchor='middle'
                             fill='#1E293B'
-                            className={`text-[11px] ${peak ? 'font-black fill-blue-600 dark:fill-blue-400' : 'font-extrabold fill-slate-800 dark:fill-slate-100'}`}
+                            className={`text-[11px] ${
+                              peak
+                                ? 'font-black fill-blue-600 dark:fill-blue-400'
+                                : 'font-extrabold fill-slate-800 dark:fill-slate-100'
+                            }`}
                           >
                             {p.val}
                           </text>
@@ -680,7 +728,9 @@ export const ForecastPage = () => {
                   </>
                 ) : (
                   <div className='w-full h-full flex items-center justify-center text-xs text-slate-400'>
-                    {forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'Chart telemetry unavailable'}
+                    {forecastLoading
+                      ? t('loadingForecast')
+                      : t('noDataAvailable') || 'Chart telemetry unavailable'}
                   </div>
                 )}
               </div>
@@ -702,7 +752,8 @@ export const ForecastPage = () => {
                         {t('maxTemperature')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        {sevenDayForecast[selectedDayIdx]?.high ?? '--'} {t('at')} 3:00 PM
+                        {sevenDayForecast[selectedDayIdx]?.high ?? '--'}{' '}
+                        {t('at')} 3:00 PM
                       </span>
                     </div>
                   </div>
@@ -714,7 +765,8 @@ export const ForecastPage = () => {
                         {t('minTemperature')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        {sevenDayForecast[selectedDayIdx]?.low ?? '--'} {t('at')} 6:00 AM
+                        {sevenDayForecast[selectedDayIdx]?.low ?? '--'}{' '}
+                        {t('at')} 6:00 AM
                       </span>
                     </div>
                   </div>
@@ -727,7 +779,13 @@ export const ForecastPage = () => {
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
                         {liveForecast?.daily?.[selectedDayIdx]
-                          ? `${(liveForecast.daily[selectedDayIdx].totalPrecipitation ?? liveForecast.daily[selectedDayIdx].precipitation ?? 0).toFixed(1)} mm`
+                          ? `${(
+                              liveForecast.daily[selectedDayIdx]
+                                .totalPrecipitation ??
+                              liveForecast.daily[selectedDayIdx]
+                                .precipitation ??
+                              0
+                            ).toFixed(1)} mm`
                           : precipBars[selectedDayIdx]
                           ? `${precipBars[selectedDayIdx].mm} mm`
                           : '--'}
@@ -763,21 +821,48 @@ export const ForecastPage = () => {
                   <ShieldCheck className='w-3.5 h-3.5' />
                 )}
                 <span>
-                  {nwpComparison?.consensus?.confidenceScore ?? 88}% {t('confidence')}
+                  {nwpComparison?.consensus?.confidenceScore ?? 88}%{' '}
+                  {t('confidence')}
                 </span>
               </span>
             </div>
 
             {/* Model Comparison Grid */}
             {(() => {
-              const ecmwfModel = nwpComparison?.models?.find(m => m.modelName?.includes('ECMWF')) || nwpComparison?.models?.[1] || nwpComparison?.models?.[0];
-              const gfsModel = nwpComparison?.models?.find(m => m.modelName?.includes('GFS')) || nwpComparison?.models?.[2];
-              const openMeteoModel = nwpComparison?.models?.find(m => m.modelName?.includes('Open-Meteo')) || nwpComparison?.models?.[0];
+              const ecmwfModel =
+                nwpComparison?.models?.find(m =>
+                  m.modelName?.includes('ECMWF')
+                ) ||
+                nwpComparison?.models?.[1] ||
+                nwpComparison?.models?.[0]
+              const gfsModel =
+                nwpComparison?.models?.find(m =>
+                  m.modelName?.includes('GFS')
+                ) || nwpComparison?.models?.[2]
+              const openMeteoModel =
+                nwpComparison?.models?.find(m =>
+                  m.modelName?.includes('Open-Meteo')
+                ) || nwpComparison?.models?.[0]
 
-              const consensusTemp = nwpComparison?.consensus?.meanTemperature;
-              const ecmwfTemp = ecmwfModel?.temperatureC != null ? `${ecmwfModel.temperatureC}°C` : (consensusTemp != null ? `${consensusTemp}°C` : '--');
-              const gfsTemp = gfsModel?.temperatureC != null ? `${gfsModel.temperatureC}°C` : (consensusTemp != null ? `${(consensusTemp - 0.2).toFixed(1)}°C` : '--');
-              const openMeteoTemp = openMeteoModel?.temperatureC != null ? `${openMeteoModel.temperatureC}°C` : (consensusTemp != null ? `${(consensusTemp + 0.1).toFixed(1)}°C` : '--');
+              const consensusTemp = nwpComparison?.consensus?.meanTemperature
+              const ecmwfTemp =
+                ecmwfModel?.temperatureC != null
+                  ? `${ecmwfModel.temperatureC}°C`
+                  : consensusTemp != null
+                  ? `${consensusTemp}°C`
+                  : '--'
+              const gfsTemp =
+                gfsModel?.temperatureC != null
+                  ? `${gfsModel.temperatureC}°C`
+                  : consensusTemp != null
+                  ? `${(consensusTemp - 0.2).toFixed(1)}°C`
+                  : '--'
+              const openMeteoTemp =
+                openMeteoModel?.temperatureC != null
+                  ? `${openMeteoModel.temperatureC}°C`
+                  : consensusTemp != null
+                  ? `${(consensusTemp + 0.1).toFixed(1)}°C`
+                  : '--'
 
               return (
                 <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2'>
@@ -791,8 +876,18 @@ export const ForecastPage = () => {
                       {ecmwfTemp}
                     </div>
                     <div className='text-[11px] text-slate-400 flex items-center justify-between'>
-                      <span>{t('rainfall')}: {ecmwfModel?.precipitationMm != null ? `${ecmwfModel.precipitationMm} mm` : '--'}</span>
-                      <span>{t('wind')}: {ecmwfModel?.windSpeedKmh != null ? `${ecmwfModel.windSpeedKmh} km/h` : '--'}</span>
+                      <span>
+                        {t('rainfall')}:{' '}
+                        {ecmwfModel?.precipitationMm != null
+                          ? `${ecmwfModel.precipitationMm} mm`
+                          : '--'}
+                      </span>
+                      <span>
+                        {t('wind')}:{' '}
+                        {ecmwfModel?.windSpeedKmh != null
+                          ? `${ecmwfModel.windSpeedKmh} km/h`
+                          : '--'}
+                      </span>
                     </div>
                   </div>
 
@@ -806,8 +901,18 @@ export const ForecastPage = () => {
                       {gfsTemp}
                     </div>
                     <div className='text-[11px] text-slate-400 flex items-center justify-between'>
-                      <span>{t('rainfall')}: {gfsModel?.precipitationMm != null ? `${gfsModel.precipitationMm} mm` : '--'}</span>
-                      <span>{t('wind')}: {gfsModel?.windSpeedKmh != null ? `${gfsModel.windSpeedKmh} km/h` : '--'}</span>
+                      <span>
+                        {t('rainfall')}:{' '}
+                        {gfsModel?.precipitationMm != null
+                          ? `${gfsModel.precipitationMm} mm`
+                          : '--'}
+                      </span>
+                      <span>
+                        {t('wind')}:{' '}
+                        {gfsModel?.windSpeedKmh != null
+                          ? `${gfsModel.windSpeedKmh} km/h`
+                          : '--'}
+                      </span>
                     </div>
                   </div>
 
@@ -815,18 +920,30 @@ export const ForecastPage = () => {
                   <div className='p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 space-y-2'>
                     <div className='flex items-center justify-between text-xs font-bold text-slate-400'>
                       <span>Open-Meteo Multi</span>
-                      <span className='text-[10px] text-emerald-400'>Ensemble</span>
+                      <span className='text-[10px] text-emerald-400'>
+                        Ensemble
+                      </span>
                     </div>
                     <div className='text-xl font-extrabold text-slate-100'>
                       {openMeteoTemp}
                     </div>
                     <div className='text-[11px] text-slate-400 flex items-center justify-between'>
-                      <span>{t('rainfall')}: {openMeteoModel?.precipitationMm != null ? `${openMeteoModel.precipitationMm} mm` : '--'}</span>
-                      <span>{t('wind')}: {openMeteoModel?.windSpeedKmh != null ? `${openMeteoModel.windSpeedKmh} km/h` : '--'}</span>
+                      <span>
+                        {t('rainfall')}:{' '}
+                        {openMeteoModel?.precipitationMm != null
+                          ? `${openMeteoModel.precipitationMm} mm`
+                          : '--'}
+                      </span>
+                      <span>
+                        {t('wind')}:{' '}
+                        {openMeteoModel?.windSpeedKmh != null
+                          ? `${openMeteoModel.windSpeedKmh} km/h`
+                          : '--'}
+                      </span>
                     </div>
                   </div>
                 </div>
-              );
+              )
             })()}
 
             <p className='text-xs text-slate-300 bg-slate-950/40 p-3 rounded-xl border border-slate-800/60 leading-relaxed'>
@@ -886,37 +1003,41 @@ export const ForecastPage = () => {
 
             <div className='space-y-1.5 pt-1'>
               {filteredSidebarLocations.length === 0 ? (
-                <p className='text-xs text-slate-400 text-center py-2'>{t('noLocationsFound')}</p>
-              ) : filteredSidebarLocations.map(loc => {
-                const isSelected = loc.active
-                return (
-                  <div
-                    key={loc.id}
-                    onClick={() => handleSelectLocation(loc.id, loc.rawCity)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition ${
-                      isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 font-bold'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className='flex items-center gap-2 text-xs truncate'>
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          isSelected ? 'bg-blue-600' : 'bg-slate-300'
+                <p className='text-xs text-slate-400 text-center py-2'>
+                  {t('noLocationsFound')}
+                </p>
+              ) : (
+                filteredSidebarLocations.map(loc => {
+                  const isSelected = loc.active
+                  return (
+                    <div
+                      key={loc.id}
+                      onClick={() => handleSelectLocation(loc.id, loc.rawCity)}
+                      className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition ${
+                        isSelected
+                          ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 font-bold'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <div className='flex items-center gap-2 text-xs truncate'>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            isSelected ? 'bg-blue-600' : 'bg-slate-300'
+                          }`}
+                        />
+                        <span className='truncate'>{loc.city}</span>
+                      </div>
+                      <Star
+                        className={`w-3.5 h-3.5 ${
+                          loc.isFav
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-slate-300'
                         }`}
                       />
-                      <span className='truncate'>{loc.city}</span>
                     </div>
-                    <Star
-                      className={`w-3.5 h-3.5 ${
-                        loc.isFav
-                          ? 'text-amber-400 fill-amber-400'
-                          : 'text-slate-300'
-                      }`}
-                    />
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
 
             <button
@@ -942,7 +1063,12 @@ export const ForecastPage = () => {
                   ? parseFloat(
                       liveForecast.daily
                         .slice(0, 7)
-                        .reduce((sum, d) => sum + (d.totalPrecipitation ?? d.precipitation ?? 0), 0)
+                        .reduce(
+                          (sum, d) =>
+                            sum +
+                            (d.totalPrecipitation ?? d.precipitation ?? 0),
+                          0
+                        )
                         .toFixed(1)
                     )
                   : '--'}{' '}
@@ -977,7 +1103,9 @@ export const ForecastPage = () => {
                 ))
               ) : (
                 <div className='w-full h-full flex items-center justify-center text-xs text-slate-400'>
-                  {forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'Rainfall data unavailable'}
+                  {forecastLoading
+                    ? t('loadingForecast')
+                    : t('noDataAvailable') || 'Rainfall data unavailable'}
                 </div>
               )}
             </div>
@@ -986,9 +1114,15 @@ export const ForecastPage = () => {
           {/* Card 3: UV Index */}
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3'>
             {(() => {
-              const uvValue = currentForecastHour?.uvIndex ?? currentForecastDay?.uvIndexMax ?? weatherData?.forecast?.current?.uvIndex;
-              const uvDisplay = uvValue != null ? Math.round(uvValue) : '--';
-              const uvPercent = uvValue != null ? Math.min(Math.max((uvValue / 11) * 100, 5), 95) : 50;
+              const uvValue =
+                currentForecastHour?.uvIndex ??
+                currentForecastDay?.uvIndexMax ??
+                weatherData?.forecast?.current?.uvIndex
+              const uvDisplay = uvValue != null ? Math.round(uvValue) : '--'
+              const uvPercent =
+                uvValue != null
+                  ? Math.min(Math.max((uvValue / 11) * 100, 5), 95)
+                  : 50
 
               return (
                 <>
@@ -1004,8 +1138,24 @@ export const ForecastPage = () => {
                         {uvDisplay}
                       </span>
                       {uvValue != null && (
-                        <span className={`text-xs font-bold ${uvValue >= 8 ? 'text-rose-500' : uvValue >= 6 ? 'text-orange-500' : uvValue >= 3 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                          {uvValue >= 8 ? t('veryHigh') || 'Very High' : uvValue >= 6 ? t('high') : uvValue >= 3 ? t('moderate') || 'Moderate' : t('low') || 'Low'}
+                        <span
+                          className={`text-xs font-bold ${
+                            uvValue >= 8
+                              ? 'text-rose-500'
+                              : uvValue >= 6
+                              ? 'text-orange-500'
+                              : uvValue >= 3
+                              ? 'text-amber-500'
+                              : 'text-emerald-500'
+                          }`}
+                        >
+                          {uvValue >= 8
+                            ? t('veryHigh') || 'Very High'
+                            : uvValue >= 6
+                            ? t('high')
+                            : uvValue >= 3
+                            ? t('moderate') || 'Moderate'
+                            : t('low') || 'Low'}
                         </span>
                       )}
                     </div>
@@ -1033,12 +1183,10 @@ export const ForecastPage = () => {
 
                   <div className='flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 pt-1'>
                     <Sun className='w-4 h-4 text-amber-500 shrink-0' />
-                    <p className='text-[11px]'>
-                      {t('uvProtectionAdvice')}
-                    </p>
+                    <p className='text-[11px]'>{t('uvProtectionAdvice')}</p>
                   </div>
                 </>
-              );
+              )
             })()}
           </div>
 
@@ -1052,25 +1200,52 @@ export const ForecastPage = () => {
             </div>
 
             {(() => {
-              const aqiVal = weatherData?.airQuality?.current?.us_aqi ?? weatherData?.airQuality?.current?.european_aqi;
-              const aqiDisplay = aqiVal != null ? Math.round(aqiVal) : '--';
-              const aqiColor = aqiVal == null ? 'text-slate-400 border-slate-400' : aqiVal <= 50 ? 'text-emerald-500 border-emerald-500' : aqiVal <= 100 ? 'text-amber-500 border-amber-500' : 'text-rose-500 border-rose-500';
+              const aqiVal =
+                weatherData?.airQuality?.current?.us_aqi ??
+                weatherData?.airQuality?.current?.european_aqi
+              const aqiDisplay = aqiVal != null ? Math.round(aqiVal) : '--'
+              const aqiColor =
+                aqiVal == null
+                  ? 'text-slate-400 border-slate-400'
+                  : aqiVal <= 50
+                  ? 'text-emerald-500 border-emerald-500'
+                  : aqiVal <= 100
+                  ? 'text-amber-500 border-amber-500'
+                  : 'text-rose-500 border-rose-500'
 
               return (
                 <div className='flex items-center gap-3.5'>
-                  <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-black text-lg shrink-0 ${aqiColor}`}>
+                  <div
+                    className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-black text-lg shrink-0 ${aqiColor}`}
+                  >
                     {aqiDisplay}
                   </div>
                   <div>
-                    <span className={`text-sm font-bold ${aqiVal <= 50 ? 'text-emerald-600' : aqiVal <= 100 ? 'text-amber-600' : 'text-rose-600'}`}>
-                      {aqiVal == null ? '--' : aqiVal <= 50 ? t('aqiGood') : aqiVal <= 100 ? t('aqiModerate') || 'Moderate' : t('aqiPoor') || 'Unhealthy'}
+                    <span
+                      className={`text-sm font-bold ${
+                        aqiVal <= 50
+                          ? 'text-emerald-600'
+                          : aqiVal <= 100
+                          ? 'text-amber-600'
+                          : 'text-rose-600'
+                      }`}
+                    >
+                      {aqiVal == null
+                        ? '--'
+                        : aqiVal <= 50
+                        ? t('aqiGood')
+                        : aqiVal <= 100
+                        ? t('aqiModerate') || 'Moderate'
+                        : t('aqiPoor') || 'Unhealthy'}
                     </span>
                     <p className='text-[11px] text-slate-500 dark:text-slate-400 mt-0.5'>
-                      {aqiVal != null && aqiVal <= 50 ? t('aqiGoodDesc') : 'Air quality telemetry monitored live via CPCB/Open-Meteo.'}
+                      {aqiVal != null && aqiVal <= 50
+                        ? t('aqiGoodDesc')
+                        : 'Air quality telemetry monitored live via CPCB/Open-Meteo.'}
                     </p>
                   </div>
                 </div>
-              );
+              )
             })()}
           </div>
 
@@ -1081,10 +1256,20 @@ export const ForecastPage = () => {
             </h3>
 
             {(() => {
-              const sunrise = currentForecastDay?.sunrise;
-              const sunset = currentForecastDay?.sunset;
-              const sunriseDisplay = sunrise ? new Date(sunrise).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '--';
-              const sunsetDisplay = sunset ? new Date(sunset).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '--';
+              const sunrise = currentForecastDay?.sunrise
+              const sunset = currentForecastDay?.sunset
+              const sunriseDisplay = sunrise
+                ? new Date(sunrise).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })
+                : '--'
+              const sunsetDisplay = sunset
+                ? new Date(sunset).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })
+                : '--'
 
               return (
                 <div className='grid grid-cols-2 gap-3 pt-1'>
@@ -1114,7 +1299,7 @@ export const ForecastPage = () => {
                     </div>
                   </div>
                 </div>
-              );
+              )
             })()}
           </div>
 
