@@ -480,7 +480,32 @@ export const TRANSLATIONS = {
     india: 'India',
     nationalCapital: 'National Capital',
     mapZoomIn: 'Map zoom in',
-    mapZoomOut: 'Map zoom out'
+    mapZoomOut: 'Map zoom out',
+
+    // StitchMCP Emergency & High-Accessibility Interface
+    emergencyBroadcast: 'Emergency Weather Broadcast',
+    immediateDanger: 'Immediate Danger',
+    heavyRainfall: 'Heavy Rainfall Warning',
+    heatwaveAdvisory: 'Heatwave Advisory',
+    audioBroadcast: 'Audio Siren Broadcast',
+    audioPlaying: 'Broadcasting Audio Warning...',
+    stopAudio: 'Stop Audio',
+    emergencyHotline: 'Emergency Helpline (112)',
+    disasterHelpline: 'Disaster Relief (1078)',
+    quickDistrictAlert: 'Quick District Alert Triage',
+    highRiskAlertActive: 'High-Risk Meteorological Alert Active',
+    precautionaryAdvice: 'Precautionary Measures & Guidelines',
+    listenAlertAudio: 'Listen to spoken alert advisory in preferred language',
+    emergencyContactsTitle: '24x7 Emergency Helplines & Disaster Response',
+    emergencyContactsSubtitle: 'Immediate one-tap assistance from national and state disaster response authorities',
+    callNow: 'Call Now',
+    close: 'Close',
+    activeAlertsSummary: 'Active Meteorological Hazards & Bulletins',
+    allSevereWarnings: 'Severe Warnings',
+    watchBulletins: 'Watch Bulletins',
+    safeAreas: 'Safe Zones',
+    districtTriage: 'District Warning Triage',
+    audioAnnounceSuccess: 'Audio weather alert broadcast started'
   },
   mr: {
     // Navigation
@@ -955,7 +980,32 @@ export const TRANSLATIONS = {
     india: 'भारत',
     nationalCapital: 'राष्ट्रीय राजधानी',
     mapZoomIn: 'नकाशा झूम इन',
-    mapZoomOut: 'नकाशा झूम आउट'
+    mapZoomOut: 'नकाशा झूम आउट',
+
+    // StitchMCP Emergency & High-Accessibility Interface
+    emergencyBroadcast: 'तातडीची हवामान सूचना व चेतावणी',
+    immediateDanger: 'तातडीचा धोका (रेड अलर्ट)',
+    heavyRainfall: 'मुसळधार पाऊस (ऑरेंज अलर्ट)',
+    heatwaveAdvisory: 'उष्णतेची लाट सल्ला (यलो अलर्ट)',
+    audioBroadcast: 'ऑडिओ सायरन प्रसारण',
+    audioPlaying: 'ऑडिओ सूचना ऐकवली जात आहे...',
+    stopAudio: 'ऑडिओ थांबवा',
+    emergencyHotline: 'आपत्कालीन हेल्पलाइन (११२)',
+    disasterHelpline: 'आपत्ती निवारण दल (१०७८)',
+    quickDistrictAlert: 'जलद जिल्हा अलर्ट स्थिती',
+    highRiskAlertActive: 'अति जोखमीचा हवामान इशारा सक्रिय',
+    precautionaryAdvice: 'खबरदारीचे उपाय व आवश्यक मार्गदर्शक सूचना',
+    listenAlertAudio: 'पसंतीच्या भाषेत अधिकृत हवामान सूचना ऐका',
+    emergencyContactsTitle: '२४x७ आपत्कालीन हेल्पलाइन व आपत्ती निवारण',
+    emergencyContactsSubtitle: 'राष्ट्रीय आपत्ती व मदत केंद्रांशी थेट संपर्क साधा',
+    callNow: 'थेट संपर्क करा',
+    close: 'बंद करा',
+    activeAlertsSummary: 'सक्रिय हवामान धोके आणि अधिकृत पत्रके',
+    allSevereWarnings: 'गंभीर इशारे',
+    watchBulletins: 'निरीक्षण पत्रके',
+    safeAreas: 'सुरक्षित क्षेत्रे',
+    districtTriage: 'जिल्हा चेतावणी ट्रियाज',
+    audioAnnounceSuccess: 'ऑडिओ हवामान सूचना प्रसारण सुरू झाले'
   },
   hi: {
     // Navigation
@@ -1430,7 +1480,32 @@ export const TRANSLATIONS = {
     india: 'भारत',
     nationalCapital: 'राष्ट्रीय राजधानी',
     mapZoomIn: 'मानचित्र ज़ूम इन',
-    mapZoomOut: 'मानचित्र ज़ूम आउट'
+    mapZoomOut: 'मानचित्र ज़ूम आउट',
+
+    // StitchMCP Emergency & High-Accessibility Interface
+    emergencyBroadcast: 'आपातकालीन मौसम प्रसारण एवं चेतावनी',
+    immediateDanger: 'अत्यधिक ख़तरा (रेड अलर्ट)',
+    heavyRainfall: 'भारी वर्षा (ऑरेंज अलर्ट)',
+    heatwaveAdvisory: 'लू / हीटवेव परामर्श (येलो अलर्ट)',
+    audioBroadcast: 'ऑडियो सायरन प्रसारण',
+    audioPlaying: 'ऑडियो चेतावनी प्रसारित हो रही है...',
+    stopAudio: 'ऑडियो बंद करें',
+    emergencyHotline: 'आपातकालीन हेल्पलाइन (112)',
+    disasterHelpline: 'आपदा राहत दल (1078)',
+    quickDistrictAlert: 'त्वरित ज़िला अलर्ट स्थिति',
+    highRiskAlertActive: 'उच्च जोखिम मौसम चेतावनी सक्रिय',
+    precautionaryAdvice: 'एहतियाती उपाय एवं आवश्यक दिशानिर्देश',
+    listenAlertAudio: 'पसंदीदा भाषा में आधिकारिक मौसम चेतावनी सुनें',
+    emergencyContactsTitle: '24x7 आपातकालीन हेल्पलाइन एवं आपदा प्रबंधन',
+    emergencyContactsSubtitle: 'राष्ट्रीय आपदा प्रबंधन व राहत केंद्रों से सीधा संपर्क',
+    callNow: 'तुरंत कॉल करें',
+    close: 'बंद करें',
+    activeAlertsSummary: 'सक्रिय मौसम खतरे और आधिकारिक बुलेटिन',
+    allSevereWarnings: 'गंभीर चेतावनियां',
+    watchBulletins: 'निगरानी बुलेटिन',
+    safeAreas: 'सुरक्षित क्षेत्र',
+    districtTriage: 'ज़िला चेतावनी स्थिति',
+    audioAnnounceSuccess: 'ऑडियो मौसम चेतावनी प्रसारण प्रारंभ हुआ'
   },
   bn: {
     dashboard: 'ড্যাশবোর্ড',

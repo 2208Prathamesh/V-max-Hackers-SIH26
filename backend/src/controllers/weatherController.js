@@ -134,5 +134,34 @@ const compareModels = async (req, res, next) => {
   }
 };
 
-export { getCurrentWeather, getForecast, getHourlyForecast, compareModels };
-export default { getCurrentWeather, getForecast, getHourlyForecast, compareModels };
+/**
+ * Search locations via geocoding
+ * GET /api/weather/search?q=Pune
+ */
+const searchLocations = async (req, res, next) => {
+  try {
+    const query = req.query.q || req.query.query || req.query.city || '';
+    if (!query.trim()) {
+      return successResponse(res, [], 'Empty query', 200);
+    }
+    const geoData = await searchLocation(query.trim());
+    const results = (geoData?.results || []).map((r, idx) => ({
+      id: `${r.id || idx}-${r.latitude}-${r.longitude}`,
+      city: r.name,
+      region: r.admin1 || r.country || '',
+      country: r.country || '',
+      countryCode: r.country_code || '',
+      lat: r.latitude,
+      lng: r.longitude,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      timezone: r.timezone
+    }));
+    return successResponse(res, results, 'Locations found', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getCurrentWeather, getForecast, getHourlyForecast, compareModels, searchLocations };
+export default { getCurrentWeather, getForecast, getHourlyForecast, compareModels, searchLocations };

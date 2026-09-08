@@ -22,6 +22,7 @@ import {
   Radio
 } from 'lucide-react';
 import { AlertDetailsModal } from '../components/modals/AlertDetailsModal';
+import { EmergencyBroadcastBanner } from '../components/common/EmergencyBroadcastBanner';
 
 // 3D Weather Graphic Illustrations
 const RainCloudArt = () => (
@@ -69,7 +70,7 @@ const SunArt = () => (
 );
 
 export const AlertsPage = () => {
-  const { setCurrentPage, addToast } = useWeather();
+  const { setCurrentPage, addToast, alerts } = useWeather();
   const { 
     t, 
     translateAlertTitle,
@@ -78,6 +79,112 @@ export const AlertsPage = () => {
     translateCity,
     formatUntil
   } = useLanguage();
+
+  // Normalize alerts dynamically from MongoDB seed
+  const normalizedAlerts = useMemo(() => {
+    if (!alerts || alerts.length === 0) return [];
+
+    return alerts.map((a, idx) => {
+      const isExtreme = a.severity === 'extreme';
+      const isHigh = a.severity === 'high';
+      const isModerate = a.severity === 'moderate';
+
+      const normSeverity = isExtreme || isHigh ? 'Severe' : isModerate ? 'Moderate' : 'Watch';
+      const normSeverityLevel = isExtreme ? 'extreme' : isHigh ? 'high' : isModerate ? 'medium' : 'low';
+      const normType = isExtreme || isHigh ? 'warning' : isModerate ? 'watch' : 'information';
+
+      // 3D Graphic Illustration category
+      let art = 'rain';
+      if (a.type === 'heatwave' || a.type === 'heat' || a.type === 'sunny') {
+        art = 'sun';
+      } else if (a.type === 'strong_wind' || a.type === 'wind') {
+        art = 'wind';
+      } else if (a.type === 'rain' || a.type === 'flood' || a.type === 'thunderstorm') {
+        art = 'rain';
+      }
+
+      // Safe date formatting
+      const effectiveTime = a.startTime
+        ? new Date(a.startTime).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+        : (a.effectiveTime || a.time || 'Today');
+
+      const untilTime = a.endTime
+        ? new Date(a.endTime).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+        : (a.untilTime || 'Tomorrow');
+
+      return {
+        id: a._id || a.id || `alert-${idx}`,
+        title: a.title,
+        location: a.location || a.region || 'Maharashtra, India',
+        region: a.region || a.location || 'Maharashtra, India',
+        type: normType,
+        severity: normSeverity,
+        severityLevel: normSeverityLevel,
+        rawSeverity: a.severity,
+        effectiveTime,
+        untilTime,
+        time: effectiveTime,
+        probability: a.probability || (isExtreme ? '90%' : isHigh ? '80%' : isModerate ? '60%' : '35%'),
+        source: a.source || 'IMD / WeatherGPT',
+        description: a.description,
+        action: a.action,
+        art,
+        latitude: a.latitude,
+        longitude: a.longitude
+      };
+    });
+  }, [alerts]);
+
+  // Dynamic streams: active alerts vs recent / informational advisories
+  const activeAlertsStream = useMemo(() => {
+    return normalizedAlerts.filter(a => a.rawSeverity !== 'low');
+  }, [normalizedAlerts]);
+
+  const recentAlertsStream = useMemo(() => {
+    const lows = normalizedAlerts.filter(a => a.rawSeverity === 'low');
+    if (lows.length > 0) return lows;
+    return normalizedAlerts.slice(-2);
+  }, [normalizedAlerts]);
+
+  // Dynamic severity triage counts
+  const immediateDangerCount = useMemo(() => normalizedAlerts.filter(a => a.rawSeverity === 'extreme').length, [normalizedAlerts]);
+  const immediateDangerPlaces = useMemo(() => {
+    const list = normalizedAlerts.filter(a => a.rawSeverity === 'extreme').map(a => a.location.split(',')[0].trim());
+    return list.join(', ') || 'None';
+  }, [normalizedAlerts]);
+
+  const highRainCount = useMemo(() => normalizedAlerts.filter(a => a.rawSeverity === 'high').length, [normalizedAlerts]);
+  const highRainPlaces = useMemo(() => {
+    const list = normalizedAlerts.filter(a => a.rawSeverity === 'high').map(a => a.location.split(',')[0].trim());
+    return list.slice(0, 2).join(' & ') || 'None';
+  }, [normalizedAlerts]);
+
+  const moderateCount = useMemo(() => normalizedAlerts.filter(a => a.rawSeverity === 'moderate').length, [normalizedAlerts]);
+  const moderatePlaces = useMemo(() => {
+    const list = normalizedAlerts.filter(a => a.rawSeverity === 'moderate').map(a => a.location.split(',')[0].trim());
+    return list.slice(0, 2).join(' & ') || 'None';
+  }, [normalizedAlerts]);
+
+  const lowCount = useMemo(() => normalizedAlerts.filter(a => a.rawSeverity === 'low').length, [normalizedAlerts]);
+  const lowPlaces = useMemo(() => {
+    const list = normalizedAlerts.filter(a => a.rawSeverity === 'low').map(a => a.location.split(',')[0].trim());
+    return list.slice(0, 3).join(', ') || 'None';
+  }, [normalizedAlerts]);
+
+  // Tab counts
+  const warningCount = useMemo(() => normalizedAlerts.filter(a => a.type === 'warning').length, [normalizedAlerts]);
+  const watchCount = useMemo(() => normalizedAlerts.filter(a => a.type === 'watch').length, [normalizedAlerts]);
+  const infoCount = useMemo(() => normalizedAlerts.filter(a => a.type === 'information').length, [normalizedAlerts]);
+
+  // Dynamic available locations for dropdown
+  const availableLocations = useMemo(() => {
+    const locSet = new Set();
+    normalizedAlerts.forEach(a => {
+      const city = a.location.split(',')[0].trim();
+      if (city) locSet.add(city);
+    });
+    return Array.from(locSet);
+  }, [normalizedAlerts]);
 
   // Active Tab state: 'all' | 'active' | 'warnings' | 'watch' | 'information'
   const [activeTab, setActiveTab] = useState('all');
@@ -100,12 +207,39 @@ export const AlertsPage = () => {
   // Modal State
   const [selectedAlertForDetails, setSelectedAlertForDetails] = useState(null);
 
-  // Subscriptions Toggle state
-  const [subscriptions, setSubscriptions] = useState({
-    pune: true,
-    mumbai: true,
-    nagpur: false
-  });
+  // Subscriptions Toggle state for locations
+  const [subscriptions, setSubscriptions] = useState({});
+
+  // Dynamic map pins derived from database alerts
+  const mapPins = useMemo(() => {
+    const pinPositions = [
+      { top: '48%', left: '34%' }, // Pune
+      { top: '38%', left: '22%' }, // Mumbai
+      { top: '22%', right: '18%' }, // Nagpur
+      { top: '30%', left: '48%' }, // Sambhajinagar
+      { bottom: '24%', left: '62%' }, // Solapur
+      { bottom: '16%', left: '32%' }, // Kolhapur
+      { top: '60%', left: '26%' }  // Ratnagiri
+    ];
+
+    return normalizedAlerts.slice(0, 7).map((alert, idx) => {
+      const city = alert.location.split(',')[0].trim();
+      const pos = pinPositions[idx] || { top: '50%', left: '50%' };
+      const isSevere = alert.severity === 'Severe';
+      const isModerate = alert.severity === 'Moderate';
+      const icon = alert.art === 'rain' ? '🌧️' : alert.art === 'wind' ? '💨' : alert.art === 'sun' ? '☀️' : '⚠️';
+      const pinColor = isSevere ? 'bg-rose-600' : isModerate ? 'bg-amber-500' : 'bg-yellow-500';
+
+      return {
+        id: alert.id,
+        city,
+        pos,
+        icon,
+        pinColor,
+        isBounce: isSevere
+      };
+    });
+  }, [normalizedAlerts]);
 
   // Live IMD District Warning Search State
   const [imdDistrictQuery, setImdDistrictQuery] = useState('');
@@ -129,88 +263,9 @@ export const AlertsPage = () => {
     }
   };
 
-
-
-  // Master Alerts dataset matching mockup
-  const activeAlertsList = [
-    {
-      id: 'alert-1',
-      title: 'Heavy Rainfall Warning',
-      location: 'Pune, Maharashtra',
-      region: 'Pune, Maharashtra',
-      type: 'warning',
-      severity: 'Severe',
-      severityLevel: 'high',
-      time: '21 May 2025, 8:20 AM',
-      effectiveTime: '21 May 2025, 8:20 AM',
-      untilTime: '22 May 2025, 8:00 AM',
-      probability: '80%',
-      source: 'IMD',
-      description: 'Heavy rainfall expected in the next 24 hours. Widespread rainfall may cause waterlogging in low lying areas and traffic disruptions.',
-      art: 'rain'
-    },
-    {
-      id: 'alert-2',
-      title: 'Strong Winds',
-      location: 'Mumbai, Maharashtra',
-      region: 'Mumbai, Maharashtra',
-      type: 'warning',
-      severity: 'Moderate',
-      severityLevel: 'medium',
-      time: '21 May 2025, 9:00 AM',
-      effectiveTime: '21 May 2025, 9:00 AM',
-      untilTime: '21 May 2025, 8:00 PM',
-      probability: '60%',
-      source: 'IMD',
-      description: 'Strong surface winds with speed reaching 40-50 kmph likely to prevail over Mumbai and nearby areas.',
-      art: 'wind'
-    },
-    {
-      id: 'alert-3',
-      title: 'Heatwave Conditions',
-      location: 'Nagpur, Maharashtra',
-      region: 'Nagpur, Maharashtra',
-      type: 'watch',
-      severity: 'Watch',
-      severityLevel: 'low',
-      time: '21 May 2025, 1:00 PM',
-      effectiveTime: '21 May 2025, 1:00 PM',
-      untilTime: '24 May 2025, 5:00 PM',
-      probability: '45%',
-      source: 'IMD',
-      description: 'Heatwave conditions likely in isolated places over Vidarbha region. Stay hydrated and avoid direct sunlight.',
-      art: 'sun'
-    }
-  ];
-
-  const recentAlertsList = [
-    {
-      id: 'recent-1',
-      title: 'Thunderstorm with Lightning',
-      location: 'Aurangabad, Maharashtra',
-      region: 'Aurangabad, Maharashtra',
-      type: 'information',
-      severity: 'Info',
-      tag: 'Information',
-      time: '20 May 2025, 6:30 PM',
-      description: 'Scattered light to moderate thunderstorms observed with surface lightning. No property damage reported.'
-    },
-    {
-      id: 'recent-2',
-      title: 'Moderate Rainfall',
-      location: 'Nashik, Maharashtra',
-      region: 'Nashik, Maharashtra',
-      type: 'information',
-      severity: 'Info',
-      tag: 'Information',
-      time: '20 May 2025, 10:10 AM',
-      description: 'Passing monsoon clouds bringing light to moderate showers across Godavari river catchment areas.'
-    }
-  ];
-
-  // Filtering Logic
+  // Dynamic Filtering Logic
   const filteredActiveAlerts = useMemo(() => {
-    return activeAlertsList.filter(item => {
+    return activeAlertsStream.filter(item => {
       // Tab filter
       if (activeTab === 'warnings' && item.type !== 'warning') return false;
       if (activeTab === 'watch' && item.type !== 'watch') return false;
@@ -228,7 +283,7 @@ export const AlertsPage = () => {
 
       return true;
     });
-  }, [activeTab, selectedLocation, severityFilters]);
+  }, [activeAlertsStream, activeTab, selectedLocation, severityFilters]);
 
   const handleClearFilters = () => {
     setSelectedLocation('All');
@@ -258,18 +313,74 @@ export const AlertsPage = () => {
       />
 
       {/* =========================================================================
-          HEADER SECTION: Title & Description
+          HEADER SECTION: Title, Emergency Broadcast & Severity Triage Cards
           ========================================================================= */}
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {t('alerts')}
-          </h1>
-          <ShieldCheck className="w-6 h-6 text-blue-600 fill-blue-50" />
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {t('alerts')}
+              </h1>
+              <ShieldCheck className="w-6 h-6 text-blue-600 fill-blue-50" />
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {t('alertsSubtitle')}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center gap-1.5 border border-rose-200 dark:border-rose-900/60">
+              <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping" />
+              <span>{activeAlertsStream.length} {t('activeAlerts')}</span>
+            </span>
+          </div>
         </div>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          {t('alertsSubtitle')}
-        </p>
+
+        {/* StitchMCP Apex Emergency Interface: Live Broadcast & Spoken Audio Announcer */}
+        <EmergencyBroadcastBanner onSelectDistrict={(dist) => {
+          setSelectedLocation(dist.nameEn);
+          fetchImdDistrict(dist.nameEn);
+        }} />
+
+        {/* 4 Severity Triage Cards (WCAG 2.1 AAA Compliant) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="p-3.5 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-400">{t('immediateDanger')}</span>
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            </div>
+            <p className="text-xl font-black text-rose-600 dark:text-rose-300 mt-1">{immediateDangerCount}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{immediateDangerPlaces}</p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-400">{t('heavyRainfall')}</span>
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+            </div>
+            <p className="text-xl font-black text-amber-600 dark:text-amber-300 mt-1">{highRainCount}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{highRainPlaces}</p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-yellow-50/80 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-900/60">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-yellow-800 dark:text-yellow-400">{t('heatwaveAdvisory')}</span>
+              <span className="w-2 h-2 rounded-full bg-yellow-400" />
+            </div>
+            <p className="text-xl font-black text-yellow-700 dark:text-yellow-300 mt-1">{moderateCount}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{moderatePlaces}</p>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{t('safeAreas')}</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+            <p className="text-xl font-black text-emerald-600 dark:text-emerald-300 mt-1">{lowCount}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{lowPlaces}</p>
+          </div>
+        </div>
 
         {/* 5 Filter Tabs */}
         <div className="flex items-center gap-6 mt-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto scrollbar-none">
@@ -285,7 +396,7 @@ export const AlertsPage = () => {
             {t('allAlerts')}
           </button>
 
-          {/* Tab 2: Active (3) */}
+          {/* Tab 2: Active */}
           <button
             onClick={() => setActiveTab('active')}
             className={`pb-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
@@ -296,11 +407,11 @@ export const AlertsPage = () => {
           >
             <span>{t('active')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#EF4444] text-white text-[10px] flex items-center justify-center font-bold">
-              3
+              {activeAlertsStream.length}
             </span>
           </button>
 
-          {/* Tab 3: Warnings (2) */}
+          {/* Tab 3: Warnings */}
           <button
             onClick={() => setActiveTab('warnings')}
             className={`pb-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
@@ -311,11 +422,11 @@ export const AlertsPage = () => {
           >
             <span>{t('warnings')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#F59E0B] text-white text-[10px] flex items-center justify-center font-bold">
-              2
+              {warningCount}
             </span>
           </button>
 
-          {/* Tab 4: Watch (1) */}
+          {/* Tab 4: Watch */}
           <button
             onClick={() => setActiveTab('watch')}
             className={`pb-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
@@ -326,11 +437,11 @@ export const AlertsPage = () => {
           >
             <span>{t('watch')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#EAB308] text-white text-[10px] flex items-center justify-center font-bold">
-              1
+              {watchCount}
             </span>
           </button>
 
-          {/* Tab 5: Information (2) */}
+          {/* Tab 5: Information */}
           <button
             onClick={() => setActiveTab('information')}
             className={`pb-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
@@ -341,7 +452,7 @@ export const AlertsPage = () => {
           >
             <span>{t('information')}</span>
             <span className="w-4.5 h-4.5 rounded-full bg-[#0EA5E9] text-white text-[10px] flex items-center justify-center font-bold">
-              2
+              {infoCount}
             </span>
           </button>
         </div>
@@ -577,7 +688,7 @@ export const AlertsPage = () => {
             </div>
 
             <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 shadow-2xs overflow-hidden">
-              {recentAlertsList.map((recent) => (
+              {recentAlertsStream.map((recent) => (
                 <div
                   key={recent.id}
                   onClick={() => setSelectedAlertForDetails(recent)}
@@ -585,7 +696,7 @@ export const AlertsPage = () => {
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                      {recent.id === 'recent-1' ? <MapPin className="w-4 h-4" /> : <CloudRain className="w-4 h-4" />}
+                      {recent.art === 'rain' ? <CloudRain className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate">
@@ -599,7 +710,7 @@ export const AlertsPage = () => {
 
                   <div className="flex items-center gap-4 shrink-0">
                     <span className="px-2.5 py-0.5 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 rounded-md text-[10px] font-bold">
-                      {recent.tag === 'Watch' ? t('watch') : recent.tag === 'Advisory' ? t('advisory') : recent.tag}
+                      {recent.type === 'watch' ? t('watch') : t('advisory')}
                     </span>
                     <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
                       {recent.time}
@@ -645,12 +756,12 @@ export const AlertsPage = () => {
                   onChange={(e) => setSelectedLocation(e.target.value)}
                   className="w-full pl-9 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                 >
-                  <option value="All">{t('allTypes')} - {translateCity('Pune, Maharashtra')}</option>
-                  <option value="Pune">{translateCity('Pune, Maharashtra')}</option>
-                  <option value="Mumbai">{translateCity('Mumbai, Maharashtra')}</option>
-                  <option value="Nagpur">{translateCity('Nagpur, Maharashtra')}</option>
-                  <option value="Aurangabad">{translateCity('Aurangabad, Maharashtra')}</option>
-                  <option value="Delhi">{translateCity('Delhi, India')}</option>
+                  <option value="All">{t('allTypes')} - {t('allLocations') || 'All Regions'}</option>
+                  {availableLocations.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {translateCity(loc)}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -795,65 +906,31 @@ export const AlertsPage = () => {
                 <path d="M 40,0 Q 30,50 45,90 T 55,160 Q 60,190 70,200 L 0,200 L 0,0 Z" fill="#93C5FD" />
               </svg>
 
-              {/* Alert Pin 1: Pune (Severe Red Pin) */}
-              <div className="absolute top-[48%] left-[34%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group-hover:scale-110 transition">
-                <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold shadow-md shadow-rose-600/50 animate-bounce">
-                  ⚠️
+              {/* Dynamic Database Alert Pins */}
+              {mapPins.map((pin) => (
+                <div
+                  key={pin.id}
+                  style={{
+                    top: pin.pos.top,
+                    left: pin.pos.left,
+                    right: pin.pos.right,
+                    bottom: pin.pos.bottom
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedLocation(pin.city);
+                    addToast(`Filtered alerts to ${pin.city}`, 'info');
+                  }}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group-hover:scale-110 transition cursor-pointer"
+                >
+                  <div className={`w-5 h-5 rounded-full ${pin.pinColor} text-white flex items-center justify-center text-[10px] font-bold shadow-md ${pin.isBounce ? 'animate-bounce shadow-rose-600/50' : 'shadow-xs'}`}>
+                    {pin.icon}
+                  </div>
+                  <span className="text-[9px] font-extrabold text-slate-900 bg-white/95 px-1 py-0.2 rounded-sm shadow-2xs mt-0.5 whitespace-nowrap">
+                    {translateCity(pin.city)}
+                  </span>
                 </div>
-                <span className="text-[9px] font-extrabold text-slate-900 bg-white/90 px-1 py-0.2 rounded-sm shadow-2xs mt-0.5">
-                  {translateCity('Pune')}
-                </span>
-              </div>
-
-              {/* Alert Pin 2: Mumbai (Amber Pin) */}
-              <div className="absolute top-[38%] left-[22%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[8px] font-bold shadow-xs">
-                  💨
-                </div>
-                <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  {translateCity('Mumbai')}
-                </span>
-              </div>
-
-              {/* Alert Pin 3: Nagpur (Yellow Pin) */}
-              <div className="absolute top-[22%] right-[18%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-4 h-4 rounded-full bg-yellow-500 text-white flex items-center justify-center text-[8px] font-bold shadow-xs">
-                  ☀️
-                </div>
-                <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  {translateCity('Nagpur')}
-                </span>
-              </div>
-
-              {/* Alert Pin 4: Aurangabad */}
-              <div className="absolute top-[30%] left-[48%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-3.5 h-3.5 rounded-full bg-sky-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  ⚡
-                </div>
-                <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  {translateCity('Aurangabad')}
-                </span>
-              </div>
-
-              {/* Alert Pin 5: Solapur */}
-              <div className="absolute bottom-[24%] left-[62%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-3.5 h-3.5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  •
-                </div>
-                <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  {translateCity('Solapur')}
-                </span>
-              </div>
-
-              {/* Alert Pin 6: Kolhapur */}
-              <div className="absolute bottom-[16%] left-[32%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  •
-                </div>
-                <span className="text-[8px] font-bold text-slate-800 bg-white/80 px-1 rounded-xs mt-0.5">
-                  {translateCity('Kolhapur')}
-                </span>
-              </div>
+              ))}
 
               {/* Zoom Buttons Controls */}
               <div className="absolute bottom-3 right-3 flex flex-col gap-1 bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -891,78 +968,36 @@ export const AlertsPage = () => {
               {t('alertSubscriptionsDesc')}
             </p>
 
-            {/* Subscribed Locations List */}
+            {/* Subscribed Locations List derived dynamically */}
             <div className="space-y-3 pt-1">
-              
-              {/* Pune, Maharashtra */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {translateCity('Pune, Maharashtra')}
-                  </h4>
-                  <p className="text-[10px] text-slate-400">{t('pushEmail')}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleSubscriptionToggle('pune')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                    subscriptions.pune ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
-                      subscriptions.pune ? 'translate-x-4.5' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+              {availableLocations.slice(0, 3).map((city) => {
+                const key = city.toLowerCase();
+                const isSubscribed = subscriptions[key] !== false; // default enabled for top districts
 
-              {/* Mumbai, Maharashtra */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {translateCity('Mumbai, Maharashtra')}
-                  </h4>
-                  <p className="text-[10px] text-slate-400">{t('push')}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleSubscriptionToggle('mumbai')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                    subscriptions.mumbai ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
-                      subscriptions.mumbai ? 'translate-x-4.5' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Nagpur, Maharashtra */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {translateCity('Nagpur, Maharashtra')}
-                  </h4>
-                  <p className="text-[10px] text-slate-400">{t('email')}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleSubscriptionToggle('nagpur')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
-                    subscriptions.nagpur ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
-                      subscriptions.nagpur ? 'translate-x-4.5' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
+                return (
+                  <div key={city} className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {translateCity(city)}
+                      </h4>
+                      <p className="text-[10px] text-slate-400">{t('pushEmail') || 'Push & SMS'}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSubscriptionToggle(key)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
+                        isSubscribed ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition duration-200 ease-in-out shadow-xs ${
+                          isSubscribed ? 'translate-x-4.5' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Manage Subscriptions Button */}

@@ -13,7 +13,8 @@ import {
   Check, 
   AlertTriangle,
   LogOut,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  ShieldAlert
 } from 'lucide-react';
 
 export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
@@ -155,14 +156,30 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
           )}
         </button>
 
+        {/* Live Emergency Broadcast Quick Access */}
+        <button
+          onClick={() => {
+            setCurrentPage('alerts');
+            addToast(t('emergencyBroadcast'), 'info');
+          }}
+          className="p-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition shadow-xs cursor-pointer"
+          title={t('emergencyBroadcast')}
+          aria-label={t('emergencyBroadcast')}
+        >
+          <ShieldAlert className="w-4 h-4 animate-pulse" />
+        </button>
+
         {/* Alerts Notification Bell */}
         <div className="relative">
           <button
             onClick={() => setIsAlertsOpen(!isAlertsOpen)}
             className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-xs cursor-pointer"
+            aria-label={t('alerts')}
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[9px] font-black shadow-xs">
+              3
+            </span>
           </button>
 
           {isAlertsOpen && (

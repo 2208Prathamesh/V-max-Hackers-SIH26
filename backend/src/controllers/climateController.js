@@ -24,8 +24,9 @@ async function resolveCoords(req) {
     }
   }
 
-  // Default to Pune
-  return { lat: 18.5204, lon: 73.8567, cityName: 'Pune, India' };
+  const error = new Error('City name or latitude and longitude are required');
+  error.statusCode = 400;
+  throw error;
 }
 
 /**

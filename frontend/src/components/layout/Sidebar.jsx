@@ -78,61 +78,13 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { id: 'settings', label: t('settings'), icon: Settings },
   ];
 
-  const fallbackRecentChats = [
-    { 
-      id: 'conv-1', 
-      title: language === 'mr' 
-        ? 'पुण्यात उद्या पाऊस पडेल का?' 
-        : language === 'hi' 
-        ? 'क्या कल पुणे में बारिश होगी?' 
-        : 'Will it rain tomorrow in Pune?', 
-      time: '10:21 AM' 
-    },
-    { 
-      id: 'conv-3', 
-      title: language === 'mr'
-        ? 'या आठवड्यात मुंबईतील हवामान'
-        : language === 'hi'
-        ? 'इस सप्ताहांत मुंबई का मौसम'
-        : 'Weather this weekend in Mumbai', 
-      time: language === 'mr' ? 'काल' : language === 'hi' ? 'कल' : 'Yesterday' 
-    },
-    { 
-      id: 'conv-5', 
-      title: language === 'mr'
-        ? 'बंगालच्या उपसागरातील चक्रीवादळ अपडेट'
-        : language === 'hi'
-        ? 'बंगाल की खाड़ी में चक्रवात अपडेट'
-        : 'Cyclone update in Bay of Bengal', 
-      time: language === 'mr' ? '२ दिवसांपूर्वी' : language === 'hi' ? '2 दिन पहले' : '2 days ago' 
-    },
-    { 
-      id: 'conv-4', 
-      title: language === 'mr'
-        ? 'दिल्लीतील हवेची गुणवत्ता (AQI)'
-        : language === 'hi'
-        ? 'दिल्ली में वायु गुणवत्ता'
-        : 'Air quality in Delhi', 
-      time: language === 'mr' ? '२ दिवसांपूर्वी' : language === 'hi' ? '2 दिन पहले' : '2 days ago' 
-    },
-    { 
-      id: 'conv-6', 
-      title: language === 'mr'
-        ? 'नागपूरचे उद्याचे तापमान'
-        : language === 'hi'
-        ? 'नागपुर का कल का तापमान'
-        : "Tomorrow's temperature in Nagpur", 
-      time: language === 'mr' ? '३ दिवसांपूर्वी' : language === 'hi' ? '3 दिन पहले' : '3 days ago' 
-    },
-  ];
-
   const recentChats = conversations.length
     ? conversations.slice(0, 5).map(c => ({
         id: c.id,
         title: c.title,
         time: c.time || (language === 'mr' ? 'अलीकडील' : language === 'hi' ? 'हालिया' : 'Recent')
       }))
-    : fallbackRecentChats;
+    : [];
 
   const handleNavClick = (pageId) => {
     setCurrentPage(pageId);

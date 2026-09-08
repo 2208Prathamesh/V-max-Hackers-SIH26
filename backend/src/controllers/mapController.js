@@ -3,10 +3,10 @@ import mapLayerService from '../services/gis/mapLayerService.js';
 /**
  * Get GeoJSON map layer for temperature, precipitation, wind, or clouds
  */
-export const getWeatherMapLayer = (req, res, next) => {
+export const getWeatherMapLayer = async (req, res, next) => {
   try {
     const layer = req.query.layer || 'temperature';
-    const geojson = mapLayerService.getWeatherGeoJSON(layer);
+    const geojson = await mapLayerService.getWeatherGeoJSON(layer);
     return res.status(200).json(geojson);
   } catch (error) {
     next(error);
@@ -28,9 +28,9 @@ export const getAlertsMapLayer = async (req, res, next) => {
 /**
  * Get GeoJSON map layer for flood risk zones
  */
-export const getFloodRiskMapLayer = (req, res, next) => {
+export const getFloodRiskMapLayer = async (req, res, next) => {
   try {
-    const geojson = mapLayerService.getFloodRiskGeoJSON();
+    const geojson = await mapLayerService.getFloodRiskGeoJSON();
     return res.status(200).json(geojson);
   } catch (error) {
     next(error);

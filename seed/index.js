@@ -16,14 +16,24 @@ import Conversation from '../backend/src/models/Conversation.js'
 import Message from '../backend/src/models/Message.js'
 import Alert from '../backend/src/models/Alert.js'
 import Notification from '../backend/src/models/Notification.js'
+import ImdWarning from '../backend/src/models/ImdWarning.js'
+import Station from '../backend/src/models/Station.js'
+import FloodZone from '../backend/src/models/FloodZone.js'
+import SatelliteProduct from '../backend/src/models/SatelliteProduct.js'
+import CycloneTrack from '../backend/src/models/CycloneTrack.js'
 
 // Import Datasets
 import { usersSeedData } from './data/users.seed.js'
 import { preferencesSeedData } from './data/preferences.seed.js'
 import { locationsSeedData } from './data/locations.seed.js'
-import { alertsSeedData } from './data/alerts.seed.js'
+import { getAlertsSeedData } from './data/alerts.seed.js'
 import { conversationsSeedData } from './data/conversations.seed.js'
 import { notificationsSeedData } from './data/notifications.seed.js'
+import { getImdWarningsSeedData } from './data/imd-warnings.seed.js'
+import { stationsSeedData } from './data/stations.seed.js'
+import { floodZonesSeedData } from './data/flood-zones.seed.js'
+import { satelliteProductsSeedData } from './data/satellite-products.seed.js'
+import { cycloneTracksSeedData } from './data/cyclone-tracks.seed.js'
 
 const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/weathergpt'
 
@@ -39,7 +49,12 @@ async function cleanDatabase() {
     Conversation.deleteMany({}),
     Message.deleteMany({}),
     Alert.deleteMany({}),
-    Notification.deleteMany({})
+    Notification.deleteMany({}),
+    ImdWarning.deleteMany({}),
+    Station.deleteMany({}),
+    FloodZone.deleteMany({}),
+    SatelliteProduct.deleteMany({}),
+    CycloneTrack.deleteMany({})
   ])
   console.log('✅ Collections cleaned successfully.')
 }
@@ -68,14 +83,41 @@ async function runSeeder() {
     await cleanDatabase()
   }
 
-  console.log('\n📥 Seeding sample dataset...')
+  console.log('\n📥 Seeding all datasets...')
 
-  // 1. Seed Alerts
-  console.log(`- Seeding ${alertsSeedData.length} weather alerts...`)
-  const createdAlerts = await Alert.insertMany(alertsSeedData)
+  // 1. Seed Weather Alerts
+  const freshAlertsData = getAlertsSeedData()
+  console.log(`\n🔔 Seeding ${freshAlertsData.length} weather alerts...`)
+  const createdAlerts = await Alert.insertMany(freshAlertsData)
   console.log(`  ✓ Created ${createdAlerts.length} alerts.`)
 
-  // 2. Seed Users & Preferences & Associated Data
+  // 2. Seed IMD District Warnings
+  const imdWarnings = getImdWarningsSeedData()
+  console.log(`\n🌧️ Seeding ${imdWarnings.length} IMD district warnings...`)
+  const createdWarnings = await ImdWarning.insertMany(imdWarnings)
+  console.log(`  ✓ Created ${createdWarnings.length} IMD warnings.`)
+
+  // 3. Seed Weather Observation Stations
+  console.log(`\n📡 Seeding ${stationsSeedData.length} weather stations...`)
+  const createdStations = await Station.insertMany(stationsSeedData)
+  console.log(`  ✓ Created ${createdStations.length} stations.`)
+
+  // 4. Seed Flood Risk Zones
+  console.log(`\n🌊 Seeding ${floodZonesSeedData.length} flood risk zones...`)
+  const createdFloodZones = await FloodZone.insertMany(floodZonesSeedData)
+  console.log(`  ✓ Created ${createdFloodZones.length} flood zones.`)
+
+  // 5. Seed Satellite Products
+  console.log(`\n🛰️ Seeding ${satelliteProductsSeedData.length} satellite products...`)
+  const createdProducts = await SatelliteProduct.insertMany(satelliteProductsSeedData)
+  console.log(`  ✓ Created ${createdProducts.length} satellite products.`)
+
+  // 6. Seed Cyclone Tracks
+  console.log(`\n🌀 Seeding ${cycloneTracksSeedData.length} cyclone tracks...`)
+  const createdTracks = await CycloneTrack.insertMany(cycloneTracksSeedData)
+  console.log(`  ✓ Created ${createdTracks.length} cyclone tracks.`)
+
+  // 7. Seed Users & Preferences & Associated Data
   for (const userData of usersSeedData) {
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(userData.password, salt)
@@ -147,9 +189,17 @@ async function runSeeder() {
 
   console.log('\n==============================================')
   console.log('🎉 Seeding completed successfully!')
-  console.log('Demo Login Credentials:')
+  console.log('\nSeeded Collections Summary:')
+  console.log(`  📊 Alerts:             ${createdAlerts.length}`)
+  console.log(`  🌧️ IMD Warnings:       ${createdWarnings.length}`)
+  console.log(`  📡 Stations:           ${createdStations.length}`)
+  console.log(`  🌊 Flood Zones:        ${createdFloodZones.length}`)
+  console.log(`  🛰️ Satellite Products: ${createdProducts.length}`)
+  console.log(`  🌀 Cyclone Tracks:     ${createdTracks.length}`)
+  console.log(`  👤 Users:              ${usersSeedData.length}`)
+  console.log('\nDemo Login Credentials:')
   usersSeedData.forEach(u => {
-    console.log(`👉 Email: ${u.email.padEnd(28)} | Password: ${u.password}`)
+    console.log(`  👉 Email: ${u.email.padEnd(28)} | Password: ${u.password}`)
   })
   console.log('==============================================\n')
 }

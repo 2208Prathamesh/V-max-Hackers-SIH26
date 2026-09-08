@@ -1,73 +1,51 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import {
-  initialUser,
-  defaultSettings,
-  initialSavedLocations,
-  initialConversations,
-  activeAlerts,
-  allCityDatabase
-} from '../data/mockData'
+import { DEFAULT_SETTINGS, DEFAULT_USER_STATS } from '../config/defaults'
 import { api } from '../services/api'
 
 const WeatherContext = createContext()
 
-const defaultUserStats = {
-  conversations: 0,
-  thisWeek: 0,
-  thisMonth: 0,
-  totalMessages: 0,
-  storageUsedPercent: 0,
-  locationsSaved: 0
-}
-
 const normalizeUser = user => ({
   ...user,
   stats: {
-    ...defaultUserStats,
+    ...DEFAULT_USER_STATS,
     ...(user?.stats || {})
   }
 })
 
 export const WeatherProvider = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState('dashboard') // 'dashboard' | 'chat' | 'alerts' | 'weather-map' | 'forecast' | 'history' | 'saved-locations' | 'settings' | 'login'
+  const [currentPage, setCurrentPage] = useState('dashboard')
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('weathergpt_token') !== null
   })
 
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('weathergpt_user')
-
     try {
-      return normalizeUser(saved ? JSON.parse(saved) : initialUser)
+      return saved ? normalizeUser(JSON.parse(saved)) : null
     } catch {
-      return normalizeUser(initialUser)
+      return null
     }
   })
 
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('weathergpt_settings')
-    return saved ? JSON.parse(saved) : defaultSettings
+    try {
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS
+    } catch {
+      return DEFAULT_SETTINGS
+    }
   })
 
-  const [savedLocations, setSavedLocations] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_saved_locations')
-    return saved ? JSON.parse(saved) : initialSavedLocations
-  })
-
-  const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem('weathergpt_conversations')
-    return saved ? JSON.parse(saved) : initialConversations
-  })
-
-  const [activeConversationId, setActiveConversationId] = useState('conv-1')
-  const [selectedMapLocation, setSelectedMapLocation] = useState(
-    initialSavedLocations[0]
-  ) // Default Pune
-  const [alerts, setAlerts] = useState(activeAlerts)
+  const [savedLocations, setSavedLocations] = useState([])
+  const [conversations, setConversations] = useState([])
+  const [activeConversationId, setActiveConversationId] = useState(null)
+  const [selectedMapLocation, setSelectedMapLocation] = useState(null)
+  const [alerts, setAlerts] = useState([])
   const [weatherData, setWeatherData] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
   const [forecastData, setForecastData] = useState(null)
   const [forecastLoading, setForecastLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(true)
 
   // Modals state
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false)
@@ -81,95 +59,87 @@ export const WeatherProvider = ({ children }) => {
     localStorage.setItem('weathergpt_auth', JSON.stringify(isAuthenticated))
   }, [isAuthenticated])
   useEffect(() => {
-    localStorage.setItem('weathergpt_user', JSON.stringify(user))
+    if (user) {
+      localStorage.setItem('weathergpt_user', JSON.stringify(user))
+    }
   }, [user])
 
   useEffect(() => {
     localStorage.setItem('weathergpt_settings', JSON.stringify(settings))
   }, [settings])
 
+  const refreshAlerts = async () => {
+    try {
+      const serverAlerts = await api.alerts()
+      if (Array.isArray(serverAlerts)) {
+        setAlerts(serverAlerts)
+      }
+    } catch (err) {
+      console.warn('Could not refresh alerts from API:', err)
+    }
+  }
+
+  // Load live alerts from database on mount
   useEffect(() => {
-    localStorage.setItem(
-      'weathergpt_saved_locations',
-      JSON.stringify(savedLocations)
-    )
-  }, [savedLocations])
+    refreshAlerts()
+  }, [])
 
   useEffect(() => {
-    localStorage.setItem(
-      'weathergpt_conversations',
-      JSON.stringify(conversations)
-    )
-  }, [conversations])
+    if (!isAuthenticated) {
+      setDataLoading(false)
+      return
+    }
 
-  useEffect(() => {
-    if (!isAuthenticated) return
+    setDataLoading(true)
 
-    api
-      .conversations()
-      .then(serverConversations => {
-        setConversations(
-          serverConversations.map(conversation => ({
-            id: conversation._id,
-            title: conversation.title,
-            preview: conversation.title,
-            tag: conversation.category || 'General Query',
-            tagColor: 'blue',
-            icon: 'sun-cloud',
-            messages: []
-          }))
-        )
-      })
-      .catch(() => addToast('Could not load your conversations', 'warning'))
-
-    api
-      .alerts()
-      .then(setAlerts)
-      .catch(() => addToast('Could not load weather alerts', 'warning'))
-
-    api
-      .locations()
-      .then(serverLocations => {
-        const locations = serverLocations.map(location => {
-          const fallback = savedLocations.find(
-            previous =>
-              previous.city.toLowerCase() === location.city.toLowerCase()
+    const loadData = async () => {
+      try {
+        // Load conversations
+        const serverConversations = await api.conversations().catch(() => [])
+        if (Array.isArray(serverConversations)) {
+          setConversations(
+            serverConversations.map(conversation => ({
+              id: conversation._id,
+              title: conversation.title,
+              preview: conversation.title,
+              tag: conversation.category || 'General Query',
+              tagColor: 'blue',
+              icon: 'sun-cloud',
+              messages: []
+            }))
           )
-          const liveForecast =
-            Array.isArray(location.forecast3Day) &&
-            location.forecast3Day.some(day => day.temp != null)
+        }
 
-          return {
-            ...fallback,
+        // Load locations
+        const serverLocations = await api.locations().catch(() => [])
+        if (Array.isArray(serverLocations) && serverLocations.length > 0) {
+          const locations = serverLocations.map(location => ({
             ...location,
-            id: location._id,
-            region: location.region || location.state || fallback?.region,
-            lat: location.lat ?? location.latitude ?? fallback?.lat,
-            lng: location.lng ?? location.longitude ?? fallback?.lng,
+            id: location._id || location.id,
+            region: location.region || location.state,
+            lat: location.lat ?? location.latitude,
+            lng: location.lng ?? location.longitude,
             condition:
               location.condition && location.condition !== 'Unknown'
                 ? location.condition
-                : fallback?.condition || 'Weather unavailable',
-            tempC: location.tempC ?? fallback?.tempC ?? null,
-            feelsLikeC: location.feelsLikeC ?? fallback?.feelsLikeC ?? null,
-            humidity: location.humidity ?? fallback?.humidity ?? null,
-            windSpeedKmh:
-              location.windSpeedKmh ?? fallback?.windSpeedKmh ?? null,
-            windDirection:
-              location.windDirection || fallback?.windDirection || '',
-            forecast3Day: liveForecast
-              ? location.forecast3Day
-              : fallback?.forecast3Day || []
-          }
-        })
-        setSavedLocations(locations)
-        if (locations.length > 0) setSelectedMapLocation(locations[0])
-      })
-      .catch(() => addToast('Could not load saved locations', 'warning'))
+                : 'Weather unavailable',
+            tempC: location.tempC ?? null,
+            feelsLikeC: location.feelsLikeC ?? null,
+            humidity: location.humidity ?? null,
+            windSpeedKmh: location.windSpeedKmh ?? null,
+            windDirection: location.windDirection || '',
+            forecast3Day:
+              Array.isArray(location.forecast3Day) &&
+              location.forecast3Day.some(day => day.temp != null)
+                ? location.forecast3Day
+                : []
+          }))
+          setSavedLocations(locations)
+          setSelectedMapLocation(locations[0])
+        }
 
-    api
-      .settings()
-      .then(serverSettings => {
+        // Load settings
+        const serverSettings = await api.settings().catch(() => null)
         if (serverSettings) {
           setSettings(prev => ({
             ...prev,
@@ -183,48 +153,61 @@ export const WeatherProvider = ({ children }) => {
             localStorage.setItem('weathergpt_language', serverSettings.language)
           }
         }
-      })
-      .catch(() => {})
+      } catch (err) {
+        console.warn('Error loading initial data:', err)
+      } finally {
+        setDataLoading(false)
+      }
+    }
+
+    loadData()
   }, [isAuthenticated])
 
-  const refreshWeather = async (latitude = 18.5204, longitude = 73.8567) => {
+  const refreshWeather = async (latitude, longitude) => {
+    if (latitude === undefined || longitude === undefined) return null
     setWeatherLoading(true)
     try {
       const data = await api.weather({ latitude, longitude })
       setWeatherData(data)
       return data
     } catch (error) {
-      addToast(error.message || 'Could not load current weather', 'warning')
+      addToast(
+        settings.language === 'mr' ? 'हवामान डेटा लोड होऊ शकला नाही' :
+        settings.language === 'hi' ? 'मौसम डेटा लोड नहीं हो सका' :
+        (error.message || 'Could not load current weather'), 'warning'
+      )
       return null
     } finally {
       setWeatherLoading(false)
     }
   }
 
-  const refreshForecast = async (latitude = 18.5204, longitude = 73.8567) => {
+  const refreshForecast = async (latitude, longitude) => {
+    if (latitude === undefined || longitude === undefined) return null
     setForecastLoading(true)
     try {
       const data = await api.forecast({ latitude, longitude, days: 7 })
       setForecastData(data)
       return data
     } catch (error) {
-      addToast(error.message || 'Could not load forecast', 'warning')
+      addToast(
+        settings.language === 'mr' ? 'हवामान अंदाज लोड होऊ शकला नाही' :
+        settings.language === 'hi' ? 'पूर्वानुमान लोड नहीं हो सका' :
+        (error.message || 'Could not load forecast'), 'warning'
+      )
       return null
     } finally {
       setForecastLoading(false)
     }
   }
 
+  // Fetch weather when location is selected
   useEffect(() => {
-    if (isAuthenticated) refreshWeather()
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    if (!isAuthenticated) return
-
+    if (!isAuthenticated || !selectedMapLocation) return
     const latitude = selectedMapLocation?.lat ?? selectedMapLocation?.latitude
     const longitude = selectedMapLocation?.lng ?? selectedMapLocation?.longitude
     if (latitude !== undefined && longitude !== undefined) {
+      refreshWeather(latitude, longitude)
       refreshForecast(latitude, longitude)
     }
   }, [isAuthenticated, selectedMapLocation])
@@ -324,10 +307,10 @@ export const WeatherProvider = ({ children }) => {
     }
     const updated = [...savedLocations, updatedLocation]
     setSavedLocations(updated)
-    setUser(prev => ({
+    setUser(prev => prev ? ({
       ...prev,
       stats: { ...prev.stats, locationsSaved: updated.length }
-    }))
+    }) : prev)
     addToast(`${cityData.city} added to saved locations!`, 'success')
   }
 
@@ -336,10 +319,10 @@ export const WeatherProvider = ({ children }) => {
     await api.deleteLocation(id)
     const updated = savedLocations.filter(l => l.id !== id)
     setSavedLocations(updated)
-    setUser(prev => ({
+    setUser(prev => prev ? ({
       ...prev,
       stats: { ...prev.stats, locationsSaved: updated.length }
-    }))
+    }) : prev)
     addToast(`Removed ${loc ? loc.city : 'location'}`, 'info')
   }
 
@@ -367,10 +350,10 @@ export const WeatherProvider = ({ children }) => {
   }
 
   const updateProfile = updatedProfile => {
-    setUser(prev => ({
+    setUser(prev => prev ? ({
       ...prev,
       ...updatedProfile
-    }))
+    }) : updatedProfile)
     addToast('Profile updated successfully!', 'success')
   }
 
@@ -378,7 +361,7 @@ export const WeatherProvider = ({ children }) => {
     if (!text.trim()) return
 
     let convId = activeConversationId
-    if (!conversations.some(conversation => conversation.id === convId)) {
+    if (!convId || !conversations.some(conversation => conversation.id === convId)) {
       const conversation = await api.createConversation({
         title: text.slice(0, 32),
         category: 'general'
@@ -431,10 +414,11 @@ export const WeatherProvider = ({ children }) => {
 
   const createNewChat = () => {
     const newId = `conv-${Date.now()}`
+    const now = new Date()
     const newConv = {
       id: newId,
-      dateGroup: 'Today – 21 May 2025',
-      time: new Date().toLocaleTimeString([], {
+      dateGroup: now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }),
+      time: now.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit'
       }),
@@ -454,14 +438,14 @@ export const WeatherProvider = ({ children }) => {
   const deleteConversation = id => {
     setConversations(prev => prev.filter(c => c.id !== id))
 
-    setUser(prev => ({
+    setUser(prev => prev ? ({
       ...prev,
       stats: {
-        ...defaultUserStats,
+        ...DEFAULT_USER_STATS,
         ...(prev.stats || {}),
         conversations: Math.max(0, (prev.stats?.conversations ?? 0) - 1)
       }
-    }))
+    }) : prev)
 
     addToast('Conversation deleted', 'info')
   }
@@ -506,6 +490,15 @@ export const WeatherProvider = ({ children }) => {
       // A stateless token can still be cleared when the API is unavailable.
     }
     localStorage.removeItem('weathergpt_token')
+    localStorage.removeItem('weathergpt_user')
+    setUser(null)
+    setSavedLocations([])
+    setConversations([])
+    setAlerts([])
+    setWeatherData(null)
+    setForecastData(null)
+    setSelectedMapLocation(null)
+    setActiveConversationId(null)
     setIsAuthenticated(false)
     setCurrentPage('login')
     addToast('Logged out successfully', 'info')
@@ -529,7 +522,6 @@ export const WeatherProvider = ({ children }) => {
         updateUnits,
         updateNotifications,
         savedLocations,
-        allCityDatabase,
         addLocation,
         removeLocation,
         toggleFavorite,
@@ -542,12 +534,14 @@ export const WeatherProvider = ({ children }) => {
         createNewChat,
         deleteConversation,
         alerts,
+        refreshAlerts,
         weatherData,
         weatherLoading,
         refreshWeather,
         forecastData,
         forecastLoading,
         refreshForecast,
+        dataLoading,
         formatTemp,
         formatTempRaw,
         formatWind,

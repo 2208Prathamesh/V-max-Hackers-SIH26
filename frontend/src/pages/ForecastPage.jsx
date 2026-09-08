@@ -69,6 +69,7 @@ export const ForecastPage = () => {
     addToast,
     forecastData,
     forecastLoading,
+    weatherData,
     formatTemp,
     formatWind,
     formatPressure
@@ -82,8 +83,7 @@ export const ForecastPage = () => {
   const [nwpComparison, setNwpComparison] = useState(null)
   const [nwpLoading, setNwpLoading] = useState(false)
 
-  const city = selectedMapLocation ||
-    savedLocations[0] || { city: 'Pune', region: 'Maharashtra' }
+  const city = selectedMapLocation || savedLocations[0] || null
 
   useEffect(() => {
     if (city?.city || city?.lat) {
@@ -120,65 +120,6 @@ export const ForecastPage = () => {
 
   const liveChartHours = liveForecast?.hourly?.slice(0, 6)
 
-  // 7-Day Forecast Data matching screenshot
-  const fallbackSevenDayForecast = [
-    {
-      day: formatDay('Wed'),
-      date: '21 May',
-      high: '31°',
-      low: '22°',
-      pop: '20%',
-      icon: 'sun-cloud'
-    },
-    {
-      day: formatDay('Thu'),
-      date: '22 May',
-      high: '30°',
-      low: '22°',
-      pop: '60%',
-      icon: 'rain'
-    },
-    {
-      day: formatDay('Fri'),
-      date: '23 May',
-      high: '29°',
-      low: '21°',
-      pop: '70%',
-      icon: 'rain'
-    },
-    {
-      day: formatDay('Sat'),
-      date: '24 May',
-      high: '28°',
-      low: '21°',
-      pop: '80%',
-      icon: 'rain'
-    },
-    {
-      day: formatDay('Sun'),
-      date: '25 May',
-      high: '30°',
-      low: '22°',
-      pop: '30%',
-      icon: 'sun-cloud'
-    },
-    {
-      day: formatDay('Mon'),
-      date: '26 May',
-      high: '31°',
-      low: '23°',
-      pop: '20%',
-      icon: 'sun-cloud'
-    },
-    {
-      day: formatDay('Tue'),
-      date: '27 May',
-      high: '32°',
-      low: '23°',
-      pop: '10%',
-      icon: 'sun'
-    }
-  ]
   const sevenDayForecast = liveForecast?.daily?.length
     ? liveForecast.daily.slice(0, 7).map(day => ({
         day: formatDate(day.date).split(' ')[0],
@@ -186,25 +127,13 @@ export const ForecastPage = () => {
           `${formatDate(day.date).split(' ')[0]} `,
           ''
         ),
-        high: formatTemp(day.maxTemperature),
-        low: formatTemp(day.minTemperature),
+        high: day.maxTemperature != null ? formatTemp(day.maxTemperature) : '--',
+        low: day.minTemperature != null ? formatTemp(day.minTemperature) : '--',
         pop: `${Math.round(day.precipitationProbability ?? 0)}%`,
         icon: weatherIcon(day.precipitationProbability ?? 0)
       }))
-    : fallbackSevenDayForecast
+    : []
 
-  // 9-Slot Hourly Forecast matching screenshot
-  const fallbackNineHourForecast = [
-    { time: 'Now', temp: '28°C', pop: '20%', icon: 'sun-cloud' },
-    { time: '9 AM', temp: '29°C', pop: '30%', icon: 'rain' },
-    { time: '10 AM', temp: '30°C', pop: '40%', icon: 'cloud' },
-    { time: '11 AM', temp: '31°C', pop: '60%', icon: 'cloud' },
-    { time: '12 PM', temp: '31°C', pop: '70%', icon: 'rain' },
-    { time: '1 PM', temp: '30°C', pop: '70%', icon: 'rain' },
-    { time: '2 PM', temp: '29°C', pop: '70%', icon: 'rain' },
-    { time: '3 PM', temp: '28°C', pop: '40%', icon: 'rain' },
-    { time: '4 PM', temp: '27°C', pop: '40%', icon: 'rain' }
-  ]
   const nineHourForecast = liveForecast?.hourly?.length
     ? liveForecast.hourly.slice(0, 9).map((hour, index) => ({
         time:
@@ -214,114 +143,92 @@ export const ForecastPage = () => {
                 hour: 'numeric',
                 minute: '2-digit'
               }),
-        temp: formatTemp(hour.temperature),
+        temp: hour.temperature != null ? formatTemp(hour.temperature) : '--',
         pop: `${Math.round(hour.precipitationProbability ?? 0)}%`,
         icon: weatherIcon(hour.precipitationProbability ?? 0)
       }))
-    : fallbackNineHourForecast.map((item, idx) => idx === 0 ? { ...item, time: t('now') } : item)
+    : []
 
   // Chart data based on active tab
   const getChartPoints = () => {
-    if (liveChartHours?.length === 6) {
-      const chartValues = {
-        temperature: hour => formatTemp(hour.temperature),
-        precipitation: hour => `${hour.precipitation ?? 0} mm`,
-        wind: hour => formatWind(hour.windSpeed),
-        humidity: hour => `${hour.humidity ?? 0}%`,
-        pressure: hour => formatPressure(hour.pressure)
-      }
-      const yPositions = [120, 85, 65, 25, 50, 100]
-      return liveChartHours.map((hour, index) => ({
+    if (!liveChartHours || liveChartHours.length < 6) return []
+    const chartValues = {
+      temperature: hour => (hour.temperature != null ? formatTemp(hour.temperature) : '--'),
+      precipitation: hour => `${hour.precipitation ?? 0} mm`,
+      wind: hour => (hour.windSpeed != null ? formatWind(hour.windSpeed) : '--'),
+      humidity: hour => `${hour.humidity ?? 0}%`,
+      pressure: hour => (hour.pressure != null ? formatPressure(hour.pressure) : '--')
+    }
+    const rawValues = {
+      temperature: hour => hour.temperature ?? 25,
+      precipitation: hour => hour.precipitation ?? 0,
+      wind: hour => hour.windSpeed ?? 10,
+      humidity: hour => hour.humidity ?? 50,
+      pressure: hour => hour.pressure ?? 1013
+    }
+    const vals = liveChartHours.map(rawValues[activeChartTab])
+    const minVal = Math.min(...vals)
+    const maxVal = Math.max(...vals)
+    const range = maxVal - minVal || 1
+    return liveChartHours.map(hour => {
+      const v = rawValues[activeChartTab](hour)
+      const normalized = (v - minVal) / range
+      const y = Math.round(120 - normalized * 95)
+      return {
         time: new Date(hour.time).toLocaleTimeString([], { hour: 'numeric' }),
         val: chartValues[activeChartTab](hour),
-        y: yPositions[index]
-      }))
-    }
-
-    switch (activeChartTab) {
-      case 'precipitation':
-        return [
-          { time: '6 AM', val: '0.2 mm', y: 80 },
-          { time: '9 AM', val: '1.4 mm', y: 60 },
-          { time: '12 PM', val: '2.8 mm', y: 35 },
-          { time: '3 PM', val: '4.2 mm', y: 20 },
-          { time: '6 PM', val: '2.0 mm', y: 45 },
-          { time: '9 PM', val: '0.6 mm', y: 70 }
-        ]
-      case 'wind':
-        return [
-          { time: '6 AM', val: '10 km/h', y: 75 },
-          { time: '9 AM', val: '14 km/h', y: 55 },
-          { time: '12 PM', val: '18 km/h', y: 40 },
-          { time: '3 PM', val: '22 km/h', y: 25 },
-          { time: '6 PM', val: '16 km/h', y: 50 },
-          { time: '9 PM', val: '12 km/h', y: 65 }
-        ]
-      case 'humidity':
-        return [
-          { time: '6 AM', val: '85%', y: 20 },
-          { time: '9 AM', val: '78%', y: 35 },
-          { time: '12 PM', val: '68%', y: 60 },
-          { time: '3 PM', val: '62%', y: 75 },
-          { time: '6 PM', val: '70%', y: 55 },
-          { time: '9 PM', val: '80%', y: 30 }
-        ]
-      case 'pressure':
-        return [
-          { time: '6 AM', val: '1010 hPa', y: 35 },
-          { time: '9 AM', val: '1009 hPa', y: 45 },
-          { time: '12 PM', val: '1008 hPa', y: 55 },
-          { time: '3 PM', val: '1007 hPa', y: 65 },
-          { time: '6 PM', val: '1008 hPa', y: 55 },
-          { time: '9 PM', val: '1009 hPa', y: 45 }
-        ]
-      case 'temperature':
-      default:
-        return [
-          { time: '6 AM', val: '23°', y: 75 },
-          { time: '9 AM', val: '26°', y: 55 },
-          { time: '12 PM', val: '28°', y: 45 },
-          { time: '3 PM', val: '31°', y: 20 },
-          { time: '6 PM', val: '29°', y: 35 },
-          { time: '9 PM', val: '25°', y: 65 }
-        ]
-    }
+        y
+      }
+    })
   }
 
   const chartPoints = getChartPoints()
 
-  // Precipitation weekly bars
-  const precipBars = [
-    { day: formatDay('Wed'), mm: 2.4, height: '20%' },
-    { day: formatDay('Thu'), mm: 8.6, height: '65%' },
-    { day: formatDay('Fri'), mm: 10.2, height: '78%' },
-    { day: formatDay('Sat'), mm: 12.4, height: '95%' },
-    { day: formatDay('Sun'), mm: 1.8, height: '15%' },
-    { day: formatDay('Mon'), mm: 0.8, height: '8%' },
-    { day: formatDay('Tue'), mm: 0.6, height: '6%' }
-  ]
+  // Precipitation weekly bars — dynamic from live forecast
+  const precipBars = liveForecast?.daily?.length
+    ? liveForecast.daily.slice(0, 7).map(day => {
+        const mm = day.totalPrecipitation ?? day.precipitation ?? 0
+        const maxMm = 15
+        const heightPct = Math.min(Math.round((mm / maxMm) * 100), 100)
+        return {
+          day: formatDate(day.date).split(' ')[0],
+          mm: parseFloat(mm.toFixed(1)),
+          height: `${Math.max(heightPct, 4)}%`
+        }
+      })
+    : []
 
-  // Right sidebar locations list
-  const sidebarLocations = [
-    { id: 'loc-1', city: 'Pune, Maharashtra', active: true, isFav: true },
-    { id: 'loc-2', city: 'Mumbai, Maharashtra', active: false, isFav: false },
-    { id: 'loc-3', city: 'Nagpur, Maharashtra', active: false, isFav: false },
-    { id: 'loc-4', city: 'New Delhi, Delhi', active: false, isFav: false }
-  ]
+  // Right sidebar locations list — dynamic from savedLocations context
+  const sidebarLocations = savedLocations.map(loc => ({
+    id: loc.id || loc._id,
+    city: `${translateCity(loc.city)}, ${translateRegion(loc.region || loc.state || loc.country || '')}`,
+    rawCity: loc.city,
+    active: (selectedMapLocation?.city || city?.city)?.toLowerCase() === loc.city.toLowerCase(),
+    isFav: !!loc.isFavorite
+  }))
 
   const filteredSidebarLocations = sidebarLocations.filter(l =>
     l.city.toLowerCase().includes(locationSearchQuery.toLowerCase())
   )
 
-  const handleSelectLocation = locName => {
+  const handleSelectLocation = (locId, rawCity) => {
     const found = savedLocations.find(l =>
-      l.city.toLowerCase().includes(locName.split(',')[0].toLowerCase())
+      (l.id === locId || l._id === locId) ||
+      l.city.toLowerCase() === (rawCity || '').toLowerCase()
     )
     if (found) {
       setSelectedMapLocation(found)
-      addToast(`Updated forecast for ${found.city}`, 'info')
+      addToast(
+        language === 'mr'
+          ? `${translateCity(found.city)} साठी हवामान अंदाज अद्यतनित केला`
+          : language === 'hi'
+          ? `${translateCity(found.city)} के लिए पूर्वानुमान अपडेट किया गया`
+          : `Updated forecast for ${found.city}`,
+        'info'
+      )
     }
   }
+
 
   return (
     <div className='space-y-6 pb-10 select-none'>
@@ -359,12 +266,14 @@ export const ForecastPage = () => {
                 <div className='flex items-center gap-1.5 cursor-pointer group'>
                   <MapPin className='w-4 h-4 text-blue-600' />
                   <h2 className='text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition'>
-                    {translateCity(city.city)}, {translateRegion(city.region)}
+                    {city ? `${translateCity(city.city)}${city.region ? `, ${translateRegion(city.region)}` : ''}` : t('selectLocation')}
                   </h2>
                   <ChevronDown className='w-4 h-4 text-slate-400' />
                 </div>
                 <p className='text-xs text-slate-400 pl-5.5 mt-0.5'>
-                  Lat 18.52° N, Long 73.86° E
+                  {city?.lat != null
+                    ? `Lat ${Math.abs(city.lat).toFixed(2)}° ${city.lat >= 0 ? 'N' : 'S'}, Long ${Math.abs(city.lng ?? city.longitude ?? 0).toFixed(2)}° ${(city.lng ?? city.longitude ?? 0) >= 0 ? 'E' : 'W'}`
+                    : '--'}
                 </p>
               </div>
 
@@ -387,7 +296,7 @@ export const ForecastPage = () => {
                     {t('today')} • {new Date().toLocaleDateString(language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                   <div className='text-5xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5'>
-                    {formatTemp(currentForecastHour?.temperature ?? 28)}
+                    {currentForecastHour?.temperature != null ? formatTemp(currentForecastHour.temperature) : '--'}
                   </div>
                   <p className='text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1'>
                     {currentForecastHour?.precipitationProbability >= 50
@@ -414,7 +323,7 @@ export const ForecastPage = () => {
                       {t('minTemp')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {formatTemp(currentForecastDay?.minTemperature ?? 22)}
+                      {currentForecastDay?.minTemperature != null ? formatTemp(currentForecastDay.minTemperature) : '--'}
                     </span>
                   </div>
                 </div>
@@ -429,9 +338,9 @@ export const ForecastPage = () => {
                       {t('wind')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.windSpeed
+                      {currentForecastHour?.windSpeed != null
                         ? formatWind(currentForecastHour.windSpeed)
-                        : '16 km/h'}
+                        : '--'}
                     </span>
                   </div>
                 </div>
@@ -446,7 +355,7 @@ export const ForecastPage = () => {
                       {t('maxTemp')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {formatTemp(currentForecastDay?.maxTemperature ?? 31)}
+                      {currentForecastDay?.maxTemperature != null ? formatTemp(currentForecastDay.maxTemperature) : '--'}
                     </span>
                   </div>
                 </div>
@@ -461,9 +370,9 @@ export const ForecastPage = () => {
                       {t('pressure')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.pressure
+                      {currentForecastHour?.pressure != null
                         ? formatPressure(currentForecastHour.pressure)
-                        : '1008 hPa'}
+                        : '--'}
                     </span>
                   </div>
                 </div>
@@ -478,7 +387,7 @@ export const ForecastPage = () => {
                       {t('humidity')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      {currentForecastHour?.humidity ?? 72}%
+                      {currentForecastHour?.humidity != null ? `${currentForecastHour.humidity}%` : '--'}
                     </span>
                   </div>
                 </div>
@@ -493,7 +402,9 @@ export const ForecastPage = () => {
                       {t('visibility')}
                     </span>
                     <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>
-                      8 km
+                      {currentForecastHour?.visibility != null
+                        ? `${(currentForecastHour.visibility / 1000).toFixed(1)} km`
+                        : '--'}
                     </span>
                   </div>
                 </div>
@@ -518,65 +429,68 @@ export const ForecastPage = () => {
               </button>
             </div>
 
-            {/* 7 Columns Daily Grid */}
-            <div className='grid grid-cols-7 gap-2 pt-1'>
-              {sevenDayForecast.map((item, idx) => {
-                const isActive = selectedDayIdx === idx
-                return (
-                  <button
-                    key={idx}
-                    type='button'
-                    onClick={() => setSelectedDayIdx(idx)}
-                    className={`flex flex-col items-center justify-between py-3.5 px-1 rounded-2xl text-center transition cursor-pointer ${
-                      isActive
-                        ? 'bg-blue-50/70 dark:bg-blue-950/40 border border-blue-400 dark:border-blue-700 shadow-2xs'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'
-                    }`}
-                  >
-                    <div>
-                      <span className='text-xs font-bold text-slate-800 dark:text-slate-200 block'>
-                        {item.day}
-                      </span>
-                      <span className='text-[10px] text-slate-400 block'>
-                        {item.date}
-                      </span>
-                    </div>
+            {sevenDayForecast.length > 0 ? (
+              <div className='grid grid-cols-7 gap-2 pt-1'>
+                {sevenDayForecast.map((item, idx) => {
+                  const isActive = selectedDayIdx === idx
+                  return (
+                    <button
+                      key={idx}
+                      type='button'
+                      onClick={() => setSelectedDayIdx(idx)}
+                      className={`flex flex-col items-center justify-between py-3.5 px-1 rounded-2xl text-center transition cursor-pointer ${
+                        isActive
+                          ? 'bg-blue-50/70 dark:bg-blue-950/40 border border-blue-400 dark:border-blue-700 shadow-2xs'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'
+                      }`}
+                    >
+                      <div>
+                        <span className='text-xs font-bold text-slate-800 dark:text-slate-200 block'>
+                          {item.day}
+                        </span>
+                        <span className='text-[10px] text-slate-400 block'>
+                          {item.date}
+                        </span>
+                      </div>
 
-                    {/* Icon */}
-                    <div className='my-2 flex items-center justify-center'>
-                      {item.icon === 'sun-cloud' && (
-                        <div className='relative w-7 h-7 flex items-center justify-center'>
-                          <Sun className='w-4 h-4 text-amber-500 absolute -top-1 -right-1' />
-                          <Cloud className='w-6 h-6 text-slate-400 fill-slate-200 dark:fill-slate-700' />
-                        </div>
-                      )}
-                      {item.icon === 'rain' && (
-                        <CloudRain className='w-6 h-6 text-blue-500' />
-                      )}
-                      {item.icon === 'sun' && (
-                        <Sun className='w-6 h-6 text-amber-500 fill-amber-400' />
-                      )}
-                    </div>
+                      {/* Icon */}
+                      <div className='my-2 flex items-center justify-center'>
+                        {item.icon === 'sun-cloud' && (
+                          <div className='relative w-7 h-7 flex items-center justify-center'>
+                            <Sun className='w-4 h-4 text-amber-500 absolute -top-1 -right-1' />
+                            <Cloud className='w-6 h-6 text-slate-400 fill-slate-200 dark:fill-slate-700' />
+                          </div>
+                        )}
+                        {item.icon === 'rain' && (
+                          <CloudRain className='w-6 h-6 text-blue-500' />
+                        )}
+                        {item.icon === 'sun' && (
+                          <Sun className='w-6 h-6 text-amber-500 fill-amber-400' />
+                        )}
+                      </div>
 
-                    {/* Max & Min */}
-                    <div className='space-y-0.5'>
-                      <span className='text-sm font-black text-slate-900 dark:text-white block'>
-                        {item.high}
-                      </span>
-                      <span className='text-[11px] text-slate-400 block'>
-                        {item.low}
-                      </span>
-                    </div>
+                      {/* Max & Min */}
+                      <div className='space-y-0.5'>
+                        <span className='text-sm font-black text-slate-900 dark:text-white block'>
+                          {item.high}
+                        </span>
+                        <span className='text-[11px] text-slate-400 block'>
+                          {item.low}
+                        </span>
+                      </div>
 
-                    {/* Rain pop */}
-                    <div className='flex items-center gap-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1.5'>
-                      <Droplets className='w-2.5 h-2.5' />
-                      <span>{item.pop}</span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+                      {/* Rain pop */}
+                      <div className='flex items-center gap-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1.5'>
+                        <Droplets className='w-2.5 h-2.5' />
+                        <span>{item.pop}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className='text-xs text-slate-400 py-6 text-center'>{forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'No 7-day forecast data'}</p>
+            )}
           </div>
 
           {/* Card 3: Hourly Forecast (9 slots) */}
@@ -591,42 +505,46 @@ export const ForecastPage = () => {
             </div>
 
             {/* 9 columns strip */}
-            <div className='grid grid-cols-9 gap-1.5 pt-1 overflow-x-auto scrollbar-none'>
-              {nineHourForecast.map((hour, idx) => (
-                <div
-                  key={idx}
-                  className='flex flex-col items-center justify-between py-3 px-1 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition text-center space-y-1.5'
-                >
-                  <span className='text-[11px] font-bold text-slate-700 dark:text-slate-300'>
-                    {hour.time}
-                  </span>
+            {nineHourForecast.length > 0 ? (
+              <div className='grid grid-cols-9 gap-1.5 pt-1 overflow-x-auto scrollbar-none'>
+                {nineHourForecast.map((hour, idx) => (
+                  <div
+                    key={idx}
+                    className='flex flex-col items-center justify-between py-3 px-1 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition text-center space-y-1.5'
+                  >
+                    <span className='text-[11px] font-bold text-slate-700 dark:text-slate-300'>
+                      {hour.time}
+                    </span>
 
-                  <div className='my-1 flex items-center justify-center'>
-                    {hour.icon === 'sun-cloud' && (
-                      <div className='relative w-6 h-6 flex items-center justify-center'>
-                        <Sun className='w-3.5 h-3.5 text-amber-500 absolute -top-1 -right-1' />
+                    <div className='my-1 flex items-center justify-center'>
+                      {hour.icon === 'sun-cloud' && (
+                        <div className='relative w-6 h-6 flex items-center justify-center'>
+                          <Sun className='w-3.5 h-3.5 text-amber-500 absolute -top-1 -right-1' />
+                          <Cloud className='w-5 h-5 text-slate-400 fill-slate-200 dark:fill-slate-700' />
+                        </div>
+                      )}
+                      {hour.icon === 'rain' && (
+                        <CloudRain className='w-5 h-5 text-blue-500' />
+                      )}
+                      {hour.icon === 'cloud' && (
                         <Cloud className='w-5 h-5 text-slate-400 fill-slate-200 dark:fill-slate-700' />
-                      </div>
-                    )}
-                    {hour.icon === 'rain' && (
-                      <CloudRain className='w-5 h-5 text-blue-500' />
-                    )}
-                    {hour.icon === 'cloud' && (
-                      <Cloud className='w-5 h-5 text-slate-400 fill-slate-200 dark:fill-slate-700' />
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  <span className='text-xs font-black text-slate-900 dark:text-white'>
-                    {hour.temp}
-                  </span>
+                    <span className='text-xs font-black text-slate-900 dark:text-white'>
+                      {hour.temp}
+                    </span>
 
-                  <div className='flex items-center gap-0.5 text-[9px] font-bold text-blue-500'>
-                    <Droplets className='w-2 h-2' />
-                    <span>{hour.pop}</span>
+                    <div className='flex items-center gap-0.5 text-[9px] font-bold text-blue-500'>
+                      <Droplets className='w-2.5 h-2.5' />
+                      <span>{hour.pop}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className='text-xs text-slate-400 py-6 text-center'>{forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'No hourly forecast data'}</p>
+            )}
           </div>
 
           {/* Card 4: Detailed Forecast & Curve Graph */}
@@ -662,189 +580,109 @@ export const ForecastPage = () => {
             <div className='grid grid-cols-1 md:grid-cols-12 gap-6 items-center pt-2'>
               {/* Left Interactive SVG Spline Line Graph (Span 8) */}
               <div className='md:col-span-8 relative h-48 sm:h-52 w-full flex items-end'>
-                {/* Y-axis reference lines */}
-                <div className='absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 pointer-events-none pr-2'>
-                  <div className='border-b border-dashed border-slate-200 dark:border-slate-800 pb-1'>
-                    35°
-                  </div>
-                  <div className='border-b border-dashed border-slate-200 dark:border-slate-800 pb-1'>
-                    30°
-                  </div>
-                  <div className='border-b border-dashed border-slate-200 dark:border-slate-800 pb-1'>
-                    25°
-                  </div>
-                  <div className='border-b border-slate-200 dark:border-slate-800 pb-1'>
-                    20°
-                  </div>
-                </div>
+                {chartPoints.length === 6 ? (
+                  <>
+                    {/* Y-axis reference lines */}
+                    <div className='absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 pointer-events-none pr-2'>
+                      <div className='border-b border-dashed border-slate-200 dark:border-slate-800 pb-1'>
+                        35°
+                      </div>
+                      <div className='border-b border-dashed border-slate-200 dark:border-slate-800 pb-1'>
+                        30°
+                      </div>
+                      <div className='border-b border-dashed border-slate-200 dark:border-slate-800 pb-1'>
+                        25°
+                      </div>
+                      <div className='border-b border-slate-200 dark:border-slate-800 pb-1'>
+                        20°
+                      </div>
+                    </div>
 
-                {/* SVG Curve Line */}
-                <svg
-                  className='w-full h-full relative z-10 overflow-visible'
-                  viewBox='0 0 500 160'
-                  preserveAspectRatio='none'
-                >
-                  <defs>
-                    <linearGradient
-                      id='chartFillGrad'
-                      x1='0'
-                      y1='0'
-                      x2='0'
-                      y2='1'
+                    {/* SVG Curve Line */}
+                    <svg
+                      className='w-full h-full relative z-10 overflow-visible'
+                      viewBox='0 0 500 160'
+                      preserveAspectRatio='none'
                     >
-                      <stop
-                        offset='0%'
-                        stopColor='#3B82F6'
-                        stopOpacity='0.25'
+                      <defs>
+                        <linearGradient
+                          id='chartFillGrad'
+                          x1='0%'
+                          y1='0%'
+                          x2='0%'
+                          y2='100%'
+                        >
+                          <stop
+                            offset='0%'
+                            stopColor='#3B82F6'
+                            stopOpacity='0.25'
+                          />
+                          <stop
+                            offset='100%'
+                            stopColor='#3B82F6'
+                            stopOpacity='0.0'
+                          />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Gradient Area under curve */}
+                      <path
+                        d={`M 20 ${chartPoints[0].y} Q 100 ${chartPoints[1].y}, 180 ${chartPoints[2].y} T 304 ${chartPoints[3].y} T 400 ${chartPoints[4].y} T 480 ${chartPoints[5].y} L 480 150 L 20 150 Z`}
+                        fill='url(#chartFillGrad)'
                       />
-                      <stop
-                        offset='100%'
-                        stopColor='#3B82F6'
-                        stopOpacity='0.0'
+
+                      {/* Line Path */}
+                      <path
+                        d={`M 20 ${chartPoints[0].y} Q 100 ${chartPoints[1].y}, 180 ${chartPoints[2].y} T 304 ${chartPoints[3].y} T 400 ${chartPoints[4].y} T 480 ${chartPoints[5].y}`}
+                        fill='none'
+                        stroke='#2563EB'
+                        strokeWidth='3.5'
+                        strokeLinecap='round'
                       />
-                    </linearGradient>
-                  </defs>
 
-                  {/* Gradient Area under curve */}
-                  <path
-                    d='M 20 120 Q 100 80, 180 65 T 340 25 T 420 50 T 480 100 L 480 150 L 20 150 Z'
-                    fill='url(#chartFillGrad)'
-                  />
+                      {/* 6 Data points with labels */}
+                      {[
+                        { cx: 20, p: chartPoints[0] },
+                        { cx: 112, p: chartPoints[1] },
+                        { cx: 204, p: chartPoints[2] },
+                        { cx: 304, p: chartPoints[3], peak: true },
+                        { cx: 400, p: chartPoints[4] },
+                        { cx: 480, p: chartPoints[5] }
+                      ].map(({ cx, p, peak }, idx) => (
+                        <g key={idx}>
+                          <circle
+                            cx={cx}
+                            cy={p.y}
+                            r={peak ? 5 : 4.5}
+                            fill='#2563EB'
+                            stroke='#FFFFFF'
+                            strokeWidth={peak ? 2.5 : 2}
+                          />
+                          <text
+                            x={cx}
+                            y={Math.max(10, p.y - 15)}
+                            textAnchor='middle'
+                            fill='#1E293B'
+                            className={`text-[11px] ${peak ? 'font-black fill-blue-600 dark:fill-blue-400' : 'font-extrabold fill-slate-800 dark:fill-slate-100'}`}
+                          >
+                            {p.val}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
 
-                  {/* Line Path */}
-                  <path
-                    d='M 20 120 Q 100 80, 180 65 T 340 25 T 420 50 T 480 100'
-                    fill='none'
-                    stroke='#2563EB'
-                    strokeWidth='3.5'
-                    strokeLinecap='round'
-                  />
-
-                  {/* 6 Data points with labels */}
-                  {/* Point 1: 6 AM (23°) */}
-                  <circle
-                    cx='20'
-                    cy='120'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='20'
-                    y='105'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[0].val}
-                  </text>
-
-                  {/* Point 2: 9 AM (26°) */}
-                  <circle
-                    cx='112'
-                    cy='85'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='112'
-                    y='70'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[1].val}
-                  </text>
-
-                  {/* Point 3: 12 PM (28°) */}
-                  <circle
-                    cx='204'
-                    cy='65'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='204'
-                    y='50'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[2].val}
-                  </text>
-
-                  {/* Point 4: 3 PM (31° Peak) */}
-                  <circle
-                    cx='304'
-                    cy='25'
-                    r='5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2.5'
-                  />
-                  <text
-                    x='304'
-                    y='10'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[12px] font-black fill-blue-600 dark:fill-blue-400'
-                  >
-                    {chartPoints[3].val}
-                  </text>
-
-                  {/* Point 5: 6 PM (29°) */}
-                  <circle
-                    cx='400'
-                    cy='50'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='400'
-                    y='35'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[4].val}
-                  </text>
-
-                  {/* Point 6: 9 PM (25°) */}
-                  <circle
-                    cx='480'
-                    cy='100'
-                    r='4.5'
-                    fill='#2563EB'
-                    stroke='#FFFFFF'
-                    strokeWidth='2'
-                  />
-                  <text
-                    x='480'
-                    y='85'
-                    textAnchor='middle'
-                    fill='#1E293B'
-                    className='text-[11px] font-extrabold fill-slate-800 dark:fill-slate-100'
-                  >
-                    {chartPoints[5].val}
-                  </text>
-                </svg>
-
-                {/* X-axis labels */}
-                <div className='absolute -bottom-6 inset-x-0 flex justify-between text-[11px] font-bold text-slate-500'>
-                  <span>{formatHour('6 AM')}</span>
-                  <span>{formatHour('9 AM')}</span>
-                  <span>{formatHour('12 PM')}</span>
-                  <span>{formatHour('3 PM')}</span>
-                  <span>{formatHour('6 PM')}</span>
-                  <span>{formatHour('9 PM')}</span>
-                </div>
+                    {/* X-axis labels */}
+                    <div className='absolute -bottom-6 inset-x-0 flex justify-between text-[11px] font-bold text-slate-500'>
+                      {chartPoints.map((p, idx) => (
+                        <span key={idx}>{p.time}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className='w-full h-full flex items-center justify-center text-xs text-slate-400'>
+                    {forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'Chart telemetry unavailable'}
+                  </div>
+                )}
               </div>
 
               {/* Right Summary Box (Span 4) */}
@@ -864,7 +702,7 @@ export const ForecastPage = () => {
                         {t('maxTemperature')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        31°C {t('at')} 3:00 PM
+                        {sevenDayForecast[selectedDayIdx]?.high ?? '--'} {t('at')} 3:00 PM
                       </span>
                     </div>
                   </div>
@@ -876,7 +714,7 @@ export const ForecastPage = () => {
                         {t('minTemperature')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        22°C {t('at')} 6:00 AM
+                        {sevenDayForecast[selectedDayIdx]?.low ?? '--'} {t('at')} 6:00 AM
                       </span>
                     </div>
                   </div>
@@ -888,7 +726,11 @@ export const ForecastPage = () => {
                         {t('rainfall')}
                       </span>
                       <span className='font-bold text-slate-800 dark:text-slate-200'>
-                        2.4 mm
+                        {liveForecast?.daily?.[selectedDayIdx]
+                          ? `${(liveForecast.daily[selectedDayIdx].totalPrecipitation ?? liveForecast.daily[selectedDayIdx].precipitation ?? 0).toFixed(1)} mm`
+                          : precipBars[selectedDayIdx]
+                          ? `${precipBars[selectedDayIdx].mm} mm`
+                          : '--'}
                       </span>
                     </div>
                   </div>
@@ -933,9 +775,9 @@ export const ForecastPage = () => {
               const openMeteoModel = nwpComparison?.models?.find(m => m.modelName?.includes('Open-Meteo')) || nwpComparison?.models?.[0];
 
               const consensusTemp = nwpComparison?.consensus?.meanTemperature;
-              const ecmwfTemp = ecmwfModel?.temperatureC != null ? ecmwfModel.temperatureC : (consensusTemp != null ? consensusTemp : '23.0');
-              const gfsTemp = gfsModel?.temperatureC != null ? gfsModel.temperatureC : (consensusTemp != null ? (consensusTemp - 0.2).toFixed(1) : '22.8');
-              const openMeteoTemp = openMeteoModel?.temperatureC != null ? openMeteoModel.temperatureC : (consensusTemp != null ? (consensusTemp + 0.1).toFixed(1) : '23.1');
+              const ecmwfTemp = ecmwfModel?.temperatureC != null ? `${ecmwfModel.temperatureC}°C` : (consensusTemp != null ? `${consensusTemp}°C` : '--');
+              const gfsTemp = gfsModel?.temperatureC != null ? `${gfsModel.temperatureC}°C` : (consensusTemp != null ? `${(consensusTemp - 0.2).toFixed(1)}°C` : '--');
+              const openMeteoTemp = openMeteoModel?.temperatureC != null ? `${openMeteoModel.temperatureC}°C` : (consensusTemp != null ? `${(consensusTemp + 0.1).toFixed(1)}°C` : '--');
 
               return (
                 <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2'>
@@ -946,11 +788,11 @@ export const ForecastPage = () => {
                       <span className='text-[10px] text-blue-400'>Europe</span>
                     </div>
                     <div className='text-xl font-extrabold text-slate-100'>
-                      {ecmwfTemp}°C
+                      {ecmwfTemp}
                     </div>
                     <div className='text-[11px] text-slate-400 flex items-center justify-between'>
-                      <span>{t('rainfall')}: {ecmwfModel?.precipitationMm ?? '0'} mm</span>
-                      <span>{t('wind')}: {ecmwfModel?.windSpeedKmh ?? '9'} km/h</span>
+                      <span>{t('rainfall')}: {ecmwfModel?.precipitationMm != null ? `${ecmwfModel.precipitationMm} mm` : '--'}</span>
+                      <span>{t('wind')}: {ecmwfModel?.windSpeedKmh != null ? `${ecmwfModel.windSpeedKmh} km/h` : '--'}</span>
                     </div>
                   </div>
 
@@ -961,11 +803,11 @@ export const ForecastPage = () => {
                       <span className='text-[10px] text-sky-400'>USA</span>
                     </div>
                     <div className='text-xl font-extrabold text-slate-100'>
-                      {gfsTemp}°C
+                      {gfsTemp}
                     </div>
                     <div className='text-[11px] text-slate-400 flex items-center justify-between'>
-                      <span>{t('rainfall')}: {gfsModel?.precipitationMm ?? '0'} mm</span>
-                      <span>{t('wind')}: {gfsModel?.windSpeedKmh ?? '11'} km/h</span>
+                      <span>{t('rainfall')}: {gfsModel?.precipitationMm != null ? `${gfsModel.precipitationMm} mm` : '--'}</span>
+                      <span>{t('wind')}: {gfsModel?.windSpeedKmh != null ? `${gfsModel.windSpeedKmh} km/h` : '--'}</span>
                     </div>
                   </div>
 
@@ -976,11 +818,11 @@ export const ForecastPage = () => {
                       <span className='text-[10px] text-emerald-400'>Ensemble</span>
                     </div>
                     <div className='text-xl font-extrabold text-slate-100'>
-                      {openMeteoTemp}°C
+                      {openMeteoTemp}
                     </div>
                     <div className='text-[11px] text-slate-400 flex items-center justify-between'>
-                      <span>{t('rainfall')}: {openMeteoModel?.precipitationMm ?? '0'} mm</span>
-                      <span>{t('wind')}: {openMeteoModel?.windSpeedKmh ?? '10'} km/h</span>
+                      <span>{t('rainfall')}: {openMeteoModel?.precipitationMm != null ? `${openMeteoModel.precipitationMm} mm` : '--'}</span>
+                      <span>{t('wind')}: {openMeteoModel?.windSpeedKmh != null ? `${openMeteoModel.windSpeedKmh} km/h` : '--'}</span>
                     </div>
                   </div>
                 </div>
@@ -1042,16 +884,15 @@ export const ForecastPage = () => {
               <Search className='w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2' />
             </div>
 
-            {/* Locations List */}
             <div className='space-y-1.5 pt-1'>
-              {filteredSidebarLocations.map(loc => {
-                const isSelected = city.city
-                  .toLowerCase()
-                  .includes(loc.city.split(',')[0].toLowerCase())
+              {filteredSidebarLocations.length === 0 ? (
+                <p className='text-xs text-slate-400 text-center py-2'>{t('noLocationsFound')}</p>
+              ) : filteredSidebarLocations.map(loc => {
+                const isSelected = loc.active
                 return (
                   <div
                     key={loc.id}
-                    onClick={() => handleSelectLocation(loc.city)}
+                    onClick={() => handleSelectLocation(loc.id, loc.rawCity)}
                     className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition ${
                       isSelected
                         ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 font-bold'
@@ -1064,7 +905,7 @@ export const ForecastPage = () => {
                           isSelected ? 'bg-blue-600' : 'bg-slate-300'
                         }`}
                       />
-                      <span className='truncate'>{translateCity(loc.city)}</span>
+                      <span className='truncate'>{loc.city}</span>
                     </div>
                     <Star
                       className={`w-3.5 h-3.5 ${
@@ -1097,7 +938,14 @@ export const ForecastPage = () => {
 
             <div>
               <div className='text-3xl font-black text-slate-900 dark:text-white'>
-                28.6{' '}
+                {liveForecast?.daily?.length
+                  ? parseFloat(
+                      liveForecast.daily
+                        .slice(0, 7)
+                        .reduce((sum, d) => sum + (d.totalPrecipitation ?? d.precipitation ?? 0), 0)
+                        .toFixed(1)
+                    )
+                  : '--'}{' '}
                 <span className='text-sm font-bold text-slate-500'>mm</span>
               </div>
               <p className='text-[11px] text-slate-400 mt-0.5'>
@@ -1107,70 +955,91 @@ export const ForecastPage = () => {
 
             {/* Vertical Bar Chart */}
             <div className='h-32 flex items-end justify-between gap-2 pt-4 border-b border-slate-100 dark:border-slate-800 pb-2'>
-              {precipBars.map((bar, i) => (
-                <div
-                  key={i}
-                  className='flex-1 flex flex-col items-center h-full justify-end group'
-                >
-                  <span className='text-[9px] font-bold text-slate-600 dark:text-slate-300 mb-1 opacity-0 group-hover:opacity-100 transition'>
-                    {bar.mm}
-                  </span>
-                  <div className='w-full bg-slate-100 dark:bg-slate-800 rounded-t-md h-full flex items-end'>
-                    <div
-                      className='w-full bg-blue-600 rounded-t-md transition-all duration-500 group-hover:bg-blue-500'
-                      style={{ height: bar.height }}
-                    />
+              {precipBars.length > 0 ? (
+                precipBars.map((bar, i) => (
+                  <div
+                    key={i}
+                    className='flex-1 flex flex-col items-center h-full justify-end group'
+                  >
+                    <span className='text-[9px] font-bold text-slate-600 dark:text-slate-300 mb-1 opacity-0 group-hover:opacity-100 transition'>
+                      {bar.mm}
+                    </span>
+                    <div className='w-full bg-slate-100 dark:bg-slate-800 rounded-t-md h-full flex items-end'>
+                      <div
+                        className='w-full bg-blue-600 rounded-t-md transition-all duration-500 group-hover:bg-blue-500'
+                        style={{ height: bar.height }}
+                      />
+                    </div>
+                    <span className='text-[10px] font-bold text-slate-500 mt-1'>
+                      {bar.day}
+                    </span>
                   </div>
-                  <span className='text-[10px] font-bold text-slate-500 mt-1'>
-                    {bar.day}
-                  </span>
+                ))
+              ) : (
+                <div className='w-full h-full flex items-center justify-center text-xs text-slate-400'>
+                  {forecastLoading ? t('loadingForecast') : t('noDataAvailable') || 'Rainfall data unavailable'}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
           {/* Card 3: UV Index */}
           <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-3'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
-                  {t('uvIndex')}
-                </h3>
-                <p className='text-[11px] text-slate-400'>{t('today')}</p>
-              </div>
-              <div className='flex items-baseline gap-1.5'>
-                <span className='text-2xl font-black text-slate-900 dark:text-white'>
-                  7
-                </span>
-                <span className='text-xs font-bold text-orange-500'>{t('high')}</span>
-              </div>
-            </div>
+            {(() => {
+              const uvValue = currentForecastHour?.uvIndex ?? currentForecastDay?.uvIndexMax ?? weatherData?.forecast?.current?.uvIndex;
+              const uvDisplay = uvValue != null ? Math.round(uvValue) : '--';
+              const uvPercent = uvValue != null ? Math.min(Math.max((uvValue / 11) * 100, 5), 95) : 50;
 
-            {/* Multi-color UV Spectrum Bar */}
-            <div className='space-y-1.5 pt-1'>
-              <div className='h-2 w-full rounded-full bg-gradient-to-r from-emerald-400 via-orange-500 to-rose-600 relative'>
-                <div className='absolute top-1/2 left-[62%] -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-orange-500 rounded-full shadow-xs' />
-              </div>
-              <div className='flex justify-between text-[9px] text-slate-400 font-bold px-0.5'>
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>7</span>
-                <span>8</span>
-                <span>9</span>
-                <span>10</span>
-                <span>11+</span>
-              </div>
-            </div>
+              return (
+                <>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
+                        {t('uvIndex')}
+                      </h3>
+                      <p className='text-[11px] text-slate-400'>{t('today')}</p>
+                    </div>
+                    <div className='flex items-baseline gap-1.5'>
+                      <span className='text-2xl font-black text-slate-900 dark:text-white'>
+                        {uvDisplay}
+                      </span>
+                      {uvValue != null && (
+                        <span className={`text-xs font-bold ${uvValue >= 8 ? 'text-rose-500' : uvValue >= 6 ? 'text-orange-500' : uvValue >= 3 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                          {uvValue >= 8 ? t('veryHigh') || 'Very High' : uvValue >= 6 ? t('high') : uvValue >= 3 ? t('moderate') || 'Moderate' : t('low') || 'Low'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-            <div className='flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 pt-1'>
-              <Sun className='w-4 h-4 text-amber-500 shrink-0' />
-              <p className='text-[11px]'>
-                {t('uvProtectionAdvice')}
-              </p>
-            </div>
+                  {/* Multi-color UV Spectrum Bar */}
+                  <div className='space-y-1.5 pt-1'>
+                    <div className='h-2 w-full rounded-full bg-gradient-to-r from-emerald-400 via-orange-500 to-rose-600 relative'>
+                      {uvValue != null && (
+                        <div
+                          className='absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-orange-500 rounded-full shadow-xs'
+                          style={{ left: `${uvPercent}%` }}
+                        />
+                      )}
+                    </div>
+                    <div className='flex justify-between text-[9px] text-slate-400 font-bold px-0.5'>
+                      <span>1</span>
+                      <span>3</span>
+                      <span>5</span>
+                      <span>7</span>
+                      <span>9</span>
+                      <span>11+</span>
+                    </div>
+                  </div>
+
+                  <div className='flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 pt-1'>
+                    <Sun className='w-4 h-4 text-amber-500 shrink-0' />
+                    <p className='text-[11px]'>
+                      {t('uvProtectionAdvice')}
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* Card 4: Air Quality Index */}
@@ -1182,17 +1051,27 @@ export const ForecastPage = () => {
               <p className='text-[11px] text-slate-400'>{t('today')}</p>
             </div>
 
-            <div className='flex items-center gap-3.5'>
-              <div className='w-12 h-12 rounded-full border-4 border-emerald-500 flex items-center justify-center font-black text-lg text-emerald-600 shrink-0'>
-                42
-              </div>
-              <div>
-                <span className='text-sm font-bold text-emerald-600'>{t('aqiGood')}</span>
-                <p className='text-[11px] text-slate-500 dark:text-slate-400 mt-0.5'>
-                  {t('aqiGoodDesc')}
-                </p>
-              </div>
-            </div>
+            {(() => {
+              const aqiVal = weatherData?.airQuality?.current?.us_aqi ?? weatherData?.airQuality?.current?.european_aqi;
+              const aqiDisplay = aqiVal != null ? Math.round(aqiVal) : '--';
+              const aqiColor = aqiVal == null ? 'text-slate-400 border-slate-400' : aqiVal <= 50 ? 'text-emerald-500 border-emerald-500' : aqiVal <= 100 ? 'text-amber-500 border-amber-500' : 'text-rose-500 border-rose-500';
+
+              return (
+                <div className='flex items-center gap-3.5'>
+                  <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-black text-lg shrink-0 ${aqiColor}`}>
+                    {aqiDisplay}
+                  </div>
+                  <div>
+                    <span className={`text-sm font-bold ${aqiVal <= 50 ? 'text-emerald-600' : aqiVal <= 100 ? 'text-amber-600' : 'text-rose-600'}`}>
+                      {aqiVal == null ? '--' : aqiVal <= 50 ? t('aqiGood') : aqiVal <= 100 ? t('aqiModerate') || 'Moderate' : t('aqiPoor') || 'Unhealthy'}
+                    </span>
+                    <p className='text-[11px] text-slate-500 dark:text-slate-400 mt-0.5'>
+                      {aqiVal != null && aqiVal <= 50 ? t('aqiGoodDesc') : 'Air quality telemetry monitored live via CPCB/Open-Meteo.'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Card 5: Sunrise & Sunset */}
@@ -1201,33 +1080,42 @@ export const ForecastPage = () => {
               {t('sunriseSunset')}
             </h3>
 
-            <div className='grid grid-cols-2 gap-3 pt-1'>
-              {/* Sunrise */}
-              <div className='flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40'>
-                <Sun className='w-5 h-5 text-amber-500 shrink-0' />
-                <div>
-                  <span className='text-[10px] text-slate-400 block'>
-                    {t('sunrise')}
-                  </span>
-                  <span className='text-xs font-black text-slate-800 dark:text-slate-200'>
-                    5:47 AM
-                  </span>
-                </div>
-              </div>
+            {(() => {
+              const sunrise = currentForecastDay?.sunrise;
+              const sunset = currentForecastDay?.sunset;
+              const sunriseDisplay = sunrise ? new Date(sunrise).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '--';
+              const sunsetDisplay = sunset ? new Date(sunset).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '--';
 
-              {/* Sunset */}
-              <div className='flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40'>
-                <Sun className='w-5 h-5 text-orange-500 shrink-0' />
-                <div>
-                  <span className='text-[10px] text-slate-400 block'>
-                    {t('sunset')}
-                  </span>
-                  <span className='text-xs font-black text-slate-800 dark:text-slate-200'>
-                    6:57 PM
-                  </span>
+              return (
+                <div className='grid grid-cols-2 gap-3 pt-1'>
+                  {/* Sunrise */}
+                  <div className='flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40'>
+                    <Sun className='w-5 h-5 text-amber-500 shrink-0' />
+                    <div>
+                      <span className='text-[10px] text-slate-400 block'>
+                        {t('sunrise')}
+                      </span>
+                      <span className='text-xs font-black text-slate-800 dark:text-slate-200'>
+                        {sunriseDisplay}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sunset */}
+                  <div className='flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40'>
+                    <Sun className='w-5 h-5 text-orange-500 shrink-0' />
+                    <div>
+                      <span className='text-[10px] text-slate-400 block'>
+                        {t('sunset')}
+                      </span>
+                      <span className='text-xs font-black text-slate-800 dark:text-slate-200'>
+                        {sunsetDisplay}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* Card 6: Compare Locations Button */}

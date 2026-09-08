@@ -62,6 +62,21 @@ const alertSchema = new mongoose.Schema(
       required: true
     },
 
+    region: {
+      type: String,
+      trim: true
+    },
+
+    probability: {
+      type: String,
+      trim: true
+    },
+
+    action: {
+      type: String,
+      trim: true
+    },
+
     source: {
       type: String,
       required: true,

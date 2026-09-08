@@ -5,150 +5,26 @@ import {
   MapPin,
   Droplets,
   Wind,
-  Gauge,
-  Eye,
-  AlertTriangle,
-  ChevronRight,
-  CalendarDays,
-  Map,
-  MessageSquare,
-  Mic,
-  Send,
-  Sprout,
   Sun,
   CloudRain,
   CloudSun,
   Cloud,
-  ArrowRight
+  ArrowRight,
+  Activity,
+  Mic,
+  Send,
+  AlertTriangle,
+  MessageSquare,
+  Sparkles,
+  ChevronRight,
+  ShieldCheck,
+  Compass,
+  Sprout,
+  CalendarDays,
+  Gauge,
+  Eye,
+  Star
 } from 'lucide-react'
-
-// 3D Styled Cloud & Sun Illustration for Hero Card
-const Hero3DWeatherGraphic = () => (
-  <div className='relative w-36 h-28 sm:w-44 sm:h-32 flex items-center justify-center select-none pointer-events-none'>
-    {/* Radiant Sun with Golden Rays */}
-    <div className='absolute top-1 right-2 sm:right-4 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-yellow-200 shadow-[0_0_24px_rgba(250,204,21,0.85)] flex items-center justify-center animate-pulse-subtle'>
-      {/* Sun rays styling */}
-      <div className='w-12 h-12 rounded-full bg-yellow-300/40 blur-xs' />
-    </div>
-
-    {/* Front 3D Puffy Cloud */}
-    <div className='relative z-10 filter drop-shadow-xl mt-4 -ml-4'>
-      <svg
-        className='w-28 h-20 sm:w-36 sm:h-24'
-        viewBox='0 0 100 68'
-        fill='none'
-      >
-        <path
-          d='M75 58H25C13.95 58 5 49.05 5 38C5 27.56 12.97 19 23.31 18.09C27.65 7.46 38.2 0.5 50.5 0.5C65.34 0.5 77.63 11.16 80.22 25.28C89.28 26.98 95.5 34.88 95.5 43.88C95.5 52.02 88.94 58 80.8 58H75Z'
-          fill='url(#heroCloudGrad)'
-        />
-        <defs>
-          <linearGradient
-            id='heroCloudGrad'
-            x1='15'
-            y1='5'
-            x2='85'
-            y2='60'
-            gradientUnits='userSpaceOnUse'
-          >
-            <stop stopColor='#FFFFFF' />
-            <stop offset='0.6' stopColor='#F0F6FC' />
-            <stop offset='1' stopColor='#D5E2EE' />
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>
-  </div>
-)
-
-// Green Trees Landscape Illustration for Eco Banner
-const TreesIllustration = () => (
-  <div className='relative w-48 sm:w-64 h-20 sm:h-24 flex items-end justify-end select-none pointer-events-none overflow-hidden'>
-    <svg className='w-full h-full' viewBox='0 0 240 90' fill='none'>
-      {/* Rolling Hills in background */}
-      <path
-        d='M0 90 Q 60 45, 120 70 T 240 60 L 240 90 Z'
-        fill='#A7F3D0'
-        opacity='0.6'
-      />
-      <path
-        d='M40 90 Q 110 50, 180 75 T 240 65 L 240 90 Z'
-        fill='#6EE7B7'
-        opacity='0.7'
-      />
-      <path
-        d='M0 90 Q 90 65, 170 80 T 240 75 L 240 90 Z'
-        fill='#34D399'
-        opacity='0.8'
-      />
-
-      {/* Tree 1: Left small round */}
-      <circle cx='35' cy='62' r='16' fill='#10B981' />
-      <circle cx='30' cy='56' r='12' fill='#34D399' />
-      <rect
-        x='33'
-        y='70'
-        width='4'
-        height='18'
-        fill='#78350F'
-        opacity='0.8'
-        rx='2'
-      />
-
-      {/* Tree 2: Center-left medium tree */}
-      <circle cx='70' cy='50' r='22' fill='#059669' />
-      <circle cx='65' cy='42' r='17' fill='#10B981' />
-      <rect
-        x='68'
-        y='66'
-        width='5'
-        height='22'
-        fill='#78350F'
-        opacity='0.8'
-        rx='2'
-      />
-
-      {/* Tree 3: Large Center tree */}
-      <circle cx='120' cy='38' r='28' fill='#047857' />
-      <circle cx='114' cy='30' r='22' fill='#10B981' />
-      <circle cx='128' cy='34' r='16' fill='#34D399' />
-      <rect
-        x='117'
-        y='60'
-        width='6'
-        height='28'
-        fill='#78350F'
-        opacity='0.9'
-        rx='3'
-      />
-
-      {/* Tree 4: Right medium round tree */}
-      <circle cx='170' cy='48' r='24' fill='#059669' />
-      <circle cx='164' cy='40' r='18' fill='#34D399' />
-      <rect
-        x='168'
-        y='66'
-        width='5'
-        height='22'
-        fill='#78350F'
-        opacity='0.8'
-        rx='2'
-      />
-
-      {/* Tree 5: Far Right small tree */}
-      <circle cx='210' cy='58' r='16' fill='#10B981' />
-      <rect
-        x='208'
-        y='70'
-        width='4'
-        height='18'
-        fill='#78350F'
-        opacity='0.8'
-        rx='2'
-      />
-    </svg>
-  </div>
-)
 
 export const DashboardPage = () => {
   const {
@@ -169,10 +45,12 @@ export const DashboardPage = () => {
     formatWind,
     formatPressure
   } = useWeather()
+
   const {
     language,
     t,
     getGreeting,
+    formatDay,
     translateCondition,
     translateAlertTitle,
     translateAlertDescription,
@@ -182,7 +60,7 @@ export const DashboardPage = () => {
 
   const [queryText, setQueryText] = useState('')
 
-  const userName = user?.name ? user.name.split(' ')[0] : 'Sid'
+  const userName = user?.name ? user.name.split(' ')[0] : t('user')
   const currentHour = weatherData?.forecast?.hourly?.[0]
   const forecastCurrent = forecastData?.models?.openMeteo?.current
   const forecastHour = forecastData?.models?.openMeteo?.hourly?.[0]
@@ -195,6 +73,7 @@ export const DashboardPage = () => {
       ? forecastCurrent
       : forecastHour
   const forecastHours = forecastData?.models?.openMeteo?.hourly || []
+  const dailyForecastData = forecastData?.models?.openMeteo?.daily || []
 
   const weatherIcon = precipitationProbability => {
     if (precipitationProbability >= 50) return 'rain'
@@ -210,24 +89,30 @@ export const DashboardPage = () => {
         selectedLocation.country
       )}`
     : t('currentLocation')
+
   const weatherDescription =
     currentConditions?.precipitation > 0
       ? t('rainNearby')
       : currentConditions?.humidity > 80
       ? t('humidConditions')
       : t('currentConditions')
+
   const currentTime =
     currentHour?.time || forecastHour?.time
-      ? new Date(currentHour?.time || forecastHour.time).toLocaleString([], {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-          hour: 'numeric',
-          minute: '2-digit'
-        })
+      ? new Date(currentHour?.time || forecastHour.time).toLocaleString(
+          language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN',
+          {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            hour: 'numeric',
+            minute: '2-digit'
+          }
+        )
       : t('weatherUnavailable')
 
   const formattedCurrentTemperature = formatTemp(currentConditions?.temperature)
+
   const suggestionChips = [
     t('chipRain'),
     t('chipMumbai'),
@@ -249,14 +134,15 @@ export const DashboardPage = () => {
   }
 
   const handleVoiceSearch = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SpeechRecognition) {
       addToast(
-        language === 'mr' 
-          ? 'या ब्राउझरमध्ये व्हॉइस सर्च उपलब्ध नाही.' 
-          : language === 'hi' 
-          ? 'इस ब्राउज़र में वॉइस सर्च उपलब्ध नहीं है।' 
-          : 'Voice recognition not supported in this browser.', 
+        language === 'mr'
+          ? 'या ब्राउझरमध्ये व्हॉइस सर्च उपलब्ध नाही.'
+          : language === 'hi'
+          ? 'इस ब्राउज़र में वॉइस सर्च उपलब्ध नहीं है।'
+          : 'Voice recognition not supported in this browser.',
         'warning'
       )
       return
@@ -278,16 +164,16 @@ export const DashboardPage = () => {
 
       recognition.onstart = () => {
         addToast(
-          language === 'mr' 
-            ? 'ऐकत आहे... तुमचा प्रश्न बोला...' 
-            : language === 'hi' 
-            ? 'सुन रहा हूँ... अपना सवाल बोलिए...' 
-            : 'Listening... Speak your weather query...', 
+          language === 'mr'
+            ? 'ऐकत आहे... तुमचा प्रश्न बोला...'
+            : language === 'hi'
+            ? 'सुन रहा हूँ... अपना सवाल बोलिए...'
+            : 'Listening... Speak your weather query...',
           'info'
         )
       }
 
-      recognition.onresult = (event) => {
+      recognition.onresult = event => {
         const spokenText = event.results[0]?.[0]?.transcript
         if (spokenText) {
           setQueryText(spokenText)
@@ -296,14 +182,14 @@ export const DashboardPage = () => {
         }
       }
 
-      recognition.onerror = (event) => {
+      recognition.onerror = event => {
         console.warn('Dashboard voice search error:', event.error)
         addToast(
-          language === 'mr' 
-            ? 'आवाज ओळखण्यात अडचण आली. पुन्हा प्रयत्न करा.' 
-            : language === 'hi' 
-            ? 'आवाज पहचानने में समस्या आई। पुनः प्रयास करें।' 
-            : 'Could not recognize voice. Please try again.', 
+          language === 'mr'
+            ? 'आवाज ओळखण्यात अडचण आली. पुन्हा प्रयत्न करा.'
+            : language === 'hi'
+            ? 'आवाज पहचानने में समस्या आई। पुनः प्रयास करें।'
+            : 'Could not recognize voice. Please try again.',
           'warning'
         )
       }
@@ -314,16 +200,7 @@ export const DashboardPage = () => {
     }
   }
 
-  // Hourly Forecast Data matching screenshot
-  const fallbackHourlyData = [
-    { time: t('now'), temp: '28°', pop: '65%', icon: 'sun-cloud', isNow: true },
-    { time: '9 AM', temp: '29°', pop: '60%', icon: 'rain' },
-    { time: '10 AM', temp: '30°', pop: '70%', icon: 'rain' },
-    { time: '11 AM', temp: '31°', pop: '80%', icon: 'rain' },
-    { time: '12 PM', temp: '31°', pop: '70%', icon: 'cloud' },
-    { time: '1 PM', temp: '30°', pop: '60%', icon: 'cloud' },
-    { time: '2 PM', temp: '29°', pop: '40%', icon: 'cloud' }
-  ]
+  // 7-Hour Timeline Data
   const hourlyData = forecastHours.length
     ? forecastHours.slice(0, 7).map((hour, index) => ({
         time:
@@ -340,124 +217,27 @@ export const DashboardPage = () => {
         icon: weatherIcon(hour.precipitationProbability ?? 0),
         isNow: index === 0
       }))
-    : fallbackHourlyData
+    : []
 
-  // Recent Conversations matching screenshot
-  const fallbackRecentChats = [
-    {
-      id: 'conv-1',
-      title:
-        language === 'mr'
-          ? 'पुण्यात उद्या पाऊस पडेल का?'
-          : language === 'hi'
-          ? 'क्या कल पुणे में बारिश होगी?'
-          : language === 'bn'
-          ? 'কাল কি পুনেতে বৃষ্টি হবে?'
-          : language === 'ta'
-          ? 'புனேயில் நாளை மழை பெய்யுமா?'
-          : language === 'te'
-          ? 'పూణేలో రేపు వర్షం పడుతుందా?'
-          : 'Will it rain tomorrow in Pune?',
-      time: '8:15 AM'
-    },
-    {
-      id: 'conv-2',
-      title:
-        language === 'mr'
-          ? 'माझ्या शेतीसाठी हवामान अंदाज'
-          : language === 'hi'
-          ? 'मेरे खेत के लिए मौसम का हाल'
-          : language === 'bn'
-          ? 'আমার খামারের আবহাওয়ার তথ্য'
-          : language === 'ta'
-          ? 'எனது பண்ணைக்கான வானிலை தகவல்'
-          : language === 'te'
-          ? 'నా వ్యవసాయ క్షేత్ర వాతావరణ సమాచారం'
-          : 'Weather update for my farm',
-      time: language === 'mr' ? 'काल' : language === 'hi' ? 'कल' : 'Yesterday'
-    },
-    {
-      id: 'conv-3',
-      title:
-        language === 'mr'
-          ? 'बंगालच्या उपसागरातील चक्रीवादळ स्थिती'
-          : language === 'hi'
-          ? 'बंगाल की खाड़ी में चक्रवात अपडेट'
-          : language === 'bn'
-          ? 'বঙ্গোপসাগরে ঘূর্ণিঝড়ের আপডেট'
-          : language === 'ta'
-          ? 'வங்காள விரிகுடாவில் புயல் எச்சரிக்கை'
-          : language === 'te'
-          ? 'బంగాళాఖాతంలో తుఫాను స్థితి'
-          : 'Cyclone update in Bay of Bengal',
-      time: language === 'mr' ? 'काल' : language === 'hi' ? 'कल' : 'Yesterday'
-    },
-    {
-      id: 'conv-4',
-      title:
-        language === 'mr'
-          ? 'आजचे तापमान किती आहे?'
-          : language === 'hi'
-          ? 'आज का तापमान क्या है?'
-          : language === 'bn'
-          ? 'আজকের তাপমাত্রা কত?'
-          : language === 'ta'
-          ? 'இன்றைய வெப்பநிலை என்ன?'
-          : language === 'te'
-          ? 'ఈరోజు ఉష్ణోగ్రత ఎంత?'
-          : 'What is the temperature today?',
-      time: '20 May'
-    },
-    {
-      id: 'conv-5',
-      title:
-        language === 'mr'
-          ? 'दिल्लीमधील हवेची गुणवत्ता (AQI)'
-          : language === 'hi'
-          ? 'दिल्ली में वायु गुणवत्ता'
-          : language === 'bn'
-          ? 'দিল্লির বায়ু গুণমান'
-          : language === 'ta'
-          ? 'டெல்லியில் காற்றின் தரம்'
-          : language === 'te'
-          ? 'ఢిల్లీలో గాలి నాణ్యత'
-          : 'Air quality in Delhi',
-      time: '19 May'
-    }
-  ]
-  const recentChats = conversations.length
-    ? conversations.slice(0, 5).map(conversation => ({
-        id: conversation.id,
-        title: conversation.title,
-        time: conversation.time || (language === 'mr' ? 'अलीकडील' : language === 'hi' ? 'हालिया' : 'Recent')
-      }))
-    : fallbackRecentChats
-
-  // Saved Locations matching screenshot
-  const dashboardLocations = savedLocations.length
-    ? savedLocations.slice(0, 4).map((location, index) => ({
-        city: `${translateCity(location.city)}, ${translateRegion(
-          location.region || location.state || location.country
-        )}`,
-        status:
-          index === 0
-            ? t('currentLocation')
-            : location.isFavorite
-            ? t('favoriteLocation')
-            : t('savedLocation'),
-        temp:
-          index === 0 && currentHour
-            ? formatTemp(currentHour.temperature)
-            : '--',
-        icon:
-          index === 0
-            ? weatherIcon(currentHour?.precipitationProbability ?? 0)
-            : 'sun-cloud',
-        rawCity: location.city
+  // 7-Day Glance Data
+  const weekGlance = dailyForecastData.length
+    ? dailyForecastData.slice(0, 7).map((d, i) => ({
+        day:
+          i === 0
+            ? t('today')
+            : new Date(d.date).toLocaleDateString(
+                language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN',
+                { weekday: 'short' }
+              ),
+        min: formatTemp(d.minTemperature),
+        max: formatTemp(d.maxTemperature),
+        pop: `${Math.round(d.precipitationProbability ?? 0)}%`,
+        icon: weatherIcon(d.precipitationProbability ?? 0)
       }))
     : []
 
-  const displayedAlerts = alerts.slice(0, 3)
+  // Active alerts list for alert summary
+  const activeAlertsList = (alerts || []).slice(0, 3)
 
   const handleLocationClick = rawCity => {
     const loc = savedLocations.find(
@@ -465,438 +245,438 @@ export const DashboardPage = () => {
     )
     if (loc) {
       setSelectedMapLocation(loc)
-      addToast(`Selected ${loc.city} weather view`, 'info')
+      addToast(
+        language === 'mr'
+          ? `${translateCity(loc.city)} चे हवामान लोड केले`
+          : language === 'hi'
+          ? `${translateCity(loc.city)} का मौसम लोड हुआ`
+          : `${loc.city} weather view selected`,
+        'info'
+      )
     }
   }
 
-  const handleRecentChatClick = id => {
-    setActiveConversationId(id)
-    setCurrentPage('chat')
-  }
-
   return (
-    <div className='space-y-6 pb-8 select-none'>
+    <div className='max-w-7xl mx-auto space-y-6 pb-12 select-none'>
       {/* =========================================================================
-          TOP SECTION: Greeting & AI Natural Language Search Bar
+          1. HEADER BAR: Personalized Greeting & Sleek AI Search Capsule
           ========================================================================= */}
-      <div>
-        <div className='flex items-center gap-2'>
-          <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
-            {getGreeting()}, {userName}!
-          </h1>
-          <span className='text-2xl sm:text-3xl animate-bounce'>👋</span>
+      <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+        <div>
+          <div className='flex items-center gap-2'>
+            <h1 className='text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight'>
+              {getGreeting()}, {userName}!
+            </h1>
+            <span className='text-2xl animate-pulse'>🌤️</span>
+          </div>
+          <p className='text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-medium'>
+            {currentTime} • {translateCity(selectedLocation?.city || 'Pune')}
+          </p>
         </div>
-        <p className='text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1'>
-          {t('weatherOverview')}
-        </p>
 
-        {/* AI Query Input Bar */}
-        <form onSubmit={handleSearchSubmit} className='mt-5'>
-          <div className='relative flex items-center w-full rounded-full bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-700/80 shadow-sm hover:border-blue-300 dark:hover:border-slate-600 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition p-1.5 pl-6'>
+        {/* AI Weather Search Input */}
+        <form onSubmit={handleSearchSubmit} className='w-full md:w-96'>
+          <div className='relative flex items-center w-full rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 transition px-3.5 py-2'>
             <input
               type='text'
               placeholder={t('askAnything')}
               value={queryText}
               onChange={e => setQueryText(e.target.value)}
-              className='w-full bg-transparent text-sm sm:text-base text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none pr-3'
+              className='w-full bg-transparent text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none pr-2'
             />
-            <div className='flex items-center gap-2 pr-1'>
-              {/* Mic button */}
+            <div className='flex items-center gap-1.5 shrink-0'>
               <button
                 type='button'
                 onClick={handleVoiceSearch}
-                className='w-10 h-10 rounded-full border border-blue-100 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition flex items-center justify-center cursor-pointer'
-                title='Voice Search'
+                className='w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-600 dark:text-slate-300 hover:text-blue-600 transition flex items-center justify-center cursor-pointer'
+                title='Voice Query'
               >
                 <Mic className='w-4 h-4' />
               </button>
-              {/* Send Submit button */}
               <button
                 type='submit'
-                className='w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-500/25 transition cursor-pointer'
-                title='Ask WeatherGPT'
+                className='w-8 h-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-xs transition cursor-pointer'
+                title='Search'
               >
-                <Send className='w-4 h-4' />
+                <Send className='w-3.5 h-3.5' />
               </button>
             </div>
           </div>
         </form>
+      </div>
 
-        {/* 4 Query Suggestion Chips */}
-        <div className='flex flex-wrap items-center gap-2.5 mt-3.5'>
-          {suggestionChips.map((chip, index) => (
-            <button
-              key={index}
-              type='button'
-              onClick={() => handleChipClick(chip)}
-              className='px-4 py-2 rounded-full bg-white dark:bg-[#151F32] border border-slate-200/80 dark:border-slate-700/80 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 dark:hover:bg-slate-800 dark:hover:text-blue-400 transition shadow-2xs cursor-pointer'
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
+      {/* Suggestion Chips */}
+      <div className='flex flex-wrap items-center gap-2'>
+        <span className='text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-semibold pr-1'>
+          <Sparkles className='w-3.5 h-3.5 text-amber-500' />
+          {language === 'mr' ? 'सुचवलेले प्रश्न:' : language === 'hi' ? 'सुझावित सवाल:' : 'Quick ask:'}
+        </span>
+        {suggestionChips.map((chip, index) => (
+          <button
+            key={index}
+            type='button'
+            onClick={() => handleChipClick(chip)}
+            className='px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/70 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer'
+          >
+            {chip}
+          </button>
+        ))}
       </div>
 
       {/* =========================================================================
-          ROW 1: Current Weather Hero Card + Active Alerts
+          2. LIVE EMERGENCY ALERT BANNER (Active Hazard Ticker)
+          ========================================================================= */}
+      {activeAlertsList.length > 0 && (
+        <div
+          onClick={() => setCurrentPage('alerts')}
+          className='flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-transparent dark:from-rose-950/40 dark:via-amber-950/20 dark:to-slate-900/40 border border-rose-200 dark:border-rose-900/60 hover:border-rose-400 transition cursor-pointer group shadow-2xs'
+        >
+          <div className='flex items-center gap-3 min-w-0'>
+            <div className='w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition'>
+              <AlertTriangle className='w-5 h-5 animate-pulse' />
+            </div>
+            <div className='min-w-0'>
+              <div className='flex items-center gap-2 flex-wrap'>
+                <span className='px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500 text-white'>
+                  {activeAlertsList[0].severity === 'extreme' ? 'Extreme Alert' : 'Active Warning'}
+                </span>
+                <h4 className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate'>
+                  {translateAlertTitle(activeAlertsList[0].title)}
+                </h4>
+              </div>
+              <p className='text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5'>
+                {activeAlertsList[0].location} • {translateAlertDescription(activeAlertsList[0].description)}
+              </p>
+            </div>
+          </div>
+          <div className='flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 shrink-0 ml-3'>
+            <span>{t('viewAll')} ({activeAlertsList.length})</span>
+            <ChevronRight className='w-4 h-4 group-hover:translate-x-0.5 transition' />
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          3. ROW 1: PRIMARY WEATHER INTELLIGENCE (Hero Card + 7-Day Outlook)
           ========================================================================= */}
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
-        {/* Left: Current Weather Card (Pune, Maharashtra) - Span 7 */}
-        <div className='lg:col-span-7 rounded-[28px] bg-gradient-to-br from-[#d9effe] via-[#e8f6ff] to-[#f4faff] dark:from-slate-800/95 dark:via-slate-800/80 dark:to-slate-900 border border-sky-200/90 dark:border-slate-700/80 p-6 sm:p-7 shadow-sm flex flex-col justify-between relative overflow-hidden'>
-          {/* Header with Location & Date */}
-          <div>
-            <div className='flex items-center gap-2'>
-              <MapPin className='w-5 h-5 text-blue-600 fill-blue-600/10' />
-              <h2 className='text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
+        {/* Left (7 cols): Hero Current Weather + 6 Metrics + Hourly Strip */}
+        <div className='lg:col-span-7 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 text-white p-6 sm:p-7 shadow-lg shadow-blue-500/10 flex flex-col justify-between relative overflow-hidden space-y-6'>
+          {/* Ambient background glow */}
+          <div className='absolute -top-24 -right-24 w-80 h-80 rounded-full bg-sky-400/20 blur-3xl pointer-events-none' />
+
+          {/* Top: Location & Switcher */}
+          <div className='flex items-center justify-between relative z-10'>
+            <div className='flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15'>
+              <MapPin className='w-4 h-4 text-sky-300' />
+              <span className='text-xs sm:text-sm font-bold tracking-wide'>
                 {locationLabel}
-              </h2>
+              </span>
             </div>
-            <p className='text-xs text-slate-500 dark:text-slate-400 mt-1 pl-7 font-medium'>
-              {currentTime}
-            </p>
+
+            <button
+              onClick={() => setCurrentPage('weather-map')}
+              className='flex items-center gap-1.5 text-xs font-semibold bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-full transition cursor-pointer backdrop-blur-xs'
+            >
+              <Compass className='w-3.5 h-3.5 text-sky-200' />
+              <span>{t('weatherMap')}</span>
+            </button>
           </div>
 
-          {/* Temperature & 3D Art Row */}
-          <div className='flex items-center justify-between my-4'>
+          {/* Center: Main Temp & Weather Art */}
+          <div className='flex items-center justify-between relative z-10 my-1'>
             <div>
-              <div className='text-6xl sm:text-7xl font-black text-slate-900 dark:text-white tracking-tighter'>
-                {formattedCurrentTemperature === '--' ? (
-                  '--'
-                ) : (
-                  <>
-                    {formattedCurrentTemperature
-                      .replace('°C', '')
-                      .replace('°F', '')}
-                    <span className='text-3xl sm:text-4xl font-bold align-top'>
-                      °{formattedCurrentTemperature.endsWith('°F') ? 'F' : 'C'}
-                    </span>
-                  </>
-                )}
+              <div className='flex items-baseline'>
+                <span className='text-6xl sm:text-7xl font-black tracking-tighter'>
+                  {formattedCurrentTemperature === '--'
+                    ? '--'
+                    : formattedCurrentTemperature.replace('°C', '').replace('°F', '')}
+                </span>
+                <span className='text-3xl sm:text-4xl font-bold text-sky-300 ml-1'>
+                  °{formattedCurrentTemperature.endsWith('°F') ? 'F' : 'C'}
+                </span>
               </div>
-              <p className='text-xs font-semibold text-slate-600 dark:text-slate-400 mt-1.5'>
-                {t('feelsLike', { temp: formatTemp(currentConditions?.apparentTemperature) })}
-              </p>
-              <p className='text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5'>
+              <p className='text-base sm:text-lg font-bold text-sky-100 mt-1'>
                 {translateCondition(weatherDescription)}
               </p>
+              <p className='text-xs text-sky-200/80 mt-0.5'>
+                {t('feelsLike', { temp: formatTemp(currentConditions?.apparentTemperature) })}
+              </p>
             </div>
 
-            {/* 3D Sun & Cloud Graphic */}
-            <Hero3DWeatherGraphic />
+            {/* Weather Art */}
+            <div className='relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center'>
+              <div className='absolute w-20 h-20 rounded-full bg-amber-400/40 blur-xl animate-pulse' />
+              <CloudSun className='w-20 h-20 sm:w-24 sm:h-24 text-amber-300 drop-shadow-lg relative z-10' />
+            </div>
           </div>
 
-          {/* 4 Metrics Pills Row */}
-          <div className='grid grid-cols-4 gap-2.5 pt-4 border-t border-sky-200/60 dark:border-slate-700/60'>
+          {/* 6 Essential Metrics Grid */}
+          <div className='grid grid-cols-3 sm:grid-cols-6 gap-2 pt-4 border-t border-white/15 relative z-10'>
+            {/* AQI */}
+            <div
+              onClick={() => setIsAirQualityOpen(true)}
+              className='bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl p-2.5 text-center border border-white/10 transition cursor-pointer group'
+            >
+              <Activity className='w-3.5 h-3.5 text-emerald-400 mx-auto mb-1 group-hover:scale-110 transition' />
+              <span className='text-[10px] text-sky-200 block'>AQI</span>
+              <span className='text-xs font-black text-white'>{weatherData?.airQuality?.aqi != null ? `${weatherData.airQuality.aqi} ${weatherData.airQuality.label || ''}` : '--'}</span>
+            </div>
+
             {/* Humidity */}
-            <div className='bg-white/90 dark:bg-slate-800/90 rounded-2xl p-3 text-center border border-white/60 dark:border-slate-700/60 shadow-2xs'>
-              <div className='w-6 h-6 mx-auto mb-1 text-blue-500 flex items-center justify-center'>
-                <Droplets className='w-4 h-4' />
-              </div>
-              <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                {t('humidity')}
-              </span>
-              <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
-                {currentConditions?.humidity ?? '--'}
-                {currentConditions?.humidity == null ? '' : '%'}
+            <div className='bg-white/10 backdrop-blur-md rounded-2xl p-2.5 text-center border border-white/10'>
+              <Droplets className='w-3.5 h-3.5 text-sky-300 mx-auto mb-1' />
+              <span className='text-[10px] text-sky-200 block'>{t('humidity')}</span>
+              <span className='text-xs font-black text-white'>
+                {currentConditions?.humidity != null ? `${currentConditions.humidity}%` : '--'}
               </span>
             </div>
 
             {/* Wind */}
-            <div className='bg-white/90 dark:bg-slate-800/90 rounded-2xl p-3 text-center border border-white/60 dark:border-slate-700/60 shadow-2xs'>
-              <div className='w-6 h-6 mx-auto mb-1 text-blue-500 flex items-center justify-center'>
-                <Wind className='w-4 h-4' />
-              </div>
-              <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                {t('wind')}
-              </span>
-              <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
-                {currentConditions?.windSpeed == null
-                  ? '--'
-                  : formatWind(currentConditions.windSpeed)}
+            <div className='bg-white/10 backdrop-blur-md rounded-2xl p-2.5 text-center border border-white/10'>
+              <Wind className='w-3.5 h-3.5 text-sky-300 mx-auto mb-1' />
+              <span className='text-[10px] text-sky-200 block'>{t('wind')}</span>
+              <span className='text-xs font-black text-white'>
+                {currentConditions?.windSpeed != null
+                  ? formatWind(currentConditions.windSpeed)
+                  : '--'}
               </span>
             </div>
 
             {/* Pressure */}
-            <div className='bg-white/90 dark:bg-slate-800/90 rounded-2xl p-3 text-center border border-white/60 dark:border-slate-700/60 shadow-2xs'>
-              <div className='w-6 h-6 mx-auto mb-1 text-blue-500 flex items-center justify-center'>
-                <Gauge className='w-4 h-4' />
-              </div>
-              <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                {t('pressure')}
+            <div className='bg-white/10 backdrop-blur-md rounded-2xl p-2.5 text-center border border-white/10'>
+              <Gauge className='w-3.5 h-3.5 text-purple-300 mx-auto mb-1' />
+              <span className='text-[10px] text-sky-200 block'>{t('pressure')}</span>
+              <span className='text-xs font-black text-white truncate block'>
+                {currentConditions?.pressure != null
+                  ? formatPressure(currentConditions.pressure)
+                  : '--'}
               </span>
-              <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
-                {currentConditions?.pressure == null
-                  ? '--'
-                  : formatPressure(currentConditions.pressure)}
-              </span>
+            </div>
+
+            {/* UV Index */}
+            <div className='bg-white/10 backdrop-blur-md rounded-2xl p-2.5 text-center border border-white/10'>
+              <Sun className='w-3.5 h-3.5 text-amber-300 mx-auto mb-1' />
+              <span className='text-[10px] text-sky-200 block'>{t('uvIndex')}</span>
+              <span className='text-xs font-black text-white'>{currentConditions?.uvIndex != null ? `${currentConditions.uvIndex} ${currentConditions.uvIndex <= 2 ? 'Low' : currentConditions.uvIndex <= 5 ? 'Moderate' : 'High'}` : '--'}</span>
             </div>
 
             {/* Visibility */}
-            <div className='bg-white/90 dark:bg-slate-800/90 rounded-2xl p-3 text-center border border-white/60 dark:border-slate-700/60 shadow-2xs'>
-              <div className='w-6 h-6 mx-auto mb-1 text-blue-500 flex items-center justify-center'>
-                <Eye className='w-4 h-4' />
-              </div>
-              <span className='text-[11px] text-slate-500 dark:text-slate-400 block'>
-                {t('visibility')}
-              </span>
-              <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
+            <div className='bg-white/10 backdrop-blur-md rounded-2xl p-2.5 text-center border border-white/10'>
+              <Eye className='w-3.5 h-3.5 text-sky-300 mx-auto mb-1' />
+              <span className='text-[10px] text-sky-200 block'>{t('visibility')}</span>
+              <span className='text-xs font-black text-white'>
                 {currentConditions?.visibility != null
-                  ? currentConditions.visibility >= 1000
-                    ? `${Math.round(currentConditions.visibility / 1000)} km`
-                    : `${Math.round(currentConditions.visibility)} m`
-                  : '10 km'}
+                  ? `${Math.round(currentConditions.visibility / 1000)} km`
+                  : '--'}
               </span>
             </div>
           </div>
-        </div>
 
-        {/* Right: Active Alerts Card - Span 5 */}
-        <div className='lg:col-span-5 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between space-y-4'>
-          <div className='flex items-center justify-between'>
-            <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              {t('activeAlerts')}
-            </h2>
-            <button
-              onClick={() => setCurrentPage('alerts')}
-              className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
-            >
-              {t('viewAll')}
-            </button>
-          </div>
-
-          {displayedAlerts.length > 0 ? (
-            <div className='space-y-2'>
-              {displayedAlerts.map((alert, index) => (
-                <div
-                  key={alert._id || `${alert.title}-${index}`}
-                  onClick={() => setCurrentPage('alerts')}
-                  className={`${
-                    index === 0
-                      ? 'bg-[#FEF2F2] dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-900/40 p-4'
-                      : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800/80 p-3'
-                  } flex items-center justify-between rounded-2xl border cursor-pointer group hover:bg-slate-100 dark:hover:bg-slate-800 transition`}
-                >
-                  <div className='flex items-start gap-3 min-w-0'>
-                    <AlertTriangle
-                      className={`${
-                        index === 0
-                          ? 'w-6 h-6 text-[#DC2626]'
-                          : 'w-4 h-4 text-amber-500'
-                      } shrink-0 mt-0.5`}
-                    />
-                    <div className='min-w-0'>
-                      <h3
-                        className={`${
-                          index === 0
-                            ? 'text-sm text-[#DC2626] dark:text-rose-400'
-                            : 'text-xs text-slate-800 dark:text-slate-200'
-                        } font-bold truncate group-hover:text-blue-600`}
-                      >
-                        {translateAlertTitle(alert.title)}
-                      </h3>
-                      <p className='text-[11px] text-slate-500 dark:text-slate-400 truncate'>
-                        {alert.location}
-                      </p>
-                      {index === 0 && (
-                        <p className='text-xs text-slate-600 dark:text-slate-300 leading-relaxed pt-1'>
-                          {translateAlertDescription(alert.description)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {index === 0 ? (
-                    <ArrowRight className='w-4 h-4 text-slate-400 shrink-0 ml-2' />
-                  ) : (
-                    <ChevronRight className='w-4 h-4 text-slate-400 shrink-0 ml-2' />
-                  )}
-                </div>
-              ))}
+          {/* Today's 7-Slot Hourly Strip */}
+          <div className='pt-4 border-t border-white/15 relative z-10'>
+            <div className='flex items-center justify-between pb-2.5'>
+              <span className='text-xs font-bold uppercase tracking-wider text-sky-200'>
+                {t('todaysForecast')}
+              </span>
+              <span className='text-[11px] text-sky-300'>
+                {language === 'mr' ? 'पुढील ७ तास' : language === 'hi' ? 'अगले ७ घंटे' : 'Next 7 hours'}
+              </span>
             </div>
-          ) : (
-            <p className='text-xs text-slate-500 dark:text-slate-400'>
-              {t('noActiveAlerts')}
-            </p>
-          )}
-        </div>
-      </div>
 
-      {/* =========================================================================
-          ROW 2: Today's Forecast + Quick Actions
-          ========================================================================= */}
-      <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
-        {/* Left: Today's Forecast (7 columns) - Span 7 */}
-        <div className='lg:col-span-7 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4'>
-          <div className='flex items-center justify-between'>
-            <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              {t('todaysForecast')}
-            </h2>
-            <button
-              onClick={() => setCurrentPage('forecast')}
-              className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
-            >
-              {t('viewFullForecast')}
-            </button>
-          </div>
-
-          {/* 7 Columns Hourly Grid */}
-          <div className='grid grid-cols-7 gap-2 pt-2'>
-            {hourlyData.map((item, index) => {
-              return (
+            <div className='grid grid-cols-7 gap-2'>
+              {hourlyData.map((item, index) => (
                 <div
                   key={index}
-                  className={`flex flex-col items-center justify-between py-3.5 px-1 rounded-2xl text-center transition ${
+                  className={`flex flex-col items-center justify-between py-2 px-1 rounded-xl text-center backdrop-blur-xs transition ${
                     item.isNow
-                      ? 'bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/50'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      ? 'bg-white/20 border border-white/30 font-bold shadow-xs'
+                      : 'hover:bg-white/10'
                   }`}
                 >
-                  <span className='text-xs font-bold text-slate-700 dark:text-slate-300'>
+                  <span className='text-[10px] text-sky-100 font-medium'>
                     {item.time}
                   </span>
 
-                  {/* Weather Icon */}
-                  <div className='my-2.5 flex items-center justify-center'>
-                    {item.icon === 'sun-cloud' && (
-                      <div className='relative w-7 h-7 flex items-center justify-center'>
-                        <Sun className='w-4 h-4 text-amber-500 absolute -top-1 -right-1' />
-                        <Cloud className='w-6 h-6 text-slate-400 fill-slate-200 dark:fill-slate-700' />
-                      </div>
-                    )}
+                  <div className='my-1'>
                     {item.icon === 'rain' && (
-                      <div className='text-blue-500'>
-                        <CloudRain className='w-6 h-6' />
-                      </div>
+                      <CloudRain className='w-4 h-4 text-sky-300' />
                     )}
                     {item.icon === 'cloud' && (
-                      <div className='text-slate-400'>
-                        <Cloud className='w-6 h-6 fill-slate-200 dark:fill-slate-700' />
-                      </div>
+                      <Cloud className='w-4 h-4 text-slate-200' />
+                    )}
+                    {item.icon === 'sun-cloud' && (
+                      <CloudSun className='w-4 h-4 text-amber-300' />
+                    )}
+                    {item.icon === 'sun' && (
+                      <Sun className='w-4 h-4 text-amber-300' />
                     )}
                   </div>
 
-                  {/* Temp */}
-                  <span className='text-sm sm:text-base font-black text-slate-900 dark:text-white'>
+                  <span className='text-xs font-black'>
                     {item.temp}
                   </span>
 
-                  {/* Rain Prob */}
-                  <div className='flex items-center gap-0.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1'>
-                    <Droplets className='w-2.5 h-2.5' />
-                    <span>{item.pop}</span>
-                  </div>
+                  <span className='text-[9px] text-sky-200 mt-0.5 font-semibold'>
+                    {item.pop}
+                  </span>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Right: Quick Actions (2x2 Grid) - Span 5 */}
-        <div className='lg:col-span-5 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-4'>
-          <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-            {t('quickActions')}
-          </h2>
-
-          <div className='grid grid-cols-2 gap-3.5 pt-1'>
-            {/* Tile 1: Weather Forecast (Soft Blue) */}
+        {/* Right (5 cols): 7-Day Forecast Outlook Glance */}
+        <div className='lg:col-span-5 bg-white dark:bg-slate-800/90 rounded-3xl border border-slate-200/80 dark:border-slate-700/70 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4'>
+          <div className='flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-700/60'>
+            <div className='flex items-center gap-2'>
+              <CalendarDays className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+              <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white'>
+                {t('sevenDayForecast')}
+              </h3>
+            </div>
             <button
               onClick={() => setCurrentPage('forecast')}
-              className='flex flex-col items-center justify-center p-4 rounded-2xl bg-[#EFF6FF] dark:bg-blue-950/30 hover:bg-blue-100/90 dark:hover:bg-blue-900/40 border border-blue-100 dark:border-blue-900/40 transition duration-200 space-y-2 group cursor-pointer'
+              className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer'
             >
-              <div className='w-10 h-10 rounded-2xl bg-white dark:bg-blue-900/60 shadow-xs flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition'>
-                <CalendarDays className='w-5 h-5' />
-              </div>
-              <span className='text-xs font-bold text-blue-900 dark:text-blue-200'>
-                {t('weatherForecast')}
-              </span>
+              <span>{t('viewFullForecast')}</span>
+              <ChevronRight className='w-3.5 h-3.5' />
             </button>
+          </div>
 
-            {/* Tile 2: Weather Map (Soft Green) */}
-            <button
-              onClick={() => setCurrentPage('weather-map')}
-              className='flex flex-col items-center justify-center p-4 rounded-2xl bg-[#ECFDF5] dark:bg-emerald-950/30 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/40 border border-emerald-100 dark:border-emerald-900/40 transition duration-200 space-y-2 group cursor-pointer'
-            >
-              <div className='w-10 h-10 rounded-2xl bg-white dark:bg-emerald-900/60 shadow-xs flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition'>
-                <Map className='w-5 h-5' />
-              </div>
-              <span className='text-xs font-bold text-emerald-900 dark:text-emerald-200'>
-                {t('weatherMap')}
-              </span>
-            </button>
+          {/* 7-Day Vertical Rows */}
+          <div className='space-y-2.5 divide-y divide-slate-100 dark:divide-slate-700/50'>
+            {weekGlance.map((d, index) => (
+              <div
+                key={index}
+                className='flex items-center justify-between pt-2 first:pt-0 text-xs'
+              >
+                <div className='w-20 font-bold text-slate-800 dark:text-slate-200'>
+                  {d.day}
+                </div>
 
-            {/* Tile 3: Alerts (Soft Red) */}
-            <button
-              onClick={() => setCurrentPage('alerts')}
-              className='flex flex-col items-center justify-center p-4 rounded-2xl bg-[#FEF2F2] dark:bg-rose-950/30 hover:bg-rose-100/90 dark:hover:bg-rose-900/40 border border-rose-100 dark:border-rose-900/40 transition duration-200 space-y-2 group cursor-pointer'
-            >
-              <div className='w-10 h-10 rounded-2xl bg-white dark:bg-rose-900/60 shadow-xs flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition'>
-                <AlertTriangle className='w-5 h-5' />
-              </div>
-              <span className='text-xs font-bold text-rose-900 dark:text-rose-200'>
-                {t('alerts')}
-              </span>
-            </button>
+                <div className='flex items-center gap-2 text-slate-500 dark:text-slate-400'>
+                  {d.icon === 'rain' && (
+                    <CloudRain className='w-4 h-4 text-blue-500' />
+                  )}
+                  {d.icon === 'sun-cloud' && (
+                    <CloudSun className='w-4 h-4 text-amber-500' />
+                  )}
+                  {d.icon === 'sun' && (
+                    <Sun className='w-4 h-4 text-amber-500 fill-amber-400' />
+                  )}
+                  <span className='text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
+                    {d.pop}
+                  </span>
+                </div>
 
-            {/* Tile 4: Air Quality (Soft Purple) */}
-            <button
-              onClick={() => setIsAirQualityOpen(true)}
-              className='flex flex-col items-center justify-center p-4 rounded-2xl bg-[#FAF5FF] dark:bg-purple-950/30 hover:bg-purple-100/90 dark:hover:bg-purple-900/40 border border-purple-100 dark:border-purple-900/40 transition duration-200 space-y-2 group cursor-pointer'
-            >
-              <div className='w-10 h-10 rounded-2xl bg-white dark:bg-purple-900/60 shadow-xs flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition'>
-                <Wind className='w-5 h-5' />
+                {/* Min / Max Temperature Bar representation */}
+                <div className='flex items-center gap-2'>
+                  <span className='text-slate-400 dark:text-slate-500 font-medium'>
+                    {d.min}
+                  </span>
+                  <div className='w-16 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden'>
+                    <div
+                      className='h-full bg-gradient-to-r from-sky-400 to-amber-400 rounded-full'
+                      style={{ width: `${60 + index * 5}%` }}
+                    />
+                  </div>
+                  <span className='font-bold text-slate-900 dark:text-white'>
+                    {d.max}
+                  </span>
+                </div>
               </div>
-              <span className='text-xs font-bold text-purple-900 dark:text-purple-200'>
-                {t('airQuality')}
+            ))}
+          </div>
+
+          <div className='pt-2'>
+            <div className='p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between text-xs'>
+              <span className='text-slate-600 dark:text-slate-300 font-medium'>
+                {language === 'mr' ? 'हवामान मॉडेल खात्री:' : language === 'hi' ? 'मॉडल सहमति:' : 'Model Confidence:'}
               </span>
-            </button>
+              <span className='font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1'>
+                <ShieldCheck className='w-3.5 h-3.5' />
+                {forecastData?.confidence != null ? `${forecastData.confidence}% ${forecastData.confidence >= 75 ? 'High' : forecastData.confidence >= 50 ? 'Medium' : 'Low'}` : '--'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          ROW 3: Recent Conversations + Saved Locations
+          4. ROW 2: FOCUSED THREE UTILITY CARDS (Alerts + Locations + AI Assistant)
           ========================================================================= */}
-      <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
-        {/* Left: Recent Conversations (5 items) - Span 6 */}
-        <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-3'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        {/* CARD 1: Active Alerts & Hazards Overview */}
+        <div className='bg-white dark:bg-slate-800/90 rounded-3xl border border-slate-200/80 dark:border-slate-700/70 p-5 shadow-xs flex flex-col justify-between space-y-3'>
           <div className='flex items-center justify-between pb-1'>
-            <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              {t('recentConversations')}
-            </h2>
+            <div className='flex items-center gap-2'>
+              <AlertTriangle className='w-4 h-4 text-rose-500' />
+              <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white'>
+                {t('activeAlerts')}
+              </h3>
+            </div>
             <button
-              onClick={() => setCurrentPage('history')}
-              className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
+              onClick={() => setCurrentPage('alerts')}
+              className='text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer'
             >
               {t('viewAll')}
             </button>
           </div>
 
-          <div className='space-y-1'>
-            {recentChats.map(chat => (
-              <div
-                key={chat.id}
-                onClick={() => handleRecentChatClick(chat.id)}
-                className='flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer group'
-              >
-                <div className='flex items-center gap-3 min-w-0 pr-2'>
-                  <MessageSquare className='w-4 h-4 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 shrink-0 transition' />
-                  <p className='text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition'>
-                    {chat.title}
+          <div className='space-y-2'>
+            {activeAlertsList.length > 0 ? (
+              activeAlertsList.map((a, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setCurrentPage('alerts')}
+                  className='p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 hover:border-rose-300 transition cursor-pointer'
+                >
+                  <div className='flex items-center justify-between'>
+                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${
+                      a.severity === 'extreme'
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-amber-500 text-white'
+                    }`}>
+                      {a.severity}
+                    </span>
+                    <span className='text-[10px] text-slate-400 font-medium'>
+                      {a.location.split(',')[0]}
+                    </span>
+                  </div>
+                  <h4 className='text-xs font-bold text-slate-800 dark:text-slate-200 mt-1.5 truncate'>
+                    {translateAlertTitle(a.title)}
+                  </h4>
+                  <p className='text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5'>
+                    {translateAlertDescription(a.description)}
                   </p>
                 </div>
-                <span className='text-[11px] font-medium text-slate-400 dark:text-slate-500 shrink-0'>
-                  {chat.time}
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className='text-xs text-slate-500 py-4 text-center'>
+                {t('noActiveAlerts')}
+              </p>
+            )}
           </div>
+
+          <button
+            onClick={() => setCurrentPage('advisory')}
+            className='w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer'
+          >
+            <span>{language === 'mr' ? 'आपत्ती व्यवस्थापन सल्ला' : language === 'hi' ? 'आपदा प्रबंधन सलाह' : 'Disaster Advisory Hub'}</span>
+            <ArrowRight className='w-3.5 h-3.5' />
+          </button>
         </div>
 
-        {/* Right: Saved Locations (4 items) - Span 6 */}
-        <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-3'>
+        {/* CARD 2: Saved Locations Quick Switch */}
+        <div className='bg-white dark:bg-slate-800/90 rounded-3xl border border-slate-200/80 dark:border-slate-700/70 p-5 shadow-xs flex flex-col justify-between space-y-3'>
           <div className='flex items-center justify-between pb-1'>
-            <h2 className='text-base font-bold text-slate-900 dark:text-white'>
-              {t('savedLocations')}
-            </h2>
+            <div className='flex items-center gap-2'>
+              <MapPin className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+              <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white'>
+                {t('savedLocations')}
+              </h3>
+            </div>
             <button
               onClick={() => setCurrentPage('saved-locations')}
               className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
@@ -906,70 +686,110 @@ export const DashboardPage = () => {
           </div>
 
           <div className='space-y-2'>
-            {dashboardLocations.map((loc, idx) => (
-              <div
-                key={idx}
-                onClick={() => handleLocationClick(loc.rawCity)}
-                className='flex items-center justify-between p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition border border-slate-100 dark:border-slate-800/80 cursor-pointer group'
-              >
-                <div className='flex items-center gap-3'>
-                  <div className='w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0'>
-                    <MapPin className='w-4 h-4' />
-                  </div>
-                  <div>
-                    <h4 className='text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition'>
-                      {loc.city}
-                    </h4>
-                    <p className='text-[11px] text-slate-400 dark:text-slate-500'>
-                      {loc.status}
+            {savedLocations.slice(0, 3).map((loc, idx) => {
+              const isSelected =
+                (selectedLocation?.city || '').toLowerCase() ===
+                loc.city.toLowerCase()
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleLocationClick(loc.city)}
+                  className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                    isSelected
+                      ? 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 shadow-2xs'
+                      : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  <div className='min-w-0 pr-2'>
+                    <div className='flex items-center gap-1.5'>
+                      <span className='text-xs font-bold text-slate-900 dark:text-white truncate'>
+                        {translateCity(loc.city)}
+                      </span>
+                      {isSelected && (
+                        <span className='w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0' />
+                      )}
+                    </div>
+                    <p className='text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5'>
+                      {translateRegion(loc.region || loc.state || loc.country)}
                     </p>
                   </div>
-                </div>
 
-                <div className='flex items-center gap-3'>
-                  <span className='text-sm sm:text-base font-bold text-slate-900 dark:text-white'>
-                    {loc.temp}
-                  </span>
-                  <div>
-                    {loc.icon === 'sun-cloud' && (
-                      <CloudSun className='w-5 h-5 text-amber-500' />
-                    )}
-                    {loc.icon === 'rain' && (
-                      <CloudRain className='w-5 h-5 text-blue-500' />
-                    )}
-                    {loc.icon === 'sun' && (
-                      <Sun className='w-5 h-5 text-amber-500 fill-amber-400' />
-                    )}
+                  <div className='text-right shrink-0 flex items-center gap-2'>
+                    <div>
+                      <span className='text-sm font-black text-slate-900 dark:text-white'>
+                        {loc.tempC != null ? `${Math.round(loc.tempC)}°` : '--'}
+                      </span>
+                      <p className='text-[9px] text-slate-500 dark:text-slate-400'>
+                        {translateCondition(loc.condition || 'Clear')}
+                      </p>
+                    </div>
+                    <Star className={`w-3.5 h-3.5 ${loc.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300'}`} />
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-        </div>
-      </div>
 
-      {/* =========================================================================
-          ROW 4: "Did you know?" Eco Tip Banner
-          ========================================================================= */}
-      <div className='rounded-[28px] bg-gradient-to-r from-[#ECFDF5] via-[#F0FDF4] to-[#DCFCE7] dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-900/30 border border-emerald-200/80 dark:border-emerald-900/40 p-5 sm:p-6 flex items-center justify-between relative overflow-hidden shadow-xs'>
-        {/* Left Tip Content */}
-        <div className='flex items-start gap-4 max-w-xl z-10'>
-          <div className='w-11 h-11 rounded-2xl bg-emerald-500/20 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0'>
-            <Sprout className='w-6 h-6' />
-          </div>
+          <button
+            onClick={() => setCurrentPage('saved-locations')}
+            className='w-full py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-600 dark:text-blue-400 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer'
+          >
+            <span>{language === 'mr' ? 'स्थान व्यवस्थापित करा' : language === 'hi' ? 'स्थान प्रबंधित करें' : 'Manage Saved Places'}</span>
+            <ArrowRight className='w-3.5 h-3.5' />
+          </button>
+        </div>
+
+        {/* CARD 3: Weather Intelligence & Smart Agro Advisory */}
+        <div className='bg-gradient-to-br from-indigo-50/70 via-white to-emerald-50/70 dark:from-slate-800/80 dark:via-slate-800/60 dark:to-indigo-950/30 rounded-3xl border border-indigo-100 dark:border-slate-700/70 p-5 shadow-xs flex flex-col justify-between space-y-3'>
           <div>
-            <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight'>
-              {t('didYouKnow')}
-            </h3>
-            <p className='text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed'>
-              {t('treesEcoTip')}
+            <div className='flex items-center justify-between pb-1'>
+              <div className='flex items-center gap-2'>
+                <div className='w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs'>
+                  <Sprout className='w-4 h-4' />
+                </div>
+                <h3 className='text-sm sm:text-base font-bold text-slate-900 dark:text-white'>
+                  {language === 'mr' ? 'हवामान व कृषी सल्ला' : language === 'hi' ? 'मौसम व कृषि सलाह' : 'Smart Weather Advisory'}
+                </h3>
+              </div>
+              <span className='px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'>
+                AI Live
+              </span>
+            </div>
+
+            <p className='text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed'>
+              {currentConditions?.precipitation > 0 || (currentHour?.precipitationProbability ?? 0) > 40
+                ? language === 'mr'
+                  ? 'पुढील २४ तासांत पावसाची शक्यता आहे. शेतातील फवारणी पुढे ढकला आणि पाण्याचा निचरा तपासा.'
+                  : language === 'hi'
+                  ? 'अगले 24 घंटों में बारिश की संभावना है। छिड़काव स्थगित करें और उचित जल निकासी सुनिश्चित करें।'
+                  : 'Rainfall expected in next 24h. Postpone foliar spraying and inspect field drainage.'
+                : language === 'mr'
+                  ? 'हवामान अनुकूल आहे. सकाळच्या वेळी पिकांना पाणी देणे आणि शेतीची कामे करण्यासाठी उत्तम वेळ.'
+                  : language === 'hi'
+                  ? 'मौसम अनुकूल है। सुबह के समय सिंचाई और कृषि कार्यों के लिए उपयुक्त समय है।'
+                  : 'Favorable atmospheric conditions. Morning irrigation and general field operations recommended.'}
             </p>
           </div>
-        </div>
 
-        {/* Right Trees Illustration */}
-        <div className='hidden sm:block'>
-          <TreesIllustration />
+          <div className='space-y-2 pt-2'>
+            <button
+              onClick={() => setCurrentPage('advisory')}
+              className='w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer'
+            >
+              <Sprout className='w-3.5 h-3.5' />
+              <span>{language === 'mr' ? 'सविस्तर पीक सल्ला पहा' : language === 'hi' ? 'विस्तृत फसल सलाह देखें' : 'View Crop Advisory'}</span>
+              <ArrowRight className='w-3 h-3' />
+            </button>
+
+            <button
+              onClick={() => setCurrentPage('chat')}
+              className='w-full py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer'
+            >
+              <MessageSquare className='w-3.5 h-3.5' />
+              <span>{language === 'mr' ? 'एआय हवामान चॅट सुरू करा' : language === 'hi' ? 'एआई मौसम चैट शुरू करें' : 'Ask WeatherGPT AI'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

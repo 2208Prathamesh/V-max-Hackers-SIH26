@@ -1,61 +1,171 @@
 /**
- * Weather Alerts seed dataset covering diverse severities and types
+ * Weather Alerts seed dataset covering diverse severities, districts and meteorological types
+ * Computed with dynamic timestamps so alerts remain active and valid.
  */
-export const alertsSeedData = [
-  {
-    title: 'Heavy Rain & Flash Flood Warning',
-    description:
-      'Heavy to very heavy rainfall expected across Pune district. Low-lying areas may experience waterlogging.',
-    type: 'rain',
-    severity: 'high',
-    location: 'Pune, Maharashtra, India',
-    latitude: 18.5204,
-    longitude: 73.8567,
-    startTime: new Date(),
-    endTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    source: 'WeatherGPT Early Warning System',
-    status: 'active'
-  },
-  {
-    title: 'Severe Thunderstorm & Lightning Advisory',
-    description:
-      'Gusty winds up to 60 km/h with frequent cloud-to-ground lightning anticipated during evening hours.',
-    type: 'thunderstorm',
-    severity: 'moderate',
-    location: 'Mumbai, Maharashtra, India',
-    latitude: 19.076,
-    longitude: 72.8777,
-    startTime: new Date(),
-    endTime: new Date(Date.now() + 18 * 60 * 60 * 1000),
-    source: 'WeatherGPT Alert Radar',
-    status: 'active'
-  },
-  {
-    title: 'Severe Heatwave Alert',
-    description:
-      'Maximum daytime temperatures likely to exceed 43°C. Stay hydrated and avoid prolonged sun exposure.',
-    type: 'heatwave',
-    severity: 'extreme',
-    location: 'New Delhi, Delhi, India',
-    latitude: 28.6139,
-    longitude: 77.209,
-    startTime: new Date(),
-    endTime: new Date(Date.now() + 48 * 60 * 60 * 1000),
-    source: 'WeatherGPT National Weather Monitoring',
-    status: 'active'
-  },
-  {
-    title: 'Coastal High Swell & Gale Wind Advisory',
-    description:
-      'High waves and squally winds expected along the western coastline. Fishermen advised not to venture into deep sea.',
-    type: 'strong_wind',
-    severity: 'moderate',
-    location: 'Goa, India',
-    latitude: 15.2993,
-    longitude: 74.124,
-    startTime: new Date(),
-    endTime: new Date(Date.now() + 36 * 60 * 60 * 1000),
-    source: 'WeatherGPT Marine Services',
-    status: 'active'
-  }
-]
+export const getAlertsSeedData = () => {
+  const now = Date.now();
+  return [
+    {
+      title: 'Extremely Heavy Rainfall & Coastal Surge Warning',
+      description: 'Extremely heavy downpours exceeding 150 mm anticipated. High risk of flash flooding, riverbank inundation, and landslides along coastal slopes. Fishermen strictly advised not to venture out.',
+      type: 'rain',
+      severity: 'extreme',
+      location: 'Ratnagiri, Maharashtra, India',
+      region: 'Ratnagiri, Maharashtra',
+      latitude: 16.9902,
+      longitude: 73.3120,
+      startTime: new Date(now - 2 * 3600 * 1000),
+      endTime: new Date(now + 48 * 3600 * 1000),
+      probability: '90%',
+      action: 'Evacuate low-lying river areas. Move cattle and vehicles to higher elevation. Dial 112 for rescue.',
+      source: 'India Meteorological Department (IMD) / WeatherGPT',
+      status: 'active'
+    },
+    {
+      title: 'Heavy Rainfall Warning',
+      description: 'Heavy to very heavy rainfall expected in the next 24-48 hours. Widespread precipitation may cause severe waterlogging in low-lying city basins, urban underpasses, and traffic disruptions.',
+      type: 'rain',
+      severity: 'high',
+      location: 'Pune, Maharashtra, India',
+      region: 'Pune, Maharashtra',
+      latitude: 18.5204,
+      longitude: 73.8567,
+      startTime: new Date(now - 1 * 3600 * 1000),
+      endTime: new Date(now + 36 * 3600 * 1000),
+      probability: '85%',
+      action: 'Avoid unnecessary commute through flooded underpasses and ghat sections.',
+      source: 'Regional Meteorological Centre, Mumbai',
+      status: 'active'
+    },
+    {
+      title: 'Strong Surface Winds & High Tide Advisory',
+      description: 'Strong surface winds with gusty speeds reaching 45-55 km/h likely to prevail over Mumbai Metropolitan Region and coastal belt. Astronomical high tide of 4.5m expected.',
+      type: 'strong_wind',
+      severity: 'high',
+      location: 'Mumbai, Maharashtra, India',
+      region: 'Mumbai, Maharashtra',
+      latitude: 19.0760,
+      longitude: 72.8777,
+      startTime: new Date(now - 3 * 3600 * 1000),
+      endTime: new Date(now + 24 * 3600 * 1000),
+      probability: '75%',
+      action: 'Stay away from beaches and coastal promenades during high tide hours.',
+      source: 'IMD Alert Radar & Disaster Cell',
+      status: 'active'
+    },
+    {
+      title: 'Urban Waterlogging & Drainage Inundation Watch',
+      description: 'Intense short-duration cloudburst-type showers expected across Thane and Dombivli. Waterlogging probable in transit corridors.',
+      type: 'flood',
+      severity: 'high',
+      location: 'Thane, Maharashtra, India',
+      region: 'Thane, Maharashtra',
+      latitude: 19.2183,
+      longitude: 72.9781,
+      startTime: new Date(now - 4 * 3600 * 1000),
+      endTime: new Date(now + 30 * 3600 * 1000),
+      probability: '70%',
+      action: 'Follow traffic police advisories. Avoid basements in vulnerable low grounds.',
+      source: 'State Disaster Management Authority (SDMA)',
+      status: 'active'
+    },
+    {
+      title: 'Severe Heatwave Conditions',
+      description: 'Severe heatwave conditions likely in isolated places across Vidarbha region. Daytime mercury forecast to touch 42-44°C with elevated humidity.',
+      type: 'heatwave',
+      severity: 'moderate',
+      location: 'Nagpur, Maharashtra, India',
+      region: 'Nagpur, Maharashtra',
+      latitude: 21.1458,
+      longitude: 79.0882,
+      startTime: new Date(now - 5 * 3600 * 1000),
+      endTime: new Date(now + 72 * 3600 * 1000),
+      probability: '65%',
+      action: 'Drink ample water and ORS. Avoid direct sun exposure between 11:30 AM and 3:30 PM.',
+      source: 'IMD Meteorological Centre, Nagpur',
+      status: 'active'
+    },
+    {
+      title: 'Thunderstorm with Surface Lightning',
+      description: 'Scattered thunderstorms observed with sharp cloud-to-ground lightning and brief intense rain showers across Marathwada.',
+      type: 'thunderstorm',
+      severity: 'moderate',
+      location: 'Chhatrapati Sambhajinagar, Maharashtra, India',
+      region: 'Chhatrapati Sambhajinagar, Maharashtra',
+      latitude: 19.8762,
+      longitude: 75.3433,
+      startTime: new Date(now - 12 * 3600 * 1000),
+      endTime: new Date(now + 18 * 3600 * 1000),
+      probability: '55%',
+      action: 'Take shelter inside sturdy buildings. Do not stand under solitary tall trees.',
+      source: 'IMD Early Warning System',
+      status: 'active'
+    },
+    {
+      title: 'Extreme Heatwave & Dust Advisory',
+      description: 'Maximum daytime temperatures likely to exceed 43°C. High UV index and dust suspension in the lower troposphere.',
+      type: 'heatwave',
+      severity: 'extreme',
+      location: 'New Delhi, Delhi, India',
+      region: 'New Delhi, Delhi',
+      latitude: 28.6139,
+      longitude: 77.2090,
+      startTime: new Date(now - 6 * 3600 * 1000),
+      endTime: new Date(now + 48 * 3600 * 1000),
+      probability: '80%',
+      action: 'Stay hydrated, cover head when venturing outside, and protect pets and vulnerable elderly.',
+      source: 'Regional Meteorological Centre, New Delhi',
+      status: 'active'
+    },
+    {
+      title: 'Passing Monsoon Clouds & Light Rain',
+      description: 'Passing monsoon clouds bringing light to moderate showers across Godavari river catchment areas. No property or transport disruption.',
+      type: 'rain',
+      severity: 'low',
+      location: 'Nashik, Maharashtra, India',
+      region: 'Nashik, Maharashtra',
+      latitude: 19.9975,
+      longitude: 73.7898,
+      startTime: new Date(now - 18 * 3600 * 1000),
+      endTime: new Date(now + 24 * 3600 * 1000),
+      probability: '40%',
+      action: 'Normal agrarian activities may continue. Carry an umbrella for passing drizzle.',
+      source: 'Agricultural Meteorology Division',
+      status: 'active'
+    },
+    {
+      title: 'Normal Seasonal Weather Bulletin',
+      description: 'Seasonal pleasant weather with light southeasterly breeze. Mild morning mist in valleys. Air quality index remains in Good range.',
+      type: 'other',
+      severity: 'low',
+      location: 'Kolhapur, Maharashtra, India',
+      region: 'Kolhapur, Maharashtra',
+      latitude: 16.7050,
+      longitude: 74.2433,
+      startTime: new Date(now - 24 * 3600 * 1000),
+      endTime: new Date(now + 48 * 3600 * 1000),
+      probability: '20%',
+      action: 'No warning. Favorable conditions for outdoor farming and tourism.',
+      source: 'District Weather Centre',
+      status: 'active'
+    },
+    {
+      title: 'Coastal High Swell & Marine Advisory',
+      description: 'High sea waves of 3.0 to 3.8 meters and squally winds expected along Goa and south Konkan coast. Rip currents reported.',
+      type: 'strong_wind',
+      severity: 'moderate',
+      location: 'Goa, India',
+      region: 'Goa, India',
+      latitude: 15.2993,
+      longitude: 74.1240,
+      startTime: new Date(now - 8 * 3600 * 1000),
+      endTime: new Date(now + 36 * 3600 * 1000),
+      probability: '65%',
+      action: 'Beachgoers advised to heed lifeguard warning flags. Small fishing vessels stay near port.',
+      source: 'INCOIS & WeatherGPT Marine Services',
+      status: 'active'
+    }
+  ];
+};
+
+export const alertsSeedData = getAlertsSeedData();

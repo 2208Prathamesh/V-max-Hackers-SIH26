@@ -152,6 +152,7 @@ export const api = {
     if (city) params.set('city', city);
     return request(`/weather/compare?${params}`);
   },
+  searchLocations: (query) => request(`/weather/search?q=${encodeURIComponent(query)}`),
 
   // IMD Official Alerts & Warnings
   imdWarnings: () => request('/imd/warnings'),

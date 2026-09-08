@@ -26,7 +26,7 @@ export const WeatherMapPage = () => {
   const {
     selectedMapLocation,
     setSelectedMapLocation,
-    allCityDatabase,
+    savedLocations,
     formatTemp,
     formatWind,
     addToast
@@ -82,17 +82,17 @@ export const WeatherMapPage = () => {
   }, [activeLayer]);
 
   const handleFocusCity = (city) => {
-    const lat = city.lat ?? city.latitude ?? 18.5204;
-    const lng = city.lng ?? city.longitude ?? 73.8567;
+    const lat = city.lat ?? city.latitude ?? 20.5937;
+    const lng = city.lng ?? city.longitude ?? 78.9629;
     setMapCenter({ lat, lng, zoom: 8 });
     setSelectedMapLocation(city);
     setSelectedStation({
       name: city.city || city.name,
       lat,
       lng,
-      temp: city.tempC || 28,
-      rain: 4.2,
-      wind: 14
+      temp: city.tempC ?? city.temp ?? '--',
+      rain: city.rain ?? '--',
+      wind: city.windSpeed ?? city.wind ?? '--'
     });
     addToast(`${t('search')}: ${city.city || city.name}`, 'info');
   };
@@ -317,8 +317,13 @@ export const WeatherMapPage = () => {
               <div className="h-[1px] bg-slate-700 mx-1 my-0.5" />
               <button
                 onClick={() => {
-                  const pune = allCityDatabase.find((c) => c.city === 'Pune') || { city: 'Pune', lat: 18.5204, lng: 73.8567 };
-                  handleFocusCity(pune);
+                  const target = selectedMapLocation ||
+                    (stationsData.length ? {
+                      city: stationsData[0].properties.name,
+                      lat: stationsData[0].geometry.coordinates[1],
+                      lng: stationsData[0].geometry.coordinates[0]
+                    } : { city: 'India', lat: 20.5937, lng: 78.9629 });
+                  handleFocusCity(target);
                 }}
                 className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition"
                 title={t('centerOnCity')}
@@ -337,14 +342,24 @@ export const WeatherMapPage = () => {
               <Navigation className="w-4 h-4 text-blue-500" /> {t('quickCityTelemetry')}
             </h3>
             <div className="space-y-1.5">
-              {[
-                { city: 'Pune', state: 'Maharashtra', lat: 18.5204, lng: 73.8567, temp: 27 },
-                { city: 'Mumbai', state: 'Maharashtra', lat: 19.076, lng: 72.8777, temp: 29 },
-                { city: 'Delhi', state: 'National Capital', lat: 28.6139, lng: 77.209, temp: 34 },
-                { city: 'Bengaluru', state: 'Karnataka', lat: 12.9716, lng: 77.5946, temp: 24 },
-                { city: 'Kolkata', state: 'West Bengal', lat: 22.5726, lng: 88.3639, temp: 31 },
-                { city: 'Chennai', state: 'Tamil Nadu', lat: 13.0827, lng: 80.2707, temp: 32 }
-              ].map((c, idx) => (
+              {(stationsData.length > 0
+                ? stationsData.slice(0, 6).map(f => ({
+                    city: f.properties.name,
+                    state: f.properties.state || '',
+                    lat: f.geometry.coordinates[1],
+                    lng: f.geometry.coordinates[0],
+                    temp: f.properties.tempC
+                  }))
+                : savedLocations.length > 0
+                ? savedLocations.slice(0, 6).map(l => ({
+                    city: l.city,
+                    state: l.region || '',
+                    lat: l.lat,
+                    lng: l.lng,
+                    temp: l.tempC
+                  }))
+                : []
+              ).map((c, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleFocusCity(c)}
@@ -355,10 +370,13 @@ export const WeatherMapPage = () => {
                     <span className="text-[10px] text-slate-400">{translateRegion(c.state)}</span>
                   </div>
                   <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                    {formatTemp(c.temp)}
+                    {c.temp != null ? formatTemp(c.temp) : '--'}
                   </span>
                 </button>
               ))}
+              {stationsData.length === 0 && savedLocations.length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-3">No stations available</p>
+              )}
             </div>
           </div>
 
