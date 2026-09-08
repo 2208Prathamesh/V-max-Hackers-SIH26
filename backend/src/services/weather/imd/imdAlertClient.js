@@ -1,4 +1,3 @@
-import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 
 const IMD_CAP_RSS_URL =
@@ -10,12 +9,18 @@ const parser = new XMLParser({
 });
 
 async function fetchXml(url) {
-  const response = await axios.get(url, {
-    responseType: "text",
-    timeout: 15000,
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      Accept: "application/xml, text/xml, */*"
+    }
   });
 
-  return response.data;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch XML: ${response.status}`);
+  }
+
+  return response.text();
 }
 
 /**

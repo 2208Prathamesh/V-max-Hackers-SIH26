@@ -1,34 +1,37 @@
-import axios from "axios";
-import https from "https";
-
-const IMD_BASE_URL =
-  "https://wis2box.imd.gov.in/oapi/collections";
-
-const OBSERVATION_COLLECTION =
-  "urn:wmo:md:in-imd:surface-based-observations.synop";
-
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false,
-});
+const IMD_BASE_URL = "https://wis2box.imd.gov.in/oapi/collections";
+const OBSERVATION_COLLECTION = "urn:wmo:md:in-imd:surface-based-observations.synop";
 
 async function imdGet(url, params = {}) {
-  const response = await axios.get(url, {
-    httpsAgent,
-    params,
-    timeout: 15000,
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) {
+      query.set(key, String(value));
+    }
+  }
+  const queryString = query.toString();
+  const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+  const response = await fetch(fullUrl, {
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      Accept: "application/json"
+    }
   });
 
-  return response.data;
+  if (!response.ok) {
+    throw new Error(`IMD request failed with status ${response.status}`);
+  }
+
+  return response.json();
 }
 
 export async function getObservations(params = {}) {
-  const url =
-    `${IMD_BASE_URL}/${encodeURIComponent(OBSERVATION_COLLECTION)}/items`;
+  const url = `${IMD_BASE_URL}/${encodeURIComponent(OBSERVATION_COLLECTION)}/items`;
 
   return imdGet(url, {
     f: "json",
     limit: 10,
-    ...params,
+    ...params
   });
 }
 
@@ -38,18 +41,17 @@ export async function getStations(params = {}) {
   return imdGet(url, {
     f: "json",
     limit: 10,
-    ...params,
+    ...params
   });
 }
 
 export async function getStationObservations(stationId, params = {}) {
-  const url =
-    `${IMD_BASE_URL}/${encodeURIComponent(OBSERVATION_COLLECTION)}/items`;
+  const url = `${IMD_BASE_URL}/${encodeURIComponent(OBSERVATION_COLLECTION)}/items`;
 
   return imdGet(url, {
     f: "json",
     limit: 100,
     wigos_station_identifier: stationId,
-    ...params,
+    ...params
   });
 }
