@@ -72,6 +72,7 @@ app.use(
 app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/weather', weatherRoutes)
 app.use('/api/alerts', alertRoutes)
+app.use('/api/imd', imdRoutes)
 app.use('/api/weather/imd', imdRoutes)
 app.use('/api/climate', climateRoutes)
 app.use('/api/advisories', advisoryRoutes)
