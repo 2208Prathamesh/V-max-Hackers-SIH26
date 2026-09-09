@@ -48,4 +48,19 @@ const chatLimiter = rateLimit({
   }
 })
 
-export { apiLimiter, authLimiter, chatLimiter }
+/**
+ * Strict user registration rate limiter
+ * Limits account creation to prevent spam and bot signups
+ */
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: process.env.NODE_ENV === 'production' ? 5 : 25, // 5 per hour in prod, 25 in dev
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many account registrations from this IP address. Please try again after an hour.'
+  }
+})
+
+export { apiLimiter, authLimiter, chatLimiter, registerLimiter }

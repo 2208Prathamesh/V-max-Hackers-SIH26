@@ -61,8 +61,19 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ['user', 'authority'],
+      enum: ['user', 'farmer', 'authority', 'admin'],
       default: 'user'
+    },
+
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'microsoft', 'apple'],
+      default: 'local'
+    },
+
+    authProviderId: {
+      type: String,
+      default: null
     }
   },
   {

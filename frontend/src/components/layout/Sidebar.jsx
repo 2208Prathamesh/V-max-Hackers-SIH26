@@ -129,7 +129,7 @@ export const Sidebar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isUserMenuOpen])
 
-  const isAuthority = user?.role === 'authority'
+  const isAuthority = user?.role === 'authority' || user?.role === 'admin'
 
   const authorityNavItems = [
     {
@@ -477,9 +477,24 @@ export const Sidebar = ({
                     ? user?.state || 'Maharashtra State'
                     : user?.email || 'guest@weathergpt.in'}
                 </p>
-                {isAuthority && (
+                {user?.role === 'farmer' && (
+                  <span className='inline-block mt-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-md shadow-xs'>
+                    🌾 Farmer (शेतकरी)
+                  </span>
+                )}
+                {user?.role === 'authority' && (
                   <span className='inline-block mt-1 px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-md shadow-xs'>
-                    Authority
+                    🏛️ Authority Officer
+                  </span>
+                )}
+                {user?.role === 'admin' && (
+                  <span className='inline-block mt-1 px-2 py-0.5 bg-purple-600 text-white text-[10px] font-bold rounded-md shadow-xs'>
+                    ⚡ Administrator
+                  </span>
+                )}
+                {(!user?.role || user?.role === 'user') && (
+                  <span className='inline-block mt-1 px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-md shadow-xs'>
+                    👤 Citizen
                   </span>
                 )}
               </div>

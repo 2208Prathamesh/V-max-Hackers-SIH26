@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useWeather } from '../context/WeatherContext'
 import { useLanguage } from '../context/LanguageContext'
 import {
@@ -15,9 +15,15 @@ import {
   User,
   Sparkles,
   Sun,
-  Globe
+  Globe,
+  CheckCircle,
+  Sprout,
+  ShieldAlert,
+  Cpu,
+  ArrowRight
 } from 'lucide-react'
 import { ForgotPasswordModal } from '../components/modals/ForgotPasswordModal'
+import { SocialAuthModal } from '../components/modals/SocialAuthModal'
 import confetti from 'canvas-confetti'
 
 // Google Brand Icon
@@ -98,17 +104,34 @@ const WeatherGPTLogo = () => (
 )
 
 export const LoginPage = () => {
-  const { login, signUp, setIsForgotPasswordOpen, addToast } = useWeather()
+  const { login, signUp, socialLogin, setIsForgotPasswordOpen, addToast } = useWeather()
   const { language, setLanguage, t, supportedLanguages } = useLanguage()
 
   const [isSignUpMode, setIsSignUpMode] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isFarmer, setIsFarmer] = useState(false)
+  const [selectedSocialProvider, setSelectedSocialProvider] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
   })
+
+  // Password strength calculator
+  const passwordStrength = useMemo(() => {
+    const pwd = formData.password
+    if (!pwd) return { score: 0, label: '', color: 'bg-slate-200' }
+    let score = 0
+    if (pwd.length >= 8) score += 1
+    if (/[A-Z]/.test(pwd)) score += 1
+    if (/[0-9]/.test(pwd)) score += 1
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1
+
+    if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-rose-500' }
+    if (score <= 3) return { score: 2, label: 'Medium', color: 'bg-amber-500' }
+    return { score: 3, label: 'Strong', color: 'bg-emerald-500' }
+  }, [formData.password])
 
   const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -128,67 +151,62 @@ export const LoginPage = () => {
     setIsLoading(true)
 
     try {
-      triggerLoginSuccessConfetti()
       if (isSignUpMode) {
         await signUp({
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          isFarmer,
+          role: isFarmer ? 'farmer' : 'user',
           language
         })
+        triggerLoginSuccessConfetti()
       } else {
         await login(formData.email, formData.password)
+        triggerLoginSuccessConfetti()
       }
     } catch (error) {
-      addToast(error.message, 'error')
+      addToast(error.message || 'Authentication failed', 'error')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSocialLogin = async providerName => {
-    setIsLoading(true)
-    try {
-      triggerLoginSuccessConfetti()
-      await login(
-        `${providerName.toLowerCase()}user@weathergpt.ai`,
-        'social123'
-      )
-    } catch (error) {
-      addToast(`${providerName} sign-in is not configured yet`, 'warning')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleOpenSocialModal = providerName => {
+    setSelectedSocialProvider(providerName)
   }
 
-  const handleQuickDemoLogin = async () => {
-    setFormData({
-      name: 'Sid Patil',
-      email: 'sidpatil@gmail.com',
-      password: 'password123'
-    })
-    setIsLoading(true)
+  const handleSocialSuccess = async payload => {
     try {
+      await socialLogin(payload)
       triggerLoginSuccessConfetti()
-      await login('sidpatil@gmail.com', 'password123')
+      setSelectedSocialProvider(null)
     } catch (error) {
-      addToast(error.message, 'error')
-    } finally {
-      setIsLoading(false)
+      addToast(error.message || `${payload.provider} sign-in failed`, 'error')
     }
   }
 
   return (
     <div className='min-h-screen w-full bg-[#EBF2FA] dark:bg-[#070D18] flex items-center justify-center p-3 sm:p-6 md:p-8 lg:p-10 select-none'>
-      {/* Forgot Password Modal */}
+      {/* Forgot Password Modal (with instant SMTP reset flow) */}
       <ForgotPasswordModal />
 
-      {/* Main Split-Screen Container Card matching the design */}
-      <div className='w-full max-w-6xl min-h-[760px] bg-white dark:bg-[#0F172A] rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-200/80 dark:border-slate-800'>
+      {/* Social OAuth Modal (Google, Microsoft, Apple) */}
+      <SocialAuthModal
+        provider={selectedSocialProvider}
+        isOpen={Boolean(selectedSocialProvider)}
+        onClose={() => setSelectedSocialProvider(null)}
+        onSuccess={handleSocialSuccess}
+        isFarmer={isFarmer}
+        prefilledEmail={formData.email}
+      />
+
+      {/* Main Container Card */}
+      <div className='w-full max-w-6xl min-h-[780px] bg-white dark:bg-[#0F172A] rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-200/80 dark:border-slate-800'>
         {/* =========================================================================
-            LEFT PANEL: Scenic Weather Landscape + Feature Points + Quote Card
+            LEFT PANEL: Atmospheric Landscape & Features
             ========================================================================= */}
-        <div className='lg:col-span-6 relative flex flex-col justify-between p-7 sm:p-10 lg:p-12 overflow-hidden bg-[#2563EB] text-white'>
+        <div className='lg:col-span-5 relative flex flex-col justify-between p-7 sm:p-10 lg:p-12 overflow-hidden bg-[#2563EB] text-white'>
           {/* Background image & gradient overlay */}
           <div
             className='absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105'
@@ -196,84 +214,73 @@ export const LoginPage = () => {
               backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop')`
             }}
           />
-          {/* Scenic atmospheric blue top-to-bottom atmospheric overlay */}
-          <div className='absolute inset-0 bg-gradient-to-b from-[#2563EB]/95 via-[#1D4ED8]/85 to-[#0F172A]/90 mix-blend-multiply' />
-          <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-blue-600/30' />
+          <div className='absolute inset-0 bg-gradient-to-b from-[#2563EB]/95 via-[#1D4ED8]/90 to-[#0F172A]/95 mix-blend-multiply' />
+          <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-blue-600/30' />
 
           {/* Foreground Left Content */}
-          <div className='relative z-10 flex flex-col h-full justify-between space-y-8'>
-            {/* Top Branding */}
+          <div className='relative z-10 flex flex-col h-full justify-between space-y-6'>
             <div>
               <WeatherGPTLogo />
 
               {/* Main Headline & Subtitle */}
-              <div className='mt-8 md:mt-10 max-w-md'>
-                <h1 className='text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight'>
-                  {t('loginHeroTitle')}
+              <div className='mt-8 max-w-md'>
+                <div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-blue-100 mb-3'>
+                  <span className='w-2 h-2 rounded-full bg-emerald-400 animate-pulse' />
+                  <span>IMD & INSAT-3D Live Telemetry Active</span>
+                </div>
+                <h1 className='text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight'>
+                  {t('loginHeroTitle') || 'Next-Gen Climate Intelligence & Early Warning'}
                 </h1>
-                <p className='mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal'>
-                  {t('loginHeroSubtitle')}
+                <p className='mt-2.5 text-xs sm:text-sm text-blue-100/90 leading-relaxed font-normal'>
+                  {t('loginHeroSubtitle') || 'Empowering citizens, farmers, and disaster response teams with hyper-localized forecasts.'}
                 </p>
               </div>
 
               {/* 4 Feature Items */}
-              <div className='mt-8 sm:mt-10 space-y-5'>
-                {/* Feature 1: Chat Naturally */}
-                <div className='flex items-start gap-4 group'>
-                  <div className='w-11 h-11 rounded-2xl bg-white/95 text-blue-600 shadow-md shadow-blue-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition duration-200'>
-                    <MessageSquare className='w-5 h-5 text-blue-600' />
+              <div className='mt-6 sm:mt-8 space-y-3.5'>
+                {/* Feature 1: Agro Advisory */}
+                <div className='flex items-start gap-3 group bg-white/5 hover:bg-white/10 p-2.5 rounded-2xl border border-white/10 transition duration-200'>
+                  <div className='w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center justify-center flex-shrink-0'>
+                    <Sprout className='w-4 h-4' />
                   </div>
                   <div>
-                    <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      {t('chatNaturally')}
+                    <h3 className='text-xs sm:text-sm font-bold text-white tracking-tight flex items-center gap-1.5'>
+                      <span>Farmer Agro-Advisory</span>
+                      <span className='px-1.5 py-0.2 text-[9px] bg-emerald-500/30 text-emerald-200 rounded font-mono'>🌾 KRISHI</span>
                     </h3>
-                    <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      {t('chatNaturallyDesc')}
+                    <p className='text-[11px] text-blue-100/80 leading-relaxed mt-0.5'>
+                      Crop advisories, harvest forecast, and mandi weather intelligence.
                     </p>
                   </div>
                 </div>
 
                 {/* Feature 2: Instant Alerts */}
-                <div className='flex items-start gap-4 group'>
-                  <div className='w-11 h-11 rounded-2xl bg-white/95 text-blue-600 shadow-md shadow-blue-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition duration-200'>
-                    <Bell className='w-5 h-5 text-blue-600' />
+                <div className='flex items-start gap-3 group bg-white/5 hover:bg-white/10 p-2.5 rounded-2xl border border-white/10 transition duration-200'>
+                  <div className='w-9 h-9 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-400/30 flex items-center justify-center flex-shrink-0'>
+                    <Bell className='w-4 h-4' />
                   </div>
                   <div>
-                    <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      {t('instantAlerts')}
+                    <h3 className='text-xs sm:text-sm font-bold text-white tracking-tight'>
+                      {t('instantAlerts') || 'Official IMD Severe Weather Alerts'}
                     </h3>
-                    <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      {t('instantAlertsDesc')}
+                    <p className='text-[11px] text-blue-100/80 leading-relaxed mt-0.5'>
+                      Red & Orange emergency warnings for flash floods and cyclones.
                     </p>
                   </div>
                 </div>
 
-                {/* Feature 3: Location Based */}
-                <div className='flex items-start gap-4 group'>
-                  <div className='w-11 h-11 rounded-2xl bg-white/95 text-blue-600 shadow-md shadow-blue-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition duration-200'>
-                    <MapPin className='w-5 h-5 text-blue-600' />
+                {/* Feature 3: Authority Command */}
+                <div className='flex items-start gap-3 group bg-white/5 hover:bg-white/10 p-2.5 rounded-2xl border border-white/10 transition duration-200'>
+                  <div className='w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center flex-shrink-0'>
+                    <ShieldAlert className='w-4 h-4' />
                   </div>
                   <div>
-                    <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      {t('locationBased')}
+                    <h3 className='text-xs sm:text-sm font-bold text-white tracking-tight flex items-center gap-1.5'>
+                      <span>Disaster Authority Portal</span>
+                      <span className='px-1.5 py-0.2 text-[9px] bg-amber-500/30 text-amber-200 rounded font-mono'>🏛️ GOV</span>
                     </h3>
-                    <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      {t('locationBasedDesc')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Feature 4: Smart Insights */}
-                <div className='flex items-start gap-4 group'>
-                  <div className='w-11 h-11 rounded-2xl bg-white/95 text-blue-600 shadow-md shadow-blue-900/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition duration-200'>
-                    <TrendingUp className='w-5 h-5 text-blue-600' />
-                  </div>
-                  <div>
-                    <h3 className='text-sm sm:text-base font-bold text-white tracking-tight'>
-                      {t('smartInsights')}
-                    </h3>
-                    <p className='text-xs sm:text-sm text-blue-100/80 leading-relaxed mt-0.5'>
-                      {t('smartInsightsDesc')}
+                    <p className='text-[11px] text-blue-100/80 leading-relaxed mt-0.5'>
+                      Publish bulletins, coordinate district SOPs, and broadcast alerts.
                     </p>
                   </div>
                 </div>
@@ -281,35 +288,30 @@ export const LoginPage = () => {
             </div>
 
             {/* Bottom Glassmorphic Quote Card */}
-            <div className='pt-6'>
-              <div className='bg-slate-900/40 backdrop-blur-md border border-white/20 rounded-2xl p-4 sm:p-5 text-white shadow-xl max-w-md'>
+            <div className='pt-2'>
+              <div className='bg-slate-900/40 backdrop-blur-md border border-white/20 rounded-2xl p-3.5 text-white shadow-xl max-w-md'>
                 <div className='flex items-start gap-2'>
-                  <span className='text-2xl font-serif text-white/90 leading-none select-none'>
-                    “
-                  </span>
-                  <p className='text-xs sm:text-sm text-white/95 font-medium leading-relaxed italic'>
-                    {t('weatherQuote').replace(/[“”]/g, '')}
+                  <span className='text-xl font-serif text-white/90 leading-none select-none'>“</span>
+                  <p className='text-xs text-white/95 font-medium leading-relaxed italic'>
+                    {t('weatherQuote') || 'Precision weather forecasts protect lives, boost harvests, and build resilient communities.'}
                   </p>
                 </div>
-                <p className='text-[11px] text-white/75 mt-2.5 font-normal tracking-wide pl-4'>
-                  {t('weatherWisdom')}
-                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* =========================================================================
-            RIGHT PANEL: Clean Modern Authentication Form
+            RIGHT PANEL: Enhanced Authentication Form & Role Engine
             ========================================================================= */}
-        <div className='lg:col-span-6 flex flex-col justify-center items-center p-6 sm:p-10 lg:p-14 bg-white dark:bg-[#111C2E] relative'>
-          {/* Top Language Switcher Bar on Login */}
-          <div className='w-full max-w-md flex items-center justify-between pb-6 mb-2 border-b border-slate-100 dark:border-slate-800'>
+        <div className='lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-10 lg:p-12 bg-white dark:bg-[#111C2E] relative overflow-y-auto max-h-[90vh] lg:max-h-none'>
+          {/* Top Bar: Language Selector */}
+          <div className='w-full max-w-lg flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800'>
             <div className='flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400'>
               <Globe className='w-3.5 h-3.5 text-blue-500' />
-              <span>{t('preferredLanguage')}:</span>
+              <span>{t('preferredLanguage') || 'Language'}:</span>
             </div>
-            <div className='flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-700'>
+            <div className='flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700'>
               <select
                 value={language}
                 onChange={e => setLanguage(e.target.value)}
@@ -324,48 +326,54 @@ export const LoginPage = () => {
             </div>
           </div>
 
-          <div className='w-full max-w-md'>
-            {/* Form Header */}
-            <div className='mb-8'>
-              <div className='flex items-center justify-between'>
-                <h2 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
-                  {isSignUpMode ? t('createAccount') : t('welcomeBack')}
-                </h2>
-                {/* 1-Click Quick Demo Pill */}
-                <button
-                  type='button'
-                  onClick={handleQuickDemoLogin}
-                  className='inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-semibold rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/60 transition cursor-pointer'
-                  title='Auto-fill and login with demo credentials'
-                >
-                  <Sparkles className='w-3.5 h-3.5' />
-                  <span>{language === 'mr' ? 'डेमो लॉगिन' : language === 'hi' ? 'डेमो लॉगिन' : 'Demo Login'}</span>
-                </button>
-              </div>
+          <div className='w-full max-w-lg'>
+            {/* Mode Toggle Tabs: Sign In / Create Account */}
+            <div className='flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700/60'>
+              <button
+                type='button'
+                onClick={() => setIsSignUpMode(false)}
+                className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  !isSignUpMode
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <LogIn className='w-4 h-4' />
+                <span>{t('signIn') || 'Sign In'}</span>
+              </button>
 
-              <p className='text-sm text-slate-500 dark:text-slate-400 mt-1.5'>
-                {isSignUpMode ? t('signUpSubtitle') : t('signInSubtitle')}
-              </p>
+              <button
+                type='button'
+                onClick={() => setIsSignUpMode(true)}
+                className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  isSignUpMode
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <User className='w-4 h-4' />
+                <span>{t('createAccount') || 'Create Account'}</span>
+              </button>
             </div>
 
             {/* Authentication Form */}
             <form onSubmit={handleSubmit} className='space-y-4'>
-              {/* Optional Full Name in Sign Up Mode */}
+              {/* Full Name in Sign Up Mode */}
               {isSignUpMode && (
                 <div className='animate-fadeIn'>
-                  <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5'>
-                    {t('fullName')}
+                  <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1'>
+                    {t('fullName') || 'Full Name'}
                   </label>
                   <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
-                    <User className='w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
+                    <User className='w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
                     <input
                       type='text'
                       name='name'
                       required
-                      placeholder={t('fullName')}
+                      placeholder='e.g. Ramesh Patil / Officer Sharma'
                       value={formData.name}
                       onChange={handleChange}
-                      className='w-full pl-11 pr-4 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
+                      className='w-full pl-10 pr-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
                     />
                   </div>
                 </div>
@@ -373,129 +381,195 @@ export const LoginPage = () => {
 
               {/* Email Address */}
               <div>
-                <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5'>
-                  {t('emailAddress')}
+                <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1'>
+                  {t('emailAddress') || 'Email Address'}
                 </label>
                 <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
-                  <Mail className='w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
+                  <Mail className='w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
                   <input
                     type='email'
                     name='email'
                     required
                     autoComplete='username'
-                    placeholder={t('emailAddress')}
+                    placeholder='yourname@domain.com'
                     value={formData.email}
                     onChange={handleChange}
-                    className='w-full pl-11 pr-4 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
+                    className='w-full pl-10 pr-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5'>
-                  {t('password')}
-                </label>
+                <div className='flex items-center justify-between mb-1'>
+                  <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300'>
+                    {t('password') || 'Password'}
+                  </label>
+                  {!isSignUpMode && (
+                    <button
+                      type='button'
+                      onClick={() => setIsForgotPasswordOpen(true)}
+                      className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
+                    >
+                      {t('forgotPassword') || 'Forgot Password?'}
+                    </button>
+                  )}
+                </div>
                 <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
-                  <Lock className='w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
+                  <Lock className='w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name='password'
                     required
-                    autoComplete={
-                      isSignUpMode ? 'new-password' : 'current-password'
-                    }
-                    placeholder={t('password')}
+                    minLength={8}
+                    autoComplete={isSignUpMode ? 'new-password' : 'current-password'}
+                    placeholder={isSignUpMode ? 'At least 8 characters' : 'Enter your password'}
                     value={formData.password}
                     onChange={handleChange}
-                    className='w-full pl-11 pr-11 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
+                    className='w-full pl-10 pr-10 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
                   />
                   <button
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
                     className='absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer'
-                    aria-label={
-                      showPassword ? 'Hide password' : 'Show password'
-                    }
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? (
-                      <EyeOff className='w-4 h-4' />
-                    ) : (
-                      <Eye className='w-4 h-4' />
-                    )}
+                    {showPassword ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
                   </button>
                 </div>
 
-                {/* Forgot Password Link */}
-                {!isSignUpMode && (
-                  <div className='flex justify-end mt-2'>
-                    <button
-                      type='button'
-                      onClick={() => setIsForgotPasswordOpen(true)}
-                      className='text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline cursor-pointer'
-                    >
-                      {t('forgotPassword')}
-                    </button>
+                {/* Password strength indicator in Sign Up mode */}
+                {isSignUpMode && formData.password.length > 0 && (
+                  <div className='mt-2 animate-fadeIn'>
+                    <div className='flex items-center justify-between text-[11px] mb-1'>
+                      <span className='text-slate-500'>Password Strength:</span>
+                      <span className='font-bold text-slate-700 dark:text-slate-300'>{passwordStrength.label}</span>
+                    </div>
+                    <div className='w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden'>
+                      <div
+                        className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                        style={{ width: `${(passwordStrength.score / 3) * 100}%` }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
+
+              {/* =========================================================================
+                  ARE YOU A FARMER? YES / NO TOGGLE SECTION
+                  ========================================================================= */}
+              {isSignUpMode && (
+                <div className='p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 animate-fadeIn transition-all'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-lg'>🌾</span>
+                      <span className='text-xs sm:text-sm font-bold text-slate-900 dark:text-white'>
+                        {language === 'mr'
+                          ? 'तुम्ही शेतकरी आहात का?'
+                          : language === 'hi'
+                          ? 'क्या आप किसान हैं?'
+                          : 'Are you a farmer?'}
+                      </span>
+                    </div>
+
+                    {/* Yes / No Toggle Button */}
+                    <div className='flex items-center bg-slate-200 dark:bg-slate-700 p-1 rounded-xl'>
+                      <button
+                        type='button'
+                        onClick={() => setIsFarmer(false)}
+                        className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          !isFarmer
+                            ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {language === 'mr' ? 'नाही' : language === 'hi' ? 'नहीं' : 'No'}
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() => setIsFarmer(true)}
+                        className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                          isFarmer
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <span>{language === 'mr' ? 'होय' : language === 'hi' ? 'हाँ' : 'Yes'}</span>
+                        {isFarmer && <span className='text-[10px]'>✓</span>}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Single Line Description */}
+                  <p className='text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-normal'>
+                    {language === 'mr'
+                      ? 'पिकांसाठी हवामान सल्लागार, पेरणी/कापणी अंदाज आणि कृषी सूचना थेट मिळवा.'
+                      : language === 'hi'
+                      ? 'फसलों के लिए मौसम परामर्श, बुवाई/कटाई का पूर्वानुमान और कृषि अलर्ट सीधे प्राप्त करें।'
+                      : 'Access crop advisory, weather forecasts & mandi alerts.'}
+                  </p>
+                </div>
+              )}
 
               {/* Submit Button */}
               <button
                 type='submit'
                 disabled={isLoading}
-                className='w-full mt-2 py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/25 transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75'
+                className='w-full mt-3 py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/25 transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75'
               >
                 {isLoading ? (
                   <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
                 ) : (
                   <>
                     <LogIn className='w-5 h-5' />
-                    <span>{isSignUpMode ? t('signUp') : t('signIn')}</span>
+                    <span>
+                      {isSignUpMode
+                        ? isFarmer
+                          ? 'Create Farmer Account 🌾'
+                          : 'Create Account'
+                        : t('signIn') || 'Sign In to WeatherGPT'}
+                    </span>
                   </>
                 )}
               </button>
             </form>
 
             {/* Social Divider */}
-            <div className='relative my-7'>
+            <div className='relative my-6'>
               <div className='absolute inset-0 flex items-center'>
                 <div className='w-full border-t border-slate-200 dark:border-slate-700/80' />
               </div>
               <div className='relative flex justify-center text-xs'>
                 <span className='bg-white dark:bg-[#111C2E] px-4 text-slate-500 dark:text-slate-400 font-medium'>
-                  {t('orContinueWith')}
+                  {t('orContinueWith') || 'Or continue with'}
                 </span>
               </div>
             </div>
 
             {/* 3 Social Buttons */}
-            <div className='grid grid-cols-3 gap-3'>
-              {/* Google */}
+            <div className='grid grid-cols-3 gap-2.5'>
               <button
                 type='button'
-                onClick={() => handleSocialLogin('Google')}
-                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
+                onClick={() => handleOpenSocialModal('Google')}
+                className='flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
               >
                 <GoogleIcon />
                 <span>Google</span>
               </button>
 
-              {/* Apple */}
               <button
                 type='button'
-                onClick={() => handleSocialLogin('Apple')}
-                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
+                onClick={() => handleOpenSocialModal('Apple')}
+                className='flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
               >
                 <AppleIcon />
                 <span>Apple</span>
               </button>
 
-              {/* Microsoft */}
               <button
                 type='button'
-                onClick={() => handleSocialLogin('Microsoft')}
-                className='flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
+                onClick={() => handleOpenSocialModal('Microsoft')}
+                className='flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-750 transition shadow-2xs font-semibold text-xs text-slate-700 dark:text-slate-200 group cursor-pointer'
               >
                 <MicrosoftIcon />
                 <span>Microsoft</span>
@@ -503,21 +577,23 @@ export const LoginPage = () => {
             </div>
 
             {/* Switch between Login and Sign up */}
-            <p className='text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-7'>
-              {isSignUpMode ? t('haveAccount') : t('noAccount')}{' '}
+            <p className='text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-6'>
+              {isSignUpMode
+                ? (t('haveAccount') || 'Already have an account?')
+                : (t('noAccount') || "Don't have an account?")}{' '}
               <button
                 type='button'
                 onClick={() => setIsSignUpMode(!isSignUpMode)}
-                className='text-blue-600 dark:text-blue-400 font-semibold hover:underline cursor-pointer'
+                className='text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer'
               >
-                {isSignUpMode ? t('signIn') : t('signUp')}
+                {isSignUpMode ? (t('signIn') || 'Sign In') : (t('signUp') || 'Create Account')}
               </button>
             </p>
 
             {/* Trust Footer */}
-            <div className='flex items-center justify-center gap-2 mt-8 text-xs text-slate-500 dark:text-slate-400'>
-              <ShieldCheck className='w-4 h-4 text-slate-400' />
-              <span>Your data is safe and secure with us.</span>
+            <div className='flex items-center justify-center gap-2 mt-5 text-[11px] text-slate-400 dark:text-slate-500'>
+              <ShieldCheck className='w-4 h-4 text-emerald-500' />
+              <span>Encrypted with SHA-256 & Argon2 Standards • Ministry of Earth Sciences Sync</span>
             </div>
           </div>
         </div>
@@ -525,3 +601,5 @@ export const LoginPage = () => {
     </div>
   )
 }
+
+export default LoginPage

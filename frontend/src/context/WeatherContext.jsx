@@ -957,29 +957,117 @@ export const WeatherProvider = ({ children }) => {
     const result = await api.login({ email, password })
     localStorage.setItem('weathergpt_token', result.token)
     const normalized = normalizeUser(result.user)
+    localStorage.setItem('weathergpt_user', JSON.stringify(normalized))
     setUser(normalized)
     if (result.user?.language) {
       localStorage.setItem('weathergpt_language', result.user.language)
       setSettings(prev => ({ ...prev, language: result.user.language }))
     }
     setIsAuthenticated(true)
-    setCurrentPage('dashboard')
-    addToast(`Welcome back to WeatherGPT!`, 'success')
+
+    // Role-tailored landing page
+    if (result.user?.role === 'farmer') {
+      setCurrentPage('advisory')
+    } else {
+      setCurrentPage('dashboard')
+    }
+
+    const roleGreeting =
+      result.user?.role === 'farmer'
+        ? ' (Agro Advisory Mode)'
+        : result.user?.role === 'authority'
+        ? ' (Authority Portal)'
+        : result.user?.role === 'admin'
+        ? ' (Admin Console)'
+        : ''
+
+    addToast(
+      `Welcome back, ${result.user?.name || 'User'}!${roleGreeting}`,
+      'success'
+    )
     return result
   }
 
-  const signUp = async ({ name, email, password, language }) => {
+  const signUp = async ({
+    name,
+    email,
+    password,
+    isFarmer = false,
+    role,
+    language
+  }) => {
     const lang = language || localStorage.getItem('weathergpt_language') || 'en'
-    const result = await api.register({ name, email, password, language: lang })
+    const assignedRole = role || (isFarmer ? 'farmer' : 'user')
+    const result = await api.register({
+      name,
+      email,
+      password,
+      isFarmer: Boolean(isFarmer),
+      role: assignedRole,
+      language: lang
+    })
     localStorage.setItem('weathergpt_token', result.token)
     const normalized = normalizeUser(result.user)
+    localStorage.setItem('weathergpt_user', JSON.stringify(normalized))
     setUser(normalized)
     localStorage.setItem('weathergpt_language', lang)
     setSettings(prev => ({ ...prev, language: lang }))
     setIsAuthenticated(true)
-    setCurrentPage('dashboard')
+
+    // Role-tailored landing page
+    if (result.user?.role === 'farmer') {
+      setCurrentPage('advisory')
+    } else {
+      setCurrentPage('dashboard')
+    }
+
+    const roleTitle =
+      result.user?.role === 'farmer'
+        ? '🌾 Farmer'
+        : result.user?.role === 'authority'
+        ? '🏛️ Authority'
+        : result.user?.role === 'admin'
+        ? '⚡ Admin'
+        : '👤 Citizen'
+
     addToast(
-      `Account created successfully! Welcome, ${result.user.name}`,
+      `Account created as ${roleTitle}! Welcome, ${result.user.name}`,
+      'success'
+    )
+    return result
+  }
+
+  const socialLogin = async ({
+    provider,
+    providerId,
+    email,
+    name,
+    avatar,
+    isFarmer = false
+  }) => {
+    const result = await api.socialLogin({
+      provider,
+      providerId,
+      email,
+      name,
+      avatar,
+      isFarmer: Boolean(isFarmer)
+    })
+    localStorage.setItem('weathergpt_token', result.token)
+    const normalized = normalizeUser(result.user)
+    localStorage.setItem('weathergpt_user', JSON.stringify(normalized))
+    setUser(normalized)
+    setIsAuthenticated(true)
+
+    if (result.user?.role === 'farmer') {
+      setCurrentPage('advisory')
+    } else {
+      setCurrentPage('dashboard')
+    }
+
+    const provName = provider.charAt(0).toUpperCase() + provider.slice(1)
+    addToast(
+      `Logged in via ${provName}! Welcome, ${result.user.name}`,
       'success'
     )
     return result
@@ -1013,6 +1101,7 @@ export const WeatherProvider = ({ children }) => {
         setIsAuthenticated,
         login,
         signUp,
+        socialLogin,
         logout,
         currentPage,
         setCurrentPage,

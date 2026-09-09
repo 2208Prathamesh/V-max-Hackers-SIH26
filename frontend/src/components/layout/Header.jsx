@@ -467,8 +467,24 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
                   {user?.email || 'user@weathergpt.io'}
                 </p>
                 {user?.role && (
-                  <span className='inline-block mt-1 px-1.5 py-0.5 text-[9px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-md uppercase'>
-                    {user.role}
+                  <span
+                    className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-md uppercase ${
+                      user.role === 'farmer'
+                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                        : user.role === 'authority'
+                        ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                        : user.role === 'admin'
+                        ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {user.role === 'farmer'
+                      ? '🌾 FARMER'
+                      : user.role === 'authority'
+                      ? '🏛️ AUTHORITY'
+                      : user.role === 'admin'
+                      ? '⚡ ADMIN'
+                      : '👤 CITIZEN'}
                   </span>
                 )}
               </div>

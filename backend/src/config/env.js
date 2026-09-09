@@ -38,6 +38,15 @@ export const env = {
     .map(t => t.trim().toLowerCase())
     .filter(Boolean),
 
+  // SMTP Email Configuration
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),
+  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_FROM_NAME: process.env.SMTP_FROM_NAME || 'WeatherGPT Security',
+  SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL || 'alerts@weathergpt.ai',
+
   // Environment Flags
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
   IS_DEVELOPMENT: (process.env.NODE_ENV || 'development') === 'development',

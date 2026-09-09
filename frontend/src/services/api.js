@@ -132,6 +132,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(details)
     }),
+  socialLogin: payload =>
+    request('/auth/social-login', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
   currentUser: () => request('/auth/me'),
   logout: () =>
     request('/auth/logout', {

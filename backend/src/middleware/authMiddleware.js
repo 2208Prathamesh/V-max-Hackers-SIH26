@@ -46,13 +46,17 @@ const authMiddleware = async (req, res, next) => {
 
 export const requireRole = (role) => {
     return (req, res, next) => {
-        if (!req.user || req.user.role !== role) {
-            const error = new Error(`Forbidden: ${role} role required`);
+        const allowed = Array.isArray(role) ? role : [role];
+        // Allow admin full access across roles
+        if (!req.user || (!allowed.includes(req.user.role) && req.user.role !== 'admin')) {
+            const error = new Error(`Forbidden: Access denied for ${req.user?.role || 'unauthenticated'} role`);
             error.statusCode = 403;
             return next(error);
         }
         next();
     };
 };
+
+export const authorizeRoles = (...roles) => requireRole(roles);
 
 export default authMiddleware;

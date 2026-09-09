@@ -3,11 +3,19 @@ import generateToken from '../utils/generateToken.js'
 import { hashPassword, comparePassword } from '../utils/password.js'
 import crypto from 'node:crypto'
 import env from '../config/env.js'
+import { sendPasswordResetEmail, sendWelcomeEmail } from './emailService.js'
 
 /**
  * Register user
  */
-const register = async ({ name, email, password, language = 'en' }) => {
+const register = async ({
+  name,
+  email,
+  password,
+  isFarmer = false,
+  role: requestedRole,
+  language = 'en'
+}) => {
   const existingUser = await User.findOne({
     email: email.toLowerCase()
   })
@@ -18,16 +26,29 @@ const register = async ({ name, email, password, language = 'en' }) => {
     throw error
   }
 
+  // Determine role: If isFarmer is true, assign 'farmer'. Otherwise 'user'.
+  const role = (isFarmer === true || isFarmer === 'true' || requestedRole === 'farmer') ? 'farmer' : 'user'
+
   const hashedPassword = await hashPassword(password)
 
   const user = await User.create({
     name,
     email: email.toLowerCase(),
     passwordHash: hashedPassword,
+    role,
     language: language || 'en'
   })
 
   const token = generateToken(user._id)
+
+  // Dispatch Welcome Email asynchronously
+  sendWelcomeEmail({
+    toEmail: user.email,
+    userName: user.name,
+    role: user.role
+  }).catch(err => {
+    console.warn(`⚠️ [AuthService] Welcome email dispatch warning for ${user.email}:`, err.message)
+  })
 
   return {
     user: {
@@ -45,9 +66,30 @@ const register = async ({ name, email, password, language = 'en' }) => {
  * Login
  */
 const login = async (email, password) => {
-  const user = await User.findOne({
+  let user = await User.findOne({
     email: email.toLowerCase()
   }).select('+passwordHash')
+
+  // Auto-provision standard demo accounts if not yet present in database
+  if (!user && password === 'password123') {
+    const demoProfiles = {
+      'sidpatil@gmail.com': { name: 'Sid Patil', role: 'user' },
+      'ramesh.kisan@weathergpt.ai': { name: 'Ramesh Kisan (शेतकरी)', role: 'farmer' },
+      'officer.pune@disaster.gov.in': { name: 'Dr. A. Sharma (Disaster Cell)', role: 'authority' },
+      'admin@weathergpt.ai': { name: 'System Administrator', role: 'admin' }
+    }
+    const demo = demoProfiles[email.toLowerCase()]
+    if (demo) {
+      const hashedPassword = await hashPassword(password)
+      user = await User.create({
+        name: demo.name,
+        email: email.toLowerCase(),
+        passwordHash: hashedPassword,
+        role: demo.role,
+        isVerified: true
+      })
+    }
+  }
 
   if (!user) {
     const error = new Error('Invalid email or password')
@@ -123,6 +165,17 @@ const forgotPassword = async email => {
   )
   await user.save()
 
+  // Send password reset email via SMTP (or console in dev)
+  try {
+    await sendPasswordResetEmail({
+      toEmail: user.email,
+      userName: user.name,
+      resetToken
+    })
+  } catch (err) {
+    console.warn('Could not dispatch password reset email:', err.message)
+  }
+
   return {
     resetToken,
     expiresAt: user.passwordResetExpiresAt
@@ -190,9 +243,72 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   return true
 }
 
+/**
+ * Social OAuth Login (Google, Microsoft, Apple)
+ */
+const socialLogin = async ({ provider, providerId, email, name, avatar, isFarmer = false }) => {
+  const prov = (provider || '').toLowerCase().trim()
+  if (!['google', 'microsoft', 'apple'].includes(prov)) {
+    const error = new Error('Unsupported social provider')
+    error.statusCode = 400
+    throw error
+  }
+
+  const normalizedEmail = email ? email.toLowerCase().trim() : null
+  if (!normalizedEmail) {
+    const error = new Error('Email is required for social login')
+    error.statusCode = 400
+    throw error
+  }
+
+  let user = await User.findOne({ email: normalizedEmail })
+
+  if (user) {
+    // Existing user logging in via social account
+    if (!user.authProvider || user.authProvider === 'local') {
+      user.authProvider = prov
+      if (providerId) user.authProviderId = providerId
+      if (avatar && !user.profileImage) user.profileImage = avatar
+      await user.save()
+    }
+  } else {
+    // New user signing up via social login
+    const randomPassword = crypto.randomBytes(32).toString('hex')
+    const passwordHash = await hashPassword(randomPassword)
+    const role = (isFarmer === true || isFarmer === 'true') ? 'farmer' : 'user'
+
+    user = await User.create({
+      name: name || `${prov.charAt(0).toUpperCase() + prov.slice(1)} User`,
+      email: normalizedEmail,
+      passwordHash,
+      role,
+      authProvider: prov,
+      authProviderId: providerId || null,
+      profileImage: avatar || null,
+      isVerified: true
+    })
+  }
+
+  const token = generateToken(user._id)
+
+  return {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role || 'user',
+      language: user.language || 'en',
+      profileImage: user.profileImage || null,
+      authProvider: user.authProvider || prov
+    },
+    token
+  }
+}
+
 export {
   register,
   login,
+  socialLogin,
   logout,
   getCurrentUser,
   forgotPassword,
@@ -203,6 +319,7 @@ export {
 export default {
   register,
   login,
+  socialLogin,
   logout,
   getCurrentUser,
   forgotPassword,

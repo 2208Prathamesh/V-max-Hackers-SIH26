@@ -1,8 +1,10 @@
 import Alert from '../models/Alert.js'
+import User from '../models/User.js'
 import { getIO } from '../config/socket.js'
 import Notification from '../models/Notification.js'
 import SavedLocation from '../models/SavedLocation.js'
 import imdService from './weather/imd/imdService.js'
+import emailService from './emailService.js'
 import { SEVERITY_LEVELS } from '../config/constants.js'
 
 let lastOfficialSyncAt = 0
@@ -209,6 +211,33 @@ async function notifyMatchedUsers (alert) {
           `⚠️ Socket.IO notification failed for user ${userId}:`,
           socketError.message
         )
+      }
+
+      /* -----------------------------------------------------
+         Send Severe Weather Email Alert for High/Extreme alerts
+         ----------------------------------------------------- */
+      const normSev = normalizeSeverity(alert.severity)
+      if (normSev === SEVERITY_LEVELS.EXTREME || normSev === SEVERITY_LEVELS.HIGH) {
+        User.findById(userIdObj)
+          .select('name email')
+          .then(targetUser => {
+            if (targetUser && targetUser.email) {
+              emailService.sendSevereWeatherEmailAlert({
+                toEmail: targetUser.email,
+                userName: targetUser.name,
+                alert: {
+                  title: alert.title,
+                  description: alert.description,
+                  location: alert.location,
+                  severity: normSev,
+                  type: alert.type
+                }
+              }).catch(emailErr => {
+                console.warn(`⚠️ [AlertService] Email alert failed for ${targetUser.email}:`, emailErr.message)
+              })
+            }
+          })
+          .catch(() => {})
       }
 
       return notification

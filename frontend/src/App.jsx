@@ -44,7 +44,7 @@ const AppContent = () => {
   }
 
   const renderCurrentPage = () => {
-    const isAuthority = user?.role === 'authority'
+    const isAuthority = user?.role === 'authority' || user?.role === 'admin'
 
     // Authority Specific Routing
     if (isAuthority) {

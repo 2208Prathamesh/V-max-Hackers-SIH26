@@ -44,7 +44,15 @@ const registerSchema = Joi.object({
 
             "any.required":
                 "Password is required"
-        })
+        }),
+
+    isFarmer: Joi.boolean().optional(),
+
+    role: Joi.string()
+        .valid('user', 'farmer', 'authority', 'admin')
+        .optional(),
+
+    language: Joi.string().optional()
 });
 
 
@@ -75,7 +83,9 @@ const resetPasswordSchema = Joi.object({
     password: Joi.string()
         .min(8)
         .max(100)
-        .required()
+        .required(),
+    confirmPassword: Joi.string().optional(),
+    token: Joi.string().optional()
 });
 
 

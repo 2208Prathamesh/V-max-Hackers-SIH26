@@ -1,5 +1,129 @@
+# ==============================================================================
+# WeatherGPT Root .gitignore
+# Strictly blocks environment credentials, dependencies, caches, and DB files
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DEPENDENCIES & PACKAGE MANAGERS
+# ------------------------------------------------------------------------------
 node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnpm-store
+
+# ------------------------------------------------------------------------------
+# 2. ENVIRONMENT SECRETS & CREDENTIALS (STRICT BLOCK)
+# ------------------------------------------------------------------------------
 .env
+.env.*
+*.env
+*.env.local
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+**/.env
+**/.env.*
+**/*.env
+
+# Allow public example templates
+!.env.example
+!**/.env.example
+!.env.*.example
+!**/.env.*.example
+
+# ------------------------------------------------------------------------------
+# 3. LOCAL DATABASES & SYSTEM DATA
+# ------------------------------------------------------------------------------
+mongodb_local_data/
+**/mongodb_local_data/
+*.sqlite
+*.sqlite3
+*.db
+*.rdb
+dump.rdb
+
+# ------------------------------------------------------------------------------
+# 4. BUILD ARTIFACTS & OUTPUTS
+# ------------------------------------------------------------------------------
 dist/
+**/dist/
+dist-ssr/
 build/
+**/build/
+web-build/
+.expo/
+out/
+.next/
+*.tsbuildinfo
+
+# ------------------------------------------------------------------------------
+# 5. CACHES, CRON & RUNTIME TEMPORARY STORAGE
+# ------------------------------------------------------------------------------
+.nwp_cache/
+**/.nwp_cache/
 .freebuff/
+**/.freebuff/
+.cache/
+**/.cache/
+*.tmp
+*.temp
+tmp/
+temp/
+.temp/
+
+# ------------------------------------------------------------------------------
+# 6. LOGS & DIAGNOSTICS
+# ------------------------------------------------------------------------------
+logs/
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------------------------------------------------------
+# 7. KEYS, CERTIFICATES & TOKENS
+# ------------------------------------------------------------------------------
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.jks
+*.keystore
+id_rsa*
+*.pub
+
+# ------------------------------------------------------------------------------
+# 8. OS & EDITOR METADATA
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+.idea/
+**/.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
