@@ -17,6 +17,9 @@ import { buildNWPModelComparison } from './nwp/modelComparisonService.js'
 import { parseAndValidateCoordinates } from '../../utils/coordinates.js'
 import weatherCacheService from './cache/weatherCacheService.js'
 import { mergeForecastData } from './cache/forecastReconciler.js'
+import { enqueueNWP, getNWPQueueStats } from './nwp/nwpQueue.js'
+export { enqueueNWP, getNWPQueueStats }
+
 // In-memory LRU-like cache for weather data
 const weatherCache = new Map()
 const inflightRequests = new Map()
@@ -24,15 +27,6 @@ const forecastCache = new Map()
 const inflightForecastRequests = new Map()
 let ecmwfUnavailableUntil = 0
 const MAX_CACHE_ENTRIES = 300 // Max entries cache
-
-// Sequential queue for background NWP tasks to prevent parallel GRIB2 allocations from exhausting memory
-let nwpQueue = Promise.resolve()
-function enqueueNWP (task) {
-  const run = () =>
-    task().catch(err => console.warn('Background NWP error:', err.message))
-  nwpQueue = nwpQueue.then(run, run)
-  return nwpQueue
-}
 
 /**
  * Retrieve cached weather data if not expired
@@ -227,10 +221,10 @@ export async function getWeather (latitude, longitude, options = {}) {
   const coordinates = parseAndValidateCoordinates(latitude, longitude)
   const latNum = coordinates.latitude
   const lonNum = coordinates.longitude
-  // ECMWF/NOAA-GFS are only awaited when the caller needs NWP data (chat, advisory,
-  // or the full service path). GET /api/weather/current opts out so the response
-  // never blocks on NWP GRIB work; the models are returned as deferred placeholders.
-  const includeNWP = options.includeNWP !== false
+  // ECMWF/NOAA-GFS are only awaited when the caller explicitly needs NWP data (includeNWP: true).
+  // Current weather endpoints (/api/weather/current, /api/locations, chat, advisory) default to
+  // false so current-weather responses are fast, non-blocking, and never trigger GRIB downloads.
+  const includeNWP = options.includeNWP === true
   const cacheKey = `${includeNWP ? 'weather' : 'fast_weather'}_${latNum.toFixed(
     4
   )}_${lonNum.toFixed(4)}`
@@ -259,27 +253,38 @@ export async function getWeather (latitude, longitude, options = {}) {
 
   const fetchPromise = (async () => {
     try {
-      const ecmwfPromise = includeNWP
-        ? fetchECMWFWithFallback(latNum, lonNum, 1)
-        : Promise.resolve(
-            buildBackgroundModelState(
-              'ECMWF',
-              'NWP models are not fetched for the current-weather response; available via /api/weather/forecast and /api/weather/compare'
+      let ecmwfData = buildBackgroundModelState(
+        'ECMWF',
+        'NWP models are not fetched for the current-weather response; available via /api/weather/forecast and /api/weather/compare'
+      )
+      let gfsRaw = buildBackgroundModelState(
+        'NOAA-GFS',
+        'NWP models are not fetched for the current-weather response; available via /api/weather/forecast and /api/weather/compare'
+      )
+
+      if (includeNWP) {
+        const locKey = `${latNum.toFixed(2)}_${lonNum.toFixed(2)}`
+        try {
+          const nwpResult = await enqueueNWP(locKey, async () => {
+            const gfs = await fetchGFSWithFallback(latNum, lonNum, 1).catch(
+              () => null
             )
-          )
-      const gfsPromise = includeNWP
-        ? fetchGFSWithFallback(latNum, lonNum, 1)
-        : Promise.resolve(
-            buildBackgroundModelState(
-              'NOAA-GFS',
-              'NWP models are not fetched for the current-weather response; available via /api/weather/forecast and /api/weather/compare'
+            await new Promise(r => setImmediate(r))
+            if (global.gc) global.gc()
+            const ecmwf = await fetchECMWFWithFallback(latNum, lonNum, 1).catch(
+              () => null
             )
-          )
+            return { gfs, ecmwf }
+          })
+          if (nwpResult?.gfs) gfsRaw = nwpResult.gfs
+          if (nwpResult?.ecmwf) ecmwfData = nwpResult.ecmwf
+        } catch (err) {
+          console.warn('[NWP] getWeather NWP fetch error:', err.message)
+        }
+      }
 
       const [
         openMeteoRaw,
-        ecmwfData,
-        gfsRaw,
         airQuality,
         elevation,
         flood,
@@ -287,8 +292,6 @@ export async function getWeather (latitude, longitude, options = {}) {
         imdObservation
       ] = await Promise.all([
         getOpenMeteoForecast(latNum, lonNum).catch(() => null),
-        ecmwfPromise,
-        gfsPromise,
         getAirQuality(latNum, lonNum).catch(() => null),
         getElevation(latNum, lonNum).catch(() => null),
         getFloodForecast(latNum, lonNum).catch(() => null),
@@ -600,11 +603,27 @@ export async function getForecast (latitude, longitude, days = 7) {
       }
 
       // Background refresh: serialize NWP requests so multiple parallel requests never exhaust memory
-      enqueueNWP(async () => {
-        const [gfsResult, ecmwfResult] = await Promise.allSettled([
-          fetchGFSWithFallback(latNum, lonNum, daysNum),
-          fetchECMWFWithFallback(latNum, lonNum, daysNum)
-        ])
+      const locKey = `${latNum.toFixed(2)}_${lonNum.toFixed(2)}`
+      enqueueNWP(locKey, async () => {
+        let gfsResult
+        try {
+          const val = await fetchGFSWithFallback(latNum, lonNum, daysNum)
+          gfsResult = { status: 'fulfilled', value: val }
+        } catch (err) {
+          gfsResult = { status: 'rejected', reason: err }
+        }
+
+        // Allow memory to become collectible and yield to event loop before starting ECMWF
+        await new Promise(resolve => setImmediate(resolve))
+        if (global.gc) global.gc()
+
+        let ecmwfResult
+        try {
+          const val = await fetchECMWFWithFallback(latNum, lonNum, daysNum)
+          ecmwfResult = { status: 'fulfilled', value: val }
+        } catch (err) {
+          ecmwfResult = { status: 'rejected', reason: err }
+        }
 
         const nextModels = {
           ...loadingModels,
@@ -749,5 +768,7 @@ export default {
   getForecast,
   getHourlyForecast,
   fetchECMWFWithFallback,
-  fetchGFSWithFallback
+  fetchGFSWithFallback,
+  enqueueNWP,
+  getNWPQueueStats
 }

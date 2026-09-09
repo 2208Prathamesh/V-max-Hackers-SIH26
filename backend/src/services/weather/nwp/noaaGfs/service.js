@@ -135,16 +135,36 @@ export async function getGFSWeather (latitude, longitude, days = 7) {
   for (const step of steps) {
     try {
       const parsed = {
-        temperature: parseMessage(await getBuffer(step, 'temperature'), 'temperature'),
+        temperature: parseMessage(
+          await getBuffer(step, 'temperature'),
+          'temperature'
+        ),
         humidity: parseMessage(await getBuffer(step, 'humidity'), 'humidity'),
         dewPoint: parseMessage(await getBuffer(step, 'dewPoint'), 'dewPoint'),
         uWind: parseMessage(await getBuffer(step, 'uWind'), 'uWind'),
         vWind: parseMessage(await getBuffer(step, 'vWind'), 'vWind'),
         pressure: parseMessage(await getBuffer(step, 'pressure'), 'pressure'),
-        precipitation: parseMessage(await getBuffer(step, 'precipitation'), 'precipitation')
+        precipitation: parseMessage(
+          await getBuffer(step, 'precipitation'),
+          'precipitation'
+        )
       }
       const timestamp = buildTimestamp(parsed.temperature)
-      const normalized = normalizeGFS(parsed, { latitude, longitude }, timestamp)
+      const normalized = normalizeGFS(
+        parsed,
+        { latitude, longitude },
+        timestamp
+      )
+
+      // Unpin intermediate decoded message references immediately
+      parsed.temperature = null
+      parsed.humidity = null
+      parsed.dewPoint = null
+      parsed.uWind = null
+      parsed.vWind = null
+      parsed.pressure = null
+      parsed.precipitation = null
+
       gridLocation = gridLocation || normalized.location
       const accumulated = normalized.forecast.precipitation
       const intervalPrecipitation = calculateIntervalPrecipitation(
@@ -163,6 +183,9 @@ export async function getGFSWeather (latitude, longitude, days = 7) {
     } catch (err) {
       console.error(`GFS parsing failed for step ${step}: ${err.message}`)
       // Continue to next step if one fails
+    } finally {
+      // Yield with setImmediate between forecast steps to permit GC and keep memory bounded
+      await new Promise(resolve => setImmediate(resolve))
     }
   }
 

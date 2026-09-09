@@ -3,3 +3,5 @@ node_modules/
 dist/
 build/
 .freebuff/
+.nwp_cache/
+.git/

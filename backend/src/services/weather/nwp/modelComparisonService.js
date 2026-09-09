@@ -2,6 +2,7 @@ import { getForecast as getOpenMeteoForecast } from '../openMeteo/client.js'
 import { getECMWFWeather } from './ecmwf/service.js'
 import { getGFSWeather } from './noaaGfs/service.js'
 import { normalizeForecast } from '../normalizers/weatherNormalizer.js'
+import { enqueueNWP } from './nwpQueue.js'
 
 const AGREEMENT_SCORE_THRESHOLDS = Object.freeze({
   high: 90,
@@ -276,11 +277,20 @@ export function buildNWPModelComparison ({ gfs, ecmwf } = {}) {
  * @returns {Promise<object>}
  */
 export async function compareNWPModels (latitude, longitude) {
-  const [openMeteoRaw, ecmwfData, gfsRaw] = await Promise.all([
-    getOpenMeteoForecast(latitude, longitude).catch(() => null),
-    fetchECMWF(latitude, longitude),
-    getGFSWeather(latitude, longitude, 1).catch(() => null)
-  ])
+  const openMeteoPromise = getOpenMeteoForecast(latitude, longitude).catch(
+    () => null
+  )
+  const locKey = `${Number(latitude).toFixed(2)}_${Number(longitude).toFixed(
+    2
+  )}`
+  const { ecmwfData, gfsRaw } = await enqueueNWP(locKey, async () => {
+    const ecmwf = await fetchECMWF(latitude, longitude)
+    await new Promise(resolve => setImmediate(resolve))
+    if (global.gc) global.gc()
+    const gfs = await getGFSWeather(latitude, longitude, 1).catch(() => null)
+    return { ecmwfData: ecmwf, gfsRaw: gfs }
+  })
+  const openMeteoRaw = await openMeteoPromise
 
   const openMeteoNorm = openMeteoRaw
     ? normalizeForecast(openMeteoRaw, 'Open-Meteo')

@@ -5,3 +5,4 @@ node_modules/
 .env
 
 .nwp_cache/
+.git/

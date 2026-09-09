@@ -15,7 +15,9 @@ export async function getAgricultureAdvisory (
   cropName = 'general'
 ) {
   const crop = (cropName || 'general').toLowerCase()
-  const weatherData = await weatherService.getWeather(latitude, longitude)
+  const weatherData = await weatherService.getWeather(latitude, longitude, {
+    includeNWP: false
+  })
 
   const current = weatherData?.forecast?.current || {}
   const hourly = weatherData?.forecast?.hourly || []

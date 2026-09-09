@@ -1,12 +1,14 @@
 import { getECMWFMessages } from './client.js'
-
-import { GribMessageFactory } from '@mattnucc/gribberish'
+import { GribMessage, GribMessageFactory } from '@mattnucc/gribberish'
 
 import { normalizeECMWF } from './normalizer.js'
 
 function parseMessage (buffer, param) {
   try {
     if (!buffer) return null
+    if (typeof GribMessage?.parseFromBuffer === 'function') {
+      return GribMessage.parseFromBuffer(new Uint8Array(buffer), 0)
+    }
     const factory = GribMessageFactory.fromBuffer(new Uint8Array(buffer))
 
     if (factory.availableMessages.length === 0) {
@@ -151,18 +153,34 @@ export async function getECMWFWeather (latitude, longitude, days = 7) {
   for (const step of steps) {
     try {
       const tpBuffer = await getBuffer(step, 'tp')
+      let msg2t = parseMessage(await getBuffer(step, '2t'), '2t')
+      let msg2d = parseMessage(await getBuffer(step, '2d'), '2d')
+      let msg10u = parseMessage(await getBuffer(step, '10u'), '10u')
+      let msg10v = parseMessage(await getBuffer(step, '10v'), '10v')
+      let msgMsl = parseMessage(await getBuffer(step, 'msl'), 'msl')
+      let msgTp = tpBuffer ? parseMessage(tpBuffer, 'tp') : null
+
       const normalized = normalizeECMWF(
         {
-          temperature: parseMessage(await getBuffer(step, '2t'), '2t'),
-          dewPoint: parseMessage(await getBuffer(step, '2d'), '2d'),
-          uWind: parseMessage(await getBuffer(step, '10u'), '10u'),
-          vWind: parseMessage(await getBuffer(step, '10v'), '10v'),
-          pressure: parseMessage(await getBuffer(step, 'msl'), 'msl'),
-          precipitation: tpBuffer ? parseMessage(tpBuffer, 'tp') : null,
+          temperature: msg2t,
+          dewPoint: msg2d,
+          uWind: msg10u,
+          vWind: msg10v,
+          pressure: msgMsl,
+          precipitation: msgTp,
           timestamp: buildTimestamp(date, cycle, step)
         },
         { latitude, longitude }
       )
+
+      // Unpin intermediate decoded message references immediately
+      msg2t = null
+      msg2d = null
+      msg10u = null
+      msg10v = null
+      msgMsl = null
+      msgTp = null
+
       gridLocation = gridLocation || normalized.location
       const accumulated = normalized.forecast.precipitation
       const intervalPrecipitation = calculateIntervalPrecipitation(
@@ -181,6 +199,9 @@ export async function getECMWFWeather (latitude, longitude, days = 7) {
     } catch (err) {
       console.error(`ECMWF parsing failed for step ${step}: ${err.message}`)
       // Continue to next step if one fails
+    } finally {
+      // Yield with setImmediate between forecast steps to permit GC and keep memory bounded
+      await new Promise(resolve => setImmediate(resolve))
     }
   }
   const nwpSemantics = buildNwpSemantics(hourly)
