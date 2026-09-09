@@ -399,7 +399,8 @@ export const DashboardPage = () => {
   const windVal = currentConditions?.windSpeed ?? 12
   const windDirDeg = currentConditions?.windDirection ?? 245
   const pressureVal = currentConditions?.pressure ?? 1012
-  const uvVal = isNightTime ? 0 : (currentConditions?.uvIndex ?? 5)
+  const rawUv = currentConditions?.uvIndex ?? currentHourEntry?.uvIndex ?? 0
+  const uvVal = isNightTime ? 0 : Math.max(0, Math.round(Number(rawUv) * 10) / 10)
   const visibilityVal = currentConditions?.visibility != null ? Math.round(currentConditions.visibility / 1000) : 10
   const cloudCoverVal = currentConditions?.cloudCover ?? 35
   const precipVal = currentConditions?.precipitation ?? 0
@@ -481,26 +482,41 @@ export const DashboardPage = () => {
     return compass[index] || 'NW'
   }, [windDirDeg])
 
-  // UV Status Rating
+  // UV Status Rating (WMO / WHO Standard UV Index Classification)
   const uvRating = useMemo(() => {
     if (isNightTime || uvVal === 0) {
-      return { text: 'Zero (Night)', color: 'text-sky-300', bg: 'bg-sky-500/10', advice: 'No UV radiation at night' }
+      return { text: isNightTime ? 'Zero (Night)' : 'Minimal (0)', color: 'text-sky-300', bg: 'bg-sky-500/10', advice: isNightTime ? 'No UV radiation at night' : 'No protection needed' }
     }
-    if (uvVal <= 2) return { text: 'Low', color: 'text-emerald-400', bg: 'bg-emerald-500/10', advice: 'No protection needed' }
-    if (uvVal <= 5) return { text: 'Moderate', color: 'text-amber-400', bg: 'bg-amber-500/10', advice: 'Wear hat & sunscreen' }
-    if (uvVal <= 7) return { text: 'High', color: 'text-orange-400', bg: 'bg-orange-500/10', advice: 'Seek shade midday' }
-    if (uvVal <= 10) return { text: 'Very High', color: 'text-rose-400', bg: 'bg-rose-500/10', advice: 'Avoid sun 11am-4pm' }
-    return { text: 'Extreme', color: 'text-purple-400', bg: 'bg-purple-500/10', advice: 'Dangerous UV rays' }
+    if (uvVal <= 2.9) return { text: 'Low', color: 'text-emerald-400', bg: 'bg-emerald-500/10', advice: 'No protection needed. Safe for outdoor activities.' }
+    if (uvVal <= 5.9) return { text: 'Moderate', color: 'text-amber-400', bg: 'bg-amber-500/10', advice: 'Wear hat, sunglasses and seek shade during midday.' }
+    if (uvVal <= 7.9) return { text: 'High', color: 'text-orange-400', bg: 'bg-orange-500/10', advice: 'Protection needed. Generously apply SPF 30+.' }
+    if (uvVal <= 10.9) return { text: 'Very High', color: 'text-rose-400', bg: 'bg-rose-500/10', advice: 'Extra protection. Avoid sun between 11 AM - 4 PM.' }
+    return { text: 'Extreme', color: 'text-purple-400', bg: 'bg-purple-500/10', advice: 'Dangerous UV levels. Take full precautions outdoors.' }
   }, [isNightTime, uvVal])
 
-  // AQI Rating
-  const aqiVal = weatherData?.airQuality?.aqi ?? 68
+  // Real-Time AQI Rating (US EPA / India CPCB Standard Classification)
+  const aqiVal = useMemo(() => {
+    const raw =
+      weatherData?.airQuality?.aqi ??
+      weatherData?.airQuality?.current?.aqi ??
+      weatherData?.airQuality?.current?.us_aqi ??
+      weatherData?.airQuality?.current?.usAqi ??
+      weatherData?.airQuality?.current?.european_aqi ??
+      selectedLocation?.aqi
+    if (raw != null && !isNaN(Number(raw))) {
+      return Math.round(Number(raw))
+    }
+    return 55
+  }, [weatherData, selectedLocation])
+
   const aqiRating = useMemo(() => {
-    if (aqiVal <= 50) return { text: 'Good', color: 'text-emerald-400', badge: 'bg-emerald-500', advice: 'Air quality is ideal for outdoor activities.' }
-    if (aqiVal <= 100) return { text: 'Moderate', color: 'text-amber-400', badge: 'bg-amber-500', advice: 'Acceptable quality. Sensitive individuals should take care.' }
-    if (aqiVal <= 150) return { text: 'Sensitive', color: 'text-orange-400', badge: 'bg-orange-500', advice: 'Unhealthy for sensitive groups. Reduce strenuous exercise.' }
-    if (aqiVal <= 200) return { text: 'Unhealthy', color: 'text-rose-400', badge: 'bg-rose-500', advice: 'Everyone may experience health effects. Wear a mask.' }
-    return { text: 'Hazardous', color: 'text-purple-400', badge: 'bg-purple-600', advice: 'Emergency health warning. Avoid going outdoors.' }
+    const num = Number(aqiVal)
+    if (num <= 50) return { text: 'Good', color: 'text-emerald-400', badge: 'bg-emerald-500', advice: 'Air quality is satisfactory and poses little or no risk.' }
+    if (num <= 100) return { text: 'Moderate', color: 'text-amber-400', badge: 'bg-amber-500', advice: 'Acceptable quality. Sensitive individuals should take care.' }
+    if (num <= 150) return { text: 'Sensitive', color: 'text-orange-400', badge: 'bg-orange-500', advice: 'Unhealthy for sensitive groups. Reduce strenuous exercise.' }
+    if (num <= 200) return { text: 'Unhealthy', color: 'text-rose-400', badge: 'bg-rose-500', advice: 'Everyone may experience health effects. Wear a mask.' }
+    if (num <= 300) return { text: 'Very Unhealthy', color: 'text-purple-400', badge: 'bg-purple-600', advice: 'Health alert: serious risk. Avoid outdoor activity.' }
+    return { text: 'Hazardous', color: 'text-red-500', badge: 'bg-red-700', advice: 'Emergency health warning. Avoid going outdoors.' }
   }, [aqiVal])
 
   // 24-Hour Recharts Dataset (Starts from NOW)
@@ -530,6 +546,61 @@ export const DashboardPage = () => {
 
   // Active alerts list
   const activeAlertsList = (alerts || []).slice(0, 3)
+
+  // Dynamic Alert Ticker Color Theme (Properly differentiates Red, Orange, Yellow, Advisory)
+  const alertTheme = useMemo(() => {
+    if (!activeAlertsList.length) return null
+    const topAlert = activeAlertsList[0]
+    const sev = (topAlert.severity || topAlert.metadata?.warningLevel || '').toLowerCase()
+    const titleLower = (topAlert.title || '').toLowerCase()
+
+    const isRed = sev === 'extreme' || sev === 'red' || titleLower.includes('red')
+    const isOrange = sev === 'high' || sev === 'orange' || titleLower.includes('orange')
+    const isYellow = sev === 'moderate' || sev === 'medium' || sev === 'yellow' || titleLower.includes('yellow')
+
+    if (isRed) {
+      return {
+        label: language === 'mr' ? 'लाल इशारा (Red Warning)' : 'RED WARNING (Take Action)',
+        badgeClass: 'bg-rose-600 text-white shadow-xs',
+        iconBg: 'bg-rose-600 text-white animate-pulse',
+        containerBg: 'bg-gradient-to-r from-rose-500/15 via-rose-500/5 to-transparent dark:from-rose-950/50 dark:via-rose-950/20 dark:to-slate-900 border-rose-300 dark:border-rose-900 hover:border-rose-400',
+        textColor: 'text-rose-600 dark:text-rose-400',
+        actionText: language === 'mr' ? 'तातडीचा आपत्कालीन सल्ला' : 'Emergency Action Protocol'
+      }
+    }
+
+    if (isOrange) {
+      return {
+        label: language === 'mr' ? 'नारंगी इशारा (Orange Alert)' : 'ORANGE ALERT (Be Prepared)',
+        badgeClass: 'bg-orange-500 text-white shadow-xs',
+        iconBg: 'bg-orange-500 text-white',
+        containerBg: 'bg-gradient-to-r from-orange-500/15 via-amber-500/5 to-transparent dark:from-orange-950/45 dark:via-amber-950/20 dark:to-slate-900 border-orange-300 dark:border-orange-800 hover:border-orange-400',
+        textColor: 'text-orange-600 dark:text-orange-400',
+        actionText: language === 'mr' ? 'तयारी व खबरदारीचा सल्ला' : 'Preparedness Advisory'
+      }
+    }
+
+    if (isYellow) {
+      return {
+        label: language === 'mr' ? 'पिवळा इशारा (Yellow Watch)' : 'YELLOW WATCH (Be Updated)',
+        badgeClass: 'bg-amber-400 text-slate-950 font-black shadow-xs',
+        iconBg: 'bg-amber-500 text-white',
+        containerBg: 'bg-gradient-to-r from-amber-500/15 via-yellow-500/5 to-transparent dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-slate-900 border-amber-300 dark:border-amber-800 hover:border-amber-400',
+        textColor: 'text-amber-600 dark:text-amber-400',
+        actionText: language === 'mr' ? 'हवामान अपडेट पाहा' : 'Weather Watch Protocol'
+      }
+    }
+
+    return {
+      label: language === 'mr' ? 'हवामान सल्ला (Advisory)' : 'WEATHER ADVISORY',
+      badgeClass: 'bg-blue-600 text-white shadow-xs',
+      iconBg: 'bg-blue-600 text-white',
+      containerBg: 'bg-gradient-to-r from-blue-500/15 via-sky-500/5 to-transparent dark:from-blue-950/40 dark:via-slate-900 border-blue-200 dark:border-blue-800 hover:border-blue-300',
+      textColor: 'text-blue-600 dark:text-blue-400',
+      actionText: language === 'mr' ? 'सल्ला पाहा' : 'View Advisory'
+    }
+  }, [activeAlertsList, language])
+
 
   return (
     <div className='max-w-7xl mx-auto space-y-6 select-none'>
@@ -628,8 +699,8 @@ export const DashboardPage = () => {
                 type='button'
                 onClick={() => handleLocationClick(loc)}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer shrink-0 border ${isActive
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:border-blue-400'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:border-blue-400'
                   }`}
               >
                 <MapPin className={`w-3 h-3 ${isActive ? 'text-white' : 'text-blue-500'}`} />
@@ -669,19 +740,19 @@ export const DashboardPage = () => {
       {/* =========================================================================
           3. EMERGENCY / ALERT BROADCAST TICKER
           ========================================================================= */}
-      {activeAlertsList.length > 0 ? (
+      {activeAlertsList.length > 0 && alertTheme ? (
         <div
           onClick={() => setCurrentPage('alerts')}
-          className='flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-500/15 via-amber-500/10 to-transparent dark:from-rose-950/50 dark:via-amber-950/30 dark:to-slate-900 border border-rose-300 dark:border-rose-900 hover:border-rose-400 transition cursor-pointer group shadow-sm'
+          className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition cursor-pointer group shadow-sm ${alertTheme.containerBg}`}
         >
           <div className='flex items-center gap-3 min-w-0'>
-            <div className='w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition animate-pulse'>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition ${alertTheme.iconBg}`}>
               <AlertTriangle className='w-5 h-5' />
             </div>
             <div className='min-w-0'>
               <div className='flex items-center gap-2 flex-wrap'>
-                <span className='px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-xs'>
-                  {activeAlertsList[0].severity === 'extreme' ? 'RED WARNING' : 'ORANGE ALERT'}
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${alertTheme.badgeClass}`}>
+                  {alertTheme.label}
                 </span>
                 <span className='text-xs font-bold text-slate-900 dark:text-white truncate'>
                   {translateAlertTitle(activeAlertsList[0].title)}
@@ -692,8 +763,8 @@ export const DashboardPage = () => {
               </p>
             </div>
           </div>
-          <div className='flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 shrink-0 ml-3'>
-            <span>Emergency Action Protocol</span>
+          <div className={`flex items-center gap-1.5 text-xs font-bold shrink-0 ml-3 ${alertTheme.textColor}`}>
+            <span>{alertTheme.actionText}</span>
             <ChevronRight className='w-4 h-4 group-hover:translate-x-1 transition' />
           </div>
         </div>
@@ -970,8 +1041,8 @@ export const DashboardPage = () => {
               type='button'
               onClick={() => setActiveChartMetric('temp')}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeChartMetric === 'temp'
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                 }`}
             >
               <Thermometer className='w-3.5 h-3.5' />
@@ -981,8 +1052,8 @@ export const DashboardPage = () => {
               type='button'
               onClick={() => setActiveChartMetric('pop')}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeChartMetric === 'pop'
-                  ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                 }`}
             >
               <CloudRain className='w-3.5 h-3.5' />
@@ -992,8 +1063,8 @@ export const DashboardPage = () => {
               type='button'
               onClick={() => setActiveChartMetric('wind')}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeChartMetric === 'wind'
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                 }`}
             >
               <Wind className='w-3.5 h-3.5' />
@@ -1084,8 +1155,8 @@ export const DashboardPage = () => {
               <div
                 key={i}
                 className={`flex flex-col items-center justify-between p-3 rounded-2xl min-w-[76px] text-center border transition shrink-0 ${isNow
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                    : 'bg-slate-50/80 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60 hover:border-blue-400'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                  : 'bg-slate-50/80 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700/60 hover:border-blue-400'
                   }`}
               >
                 <span className={`text-[11px] font-bold ${isNow ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
@@ -1217,7 +1288,7 @@ export const DashboardPage = () => {
               </p>
             </div>
             <div className='w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden'>
-              <div className='bg-amber-500 h-full rounded-full' style={{ width: `${Math.min(100, uvVal * 10)}%` }} />
+              <div className='bg-amber-500 h-full rounded-full transition-all duration-500' style={{ width: `${Math.min(100, Math.round((uvVal / 11) * 100))}%` }} />
             </div>
           </div>
 

@@ -228,10 +228,8 @@ export const AuthorityWeatherMapPage = () => {
     if (basemapStyle === 'satellite') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
     }
-    if (basemapStyle === 'osm') {
-      return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-    }
-    return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    // Free OpenStreetMap with .leaflet-map-dark CSS filter (No API key needed)
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   }
 
   const getTileAttribution = () => {
@@ -371,9 +369,7 @@ export const AuthorityWeatherMapPage = () => {
               zoom={mapCenter.zoom}
               scrollWheelZoom={true}
               zoomControl={false}
-              className={`w-full h-full z-0 ${
-                basemapStyle === 'dark' ? 'leaflet-map-dark' : ''
-              }`}
+              className="w-full h-full z-0"
               ref={mapInstanceRef}
             >
               <MapViewController center={mapCenter} zoom={mapCenter.zoom} />
@@ -382,6 +378,7 @@ export const AuthorityWeatherMapPage = () => {
               <TileLayer
                 attribution={getTileAttribution()}
                 url={getTileUrl()}
+                className={basemapStyle === 'dark' ? 'leaflet-tile-dark' : ''}
               />
 
               {/* Optional RainViewer Radar Layer (Gracefully fails without breaking map) */}

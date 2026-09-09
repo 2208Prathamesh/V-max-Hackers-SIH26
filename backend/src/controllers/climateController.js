@@ -1,4 +1,9 @@
-import { getHistoricalWeather, getClimateTrends } from '../services/weather/historicalService.js';
+import {
+  getHistoricalWeather,
+  getClimateTrends,
+  getCompleteClimateProfile,
+  findMatchingOrNearestProfile
+} from '../services/weather/historicalService.js';
 import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
 import { successResponse } from '../utils/response.js';
 import { parseAndValidateCoordinates } from '../utils/coordinates.js';
@@ -45,79 +50,87 @@ function aggregateMonthlyData(daily) {
   const monthlyStats = Array.from({ length: 12 }, () => ({
     max: [],
     avg: [],
-    min: []
+    min: [],
+    rain: []
   }));
 
   daily.time.forEach((time, index) => {
     const month = new Date(time).getMonth();
-    monthlyStats[month].max.push(daily.temperature_2m_max[index]);
-    monthlyStats[month].avg.push(daily.temperature_2m_mean[index]);
-    monthlyStats[month].min.push(daily.temperature_2m_min[index]);
+    if (daily.temperature_2m_max[index] != null) monthlyStats[month].max.push(daily.temperature_2m_max[index]);
+    if (daily.temperature_2m_mean[index] != null) monthlyStats[month].avg.push(daily.temperature_2m_mean[index]);
+    if (daily.temperature_2m_min[index] != null) monthlyStats[month].min.push(daily.temperature_2m_min[index]);
+    const rain = daily.precipitation_sum?.[index] ?? daily.rain_sum?.[index] ?? 0;
+    monthlyStats[month].rain.push(rain);
   });
 
-  return months.map((month, i) => ({
-    month,
-    max: monthlyStats[i].max.length > 0 ? Math.max(...monthlyStats[i].max) : null,
-    avg: monthlyStats[i].avg.length > 0 ? monthlyStats[i].avg.reduce((a, b) => a + b, 0) / monthlyStats[i].avg.length : null,
-    min: monthlyStats[i].min.length > 0 ? Math.min(...monthlyStats[i].min) : null,
-  }));
+  return months.map((month, i) => {
+    const maxVal = monthlyStats[i].max.length > 0 ? Math.max(...monthlyStats[i].max) : null;
+    const minVal = monthlyStats[i].min.length > 0 ? Math.min(...monthlyStats[i].min) : null;
+    const avgVal = monthlyStats[i].avg.length > 0 ? monthlyStats[i].avg.reduce((a, b) => a + b, 0) / monthlyStats[i].avg.length : null;
+    const totalRain = monthlyStats[i].rain.length > 0 ? monthlyStats[i].rain.reduce((a, b) => a + b, 0) : 0;
+    const rainyDays = monthlyStats[i].rain.filter(r => r >= 1.0).length;
+
+    return {
+      month,
+      max: maxVal != null ? parseFloat(maxVal.toFixed(1)) : null,
+      avg: avgVal != null ? parseFloat(avgVal.toFixed(1)) : null,
+      min: minVal != null ? parseFloat(minVal.toFixed(1)) : null,
+      rainfallMm: parseFloat(totalRain.toFixed(1)),
+      rainyDays
+    };
+  });
 }
 
 /**
- * Get historical weather range
+ * Get historical weather climatology
  */
 export const getHistory = async (req, res, next) => {
   try {
     const { lat, lon, cityName } = await resolveCoords(req);
-    const startDate = req.query.startDate || '2023-01-01';
-    const endDate = req.query.endDate || '2023-12-31';
+    const profile = await getCompleteClimateProfile(lat, lon, cityName);
 
-    const history = await getHistoricalWeather(lat, lon, startDate, endDate);
-    const monthly = aggregateMonthlyData(history.daily);
-    return successResponse(res, { cityName, monthly }, 'Historical weather retrieved successfully', 200);
+    return successResponse(res, {
+      cityName: cityName || profile.city,
+      stationName: profile.stationName,
+      zone: profile.zone,
+      dataSource: profile.dataSource,
+      monthly: profile.history
+    }, 'Historical weather climatology retrieved successfully', 200);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Get 20-year climate trends and anomalies
+ * Get long-term climate trends and anomalies
  */
 export const getTrends = async (req, res, next) => {
   try {
     const { lat, lon, cityName } = await resolveCoords(req);
-    const startYear = req.query.startYear ? parseInt(req.query.startYear, 10) : undefined;
-    const endYear = req.query.endYear ? parseInt(req.query.endYear, 10) : undefined;
+    const profile = await getCompleteClimateProfile(lat, lon, cityName);
 
-    const trends = await getClimateTrends(lat, lon, startYear, endYear);
-    return successResponse(res, { cityName, ...trends }, 'Climate trends and anomalies calculated successfully', 200);
+    return successResponse(res, {
+      cityName: cityName || profile.city,
+      stationName: profile.stationName,
+      zone: profile.zone,
+      dataSource: profile.dataSource,
+      ...profile.trends,
+      allTimeRecords: profile.allTimeRecords
+    }, 'Climate trends and anomalies calculated successfully', 200);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Get full climate data (history + trends) in one call
+ * Get full climate data (history + trends + authentic records) in one consolidated call
  */
 export const getFullClimateData = async (req, res, next) => {
   try {
     const { lat, lon, cityName } = await resolveCoords(req);
-    const startDate = req.query.startDate || '2024-01-01';
-    const endDate = req.query.endDate || '2024-12-31';
+    const profile = await getCompleteClimateProfile(lat, lon, cityName);
 
-    // Parallel fetch for efficiency
-    const [history, trends] = await Promise.all([
-      getHistoricalWeather(lat, lon, startDate, endDate),
-      getClimateTrends(lat, lon)
-    ]);
-
-    const monthly = aggregateMonthlyData(history.daily);
-
-    return successResponse(res, {
-      cityName,
-      history: monthly,
-      trends: trends
-    }, 'Full climate data retrieved successfully', 200);
+    return successResponse(res, profile, 'Full authentic climate intelligence retrieved successfully', 200);
   } catch (error) {
     next(error);
   }

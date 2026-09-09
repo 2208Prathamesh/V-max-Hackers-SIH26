@@ -23,7 +23,8 @@ import {
   CloudSun,
   Newspaper,
   BarChart2,
-  Shield
+  Shield,
+  ShieldAlert
 } from 'lucide-react'
 
 // 3D Styled Cloud & Sun Logo for Sidebar
@@ -153,6 +154,11 @@ export const Sidebar = ({
       icon: BarChart2
     },
     {
+      id: 'disaster-sops',
+      label: language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली (SOP)' : 'Disaster Safety SOPs',
+      icon: ShieldAlert
+    },
+    {
       id: 'settings',
       label: t('authoritySettings') || t('settings'),
       icon: Settings
@@ -164,15 +170,19 @@ export const Sidebar = ({
     { id: 'chat', label: t('chat'), icon: MessageSquare },
     { id: 'advisory', label: t('advisory'), icon: Sprout },
     { id: 'alerts', label: t('alerts'), icon: Bell, badge: '3' },
+    {
+      id: 'disaster-sops',
+      label: language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली (SOP)' : 'Disaster Safety SOPs',
+      icon: ShieldAlert
+    },
     { id: 'weather-map', label: t('weatherMap'), icon: Map },
     { id: 'forecast', label: t('forecast'), icon: Calendar },
     { id: 'news', label: t('news') || 'Weather News', icon: Newspaper },
     {
       id: 'climate-historical',
-      label: t('climateHistorical') || 'Climate Historical',
+      label: t('climateHistorical') || 'Climate & Historical Data',
       icon: CloudSun
     },
-    { id: 'history', label: t('history'), icon: Clock },
     { id: 'saved-locations', label: t('savedLocations'), icon: Star },
     { id: 'settings', label: t('settings'), icon: Settings }
   ]

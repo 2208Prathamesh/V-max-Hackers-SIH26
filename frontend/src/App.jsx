@@ -5,7 +5,6 @@ import { WeatherProvider, useWeather } from './context/WeatherContext'
 import { Layout } from './components/layout/Layout'
 import { WeatherMapPage } from './pages/WeatherMapPage'
 import { SavedLocationsPage } from './pages/SavedLocationsPage'
-import { HistoryPage } from './pages/HistoryPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ChatPage } from './pages/ChatPage'
@@ -15,6 +14,7 @@ import { ForecastPage } from './pages/ForecastPage'
 import { AdvisoryPage } from './pages/AdvisoryPage'
 import { LoginPage } from './pages/LoginPage'
 import { NewsPage } from './pages/NewsPage'
+import { DisasterSopPage } from './pages/DisasterSopPage'
 import { AuthorityDashboardPage } from './pages/authority/AuthorityDashboardPage'
 import { AuthorityAlertsPage } from './pages/authority/AuthorityAlertsPage'
 import { AuthorityWeatherMapPage } from './pages/authority/AuthorityWeatherMapPage'
@@ -57,6 +57,8 @@ const AppContent = () => {
           return <AuthorityWeatherMapPage />
         case 'analytics':
           return <AuthorityAnalyticsPage />
+        case 'disaster-sops':
+          return <DisasterSopPage />
         case 'settings':
           return <SettingsPage />
         default:
@@ -74,15 +76,16 @@ const AppContent = () => {
         return <AdvisoryPage />
       case 'alerts':
         return <AlertsPage />
+      case 'disaster-sops':
+        return <DisasterSopPage />
       case 'weather-map':
         return <WeatherMapPage />
       case 'forecast':
         return <ForecastPage />
       case 'saved-locations':
         return <SavedLocationsPage />
-      case 'history':
-        return <HistoryPage />
       case 'climate-historical':
+      case 'history':
         return <ClimateHistorical />
       case 'news':
         return <NewsPage />

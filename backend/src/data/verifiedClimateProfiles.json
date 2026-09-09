@@ -1,0 +1,2186 @@
+{
+  "pune": {
+    "city": "Pune",
+    "stationName": "IMD Pune Shivajinagar (Station 43063) & ERA5-Land",
+    "latitude": 18.5204,
+    "longitude": 73.8567,
+    "elevation": 560,
+    "zone": "Deccan Semi-Arid",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 763.4,
+      "avgAnnualTemperatureC": 25.04
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.68,
+      "rainfallChangePercent": 6.4,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 42.6,
+        "date": "2019-04-28"
+      },
+      "minTemperature": {
+        "val": 8.2,
+        "date": "2011-01-14"
+      },
+      "heaviest24hRainfall": {
+        "val": 179.1,
+        "date": "2016-09-17"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 30.3,
+        "avg": 21,
+        "min": 11.6,
+        "rainfallMm": 1.5,
+        "rainyDays": 0
+      },
+      {
+        "month": "Feb",
+        "max": 32.8,
+        "avg": 23.1,
+        "min": 13.4,
+        "rainfallMm": 0.7,
+        "rainyDays": 0
+      },
+      {
+        "month": "Mar",
+        "max": 36.3,
+        "avg": 26.7,
+        "min": 17.1,
+        "rainfallMm": 3.6,
+        "rainyDays": 0
+      },
+      {
+        "month": "Apr",
+        "max": 38.3,
+        "avg": 29.5,
+        "min": 20.7,
+        "rainfallMm": 13.2,
+        "rainyDays": 1
+      },
+      {
+        "month": "May",
+        "max": 37.8,
+        "avg": 30.2,
+        "min": 22.5,
+        "rainfallMm": 36.4,
+        "rainyDays": 3
+      },
+      {
+        "month": "Jun",
+        "max": 32.3,
+        "avg": 27.6,
+        "min": 23,
+        "rainfallMm": 145.2,
+        "rainyDays": 10
+      },
+      {
+        "month": "Jul",
+        "max": 28.6,
+        "avg": 25.4,
+        "min": 22.2,
+        "rainfallMm": 195.4,
+        "rainyDays": 15
+      },
+      {
+        "month": "Aug",
+        "max": 27.9,
+        "avg": 24.8,
+        "min": 21.6,
+        "rainfallMm": 142.8,
+        "rainyDays": 12
+      },
+      {
+        "month": "Sep",
+        "max": 29.4,
+        "avg": 25.3,
+        "min": 21.2,
+        "rainfallMm": 148.6,
+        "rainyDays": 9
+      },
+      {
+        "month": "Oct",
+        "max": 31.8,
+        "avg": 25.6,
+        "min": 19.3,
+        "rainfallMm": 81.3,
+        "rainyDays": 5
+      },
+      {
+        "month": "Nov",
+        "max": 30.8,
+        "avg": 23.1,
+        "min": 15.3,
+        "rainfallMm": 22.4,
+        "rainyDays": 1
+      },
+      {
+        "month": "Dec",
+        "max": 29.8,
+        "avg": 21,
+        "min": 12.1,
+        "rainfallMm": 4.2,
+        "rainyDays": 0
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 948.2,
+        "averageTemperatureC": 24.62,
+        "maxTemperatureC": 39.8,
+        "minTemperatureC": 9.4,
+        "extremeHeatDays": 11,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 862.4,
+        "averageTemperatureC": 24.78,
+        "maxTemperatureC": 40.1,
+        "minTemperatureC": 10.1,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 794.1,
+        "averageTemperatureC": 24.84,
+        "maxTemperatureC": 40.4,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 15,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 682.3,
+        "averageTemperatureC": 24.69,
+        "maxTemperatureC": 39.5,
+        "minTemperatureC": 10.5,
+        "extremeHeatDays": 8,
+        "heavyRainDays": 2
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 774.8,
+        "averageTemperatureC": 25.12,
+        "maxTemperatureC": 40.8,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 18,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 982.5,
+        "averageTemperatureC": 25.08,
+        "maxTemperatureC": 41.2,
+        "minTemperatureC": 10.4,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 645.2,
+        "averageTemperatureC": 24.65,
+        "maxTemperatureC": 39.2,
+        "minTemperatureC": 8.2,
+        "extremeHeatDays": 7,
+        "heavyRainDays": 2
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 598.6,
+        "averageTemperatureC": 24.91,
+        "maxTemperatureC": 40.5,
+        "minTemperatureC": 9.2,
+        "extremeHeatDays": 16,
+        "heavyRainDays": 2
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 788.4,
+        "averageTemperatureC": 24.82,
+        "maxTemperatureC": 39.9,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 12,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 712.1,
+        "averageTemperatureC": 25.04,
+        "maxTemperatureC": 40.6,
+        "minTemperatureC": 10.1,
+        "extremeHeatDays": 17,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 521.8,
+        "averageTemperatureC": 25.32,
+        "maxTemperatureC": 41.5,
+        "minTemperatureC": 10.6,
+        "extremeHeatDays": 22,
+        "heavyRainDays": 1
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 918.4,
+        "averageTemperatureC": 25.41,
+        "maxTemperatureC": 41.8,
+        "minTemperatureC": 11.2,
+        "extremeHeatDays": 24,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 846.5,
+        "averageTemperatureC": 25.24,
+        "maxTemperatureC": 41.1,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 20,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 594.2,
+        "averageTemperatureC": 25.18,
+        "maxTemperatureC": 40.8,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 18,
+        "heavyRainDays": 2
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 1184.6,
+        "averageTemperatureC": 25.38,
+        "maxTemperatureC": 42.6,
+        "minTemperatureC": 9,
+        "extremeHeatDays": 26,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 992.4,
+        "averageTemperatureC": 25.15,
+        "maxTemperatureC": 40.2,
+        "minTemperatureC": 11.4,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 874.1,
+        "averageTemperatureC": 25.22,
+        "maxTemperatureC": 40.5,
+        "minTemperatureC": 11.1,
+        "extremeHeatDays": 15,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 962.3,
+        "averageTemperatureC": 25.29,
+        "maxTemperatureC": 40.9,
+        "minTemperatureC": 10.9,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 648.7,
+        "averageTemperatureC": 25.56,
+        "maxTemperatureC": 41.4,
+        "minTemperatureC": 11.8,
+        "extremeHeatDays": 23,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 932.6,
+        "averageTemperatureC": 25.68,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 11.5,
+        "extremeHeatDays": 25,
+        "heavyRainDays": 6
+      }
+    ]
+  },
+  "mumbai": {
+    "city": "Mumbai",
+    "stationName": "IMD Mumbai Santacruz (Station 43003) & Coastal ERA5",
+    "latitude": 19.076,
+    "longitude": 72.8777,
+    "elevation": 14,
+    "zone": "Coastal Humid",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 2422,
+      "avgAnnualTemperatureC": 27.24
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.59,
+      "rainfallChangePercent": 8.2,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 41.3,
+        "date": "2024-04-16"
+      },
+      "minTemperature": {
+        "val": 13,
+        "date": "2019-02-10"
+      },
+      "heaviest24hRainfall": {
+        "val": 944.2,
+        "date": "2005-07-26"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 31.1,
+        "avg": 24.2,
+        "min": 17.3,
+        "rainfallMm": 0.6,
+        "rainyDays": 0
+      },
+      {
+        "month": "Feb",
+        "max": 31.7,
+        "avg": 25,
+        "min": 18.2,
+        "rainfallMm": 1.1,
+        "rainyDays": 0
+      },
+      {
+        "month": "Mar",
+        "max": 33.1,
+        "avg": 27.3,
+        "min": 21.4,
+        "rainfallMm": 0.4,
+        "rainyDays": 0
+      },
+      {
+        "month": "Apr",
+        "max": 33.4,
+        "avg": 28.8,
+        "min": 24.2,
+        "rainfallMm": 0.6,
+        "rainyDays": 0
+      },
+      {
+        "month": "May",
+        "max": 34,
+        "avg": 30.5,
+        "min": 27,
+        "rainfallMm": 13.8,
+        "rainyDays": 1
+      },
+      {
+        "month": "Jun",
+        "max": 32.4,
+        "avg": 29.5,
+        "min": 26.6,
+        "rainfallMm": 526.3,
+        "rainyDays": 15
+      },
+      {
+        "month": "Jul",
+        "max": 30.4,
+        "avg": 28,
+        "min": 25.5,
+        "rainfallMm": 840.7,
+        "rainyDays": 22
+      },
+      {
+        "month": "Aug",
+        "max": 30,
+        "avg": 27.6,
+        "min": 25.2,
+        "rainfallMm": 585.2,
+        "rainyDays": 19
+      },
+      {
+        "month": "Sep",
+        "max": 31.1,
+        "avg": 28,
+        "min": 24.9,
+        "rainfallMm": 341.4,
+        "rainyDays": 13
+      },
+      {
+        "month": "Oct",
+        "max": 33.4,
+        "avg": 28.6,
+        "min": 23.7,
+        "rainfallMm": 89.3,
+        "rainyDays": 4
+      },
+      {
+        "month": "Nov",
+        "max": 33.7,
+        "avg": 27.5,
+        "min": 21.3,
+        "rainfallMm": 9.9,
+        "rainyDays": 1
+      },
+      {
+        "month": "Dec",
+        "max": 32.4,
+        "avg": 25.5,
+        "min": 18.5,
+        "rainfallMm": 1.6,
+        "rainyDays": 0
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 3214.5,
+        "averageTemperatureC": 26.95,
+        "maxTemperatureC": 38.6,
+        "minTemperatureC": 13.8,
+        "extremeHeatDays": 4,
+        "heavyRainDays": 24
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 2845.2,
+        "averageTemperatureC": 27.08,
+        "maxTemperatureC": 39.2,
+        "minTemperatureC": 14.2,
+        "extremeHeatDays": 6,
+        "heavyRainDays": 21
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 2618.4,
+        "averageTemperatureC": 27.15,
+        "maxTemperatureC": 39,
+        "minTemperatureC": 14.5,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 19
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 2314.6,
+        "averageTemperatureC": 26.88,
+        "maxTemperatureC": 38.4,
+        "minTemperatureC": 13.9,
+        "extremeHeatDays": 3,
+        "heavyRainDays": 17
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 2185.3,
+        "averageTemperatureC": 27.32,
+        "maxTemperatureC": 39.6,
+        "minTemperatureC": 14.8,
+        "extremeHeatDays": 8,
+        "heavyRainDays": 16
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 2985.6,
+        "averageTemperatureC": 27.24,
+        "maxTemperatureC": 39.8,
+        "minTemperatureC": 15.2,
+        "extremeHeatDays": 9,
+        "heavyRainDays": 22
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 2642.1,
+        "averageTemperatureC": 26.92,
+        "maxTemperatureC": 38.2,
+        "minTemperatureC": 13.4,
+        "extremeHeatDays": 3,
+        "heavyRainDays": 19
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 2015.8,
+        "averageTemperatureC": 27.18,
+        "maxTemperatureC": 39.4,
+        "minTemperatureC": 14,
+        "extremeHeatDays": 7,
+        "heavyRainDays": 15
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 2785.4,
+        "averageTemperatureC": 27.05,
+        "maxTemperatureC": 38.8,
+        "minTemperatureC": 14.3,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 20
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 2248.9,
+        "averageTemperatureC": 27.28,
+        "maxTemperatureC": 39.5,
+        "minTemperatureC": 14.7,
+        "extremeHeatDays": 8,
+        "heavyRainDays": 16
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 1812.5,
+        "averageTemperatureC": 27.56,
+        "maxTemperatureC": 40.2,
+        "minTemperatureC": 15.1,
+        "extremeHeatDays": 12,
+        "heavyRainDays": 13
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 2842.6,
+        "averageTemperatureC": 27.62,
+        "maxTemperatureC": 40.5,
+        "minTemperatureC": 15.6,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 21
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 2946.8,
+        "averageTemperatureC": 27.48,
+        "maxTemperatureC": 39.8,
+        "minTemperatureC": 14.9,
+        "extremeHeatDays": 10,
+        "heavyRainDays": 22
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 2246.3,
+        "averageTemperatureC": 27.41,
+        "maxTemperatureC": 39.6,
+        "minTemperatureC": 14.5,
+        "extremeHeatDays": 9,
+        "heavyRainDays": 17
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 3672.4,
+        "averageTemperatureC": 27.54,
+        "maxTemperatureC": 40.1,
+        "minTemperatureC": 13,
+        "extremeHeatDays": 11,
+        "heavyRainDays": 28
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 3687.2,
+        "averageTemperatureC": 27.35,
+        "maxTemperatureC": 39.4,
+        "minTemperatureC": 15.4,
+        "extremeHeatDays": 8,
+        "heavyRainDays": 27
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 3164.8,
+        "averageTemperatureC": 27.46,
+        "maxTemperatureC": 39.7,
+        "minTemperatureC": 15.2,
+        "extremeHeatDays": 9,
+        "heavyRainDays": 23
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 2684.5,
+        "averageTemperatureC": 27.52,
+        "maxTemperatureC": 40,
+        "minTemperatureC": 15,
+        "extremeHeatDays": 11,
+        "heavyRainDays": 20
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 2854.1,
+        "averageTemperatureC": 27.78,
+        "maxTemperatureC": 40.8,
+        "minTemperatureC": 16.1,
+        "extremeHeatDays": 15,
+        "heavyRainDays": 21
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 3048.6,
+        "averageTemperatureC": 27.89,
+        "maxTemperatureC": 41.3,
+        "minTemperatureC": 15.8,
+        "extremeHeatDays": 17,
+        "heavyRainDays": 23
+      }
+    ]
+  },
+  "delhi": {
+    "city": "Delhi",
+    "stationName": "IMD Delhi Safdarjung (Station 42182) & NCR ERA5",
+    "latitude": 28.6139,
+    "longitude": 77.209,
+    "elevation": 216,
+    "zone": "Subtropical Extreme",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 792.4,
+      "avgAnnualTemperatureC": 25.12
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.84,
+      "rainfallChangePercent": -4.2,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 46.8,
+        "date": "2024-05-26"
+      },
+      "minTemperature": {
+        "val": 2,
+        "date": "2019-12-31"
+      },
+      "heaviest24hRainfall": {
+        "val": 153,
+        "date": "2023-07-09"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 20.5,
+        "avg": 14.1,
+        "min": 7.6,
+        "rainfallMm": 19.3,
+        "rainyDays": 2
+      },
+      {
+        "month": "Feb",
+        "max": 24.2,
+        "avg": 17.3,
+        "min": 10.4,
+        "rainfallMm": 22.1,
+        "rainyDays": 2
+      },
+      {
+        "month": "Mar",
+        "max": 30,
+        "avg": 22.8,
+        "min": 15.6,
+        "rainfallMm": 15.9,
+        "rainyDays": 1
+      },
+      {
+        "month": "Apr",
+        "max": 36.5,
+        "avg": 29,
+        "min": 21.5,
+        "rainfallMm": 13,
+        "rainyDays": 1
+      },
+      {
+        "month": "May",
+        "max": 40,
+        "avg": 33.1,
+        "min": 26.1,
+        "rainfallMm": 31.5,
+        "rainyDays": 3
+      },
+      {
+        "month": "Jun",
+        "max": 39.2,
+        "avg": 33.6,
+        "min": 28,
+        "rainfallMm": 82.2,
+        "rainyDays": 5
+      },
+      {
+        "month": "Jul",
+        "max": 34.8,
+        "avg": 30.9,
+        "min": 27,
+        "rainfallMm": 237.2,
+        "rainyDays": 10
+      },
+      {
+        "month": "Aug",
+        "max": 33.7,
+        "avg": 30,
+        "min": 26.2,
+        "rainfallMm": 235.4,
+        "rainyDays": 11
+      },
+      {
+        "month": "Sep",
+        "max": 33.7,
+        "avg": 29.3,
+        "min": 24.8,
+        "rainfallMm": 129.9,
+        "rainyDays": 6
+      },
+      {
+        "month": "Oct",
+        "max": 33,
+        "avg": 26.2,
+        "min": 19.4,
+        "rainfallMm": 14.3,
+        "rainyDays": 1
+      },
+      {
+        "month": "Nov",
+        "max": 28.3,
+        "avg": 20.7,
+        "min": 13,
+        "rainfallMm": 4.1,
+        "rainyDays": 0
+      },
+      {
+        "month": "Dec",
+        "max": 22.9,
+        "avg": 15.7,
+        "min": 8.4,
+        "rainfallMm": 7.5,
+        "rainyDays": 1
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 724.8,
+        "averageTemperatureC": 24.72,
+        "maxTemperatureC": 44.5,
+        "minTemperatureC": 3.2,
+        "extremeHeatDays": 28,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 648.2,
+        "averageTemperatureC": 24.85,
+        "maxTemperatureC": 44.8,
+        "minTemperatureC": 3.8,
+        "extremeHeatDays": 31,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 782.4,
+        "averageTemperatureC": 24.91,
+        "maxTemperatureC": 44.2,
+        "minTemperatureC": 4.1,
+        "extremeHeatDays": 29,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 845.6,
+        "averageTemperatureC": 24.78,
+        "maxTemperatureC": 43.8,
+        "minTemperatureC": 3.9,
+        "extremeHeatDays": 24,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 652.1,
+        "averageTemperatureC": 25.28,
+        "maxTemperatureC": 45.2,
+        "minTemperatureC": 4.5,
+        "extremeHeatDays": 38,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 1032.4,
+        "averageTemperatureC": 25.14,
+        "maxTemperatureC": 45,
+        "minTemperatureC": 4.2,
+        "extremeHeatDays": 35,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 684.5,
+        "averageTemperatureC": 24.75,
+        "maxTemperatureC": 43.6,
+        "minTemperatureC": 3.5,
+        "extremeHeatDays": 22,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 582.3,
+        "averageTemperatureC": 25.06,
+        "maxTemperatureC": 45.4,
+        "minTemperatureC": 3,
+        "extremeHeatDays": 36,
+        "heavyRainDays": 2
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 874.2,
+        "averageTemperatureC": 24.89,
+        "maxTemperatureC": 44.6,
+        "minTemperatureC": 2.8,
+        "extremeHeatDays": 30,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 612.8,
+        "averageTemperatureC": 25.12,
+        "maxTemperatureC": 45.5,
+        "minTemperatureC": 3.4,
+        "extremeHeatDays": 34,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 694.6,
+        "averageTemperatureC": 25.38,
+        "maxTemperatureC": 45.8,
+        "minTemperatureC": 4,
+        "extremeHeatDays": 39,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 642.1,
+        "averageTemperatureC": 25.52,
+        "maxTemperatureC": 46.2,
+        "minTemperatureC": 4.4,
+        "extremeHeatDays": 42,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 748.9,
+        "averageTemperatureC": 25.44,
+        "maxTemperatureC": 45.6,
+        "minTemperatureC": 4.2,
+        "extremeHeatDays": 38,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 772.3,
+        "averageTemperatureC": 25.35,
+        "maxTemperatureC": 45.4,
+        "minTemperatureC": 3.6,
+        "extremeHeatDays": 37,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 684.2,
+        "averageTemperatureC": 25.46,
+        "maxTemperatureC": 46,
+        "minTemperatureC": 2,
+        "extremeHeatDays": 41,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 948.5,
+        "averageTemperatureC": 25.22,
+        "maxTemperatureC": 44.8,
+        "minTemperatureC": 3.2,
+        "extremeHeatDays": 32,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 1184.2,
+        "averageTemperatureC": 25.35,
+        "maxTemperatureC": 45.2,
+        "minTemperatureC": 3.4,
+        "extremeHeatDays": 34,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 692.4,
+        "averageTemperatureC": 25.68,
+        "maxTemperatureC": 46.4,
+        "minTemperatureC": 3.8,
+        "extremeHeatDays": 44,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 924.8,
+        "averageTemperatureC": 25.75,
+        "maxTemperatureC": 46.2,
+        "minTemperatureC": 3.9,
+        "extremeHeatDays": 43,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 864.2,
+        "averageTemperatureC": 25.96,
+        "maxTemperatureC": 46.8,
+        "minTemperatureC": 4.2,
+        "extremeHeatDays": 48,
+        "heavyRainDays": 5
+      }
+    ]
+  },
+  "bengaluru": {
+    "city": "Bengaluru",
+    "stationName": "IMD Bengaluru City (Station 43295) & Plateau ERA5",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "elevation": 920,
+    "zone": "Elevated Plateau",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 986.9,
+      "avgAnnualTemperatureC": 23.82
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.62,
+      "rainfallChangePercent": 9.8,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 39.2,
+        "date": "2016-04-25"
+      },
+      "minTemperature": {
+        "val": 12,
+        "date": "2019-01-16"
+      },
+      "heaviest24hRainfall": {
+        "val": 131,
+        "date": "2022-08-30"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 28,
+        "avg": 21.9,
+        "min": 15.8,
+        "rainfallMm": 1.8,
+        "rainyDays": 0
+      },
+      {
+        "month": "Feb",
+        "max": 30.9,
+        "avg": 24.2,
+        "min": 17.5,
+        "rainfallMm": 5.4,
+        "rainyDays": 1
+      },
+      {
+        "month": "Mar",
+        "max": 33.4,
+        "avg": 26.8,
+        "min": 20.1,
+        "rainfallMm": 18.5,
+        "rainyDays": 1
+      },
+      {
+        "month": "Apr",
+        "max": 34.1,
+        "avg": 28.1,
+        "min": 22,
+        "rainfallMm": 41.5,
+        "rainyDays": 3
+      },
+      {
+        "month": "May",
+        "max": 33.1,
+        "avg": 27.4,
+        "min": 21.7,
+        "rainfallMm": 107.4,
+        "rainyDays": 7
+      },
+      {
+        "month": "Jun",
+        "max": 29.6,
+        "avg": 25,
+        "min": 20.4,
+        "rainfallMm": 106.5,
+        "rainyDays": 6
+      },
+      {
+        "month": "Jul",
+        "max": 28.3,
+        "avg": 24.2,
+        "min": 20,
+        "rainfallMm": 112.9,
+        "rainyDays": 8
+      },
+      {
+        "month": "Aug",
+        "max": 27.8,
+        "avg": 23.8,
+        "min": 19.7,
+        "rainfallMm": 147,
+        "rainyDays": 10
+      },
+      {
+        "month": "Sep",
+        "max": 28.6,
+        "avg": 24.2,
+        "min": 19.8,
+        "rainfallMm": 212.8,
+        "rainyDays": 9
+      },
+      {
+        "month": "Oct",
+        "max": 28.4,
+        "avg": 24,
+        "min": 19.6,
+        "rainfallMm": 168.3,
+        "rainyDays": 9
+      },
+      {
+        "month": "Nov",
+        "max": 27.4,
+        "avg": 22.7,
+        "min": 17.9,
+        "rainfallMm": 48.9,
+        "rainyDays": 4
+      },
+      {
+        "month": "Dec",
+        "max": 26.5,
+        "avg": 21.2,
+        "min": 15.9,
+        "rainfallMm": 15.7,
+        "rainyDays": 1
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 1142.6,
+        "averageTemperatureC": 23.45,
+        "maxTemperatureC": 36.5,
+        "minTemperatureC": 13.8,
+        "extremeHeatDays": 3,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 894.2,
+        "averageTemperatureC": 23.58,
+        "maxTemperatureC": 36.8,
+        "minTemperatureC": 14.1,
+        "extremeHeatDays": 4,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 1085.4,
+        "averageTemperatureC": 23.64,
+        "maxTemperatureC": 36.2,
+        "minTemperatureC": 14,
+        "extremeHeatDays": 3,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 942.8,
+        "averageTemperatureC": 23.48,
+        "maxTemperatureC": 35.8,
+        "minTemperatureC": 13.6,
+        "extremeHeatDays": 2,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 984.6,
+        "averageTemperatureC": 23.82,
+        "maxTemperatureC": 37.4,
+        "minTemperatureC": 14.2,
+        "extremeHeatDays": 6,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 1124.5,
+        "averageTemperatureC": 23.75,
+        "maxTemperatureC": 37.1,
+        "minTemperatureC": 14.5,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 842.1,
+        "averageTemperatureC": 23.51,
+        "maxTemperatureC": 35.9,
+        "minTemperatureC": 13.2,
+        "extremeHeatDays": 2,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 724.8,
+        "averageTemperatureC": 23.78,
+        "maxTemperatureC": 37.2,
+        "minTemperatureC": 13.8,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 1042.6,
+        "averageTemperatureC": 23.65,
+        "maxTemperatureC": 36.6,
+        "minTemperatureC": 13.9,
+        "extremeHeatDays": 4,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 918.4,
+        "averageTemperatureC": 23.84,
+        "maxTemperatureC": 37,
+        "minTemperatureC": 14.2,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 1084.2,
+        "averageTemperatureC": 24.08,
+        "maxTemperatureC": 38,
+        "minTemperatureC": 14.6,
+        "extremeHeatDays": 8,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 648.5,
+        "averageTemperatureC": 24.26,
+        "maxTemperatureC": 39.2,
+        "minTemperatureC": 14.9,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 3
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 1424.6,
+        "averageTemperatureC": 23.98,
+        "maxTemperatureC": 37.4,
+        "minTemperatureC": 14.2,
+        "extremeHeatDays": 6,
+        "heavyRainDays": 10
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 846.2,
+        "averageTemperatureC": 23.91,
+        "maxTemperatureC": 37.1,
+        "minTemperatureC": 13.9,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 1092.4,
+        "averageTemperatureC": 24.12,
+        "maxTemperatureC": 37.8,
+        "minTemperatureC": 12,
+        "extremeHeatDays": 7,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 1186.5,
+        "averageTemperatureC": 23.85,
+        "maxTemperatureC": 36.8,
+        "minTemperatureC": 14.4,
+        "extremeHeatDays": 4,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 1384.2,
+        "averageTemperatureC": 23.96,
+        "maxTemperatureC": 37.2,
+        "minTemperatureC": 14.1,
+        "extremeHeatDays": 5,
+        "heavyRainDays": 9
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 1746.8,
+        "averageTemperatureC": 23.88,
+        "maxTemperatureC": 36.9,
+        "minTemperatureC": 13.8,
+        "extremeHeatDays": 4,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 748.2,
+        "averageTemperatureC": 24.32,
+        "maxTemperatureC": 38.4,
+        "minTemperatureC": 14.8,
+        "extremeHeatDays": 10,
+        "heavyRainDays": 4
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 1048.6,
+        "averageTemperatureC": 24.46,
+        "maxTemperatureC": 38.8,
+        "minTemperatureC": 14.5,
+        "extremeHeatDays": 12,
+        "heavyRainDays": 7
+      }
+    ]
+  },
+  "chennai": {
+    "city": "Chennai",
+    "stationName": "IMD Chennai Meenambakkam (Station 43279) & Coastal ERA5",
+    "latitude": 13.0827,
+    "longitude": 80.2707,
+    "elevation": 16,
+    "zone": "Coromandel Coastal (NE Monsoon)",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 1400,
+      "avgAnnualTemperatureC": 28.6
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.65,
+      "rainfallChangePercent": 5.8,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 44.2,
+        "date": "2024-05-28"
+      },
+      "minTemperature": {
+        "val": 17,
+        "date": "2012-01-22"
+      },
+      "heaviest24hRainfall": {
+        "val": 494,
+        "date": "2015-12-01"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 29.3,
+        "avg": 24.6,
+        "min": 20,
+        "rainfallMm": 25.9,
+        "rainyDays": 1
+      },
+      {
+        "month": "Feb",
+        "max": 31,
+        "avg": 26,
+        "min": 21.1,
+        "rainfallMm": 3.4,
+        "rainyDays": 0
+      },
+      {
+        "month": "Mar",
+        "max": 33.3,
+        "avg": 28.2,
+        "min": 23.2,
+        "rainfallMm": 3.5,
+        "rainyDays": 0
+      },
+      {
+        "month": "Apr",
+        "max": 35.5,
+        "avg": 30.5,
+        "min": 25.6,
+        "rainfallMm": 14.4,
+        "rainyDays": 1
+      },
+      {
+        "month": "May",
+        "max": 38.3,
+        "avg": 32.9,
+        "min": 27.6,
+        "rainfallMm": 42,
+        "rainyDays": 2
+      },
+      {
+        "month": "Jun",
+        "max": 37.4,
+        "avg": 32.4,
+        "min": 27.4,
+        "rainfallMm": 53.8,
+        "rainyDays": 4
+      },
+      {
+        "month": "Jul",
+        "max": 35.3,
+        "avg": 30.7,
+        "min": 26.2,
+        "rainfallMm": 101.1,
+        "rainyDays": 7
+      },
+      {
+        "month": "Aug",
+        "max": 34.6,
+        "avg": 30.1,
+        "min": 25.6,
+        "rainfallMm": 126.8,
+        "rainyDays": 9
+      },
+      {
+        "month": "Sep",
+        "max": 34.2,
+        "avg": 29.7,
+        "min": 25.3,
+        "rainfallMm": 124.6,
+        "rainyDays": 8
+      },
+      {
+        "month": "Oct",
+        "max": 32.1,
+        "avg": 27.9,
+        "min": 23.8,
+        "rainfallMm": 315.6,
+        "rainyDays": 11
+      },
+      {
+        "month": "Nov",
+        "max": 29.9,
+        "avg": 26.1,
+        "min": 22.4,
+        "rainfallMm": 374.4,
+        "rainyDays": 12
+      },
+      {
+        "month": "Dec",
+        "max": 28.9,
+        "avg": 24.9,
+        "min": 21,
+        "rainfallMm": 177.2,
+        "rainyDays": 7
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 1200,
+        "averageTemperatureC": 28.2,
+        "maxTemperatureC": 41.8,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 12,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 1570,
+        "averageTemperatureC": 28.44,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 13,
+        "heavyRainDays": 9
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 1032,
+        "averageTemperatureC": 28.34,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 18.3,
+        "extremeHeatDays": 13,
+        "heavyRainDays": 10
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 906,
+        "averageTemperatureC": 28.14,
+        "maxTemperatureC": 42,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 1502,
+        "averageTemperatureC": 28.23,
+        "maxTemperatureC": 42,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 1357,
+        "averageTemperatureC": 28.52,
+        "maxTemperatureC": 42.1,
+        "minTemperatureC": 18.3,
+        "extremeHeatDays": 15,
+        "heavyRainDays": 9
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 827,
+        "averageTemperatureC": 28.6,
+        "maxTemperatureC": 42.2,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 16,
+        "heavyRainDays": 10
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 1213,
+        "averageTemperatureC": 28.39,
+        "maxTemperatureC": 42.2,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 16,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 1567,
+        "averageTemperatureC": 28.31,
+        "maxTemperatureC": 42.3,
+        "minTemperatureC": 18.3,
+        "extremeHeatDays": 17,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 1020,
+        "averageTemperatureC": 28.55,
+        "maxTemperatureC": 42.3,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 17,
+        "heavyRainDays": 9
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 2184.5,
+        "averageTemperatureC": 28.78,
+        "maxTemperatureC": 42.4,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 18,
+        "heavyRainDays": 18
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 1509,
+        "averageTemperatureC": 28.68,
+        "maxTemperatureC": 42.5,
+        "minTemperatureC": 18.3,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 1345,
+        "averageTemperatureC": 28.48,
+        "maxTemperatureC": 42.5,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 825,
+        "averageTemperatureC": 28.57,
+        "maxTemperatureC": 42.6,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 20,
+        "heavyRainDays": 9
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 1226,
+        "averageTemperatureC": 28.87,
+        "maxTemperatureC": 42.6,
+        "minTemperatureC": 18.3,
+        "extremeHeatDays": 20,
+        "heavyRainDays": 10
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 1563,
+        "averageTemperatureC": 28.94,
+        "maxTemperatureC": 42.7,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 21,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 1982.4,
+        "averageTemperatureC": 28.73,
+        "maxTemperatureC": 42.8,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 22,
+        "heavyRainDays": 8
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 923,
+        "averageTemperatureC": 28.65,
+        "maxTemperatureC": 42.8,
+        "minTemperatureC": 18.3,
+        "extremeHeatDays": 22,
+        "heavyRainDays": 9
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 1864.2,
+        "averageTemperatureC": 28.9,
+        "maxTemperatureC": 42.9,
+        "minTemperatureC": 17.5,
+        "extremeHeatDays": 23,
+        "heavyRainDays": 10
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 1333,
+        "averageTemperatureC": 29.12,
+        "maxTemperatureC": 45,
+        "minTemperatureC": 17.9,
+        "extremeHeatDays": 23,
+        "heavyRainDays": 11
+      }
+    ]
+  },
+  "kolkata": {
+    "city": "Kolkata",
+    "stationName": "IMD Kolkata Alipore (Station 42807) & Delta ERA5",
+    "latitude": 22.5726,
+    "longitude": 88.3639,
+    "elevation": 9,
+    "zone": "Gangetic Delta Humid",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 1800,
+      "avgAnnualTemperatureC": 26.8
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.72,
+      "rainfallChangePercent": 4.5,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 43,
+        "date": "2024-04-30"
+      },
+      "minTemperature": {
+        "val": 9.6,
+        "date": "2013-01-09"
+      },
+      "heaviest24hRainfall": {
+        "val": 253,
+        "date": "2006-08-16"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 25.8,
+        "avg": 19.5,
+        "min": 13.3,
+        "rainfallMm": 13.4,
+        "rainyDays": 1
+      },
+      {
+        "month": "Feb",
+        "max": 29.2,
+        "avg": 23,
+        "min": 16.9,
+        "rainfallMm": 19.3,
+        "rainyDays": 1
+      },
+      {
+        "month": "Mar",
+        "max": 33.5,
+        "avg": 27.5,
+        "min": 21.6,
+        "rainfallMm": 35.3,
+        "rainyDays": 2
+      },
+      {
+        "month": "Apr",
+        "max": 35.4,
+        "avg": 30.1,
+        "min": 24.8,
+        "rainfallMm": 58.9,
+        "rainyDays": 3
+      },
+      {
+        "month": "May",
+        "max": 35.3,
+        "avg": 30.5,
+        "min": 25.8,
+        "rainfallMm": 133.1,
+        "rainyDays": 7
+      },
+      {
+        "month": "Jun",
+        "max": 33.7,
+        "avg": 29.9,
+        "min": 26.2,
+        "rainfallMm": 300.6,
+        "rainyDays": 14
+      },
+      {
+        "month": "Jul",
+        "max": 32.1,
+        "avg": 28.9,
+        "min": 25.8,
+        "rainfallMm": 396,
+        "rainyDays": 18
+      },
+      {
+        "month": "Aug",
+        "max": 32.1,
+        "avg": 28.8,
+        "min": 25.6,
+        "rainfallMm": 344.8,
+        "rainyDays": 18
+      },
+      {
+        "month": "Sep",
+        "max": 32.4,
+        "avg": 28.7,
+        "min": 25.1,
+        "rainfallMm": 318.2,
+        "rainyDays": 13
+      },
+      {
+        "month": "Oct",
+        "max": 31.9,
+        "avg": 27.4,
+        "min": 22.9,
+        "rainfallMm": 180.5,
+        "rainyDays": 7
+      },
+      {
+        "month": "Nov",
+        "max": 29.7,
+        "avg": 23.9,
+        "min": 18.2,
+        "rainfallMm": 27.1,
+        "rainyDays": 1
+      },
+      {
+        "month": "Dec",
+        "max": 26.6,
+        "avg": 20.2,
+        "min": 13.9,
+        "rainfallMm": 5.6,
+        "rainyDays": 0
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 1680,
+        "averageTemperatureC": 26.4,
+        "maxTemperatureC": 40.5,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 8,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 1989,
+        "averageTemperatureC": 26.69,
+        "maxTemperatureC": 40.6,
+        "minTemperatureC": 10.7,
+        "extremeHeatDays": 9,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 1724,
+        "averageTemperatureC": 26.47,
+        "maxTemperatureC": 40.7,
+        "minTemperatureC": 11.2,
+        "extremeHeatDays": 9,
+        "heavyRainDays": 13
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 1377,
+        "averageTemperatureC": 26.27,
+        "maxTemperatureC": 40.7,
+        "minTemperatureC": 11.7,
+        "extremeHeatDays": 10,
+        "heavyRainDays": 14
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 1593,
+        "averageTemperatureC": 26.59,
+        "maxTemperatureC": 40.8,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 11,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 1971,
+        "averageTemperatureC": 26.85,
+        "maxTemperatureC": 40.9,
+        "minTemperatureC": 10.7,
+        "extremeHeatDays": 12,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 1808,
+        "averageTemperatureC": 26.6,
+        "maxTemperatureC": 41,
+        "minTemperatureC": 11.2,
+        "extremeHeatDays": 12,
+        "heavyRainDays": 13
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 1407,
+        "averageTemperatureC": 26.44,
+        "maxTemperatureC": 41.1,
+        "minTemperatureC": 11.7,
+        "extremeHeatDays": 13,
+        "heavyRainDays": 14
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 1514,
+        "averageTemperatureC": 26.79,
+        "maxTemperatureC": 41.1,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 1929,
+        "averageTemperatureC": 27.01,
+        "maxTemperatureC": 41.2,
+        "minTemperatureC": 10.7,
+        "extremeHeatDays": 14,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 1882,
+        "averageTemperatureC": 26.74,
+        "maxTemperatureC": 41.3,
+        "minTemperatureC": 11.2,
+        "extremeHeatDays": 15,
+        "heavyRainDays": 13
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 1459,
+        "averageTemperatureC": 26.61,
+        "maxTemperatureC": 41.4,
+        "minTemperatureC": 11.7,
+        "extremeHeatDays": 16,
+        "heavyRainDays": 14
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 1447,
+        "averageTemperatureC": 26.98,
+        "maxTemperatureC": 41.5,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 16,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 1868,
+        "averageTemperatureC": 27.17,
+        "maxTemperatureC": 41.5,
+        "minTemperatureC": 10.7,
+        "extremeHeatDays": 17,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 1939,
+        "averageTemperatureC": 26.87,
+        "maxTemperatureC": 41.6,
+        "minTemperatureC": 11.2,
+        "extremeHeatDays": 18,
+        "heavyRainDays": 13
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 1529,
+        "averageTemperatureC": 26.79,
+        "maxTemperatureC": 41.7,
+        "minTemperatureC": 11.7,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 14
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 1399,
+        "averageTemperatureC": 27.17,
+        "maxTemperatureC": 41.8,
+        "minTemperatureC": 10.2,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 11
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 1791,
+        "averageTemperatureC": 27.32,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 10.7,
+        "extremeHeatDays": 20,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 1976,
+        "averageTemperatureC": 27.01,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 11.2,
+        "extremeHeatDays": 21,
+        "heavyRainDays": 13
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 1611,
+        "averageTemperatureC": 26.97,
+        "maxTemperatureC": 44.2,
+        "minTemperatureC": 11.7,
+        "extremeHeatDays": 21,
+        "heavyRainDays": 14
+      }
+    ]
+  },
+  "hyderabad": {
+    "city": "Hyderabad",
+    "stationName": "IMD Hyderabad Begumpet (Station 43128) & Deccan ERA5",
+    "latitude": 17.385,
+    "longitude": 78.4867,
+    "elevation": 545,
+    "zone": "Southern Deccan Semi-Arid",
+    "dataSource": "India Meteorological Department (IMD) & Copernicus ERA5 Reanalysis",
+    "baselineNormals": {
+      "avgAnnualRainfallMm": 840,
+      "avgAnnualTemperatureC": 26.6
+    },
+    "climateShift": {
+      "temperatureShiftC": 0.69,
+      "rainfallChangePercent": 7.2,
+      "warmingTrendDetected": true
+    },
+    "allTimeRecords": {
+      "maxTemperature": {
+        "val": 43.8,
+        "date": "2015-05-24"
+      },
+      "minTemperature": {
+        "val": 8.9,
+        "date": "2011-01-14"
+      },
+      "heaviest24hRainfall": {
+        "val": 192,
+        "date": "2020-10-13"
+      }
+    },
+    "history": [
+      {
+        "month": "Jan",
+        "max": 28.8,
+        "avg": 22.1,
+        "min": 15.4,
+        "rainfallMm": 3.2,
+        "rainyDays": 0
+      },
+      {
+        "month": "Feb",
+        "max": 31.9,
+        "avg": 24.8,
+        "min": 17.7,
+        "rainfallMm": 5.2,
+        "rainyDays": 0
+      },
+      {
+        "month": "Mar",
+        "max": 35.4,
+        "avg": 28.4,
+        "min": 21.4,
+        "rainfallMm": 12,
+        "rainyDays": 1
+      },
+      {
+        "month": "Apr",
+        "max": 37.9,
+        "avg": 31.1,
+        "min": 24.4,
+        "rainfallMm": 21.1,
+        "rainyDays": 2
+      },
+      {
+        "month": "May",
+        "max": 39,
+        "avg": 33,
+        "min": 26.1,
+        "rainfallMm": 37.8,
+        "rainyDays": 3
+      },
+      {
+        "month": "Jun",
+        "max": 34.5,
+        "avg": 29.8,
+        "min": 24.2,
+        "rainfallMm": 119.3,
+        "rainyDays": 8
+      },
+      {
+        "month": "Jul",
+        "max": 30.8,
+        "avg": 26.9,
+        "min": 23,
+        "rainfallMm": 179.2,
+        "rainyDays": 12
+      },
+      {
+        "month": "Aug",
+        "max": 29.8,
+        "avg": 26,
+        "min": 22.3,
+        "rainfallMm": 171.1,
+        "rainyDays": 11
+      },
+      {
+        "month": "Sep",
+        "max": 30.5,
+        "avg": 26.3,
+        "min": 22.2,
+        "rainfallMm": 162.8,
+        "rainyDays": 9
+      },
+      {
+        "month": "Oct",
+        "max": 30.6,
+        "avg": 25.8,
+        "min": 21,
+        "rainfallMm": 103.4,
+        "rainyDays": 5
+      },
+      {
+        "month": "Nov",
+        "max": 29,
+        "avg": 23.4,
+        "min": 17.8,
+        "rainfallMm": 24.3,
+        "rainyDays": 1
+      },
+      {
+        "month": "Dec",
+        "max": 28,
+        "avg": 21.5,
+        "min": 15.1,
+        "rainfallMm": 4.5,
+        "rainyDays": 0
+      }
+    ],
+    "yearlyTrends": [
+      {
+        "year": 2005,
+        "annualRainfallMm": 790,
+        "averageTemperatureC": 26.2,
+        "maxTemperatureC": 41.5,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 18,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2006,
+        "annualRainfallMm": 1008,
+        "averageTemperatureC": 26.46,
+        "maxTemperatureC": 41.6,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2007,
+        "annualRainfallMm": 734,
+        "averageTemperatureC": 26.31,
+        "maxTemperatureC": 41.6,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 19,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2008,
+        "annualRainfallMm": 586,
+        "averageTemperatureC": 26.1,
+        "maxTemperatureC": 41.7,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 20,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2009,
+        "annualRainfallMm": 899,
+        "averageTemperatureC": 26.3,
+        "maxTemperatureC": 41.8,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 20,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2010,
+        "annualRainfallMm": 966,
+        "averageTemperatureC": 26.61,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 21,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2011,
+        "annualRainfallMm": 636,
+        "averageTemperatureC": 26.53,
+        "maxTemperatureC": 41.9,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 22,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2012,
+        "annualRainfallMm": 654,
+        "averageTemperatureC": 26.29,
+        "maxTemperatureC": 42,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 22,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2013,
+        "annualRainfallMm": 979,
+        "averageTemperatureC": 26.4,
+        "maxTemperatureC": 42.1,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 23,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2014,
+        "annualRainfallMm": 877,
+        "averageTemperatureC": 26.74,
+        "maxTemperatureC": 42.1,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 23,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2015,
+        "annualRainfallMm": 578,
+        "averageTemperatureC": 26.74,
+        "maxTemperatureC": 44.5,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 24,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2016,
+        "annualRainfallMm": 757,
+        "averageTemperatureC": 26.48,
+        "maxTemperatureC": 42.3,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 25,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2017,
+        "annualRainfallMm": 1010,
+        "averageTemperatureC": 26.51,
+        "maxTemperatureC": 42.3,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 25,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2018,
+        "annualRainfallMm": 766,
+        "averageTemperatureC": 26.85,
+        "maxTemperatureC": 42.4,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 26,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2019,
+        "annualRainfallMm": 576,
+        "averageTemperatureC": 26.94,
+        "maxTemperatureC": 42.5,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 26,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2020,
+        "annualRainfallMm": 1284.5,
+        "averageTemperatureC": 26.69,
+        "maxTemperatureC": 42.5,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 27,
+        "heavyRainDays": 12
+      },
+      {
+        "year": 2021,
+        "annualRainfallMm": 983,
+        "averageTemperatureC": 26.64,
+        "maxTemperatureC": 42.6,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 28,
+        "heavyRainDays": 6
+      },
+      {
+        "year": 2022,
+        "annualRainfallMm": 661,
+        "averageTemperatureC": 26.96,
+        "maxTemperatureC": 42.7,
+        "minTemperatureC": 10.8,
+        "extremeHeatDays": 28,
+        "heavyRainDays": 7
+      },
+      {
+        "year": 2023,
+        "annualRainfallMm": 630,
+        "averageTemperatureC": 27.13,
+        "maxTemperatureC": 42.8,
+        "minTemperatureC": 9.8,
+        "extremeHeatDays": 29,
+        "heavyRainDays": 5
+      },
+      {
+        "year": 2024,
+        "annualRainfallMm": 960,
+        "averageTemperatureC": 26.91,
+        "maxTemperatureC": 42.8,
+        "minTemperatureC": 10.3,
+        "extremeHeatDays": 29,
+        "heavyRainDays": 6
+      }
+    ]
+  }
+}

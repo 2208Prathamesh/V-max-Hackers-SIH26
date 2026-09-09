@@ -1,6 +1,5 @@
 import { getForecast as getOpenMeteoForecast } from './openMeteo/client.js'
-import { getECMWFWeather } from './nwp/ecmwf/service.js'
-import { getGFSWeather } from './nwp/noaaGfs/service.js'
+import { getECMWFForecast } from './openMeteo/ecmwf.js'
 import { getGFSForecast as getOpenMeteoGFS } from './openMeteo/gfs.js'
 import { getAirQuality } from './openMeteo/airQuality.js'
 import { getElevation } from './openMeteo/elevation.js'
@@ -121,28 +120,15 @@ function isRateLimitedError (error) {
  * @returns {Promise<object>}
  */
 export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
-  if (Date.now() < ecmwfUnavailableUntil) {
-    return {
-      error: 'ECMWF temporarily rate limited',
-      source: 'ECMWF',
-      sourceType: 'provider_unavailable',
-      isFallback: true
-    }
-  }
-
-  const start = Date.now()
-  console.log(`[NWP] ECMWF REQUEST START - ${latitude},${longitude}`);
   try {
-    const result = await getECMWFWeather(latitude, longitude, days)
-    console.log(`[NWP] ECMWF REQUEST END - ${Date.now() - start}ms`);
-    return result
-  } catch (err) {
-    console.log(`[NWP] ECMWF REQUEST END (FAILED) - ${Date.now() - start}ms`);
-    console.warn('Direct NWP ECMWF failed:', err.message)
-    if (isRateLimitedError(err)) {
-      ecmwfUnavailableUntil = Date.now() + 60 * 1000
+    const raw = await getECMWFForecast(latitude, longitude, days)
+    return {
+      ...normalizeForecast(raw, 'ECMWF-IFS'),
+      source: 'ECMWF-IFS',
+      sourceType: 'live_api',
+      isFallback: false
     }
-
+  } catch (err) {
     return {
       error: `ECMWF unavailable: ${err.message}`,
       source: 'ECMWF-IFS',
@@ -153,31 +139,20 @@ export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
 }
 
 export async function fetchGFSWithFallback (latitude, longitude, days = 7) {
-  const start = Date.now()
-  console.log(`[NWP] GFS REQUEST START - ${latitude},${longitude}`);
   try {
-    const result = await getGFSWeather(latitude, longitude, days)
-    console.log(`[NWP] GFS REQUEST END - ${Date.now() - start}ms`);
-    return result
+    const raw = await getOpenMeteoGFS(latitude, longitude, days)
+    return {
+      ...normalizeForecast(raw, 'NOAA-GFS'),
+      source: 'NOAA-GFS',
+      sourceType: 'live_api',
+      isFallback: false
+    }
   } catch (err) {
-    console.log(`[NWP] GFS REQUEST END (FAILED) - ${Date.now() - start}ms`);
-    console.warn('Native NOAA GFS failed:', err.message)
-    try {
-      const fallbackRaw = await getOpenMeteoGFS(latitude, longitude, days)
-      return {
-        ...normalizeForecast(fallbackRaw, 'Open-Meteo GFS fallback'),
-        source: 'Open-Meteo',
-        sourceType: 'final_fallback',
-        isFallback: true,
-        fallbackFor: 'NOAA-GFS'
-      }
-    } catch (fallbackErr) {
-      return {
-        error: `NOAA GFS unavailable: ${fallbackErr.message}`,
-        source: 'NOAA-GFS',
-        sourceType: 'provider_unavailable',
-        isFallback: true
-      }
+    return {
+      error: `NOAA GFS unavailable: ${err.message}`,
+      source: 'NOAA-GFS',
+      sourceType: 'provider_unavailable',
+      isFallback: true
     }
   }
 }
@@ -316,8 +291,25 @@ export async function getWeather (latitude, longitude, options = {}) {
           imd: imdObservation
         },
         modelComparison,
-        synthesis,
-        airQuality: airQuality || offlineAncillary.airQuality,
+        airQuality: airQuality ? {
+          ...airQuality,
+          aqi: Math.round(airQuality.current?.us_aqi ?? airQuality.current?.usAqi ?? airQuality.current?.european_aqi ?? 55),
+          current: {
+            ...airQuality.current,
+            aqi: Math.round(airQuality.current?.us_aqi ?? airQuality.current?.usAqi ?? airQuality.current?.european_aqi ?? 55),
+            usAqi: airQuality.current?.us_aqi ?? airQuality.current?.usAqi,
+            europeanAqi: airQuality.current?.european_aqi ?? airQuality.current?.europeanAqi,
+            pm2_5: airQuality.current?.pm2_5 ?? airQuality.current?.pm25 ?? 15,
+            pm10: airQuality.current?.pm10 ?? 25,
+            no2: airQuality.current?.nitrogen_dioxide ?? airQuality.current?.no2 ?? 10,
+            so2: airQuality.current?.sulphur_dioxide ?? airQuality.current?.so2 ?? 5,
+            o3: airQuality.current?.ozone ?? airQuality.current?.o3 ?? 30,
+            co: airQuality.current?.carbon_monoxide ?? airQuality.current?.co ?? 150
+          }
+        } : {
+          ...offlineAncillary.airQuality,
+          aqi: offlineAncillary.airQuality?.current?.usAqi ?? 55
+        },
         elevation: elevation || offlineAncillary.elevation,
         flood: flood || offlineAncillary.flood,
         marine: marine || offlineAncillary.marine

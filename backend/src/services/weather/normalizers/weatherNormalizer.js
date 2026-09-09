@@ -54,7 +54,18 @@ function normalizeForecast (data, source) {
       isDay: data.current?.is_day ?? null,
       is_day: data.current?.is_day ?? null,
       visibility: data.current?.visibility ?? data.hourly?.visibility?.[0] ?? null,
-      uvIndex: data.current?.uv_index ?? data.hourly?.uv_index?.[0] ?? null,
+      uvIndex: data.current?.uv_index != null
+        ? Math.round(Number(data.current.uv_index) * 10) / 10
+        : (() => {
+            if (Array.isArray(data.hourly?.time) && Array.isArray(data.hourly?.uv_index)) {
+              const nowIsoHour = new Date().toISOString().slice(0, 13);
+              const idx = data.hourly.time.findIndex(t => typeof t === 'string' && t.startsWith(nowIsoHour));
+              if (idx !== -1 && data.hourly.uv_index[idx] != null) {
+                return Math.round(Number(data.hourly.uv_index[idx]) * 10) / 10;
+              }
+            }
+            return data.hourly?.uv_index?.[0] ?? 0;
+          })(),
       weatherCode: data.current?.weather_code ?? null,
       weatherDescription: describeWeather(data.current?.weather_code),
       condition: describeWeather(data.current?.weather_code),

@@ -146,6 +146,14 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
         return { title: t('advisory'), subtitle: t('advisorySubtitle') }
       case 'alerts':
         return { title: t('alerts'), subtitle: t('alertsSubtitle') }
+      case 'disaster-sops':
+        return {
+          title: language === 'mr' ? 'आपत्ती व्यवस्थापन सुरक्षा कार्यप्रणाली (SOP)' : 'Disaster Safety Operating Procedures (SOP)',
+          subtitle:
+            language === 'mr'
+              ? 'प्रमाणित आपत्कालीन जीवनरक्षक कृती नियम व सुरक्षा मार्गदर्शक'
+              : 'Standardized Life-Saving Emergency Protocols & Agricultural Field Procedures'
+        }
       case 'forecast':
         return { title: t('forecast'), subtitle: t('forecastSubtitle') }
       case 'news':
@@ -157,10 +165,15 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
         }
       case 'climate':
       case 'climate-historical':
+      case 'history':
         return {
-          title: t('climate') || 'Climate Analysis',
+          title: t('climateHistorical') || 'Climate & Historical Data',
           subtitle:
-            t('climateSubtitle') || 'Historical climate & environmental trends'
+            language === 'mr'
+              ? 'दीर्घकालीन हवामान कल, तापमान वाढ व ऐतिहासिक नोंदी'
+              : language === 'hi'
+              ? 'दीर्घकालिक जलवायु पैटर्न, तापमान प्रवृत्तियां और ऐतिहासिक रिकॉर्ड्स'
+              : 'Explore long-term weather patterns, trends, and climate insights for a more informed tomorrow.'
         }
       default:
         return { title: 'WeatherGPT', subtitle: t('dashboardSubtitle') }

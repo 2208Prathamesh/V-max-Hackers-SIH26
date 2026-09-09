@@ -82,6 +82,85 @@ export const AlertDetailsModal = ({ alert, isOpen, onClose, onShare }) => {
             </div>
           </div>
 
+          {/* Source Type & Authority / AGI Verification Card */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {language === 'mr' ? 'प्रमाणीकरण व स्त्रोत' : 'Verification & Authority'}
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                alert.sourceType === 'agi_analysis'
+                  ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-300'
+                  : alert.sourceType === 'authority_broadcast'
+                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300'
+                  : 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300'
+              }`}>
+                {alert.sourceType === 'agi_analysis'
+                  ? '🧠 WeatherGPT AGI Analysis'
+                  : alert.sourceType === 'authority_broadcast'
+                  ? '🛡️ Authority Broadcast'
+                  : '🏛️ IMD Official Warning'}
+              </span>
+            </div>
+
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              {alert.source}
+            </p>
+
+            {/* AGI Model Confidence & Multi-Model Chips */}
+            {alert.metadata?.confidence && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-slate-500">AGI Neural Model Confidence:</span>
+                  <span className="font-extrabold text-purple-600 dark:text-purple-400">{alert.metadata.confidence}</span>
+                </div>
+                {alert.metadata.models && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {alert.metadata.models.map((m, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-300 text-[10px] font-bold">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Authority Order Number & Issuing Officer */}
+            {alert.metadata?.orderNo && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Official Order No:</span>
+                  <span className="font-mono font-bold text-amber-700 dark:text-amber-400">{alert.metadata.orderNo}</span>
+                </div>
+                {alert.metadata.emergencyPhone && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Direct Emergency Control:</span>
+                    <a href={`tel:${alert.metadata.emergencyPhone}`} className="font-bold text-emerald-600 hover:underline">
+                      📞 {alert.metadata.emergencyPhone}
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Affected Areas / Tehsils */}
+            {alert.affectedAreas && alert.affectedAreas.length > 0 && (
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] text-slate-400 block font-semibold mb-1">
+                  {language === 'mr' ? 'बाधित तालुके / क्षेत्रे:' : 'Affected Tehsils & Areas:'}
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {alert.affectedAreas.map((area, idx) => (
+                    <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold">
+                      📍 {area}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Description */}
           <div>
             <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1.5">
@@ -96,15 +175,17 @@ export const AlertDetailsModal = ({ alert, isOpen, onClose, onShare }) => {
           <div className="grid grid-cols-3 gap-2.5">
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center border border-slate-100 dark:border-slate-800">
               <span className="text-[10px] text-slate-400 block font-medium">{t('probability')}</span>
-              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{alert.probability || '80%'}</span>
+              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{alert.probability || '85%'}</span>
             </div>
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center border border-slate-100 dark:border-slate-800">
               <span className="text-[10px] text-slate-400 block font-medium">{language === 'mr' ? 'अत्यावश्यकता' : language === 'hi' ? 'तात्कालिकता' : 'Urgency'}</span>
-              <span className="text-sm font-extrabold text-rose-600 dark:text-rose-400">{language === 'mr' ? 'तात्काळ' : language === 'hi' ? 'तुरंत' : 'Immediate'}</span>
+              <span className="text-sm font-extrabold text-rose-600 dark:text-rose-400">{alert.severity === 'Severe' ? (language === 'mr' ? 'तात्काळ' : 'Immediate') : (language === 'mr' ? 'सतर्क राहा' : 'Be Prepared')}</span>
             </div>
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center border border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] text-slate-400 block font-medium">{t('source')}</span>
-              <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400">IMD {alert.location?.split(',')[0] || 'Official'}</span>
+              <span className="text-[10px] text-slate-400 block font-medium">{t('severity')}</span>
+              <span className={`text-sm font-extrabold ${alert.severity === 'Severe' ? 'text-rose-600 dark:text-rose-400' : alert.severity === 'Moderate' ? 'text-orange-600 dark:text-orange-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                {alert.severity}
+              </span>
             </div>
           </div>
 
@@ -117,11 +198,9 @@ export const AlertDetailsModal = ({ alert, isOpen, onClose, onShare }) => {
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                 <span>
-                  {language === 'mr' 
+                  {alert.action || (language === 'mr' 
                     ? 'घरामध्येच राहा आणि पाणी साचणाऱ्या सखल भागातून प्रवास करणे टाळा.'
-                    : language === 'hi'
-                    ? 'घरों के अंदर रहें और जलभराव वाले निचले क्षेत्रों से यात्रा से बचें।'
-                    : 'Stay indoors and avoid travel through known waterlogged passages.'}
+                    : 'Stay indoors and avoid travel through known waterlogged passages.')}
                 </span>
               </div>
               <div className="flex items-start gap-2">
@@ -129,8 +208,6 @@ export const AlertDetailsModal = ({ alert, isOpen, onClose, onShare }) => {
                 <span>
                   {language === 'mr'
                     ? 'आपत्कालीन विजेरी (टॉर्च), पिण्याचे पाणी आणि आवश्यक औषधे तयार ठेवा.'
-                    : language === 'hi'
-                    ? 'इमरजेंसी टॉर्च, पीने का पानी और आवश्यक दवाएं तैयार रखें।'
                     : 'Keep emergency flashlights, drinking water, and essential medicines ready.'}
                 </span>
               </div>
@@ -138,10 +215,8 @@ export const AlertDetailsModal = ({ alert, isOpen, onClose, onShare }) => {
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                 <span>
                   {language === 'mr'
-                    ? 'विजांच्या कडकडाटाच्या वेळी संवेदनशील इलेक्ट्रॉनिक उपकरणे बंद ठेवा.'
-                    : language === 'hi'
-                    ? 'बिजली कड़कने के दौरान संवेदनशील इलेक्ट्रॉनिक उपकरणों के प्लग निकाल दें।'
-                    : 'Unplug sensitive electronic devices during severe electrical thunderstorms.'}
+                    ? 'आपत्कालीन मदतीसाठी किसान कॉल सेंटर १८००-१८०-१५५१ किंवा आपत्कालीन ११२ वर संपर्क साधा.'
+                    : 'For emergency agro-assistance call Kisan Call Center 1800-180-1551 or Emergency 112.'}
                 </span>
               </div>
             </div>

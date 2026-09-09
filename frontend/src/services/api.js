@@ -303,11 +303,15 @@ export const api = {
     if (endYear) params.set('endYear', String(endYear))
     return request(`/climate/trends?${params.toString()}`)
   },
-  fullClimateData: ({ city, startDate, endDate }) => {
+  fullClimateData: ({ city, latitude, longitude, startDate, endDate, startYear, endYear } = {}) => {
     const params = new URLSearchParams()
     if (city) params.set('city', city)
+    if (latitude !== undefined) params.set('latitude', String(latitude))
+    if (longitude !== undefined) params.set('longitude', String(longitude))
     if (startDate) params.set('startDate', startDate)
     if (endDate) params.set('endDate', endDate)
+    if (startYear) params.set('startYear', String(startYear))
+    if (endYear) params.set('endYear', String(endYear))
     return request(`/climate/full?${params.toString()}`)
   },
 
@@ -347,12 +351,14 @@ export const api = {
     }),
 
   // Advisories
-  agricultureAdvisory: ({ city, latitude, longitude, crop }) => {
+  agricultureAdvisory: ({ city, latitude, longitude, crop, sowingDate, das }) => {
     const params = new URLSearchParams()
     if (city) params.set('city', city)
     if (latitude !== undefined) params.set('latitude', String(latitude))
     if (longitude !== undefined) params.set('longitude', String(longitude))
     if (crop) params.set('crop', crop)
+    if (sowingDate) params.set('sowingDate', sowingDate)
+    if (das !== undefined && das !== null) params.set('das', String(das))
     return request(`/advisories/agriculture?${params.toString()}`)
   },
   cropAdvisory: ({ crop, latitude, longitude }) =>
@@ -399,7 +405,39 @@ export const api = {
       method: 'POST'
     }),
   authorityStats: () => request('/authority/stats'),
-  authorityDistricts: () => request('/authority/districts')
+  authorityDistricts: () => request('/authority/districts'),
+
+  // Climate & Historical Reanalysis
+  climateHistory: ({ city, latitude, longitude, startDate, endDate }) => {
+    const params = new URLSearchParams()
+    if (city) params.set('city', city)
+    if (latitude !== undefined) params.set('latitude', String(latitude))
+    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (startDate) params.set('startDate', startDate)
+    if (endDate) params.set('endDate', endDate)
+    return request(`/climate/history?${params.toString()}`)
+  },
+  climateTrends: ({ city, latitude, longitude, startYear, endYear }) => {
+    const params = new URLSearchParams()
+    if (city) params.set('city', city)
+    if (latitude !== undefined) params.set('latitude', String(latitude))
+    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (startYear) params.set('startYear', String(startYear))
+    if (endYear) params.set('endYear', String(endYear))
+    return request(`/climate/trends?${params.toString()}`)
+  },
+  fullClimateData: ({ city, latitude, longitude, startYear, endYear, startDate, endDate }) => {
+    const params = new URLSearchParams()
+    if (city) params.set('city', city)
+    if (latitude !== undefined) params.set('latitude', String(latitude))
+    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (startYear) params.set('startYear', String(startYear))
+    if (endYear) params.set('endYear', String(endYear))
+    if (startDate) params.set('startDate', startDate)
+    if (endDate) params.set('endDate', endDate)
+    return request(`/climate/full?${params.toString()}`)
+  }
 }
 
 export default api
+

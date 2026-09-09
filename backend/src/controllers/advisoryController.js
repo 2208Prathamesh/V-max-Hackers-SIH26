@@ -46,8 +46,14 @@ export const getAgroAdvisory = async (req, res, next) => {
   try {
     const { lat, lon, cityName } = await resolveCoords(req);
     const crop = req.query.crop || 'general';
+    const sowingDate = req.query.sowingDate || null;
+    const das = req.query.das ? parseInt(req.query.das, 10) : null;
 
-    const advisory = await advisoryService.getAgricultureAdvisory(lat, lon, crop);
+    const advisory = await advisoryService.getAgricultureAdvisory(lat, lon, crop, {
+      sowingDate,
+      das,
+      cityName
+    });
     return successResponse(res, { cityName, ...advisory }, `Crop advisory for ${crop} generated successfully`, 200);
   } catch (error) {
     next(error);

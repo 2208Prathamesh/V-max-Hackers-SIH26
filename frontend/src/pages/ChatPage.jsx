@@ -372,7 +372,7 @@ export const ChatPage = () => {
                 className={`w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-bold shrink-0 shadow-xs ${
                   isUser
                     ? 'bg-blue-600 text-white'
-                    : 'bg-slate-900 dark:bg-slate-800 text-blue-400 border border-slate-700/60'
+                    : 'bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-slate-700/60'
                 }`}
               >
                 {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
