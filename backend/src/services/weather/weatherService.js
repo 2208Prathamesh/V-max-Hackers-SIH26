@@ -15,6 +15,8 @@ import { buildOfflineAncillaryData } from './offlineWeather.js'
 import { buildWeatherSynthesis } from './weatherSynthesis.js'
 import { buildNWPModelComparison } from './nwp/modelComparisonService.js'
 import { parseAndValidateCoordinates } from '../../utils/coordinates.js'
+import weatherCacheService from './cache/weatherCacheService.js'
+import { mergeForecastData } from './cache/forecastReconciler.js'
 // In-memory LRU-like cache for weather data
 const weatherCache = new Map()
 const inflightRequests = new Map()
@@ -26,7 +28,8 @@ const MAX_CACHE_ENTRIES = 300 // Max entries cache
 // Sequential queue for background NWP tasks to prevent parallel GRIB2 allocations from exhausting memory
 let nwpQueue = Promise.resolve()
 function enqueueNWP (task) {
-  const run = () => task().catch(err => console.warn('Background NWP error:', err.message))
+  const run = () =>
+    task().catch(err => console.warn('Background NWP error:', err.message))
   nwpQueue = nwpQueue.then(run, run)
   return nwpQueue
 }
@@ -131,13 +134,13 @@ export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
   }
 
   const start = Date.now()
-  console.log(`[NWP] ECMWF REQUEST START - ${latitude},${longitude}`);
+  console.log(`[NWP] ECMWF REQUEST START - ${latitude},${longitude}`)
   try {
     const result = await getECMWFWeather(latitude, longitude, days)
-    console.log(`[NWP] ECMWF REQUEST END - ${Date.now() - start}ms`);
+    console.log(`[NWP] ECMWF REQUEST END - ${Date.now() - start}ms`)
     return result
   } catch (err) {
-    console.log(`[NWP] ECMWF REQUEST END (FAILED) - ${Date.now() - start}ms`);
+    console.log(`[NWP] ECMWF REQUEST END (FAILED) - ${Date.now() - start}ms`)
     console.warn('Direct NWP ECMWF failed:', err.message)
     if (isRateLimitedError(err)) {
       ecmwfUnavailableUntil = Date.now() + 60 * 1000
@@ -154,13 +157,13 @@ export async function fetchECMWFWithFallback (latitude, longitude, days = 7) {
 
 export async function fetchGFSWithFallback (latitude, longitude, days = 7) {
   const start = Date.now()
-  console.log(`[NWP] GFS REQUEST START - ${latitude},${longitude}`);
+  console.log(`[NWP] GFS REQUEST START - ${latitude},${longitude}`)
   try {
     const result = await getGFSWeather(latitude, longitude, days)
-    console.log(`[NWP] GFS REQUEST END - ${Date.now() - start}ms`);
+    console.log(`[NWP] GFS REQUEST END - ${Date.now() - start}ms`)
     return result
   } catch (err) {
-    console.log(`[NWP] GFS REQUEST END (FAILED) - ${Date.now() - start}ms`);
+    console.log(`[NWP] GFS REQUEST END (FAILED) - ${Date.now() - start}ms`)
     console.warn('Native NOAA GFS failed:', err.message)
     try {
       const fallbackRaw = await getOpenMeteoGFS(latitude, longitude, days)
@@ -228,10 +231,27 @@ export async function getWeather (latitude, longitude, options = {}) {
   // or the full service path). GET /api/weather/current opts out so the response
   // never blocks on NWP GRIB work; the models are returned as deferred placeholders.
   const includeNWP = options.includeNWP !== false
-  const cacheKey = `${includeNWP ? 'weather' : 'fast_weather'}_${latNum.toFixed(4)}_${lonNum.toFixed(4)}`
+  const cacheKey = `${includeNWP ? 'weather' : 'fast_weather'}_${latNum.toFixed(
+    4
+  )}_${lonNum.toFixed(4)}`
 
   const cached = getCached(cacheKey)
   if (cached) return cached
+
+  // L2 Distributed Redis Cache lookup
+  try {
+    const redisHot = await weatherCacheService.getCurrentWeather(
+      latNum,
+      lonNum,
+      { includeNWP }
+    )
+    if (redisHot) {
+      setCache(cacheKey, redisHot)
+      return redisHot
+    }
+  } catch (err) {
+    console.warn('[WeatherCache] Redis current lookup error:', err.message)
+  }
 
   if (inflightRequests.has(cacheKey)) {
     return await inflightRequests.get(cacheKey)
@@ -280,18 +300,18 @@ export async function getWeather (latitude, longitude, options = {}) {
       const modelComparison = includeNWP
         ? buildNWPModelComparison({
             gfs: gfsRaw,
-            ecmwf: ecmwfData,
+            ecmwf: ecmwfData
           })
-        : null;
+        : null
 
       const synthesis = includeNWP
         ? buildWeatherSynthesis({
             observation: imdObservation,
             gfs: gfsRaw,
             ecmwf: ecmwfData,
-            modelComparison,
+            modelComparison
           })
-        : null;
+        : null
 
       const result = {
         location: {
@@ -324,7 +344,36 @@ export async function getWeather (latitude, longitude, options = {}) {
       }
 
       setCache(cacheKey, result)
+      weatherCacheService
+        .setCurrentWeather(latNum, lonNum, result, { includeNWP })
+        .catch(err => {
+          console.warn(
+            '[WeatherCache] Redis setCurrentWeather warning:',
+            err.message
+          )
+        })
+
       return result
+    } catch (fetchErr) {
+      // Graceful provider fallback: attempt to retrieve retained current weather
+      try {
+        const retained = await weatherCacheService.getRetainedCurrentWeather(
+          latNum,
+          lonNum
+        )
+        if (retained) {
+          return {
+            ...retained,
+            cache: {
+              ...(retained.cache || {}),
+              isCached: true,
+              cacheStatus: 'stale',
+              isStale: true
+            }
+          }
+        }
+      } catch {}
+      throw fetchErr
     } finally {
       inflightRequests.delete(cacheKey)
     }
@@ -350,7 +399,11 @@ function buildBackgroundModelState (providerName, reason) {
   }
 }
 
-function updateForecastCacheWithBackgroundModel (cacheKey, providerName, modelData) {
+function updateForecastCacheWithBackgroundModel (
+  cacheKey,
+  providerName,
+  modelData
+) {
   const cachedEntry = getForecastCacheEntry(cacheKey)
   if (!cachedEntry) return null
 
@@ -374,8 +427,9 @@ export async function getForecast (latitude, longitude, days = 7) {
   const cacheKey = `forecast_${latNum.toFixed(4)}_${lonNum.toFixed(
     4
   )}_${daysNum}`
-  const cachedEntry = getForecastCacheEntry(cacheKey)
 
+  // 1. Check L1 in-memory cache
+  const cachedEntry = getForecastCacheEntry(cacheKey)
   if (
     cachedEntry &&
     Date.now() - cachedEntry.timestamp <= CACHE_TTL_MS.WEATHER_FORECAST
@@ -383,15 +437,36 @@ export async function getForecast (latitude, longitude, days = 7) {
     return withCacheMetadata(cachedEntry.data, cachedEntry, false)
   }
 
+  // 2. Check L2 Distributed Redis latest cache
+  try {
+    const redisLatest = await weatherCacheService.getLatestForecast(
+      latNum,
+      lonNum,
+      daysNum
+    )
+    if (redisLatest) {
+      setForecastCache(cacheKey, redisLatest)
+      return redisLatest
+    }
+  } catch (err) {
+    console.warn(
+      '[WeatherCache] Redis latest forecast lookup error:',
+      err.message
+    )
+  }
+
+  // 3. In-flight request deduplication
   if (inflightForecastRequests.has(cacheKey)) {
     return await inflightForecastRequests.get(cacheKey)
   }
 
   const forecastPromise = (async () => {
     try {
-      const openMeteoRaw = await getOpenMeteoForecast(latNum, lonNum, daysNum).catch(
-        () => null
-      )
+      const openMeteoRaw = await getOpenMeteoForecast(
+        latNum,
+        lonNum,
+        daysNum
+      ).catch(() => null)
       const openMeteo = openMeteoRaw
         ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
         : {
@@ -401,17 +476,56 @@ export async function getForecast (latitude, longitude, days = 7) {
             isFallback: true
           }
 
-      const warmCache = getForecastCacheEntry(cacheKey)
-      if (
-        openMeteo?.isFallback &&
-        warmCache &&
-        !warmCache.data.models.openMeteo?.isFallback
-      ) {
-        return withCacheMetadata(warmCache.data, warmCache, true)
+      // Check retained forecast from Redis for fallback and reconciliation
+      let retainedData = null
+      try {
+        retainedData = await weatherCacheService.getRetainedForecast(
+          latNum,
+          lonNum,
+          daysNum
+        )
+      } catch (err) {
+        console.warn(
+          '[WeatherCache] Retained forecast fetch error:',
+          err.message
+        )
       }
 
-      if (!isValidNormalizedForecast(openMeteo) && warmCache) {
-        return withCacheMetadata(warmCache.data, warmCache, true)
+      const warmCache = getForecastCacheEntry(cacheKey)
+      const fallbackSource = retainedData || warmCache?.data
+
+      if (openMeteo?.isFallback && fallbackSource) {
+        if (retainedData) {
+          return {
+            ...retainedData,
+            cache: {
+              ...(retainedData.cache || {}),
+              isCached: true,
+              cacheStatus: 'stale',
+              isStale: true
+            }
+          }
+        }
+        if (warmCache && !warmCache.data.models?.openMeteo?.isFallback) {
+          return withCacheMetadata(warmCache.data, warmCache, true)
+        }
+      }
+
+      if (!isValidNormalizedForecast(openMeteo) && fallbackSource) {
+        if (retainedData) {
+          return {
+            ...retainedData,
+            cache: {
+              ...(retainedData.cache || {}),
+              isCached: true,
+              cacheStatus: 'stale',
+              isStale: true
+            }
+          }
+        }
+        if (warmCache) {
+          return withCacheMetadata(warmCache.data, warmCache, true)
+        }
       }
 
       const loadingModels = {
@@ -425,15 +539,64 @@ export async function getForecast (latitude, longitude, days = 7) {
         )
       }
 
+      // Reconcile new provider forecast with previous retained forecast
+      let reconciledOpenMeteo = openMeteo
+      let overallCacheStatus = 'fresh'
+      let isMixed = false
+
+      if (retainedData && isValidNormalizedForecast(openMeteo)) {
+        const merged = mergeForecastData(
+          retainedData.models?.openMeteo || retainedData,
+          openMeteo,
+          { nowIso: new Date().toISOString() }
+        )
+        reconciledOpenMeteo =
+          merged.forecast || merged.models?.openMeteo || merged
+        overallCacheStatus = merged.cache?.cacheStatus || 'fresh'
+        isMixed = overallCacheStatus === 'mixed'
+      }
+
       const result = {
         location: {
           latitude: latNum,
           longitude: lonNum
         },
         models: {
-          openMeteo,
+          openMeteo: reconciledOpenMeteo,
           ...loadingModels
+        },
+        cache: {
+          isCached: false,
+          cacheStatus: overallCacheStatus,
+          isStale: overallCacheStatus === 'stale',
+          isMixed,
+          cachedAt: new Date().toISOString()
         }
+      }
+
+      // Save raw Open-Meteo forecast run as immutable history
+      if (!openMeteo.isFallback && openMeteoRaw) {
+        weatherCacheService
+          .saveForecastRun(
+            latNum,
+            lonNum,
+            'open-meteo',
+            openMeteo,
+            openMeteo.retrievedAt
+          )
+          .catch(err =>
+            console.warn('[WeatherCache] Save run error:', err.message)
+          )
+      }
+
+      // Save in L1 and L2 (latest and retained)
+      if (!openMeteo.isFallback) {
+        setForecastCache(cacheKey, result)
+        weatherCacheService
+          .setForecast(latNum, lonNum, daysNum, result)
+          .catch(err =>
+            console.warn('[WeatherCache] Set forecast error:', err.message)
+          )
       }
 
       // Background refresh: serialize NWP requests so multiple parallel requests never exhaust memory
@@ -465,24 +628,82 @@ export async function getForecast (latitude, longitude, days = 7) {
                 }
         }
 
+        // Save GFS and ECMWF runs to Redis if valid
+        if (gfsResult.status === 'fulfilled' && !gfsResult.value.isFallback) {
+          weatherCacheService
+            .saveForecastRun(
+              latNum,
+              lonNum,
+              'gfs',
+              gfsResult.value,
+              gfsResult.value.retrievedAt
+            )
+            .catch(() => {})
+        }
+        if (
+          ecmwfResult.status === 'fulfilled' &&
+          !ecmwfResult.value.isFallback
+        ) {
+          weatherCacheService
+            .saveForecastRun(
+              latNum,
+              lonNum,
+              'ecmwf',
+              ecmwfResult.value,
+              ecmwfResult.value.retrievedAt
+            )
+            .catch(() => {})
+        }
+
         const currentEntry = getForecastCacheEntry(cacheKey)
         if (!currentEntry) {
           if (!openMeteo.isFallback) {
-            setForecastCache(cacheKey, { ...result, models: { ...result.models, ...nextModels } })
+            const updated = {
+              ...result,
+              models: { ...result.models, ...nextModels }
+            }
+            setForecastCache(cacheKey, updated)
+            weatherCacheService
+              .setForecast(latNum, lonNum, daysNum, updated)
+              .catch(() => {})
           }
           return
         }
 
         updateForecastCacheWithBackgroundModel(cacheKey, 'gfs', nextModels.gfs)
-        updateForecastCacheWithBackgroundModel(cacheKey, 'ecmwf', nextModels.ecmwf)
+        const updatedResult = updateForecastCacheWithBackgroundModel(
+          cacheKey,
+          'ecmwf',
+          nextModels.ecmwf
+        )
+        if (updatedResult) {
+          weatherCacheService
+            .setForecast(latNum, lonNum, daysNum, updatedResult)
+            .catch(() => {})
+        }
       })
-
-      if (!openMeteo.isFallback) {
-        setForecastCache(cacheKey, result)
-      }
 
       return result
     } catch (error) {
+      // Fallback to retained Redis forecast or L1 warm cache
+      try {
+        const retained = await weatherCacheService.getRetainedForecast(
+          latNum,
+          lonNum,
+          daysNum
+        )
+        if (retained) {
+          return {
+            ...retained,
+            cache: {
+              ...(retained.cache || {}),
+              isCached: true,
+              cacheStatus: 'stale',
+              isStale: true
+            }
+          }
+        }
+      } catch {}
       const cached = getForecastCacheEntry(cacheKey)
       if (cached) return withCacheMetadata(cached.data, cached, true)
       throw error
@@ -507,20 +728,19 @@ export async function getHourlyForecast ({ latitude, longitude, hours = 24 }) {
   const coordinates = parseAndValidateCoordinates(latitude, longitude)
   const latNum = coordinates.latitude
   const lonNum = coordinates.longitude
+  const days = Math.max(2, Math.ceil(hours / 24))
 
-  const forecastRaw = await getOpenMeteoForecast(
-    latNum,
-    lonNum,
-    Math.max(2, Math.ceil(hours / 24))
-  )
-  const normalized = normalizeForecast(forecastRaw, 'Open-Meteo')
+  const fullForecast = await getForecast(latNum, lonNum, days)
+  const openMeteo =
+    fullForecast?.models?.openMeteo || fullForecast?.forecast || fullForecast
 
   return {
     location: {
       latitude: latNum,
       longitude: lonNum
     },
-    hourly: (normalized.hourly || []).slice(0, hours)
+    hourly: (openMeteo?.hourly || []).slice(0, hours),
+    cache: fullForecast?.cache
   }
 }
 
