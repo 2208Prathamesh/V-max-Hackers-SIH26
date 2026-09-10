@@ -1,5 +1,6 @@
 import { getForecast as getOpenMeteoForecast } from './openMeteo/client.js'
-import { getECMWFForecast } from './openMeteo/ecmwf.js'
+import { getECMWFWeather } from './nwp/ecmwf/service.js'
+import { getGFSWeather } from './nwp/noaaGfs/service.js'
 import { getGFSForecast as getOpenMeteoGFS } from './openMeteo/gfs.js'
 import { getAirQuality } from './openMeteo/airQuality.js'
 import { getElevation } from './openMeteo/elevation.js'
