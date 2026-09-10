@@ -7,7 +7,7 @@ import Scheduler from './services/scheduler.js'
 import { seedDefaultRolesUsers } from './services/seedRolesUsers.js'
 import app from './app.js'
 
-const PORT = env.PORT // Restart 1
+const PORT = env.PORT // Restarted server for auth fix
 
 let server
 

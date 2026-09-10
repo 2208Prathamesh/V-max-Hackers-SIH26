@@ -22,7 +22,7 @@ import {
 const router = express.Router()
 
 router.post('/register', registerLimiter, validationMiddleware(registerSchema), register)
-router.post('/login', authLimiter, validationMiddleware(loginSchema), login)
+router.post('/login', authLimiter, login)
 router.post('/social-login', authLimiter, socialLogin)
 router.post('/logout', authMiddleware, logout)
 router.get('/me', authMiddleware, getCurrentUser)

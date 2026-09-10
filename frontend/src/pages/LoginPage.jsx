@@ -389,19 +389,21 @@ export const LoginPage = () => {
                 </div>
               )}
 
-              {/* Email Address */}
+              {/* Email Address or Username */}
               <div>
                 <label className='block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1'>
-                  {t('emailAddress') || 'Email Address'}
+                  {isSignUpMode
+                    ? (t('emailAddress') || 'Email Address')
+                    : (t('emailOrUsername') || 'Email or Username')}
                 </label>
                 <div className='relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition shadow-2xs'>
                   <Mail className='w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2' />
                   <input
-                    type='email'
+                    type={isSignUpMode ? 'email' : 'text'}
                     name='email'
                     required
                     autoComplete='username'
-                    placeholder='yourname@domain.com'
+                    placeholder={isSignUpMode ? 'yourname@domain.com' : 'Email or username (e.g. admin)'}
                     value={formData.email}
                     onChange={handleChange}
                     className='w-full pl-10 pr-4 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'

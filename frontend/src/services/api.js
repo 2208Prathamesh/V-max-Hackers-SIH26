@@ -74,7 +74,10 @@ const request = async (path, options = {}) => {
 
     const payload = await response.json().catch(() => ({}))
     if (!response.ok) {
-      throw new Error(payload.message || 'Request failed')
+      const detail = (payload.errors && Array.isArray(payload.errors) && payload.errors.length > 0)
+        ? payload.errors.join(', ')
+        : (payload.message || 'Request failed')
+      throw new Error(detail)
     }
     return payload.data ?? payload
   }
@@ -112,7 +115,10 @@ const request = async (path, options = {}) => {
 
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        throw new Error(payload.message || 'Request failed')
+        const detail = (payload.errors && Array.isArray(payload.errors) && payload.errors.length > 0)
+          ? payload.errors.join(', ')
+          : (payload.message || 'Request failed')
+        throw new Error(detail)
       }
 
       const data = payload.data ?? payload

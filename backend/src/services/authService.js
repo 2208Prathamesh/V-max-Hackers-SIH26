@@ -66,9 +66,30 @@ const register = async ({
 /**
  * Login
  */
-const login = async (email, password) => {
+const login = async (identifier, password) => {
+  if (!identifier || !password) {
+    const error = new Error('Invalid email or password')
+    error.statusCode = 401
+    throw error
+  }
+
+  const clean = String(identifier).trim().toLowerCase()
+
+  // Role aliases for quick access
+  const aliasMap = {
+    admin: 'admin@weathergpt.ai',
+    farmer: 'ramesh.kisan@weathergpt.ai',
+    authority: 'officer.pune@disaster.gov.in',
+    sid: 'sidpatil@gmail.com'
+  }
+  const searchTarget = aliasMap[clean] || clean
+
   let user = await User.findOne({
-    email: email.toLowerCase()
+    $or: [
+      { email: searchTarget },
+      { email: clean },
+      { name: new RegExp(`^${clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+    ]
   }).select('+passwordHash')
 
   // Demo accounts are useful locally, but must never be provisioned by production traffic.
@@ -79,12 +100,16 @@ const login = async (email, password) => {
       'officer.pune@disaster.gov.in': { name: 'Dr. A. Sharma (Disaster Cell)', role: 'authority' },
       'admin@weathergpt.ai': { name: 'System Administrator', role: 'admin' }
     }
-    const demo = demoProfiles[email.toLowerCase()]
-    if (demo) {
+    const targetEmail = searchTarget.includes('@') ? searchTarget : (demoProfiles[searchTarget]?.email || `${clean}@weathergpt.ai`)
+    const existing = await User.findOne({ email: targetEmail }).select('+passwordHash')
+    if (existing) {
+      user = existing
+    } else {
+      const demo = demoProfiles[targetEmail] || { name: clean, role: 'user' }
       const hashedPassword = await hashPassword(password)
       user = await User.create({
         name: demo.name,
-        email: email.toLowerCase(),
+        email: targetEmail,
         passwordHash: hashedPassword,
         role: demo.role,
         isVerified: true

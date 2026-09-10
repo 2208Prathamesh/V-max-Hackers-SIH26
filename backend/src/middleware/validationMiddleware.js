@@ -19,7 +19,7 @@ const validationMiddleware = (schema, source = 'body') => {
         const errorMessages = error.details.map(detail => detail.message)
         return res.status(400).json({
           success: false,
-          message: 'Validation failed',
+          message: errorMessages[0] || 'Validation failed',
           errors: errorMessages
         })
       }
