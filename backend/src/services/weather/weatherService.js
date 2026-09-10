@@ -339,6 +339,7 @@ export async function getWeather (latitude, longitude, options = {}) {
           imd: imdObservation
         },
         modelComparison,
+        synthesis,
         airQuality: airQuality ? {
           ...airQuality,
           aqi: Math.round(airQuality.current?.us_aqi ?? airQuality.current?.usAqi ?? airQuality.current?.european_aqi ?? 55),
