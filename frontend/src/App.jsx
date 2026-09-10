@@ -90,19 +90,37 @@ const AppContent = () => {
     }
 
     // -----------------------------------------------------------------------
-    // AUTHORITY — Disaster management portal
+    // AUTHORITY — Disaster management portal + full citizen weather access
     // -----------------------------------------------------------------------
     if (role === 'authority') {
       switch (currentPage) {
+        // Authority-specific pages
         case 'authority-alerts':
         case 'alerts':
           return <AuthorityAlertsPage />
         case 'authority-map':
-        case 'weather-map':
           return <AuthorityWeatherMapPage />
         case 'authority-analytics':
         case 'analytics':
           return <AuthorityAnalyticsPage />
+
+        // Shared citizen weather pages (available to authority too)
+        case 'weather-dashboard':
+        case 'citizen-dashboard':
+          return <DashboardPage />
+        case 'weather-map':
+          return <WeatherMapPage />
+        case 'forecast':
+          return <ForecastPage />
+        case 'news':
+          return <NewsPage />
+        case 'climate-historical':
+        case 'history':
+          return <ClimateHistorical />
+        case 'saved-locations':
+          return <SavedLocationsPage />
+        case 'chat':
+          return <ChatPage />
         case 'disaster-sops':
           return <DisasterSopPage />
         case 'settings':

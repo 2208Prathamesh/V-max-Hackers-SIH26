@@ -94,9 +94,16 @@ const getNavItems = (role, t, language) => {
     return [
       { id: 'dashboard', label: 'Authority Dashboard', icon: Home },
       { id: 'alerts', label: 'Alert Management', icon: AlertOctagon, badge: '12' },
-      { id: 'weather-map', label: 'Weather Map', icon: Map },
+      { id: 'authority-map', label: 'Authority Weather Map', icon: Map },
       { id: 'analytics', label: 'Deep Analytics', icon: BarChart2 },
-      { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+      { divider: true, sectionLabel: 'Weather Intelligence' },
+      { id: 'weather-dashboard', label: 'Weather Dashboard', icon: LayoutDashboard },
+      { id: 'weather-map', label: 'Weather Map', icon: Map },
+      { id: 'forecast', label: '7-Day Forecast', icon: Calendar },
+      { id: 'news', label: 'News', icon: Newspaper },
+      { id: 'climate-historical', label: 'Climate & Historical', icon: CloudSun },
+      { id: 'chat', label: 'Weather Chat', icon: MessageSquare },
+      { id: 'saved-locations', label: 'Saved Locations', icon: Star },
       { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
     ]
   }
@@ -272,7 +279,27 @@ export const Sidebar = ({
 
         {/* Navigation Items */}
         <nav className='space-y-1 pt-1'>
-          {navItems.map(item => {
+          {navItems.map((item, idx) => {
+            // Section divider with optional label
+            if (item.divider) {
+              if (collapsed) {
+                return <div key={`divider-${idx}`} className='my-1.5 border-t border-slate-100 dark:border-slate-800/60' />
+              }
+              return (
+                <div key={`divider-${idx}`} className='pt-2 pb-1'>
+                  <div className='flex items-center gap-2 px-2'>
+                    <div className='flex-1 h-px bg-slate-100 dark:bg-slate-800/60' />
+                    {item.sectionLabel && (
+                      <span className='text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap'>
+                        {item.sectionLabel}
+                      </span>
+                    )}
+                    <div className='flex-1 h-px bg-slate-100 dark:bg-slate-800/60' />
+                  </div>
+                </div>
+              )
+            }
+
             const Icon = item.icon
             const isActive = currentPage === item.id
 
