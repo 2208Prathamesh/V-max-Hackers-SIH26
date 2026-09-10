@@ -87,8 +87,8 @@ export const ForgotPasswordModal = () => {
       addToast('Please enter the security reset token', 'warning');
       return;
     }
-    if (newPassword.length < 8) {
-      addToast('Password must be at least 8 characters long', 'warning');
+    if (newPassword.length < 6) {
+      addToast('Password must be at least 6 characters long', 'warning');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -253,7 +253,7 @@ export const ForgotPasswordModal = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    minLength={8}
+                    minLength={6}
                     placeholder="Enter strong new password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -279,7 +279,7 @@ export const ForgotPasswordModal = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    minLength={8}
+                    minLength={6}
                     placeholder="Re-type new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

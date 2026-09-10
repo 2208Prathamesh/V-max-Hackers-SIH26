@@ -9,6 +9,8 @@
     "seed": "node seed/index.js",
     "seed:clean": "node seed/index.js --clean",
     "seed:fresh": "node seed/index.js --fresh",
+    "create-user": "node scripts/createUser.js",
+    "user:create": "node scripts/createUser.js",
     "test": "node --test --test-concurrency=1 test/**/*.test.js",
     "test:unit": "node --test --test-concurrency=1 test/unit/*.test.js",
     "test:integration": "node --test --test-concurrency=1 test/integration/*.test.js",

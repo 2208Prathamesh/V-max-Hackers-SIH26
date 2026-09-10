@@ -508,8 +508,11 @@ export const api = {
     }),
   deleteUserByAdmin: userId =>
     request(`/admin/users/${userId}`, { method: 'DELETE' }),
-  resetUserPasswordByAdmin: userId =>
-    request(`/admin/users/${userId}/reset-password`, { method: 'POST' }),
+  resetUserPasswordByAdmin: (userId, data = {}) =>
+    request(`/admin/users/${userId}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
 
   // Admin — Analytics & System Health
   getAdminAnalytics: () => request('/admin/analytics'),

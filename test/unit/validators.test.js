@@ -15,14 +15,14 @@ describe('Unit: Joi Validation Schemas Tests', () => {
       assert.equal(error, undefined)
     })
 
-    test('registerSchema should reject short password (< 8 chars)', () => {
+    test('registerSchema should reject short password (< 6 chars)', () => {
       const { error } = registerSchema.validate({
         name: 'John Doe',
         email: 'john@example.com',
         password: '123'
       })
       assert.ok(error)
-      assert.match(error.message, /8 characters/i)
+      assert.match(error.message, /6 characters/i)
     })
 
     test('loginSchema should reject invalid email format', () => {

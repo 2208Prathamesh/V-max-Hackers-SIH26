@@ -124,10 +124,10 @@ const changePassword = async (req, res, next) => {
       });
     }
 
-    if (newPassword.length < 8) {
+    if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'New password must be at least 8 characters long'
+        message: 'New password must be at least 6 characters long'
       });
     }
 

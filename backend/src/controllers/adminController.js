@@ -5,7 +5,7 @@ import SavedLocation from '../models/SavedLocation.js'
 import UserPreferences from '../models/UserPreferences.js'
 import Notification from '../models/Notification.js'
 import { successResponse } from '../utils/response.js'
-import { sendPasswordResetEmail } from '../services/emailService.js'
+import { sendPasswordResetEmail, sendAdminPasswordChangedEmail } from '../services/emailService.js'
 import crypto from 'node:crypto'
 import { hashPassword } from '../utils/password.js'
 
@@ -223,12 +223,62 @@ export const deleteUser = async (req, res, next) => {
 export const resetUserPassword = async (req, res, next) => {
   try {
     const { id } = req.params
+    const { newPassword, notifyUser = true } = req.body || {}
+
     const user = await User.findById(id)
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' })
     }
 
-    // Generate a cryptographically secure reset token
+    // Direct password update if newPassword was provided
+    if (newPassword) {
+      if (typeof newPassword !== 'string' || newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 6 characters long'
+        })
+      }
+
+      const hashedPassword = await hashPassword(newPassword)
+      user.passwordHash = hashedPassword
+      user.passwordResetTokenHash = null
+      user.passwordResetExpiresAt = null
+      await user.save()
+
+      // Notify the user via email regarding this administrative password change
+      if (notifyUser !== false) {
+        sendAdminPasswordChangedEmail({
+          toEmail: user.email,
+          userName: user.name,
+          adminEmail: req.user?.email || 'System Administrator',
+          newPassword
+        }).catch(err => {
+          console.warn(`[AdminController] Password changed email dispatch warning: ${err.message}`)
+        })
+      }
+
+      addAuditLog({
+        actor: req.user?.email || 'Admin',
+        action: 'USER_PASSWORD_DIRECTLY_CHANGED',
+        details: `Password directly updated for user '${user.name}' (${user.email}) by administrator`,
+        severity: 'warning',
+        ip: req.ip || '127.0.0.1'
+      })
+
+      return successResponse(
+        res,
+        {
+          directChange: true,
+          email: user.email,
+          temporaryPassword: newPassword,
+          message: `Password directly updated and security notice dispatched to ${user.email}`
+        },
+        'Password updated successfully and notification email dispatched to user',
+        200
+      )
+    }
+
+    // Otherwise: generate a password reset link and dispatch email to the user
     const rawToken = crypto.randomBytes(32).toString('hex')
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
@@ -237,7 +287,6 @@ export const resetUserPassword = async (req, res, next) => {
     user.passwordResetExpiresAt = expiresAt
     await user.save()
 
-    // Dispatch password reset email
     sendPasswordResetEmail({
       toEmail: user.email,
       userName: user.name,

@@ -20,8 +20,7 @@ import {
   Sprout,
   ShieldAlert,
   Cpu,
-  ArrowRight,
-  Zap
+  ArrowRight
 } from 'lucide-react'
 import { ForgotPasswordModal } from '../components/modals/ForgotPasswordModal'
 import { SocialAuthModal } from '../components/modals/SocialAuthModal'
@@ -128,43 +127,6 @@ export const LoginPage = () => {
     password: ''
   })
 
-  const handleDemoLogin = async (
-    demoEmail = 'sidpatil@gmail.com',
-    demoPassword = 'password123',
-    demoName = 'Sid Patil',
-    demoRole = 'user'
-  ) => {
-    setIsLoading(true)
-    setFormData({
-      name: demoName,
-      email: demoEmail,
-      password: demoPassword
-    })
-    try {
-      await login(demoEmail, demoPassword)
-      triggerLoginSuccessConfetti()
-    } catch (error) {
-      // Offline / standalone dev fallback for 100% reliable 1-click access
-      console.warn('Backend login unavailable, activating local demo session:', error?.message || error)
-      const mockUser = {
-        _id: 'demo_user_123',
-        name: demoName,
-        email: demoEmail,
-        role: demoRole,
-        isFarmer: demoRole === 'farmer',
-        location: 'Pune, Maharashtra'
-      }
-      localStorage.setItem('weathergpt_token', 'demo_jwt_token_temporary')
-      localStorage.setItem('weathergpt_user', JSON.stringify(mockUser))
-      if (setUser) setUser(mockUser)
-      if (setIsAuthenticated) setIsAuthenticated(true)
-      if (setCurrentPage) setCurrentPage(demoRole === 'farmer' ? 'advisory' : 'dashboard')
-      triggerLoginSuccessConfetti()
-      addToast(`Logged in as Demo ${demoName} (${demoRole})`, 'success')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // Password strength calculator
   const passwordStrength = useMemo(() => {
@@ -469,9 +431,9 @@ export const LoginPage = () => {
                     type={showPassword ? 'text' : 'password'}
                     name='password'
                     required
-                    minLength={8}
+                    minLength={isSignUpMode ? 6 : 1}
                     autoComplete={isSignUpMode ? 'new-password' : 'current-password'}
-                    placeholder={isSignUpMode ? 'At least 8 characters' : 'Enter your password'}
+                    placeholder={isSignUpMode ? 'At least 6 characters' : 'Enter your password'}
                     value={formData.password}
                     onChange={handleChange}
                     className='w-full pl-10 pr-10 py-2.5 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none rounded-xl'
@@ -581,67 +543,7 @@ export const LoginPage = () => {
                 )}
               </button>
 
-              {/* Temporary Demo Login Section */}
-              <div className='mt-3.5 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700/80'>
-                <button
-                  type='button'
-                  onClick={() => handleDemoLogin('sidpatil@gmail.com', 'password123', 'Sid Patil', 'user')}
-                  disabled={isLoading}
-                  className='w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:via-amber-700 hover:to-orange-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75'
-                >
-                  <Zap className='w-4 h-4 fill-amber-200 text-amber-200' />
-                  <span>⚡ Demo Login (Instant 1-Click Access)</span>
-                </button>
 
-                <div className='mt-2.5'>
-                  <div className='flex items-center justify-between mb-1.5 px-0.5'>
-                    <span className='text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500'>
-                      1-Click Role Login:
-                    </span>
-                    <span className='text-[10px] text-amber-600 dark:text-amber-400 font-medium'>
-                      Temporary Mode
-                    </span>
-                  </div>
-                  <div className='grid grid-cols-4 gap-1.5'>
-                    <button
-                      type='button'
-                      onClick={() => handleDemoLogin('sidpatil@gmail.com', 'password123', 'Sid Patil', 'user')}
-                      disabled={isLoading}
-                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-amber-50 dark:bg-slate-800 dark:hover:bg-amber-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 dark:hover:border-amber-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 transition text-center cursor-pointer truncate'
-                      title='Citizen / Standard User (Sid Patil)'
-                    >
-                      User
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => handleDemoLogin('ramesh.kisan@weathergpt.ai', 'password123', 'Ramesh Kisan', 'farmer')}
-                      disabled={isLoading}
-                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-400 dark:hover:border-emerald-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition text-center cursor-pointer truncate'
-                      title='Farmer (Ramesh Kisan - Agro Advisory Mode)'
-                    >
-                      Farmer 🌾
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => handleDemoLogin('officer.pune@disaster.gov.in', 'password123', 'Dr. A. Sharma', 'authority')}
-                      disabled={isLoading}
-                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-rose-400 dark:hover:border-rose-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 transition text-center cursor-pointer truncate'
-                      title='Disaster Management Authority (Dr. A. Sharma)'
-                    >
-                      Authority 🚨
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => handleDemoLogin('admin@weathergpt.ai', 'password123', 'System Administrator', 'admin')}
-                      disabled={isLoading}
-                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-center cursor-pointer truncate'
-                      title='System Administrator (Full System Access)'
-                    >
-                      Admin ⚙️
-                    </button>
-                  </div>
-                </div>
-              </div>
             </form>
 
             {/* Social Divider */}

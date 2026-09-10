@@ -35,12 +35,12 @@ const registerSchema = Joi.object({
 
 
     password: Joi.string()
-        .min(8)
+        .min(6)
         .max(100)
         .required()
         .messages({
             "string.min":
-                "Password must contain at least 8 characters",
+                "Password must contain at least 6 characters",
 
             "any.required":
                 "Password is required"
@@ -81,7 +81,7 @@ const forgotPasswordSchema = Joi.object({
 
 const resetPasswordSchema = Joi.object({
     password: Joi.string()
-        .min(8)
+        .min(6)
         .max(100)
         .required(),
     confirmPassword: Joi.string().optional(),
@@ -95,7 +95,7 @@ const changePasswordSchema = Joi.object({
         .required(),
 
     newPassword: Joi.string()
-        .min(8)
+        .min(6)
         .max(100)
         .required()
 });

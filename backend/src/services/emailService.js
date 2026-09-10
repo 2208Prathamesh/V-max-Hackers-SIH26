@@ -539,11 +539,133 @@ export const sendWelcomeEmail = async ({ toEmail, userName, role }) => {
   return { sent: true, provider: 'simulated', htmlContent }
 }
 
+/**
+ * Generate HTML email template for password changes performed directly by an administrator
+ */
+export const generateAdminPasswordChangedHtml = ({
+  userName = 'Valued User',
+  adminEmail = 'System Administrator',
+  newPassword = null,
+  loginUrl = `${env.FRONTEND_URL || 'http://localhost:5173'}/login`
+}) => {
+  const mainContent = `
+    <!-- Title -->
+    <h2 style="margin: 0 0 8px 0; font-size: 21px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+      Account Password Updated by Administrator
+    </h2>
+    <p style="margin: 0 0 20px 0; font-size: 14.5px; color: #475569; line-height: 1.6;">
+      Hello <strong>${userName}</strong>, this is an official security alert confirming that an administrator (<strong>${adminEmail}</strong>) has updated the login credentials for your WeatherGPT account.
+    </p>
+
+    <!-- SECURITY ALERT BANNER -->
+    <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #3b82f6; border-radius: 10px; padding: 14px 16px; margin-bottom: 24px;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="28" valign="top" style="font-size: 18px; line-height: 1;">
+            ℹ️
+          </td>
+          <td style="font-size: 13px; color: #1e40af; line-height: 1.5; font-weight: 500;">
+            <strong>Administrator Action:</strong> Your password was modified on <strong>${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</strong>. All previous active sessions across all devices have been terminated for your protection.
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    ${newPassword ? `
+    <!-- NEW PASSWORD CARD -->
+    <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px 18px; text-align: center; margin: 24px 0;">
+      <span style="font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; display: block; margin-bottom: 8px;">
+        Your Newly Assigned Password
+      </span>
+      <div style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 22px; font-weight: 800; color: #0284c7; letter-spacing: 2px; word-break: break-all; padding: 6px 0;">
+        ${newPassword}
+      </div>
+      <span style="font-size: 12px; color: #64748b; display: block; margin-top: 8px;">
+        💡 You can use this password to sign in immediately. We recommend changing it in your Profile Settings after logging in.
+      </span>
+    </div>
+    ` : ''}
+
+    <!-- PRIMARY ACTION BUTTON -->
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0 20px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn-full">
+            <tr>
+              <td align="center" style="border-radius: 12px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
+                <a href="${loginUrl}" target="_blank" style="font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 700; color: #ffffff !important; text-decoration: none; padding: 15px 36px; border-radius: 12px; display: inline-block; border: 1px solid #0369a1; letter-spacing: 0.3px;">
+                  Sign In to WeatherGPT &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- SECURITY ADVISORY -->
+    <div style="background-color: #f1f5f9; border-radius: 10px; padding: 16px 18px; margin-top: 26px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+        🛡️ Did Not Authorize This Action?
+      </h4>
+      <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.6;">
+        If you did not request this administrative password reset, please contact your organization administrator or security office immediately at <strong>admin@weathergpt.ai</strong>.
+      </p>
+    </div>
+  `
+
+  return renderEmailShell({
+    subjectTitle: 'Password Changed by Administrator',
+    badgeText: 'SECURITY CREDENTIAL NOTICE',
+    badgeColor: '#38bdf8',
+    headerGradient: 'linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #0284c7 100%)',
+    mainContentHtml: mainContent
+  })
+}
+
+/**
+ * Dispatch an email to the user notifying them that their password was changed by an administrator
+ */
+export const sendAdminPasswordChangedEmail = async ({
+  toEmail,
+  userName,
+  adminEmail,
+  newPassword = null
+}) => {
+  const mailTransporter = getTransporter()
+  const htmlContent = generateAdminPasswordChangedHtml({
+    userName,
+    adminEmail,
+    newPassword
+  })
+
+  if (mailTransporter) {
+    try {
+      await mailTransporter.sendMail({
+        from: `"${env.SMTP_FROM_NAME || 'WeatherGPT Security'}" <${env.SMTP_USER || env.SMTP_FROM_EMAIL}>`,
+        to: toEmail,
+        subject: `🔐 Security Notice: Your WeatherGPT Password Has Been Changed by Administrator`,
+        text: `Hello ${userName},\n\nYour WeatherGPT account password has been updated by administrator (${adminEmail}).\n${newPassword ? `Your new password is: ${newPassword}\n` : ''}\nYou can sign in at: ${env.FRONTEND_URL || 'http://localhost:5173'}/login\n\nIf you did not authorize this, please contact support immediately.`,
+        html: htmlContent
+      })
+      console.log(`📧 [EmailService] Password changed notice sent via SMTP to: ${toEmail}`)
+      return { sent: true, provider: 'smtp' }
+    } catch (error) {
+      console.warn(`⚠️ [EmailService] SMTP error sending password change notice to ${toEmail}:`, error.message)
+    }
+  }
+
+  console.log(`ℹ️ [EmailService (Simulated)] Password change notice dispatched to ${toEmail}`)
+  return { sent: true, provider: 'simulated', htmlContent }
+}
+
 export default {
   sendPasswordResetEmail,
   sendSevereWeatherEmailAlert,
   sendWelcomeEmail,
+  sendAdminPasswordChangedEmail,
   generatePasswordResetHtml,
   generateSevereWeatherAlertHtml,
-  generateWelcomeHtml
+  generateWelcomeHtml,
+  generateAdminPasswordChangedHtml
 }
