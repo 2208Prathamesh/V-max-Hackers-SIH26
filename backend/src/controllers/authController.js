@@ -57,10 +57,10 @@ const getCurrentUser = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body
-    const result = await authService.forgotPassword(email)
+    await authService.forgotPassword(email)
     return successResponse(
       res,
-      result ? { resetToken: result.resetToken, expiresAt: result.expiresAt } : null,
+      null,
       'Password reset instructions processed',
       200
     )
@@ -100,6 +100,9 @@ const socialLogin = async (req, res, next) => {
  */
 const getEmailPreview = async (req, res, next) => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({ success: false, message: 'Not found' })
+    }
     const { type = 'reset' } = req.query
     if (type === 'alert') {
       const html = emailService.generateSevereWeatherAlertHtml({
@@ -118,7 +121,9 @@ const getEmailPreview = async (req, res, next) => {
     } else if (type === 'welcome') {
       const html = emailService.generateWelcomeHtml({
         userName: 'Shri Ramesh Patil',
-        role: req.query.role || 'farmer',
+        role: ['farmer', 'user', 'authority', 'admin'].includes(req.query.role)
+          ? req.query.role
+          : 'farmer',
         dashboardLink: 'http://localhost:5173'
       })
       res.setHeader('Content-Type', 'text/html')

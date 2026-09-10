@@ -182,7 +182,9 @@ async function getImdObservation (latitude, longitude) {
       retrievedAt: new Date().toISOString()
     }
   } catch (error) {
-    console.warn('IMD observation failed:', error.message)
+    if (process.env.DEBUG_WEATHER === 'true') {
+      console.warn('IMD observation fetch notice:', error.message)
+    }
 
     return {
       error: 'IMD observation temporarily unavailable'

@@ -20,6 +20,7 @@ import { AuthorityAlertsPage } from './pages/authority/AuthorityAlertsPage'
 import { AuthorityWeatherMapPage } from './pages/authority/AuthorityWeatherMapPage'
 import { AuthorityAnalyticsPage } from './pages/authority/AuthorityAnalyticsPage'
 import { ToastContainer } from './components/common/Toast'
+import { ErrorBoundary } from './components/common/ErrorBoundary'
 
 const AppContent = () => {
   const { currentPage, isAuthenticated, user, settings } = useWeather()
@@ -101,12 +102,14 @@ const AppContent = () => {
 
 export default function App () {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <WeatherProvider>
-          <AppContent />
-        </WeatherProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <LanguageProvider>
+          <WeatherProvider>
+            <AppContent />
+          </WeatherProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   )
 }

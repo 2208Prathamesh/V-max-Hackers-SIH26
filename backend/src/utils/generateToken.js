@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken'
+import env from '../config/env.js'
 
 const generateToken = userId => {
-  if (!process.env.JWT_SECRET) {
+  const secret = env.JWT_SECRET || process.env.JWT_SECRET
+  if (!secret) {
     throw new Error('JWT_SECRET is not configured')
   }
 
@@ -9,9 +11,9 @@ const generateToken = userId => {
     {
       userId: userId.toString()
     },
-    process.env.JWT_SECRET,
+    secret,
     {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+      expiresIn: env.JWT_EXPIRES_IN || process.env.JWT_EXPIRES_IN || '7d'
     }
   )
 }

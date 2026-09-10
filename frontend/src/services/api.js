@@ -24,6 +24,24 @@ const invalidateCache = () => {
   cache.clear()
 }
 
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 25000) => {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal
+    })
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Connection timed out. Please check your network and retry.')
+    }
+    throw err
+  } finally {
+    clearTimeout(id)
+  }
+}
+
 const request = async (path, options = {}) => {
   const method = (options.method || 'GET').toUpperCase()
   const isGet = method === 'GET'
@@ -36,7 +54,7 @@ const request = async (path, options = {}) => {
     const token = getToken()
     if (token) headers.set('Authorization', `Bearer ${token}`)
 
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}${path}`, {
       ...options,
       headers
     })
@@ -74,7 +92,7 @@ const request = async (path, options = {}) => {
       const token = getToken()
       if (token) headers.set('Authorization', `Bearer ${token}`)
 
-      const response = await fetch(`${API_BASE_URL}${path}`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}${path}`, {
         ...options,
         headers
       })

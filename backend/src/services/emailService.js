@@ -16,9 +16,7 @@ const getTransporter = () => {
         user: env.SMTP_USER,
         pass: env.SMTP_PASS
       },
-      tls: {
-        rejectUnauthorized: false
-      }
+      tls: { rejectUnauthorized: true }
     })
   }
   return transporter
@@ -276,14 +274,14 @@ export const generateSevereWeatherAlertHtml = ({
   const badgeText = isExtreme
     ? '🚨 RED ALERT • CRITICAL EMERGENCY'
     : isHigh
-    ? '🟠 ORANGE ALERT • SEVERE WARNING'
-    : '🟡 YELLOW ALERT • WEATHER ADVISORY'
+      ? '🟠 ORANGE ALERT • SEVERE WARNING'
+      : '🟡 YELLOW ALERT • WEATHER ADVISORY'
 
   const headerGradient = isExtreme
     ? 'linear-gradient(135deg, #450a0a 0%, #991b1b 60%, #dc2626 100%)'
     : isHigh
-    ? 'linear-gradient(135deg, #431407 0%, #9a3412 60%, #ea580c 100%)'
-    : 'linear-gradient(135deg, #1e293b 0%, #854d0e 60%, #ca8a04 100%)'
+      ? 'linear-gradient(135deg, #431407 0%, #9a3412 60%, #ea580c 100%)'
+      : 'linear-gradient(135deg, #1e293b 0%, #854d0e 60%, #ca8a04 100%)'
 
   const mainContent = `
     <!-- EMERGENCY CALLOUT HEADER -->
@@ -411,13 +409,12 @@ export const generateWelcomeHtml = ({
         Configured as: ${roleTitle}
       </h3>
       <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
-        ${
-          isFarmer
-            ? 'You receive dedicated AI Crop Advisories, Mandi commodity weather risks, spray window forecasts, and soil moisture indicators tailored for Indian agricultural zones.'
-            : isAuthority
-            ? 'You have privileged access to the Authority Command Center, mass SMS/Email broadcast dispatch, evacuation routing, and automated NDRF/SDRF coordination feeds.'
-            : 'You receive instant early warnings for thunderstorms, heatwaves, cyclones, and rainfall forecasts for your saved locations.'
-        }
+        ${isFarmer
+      ? 'You receive dedicated AI Crop Advisories, Mandi commodity weather risks, spray window forecasts, and soil moisture indicators tailored for Indian agricultural zones.'
+      : isAuthority
+        ? 'You have privileged access to the Authority Command Center, mass SMS/Email broadcast dispatch, evacuation routing, and automated NDRF/SDRF coordination feeds.'
+        : 'You receive instant early warnings for thunderstorms, heatwaves, cyclones, and rainfall forecasts for your saved locations.'
+    }
       </p>
     </div>
 
@@ -483,9 +480,9 @@ export const sendPasswordResetEmail = async ({ toEmail, userName, resetToken }) 
     }
   }
 
-  // Fallback simulation mode
-  console.log(`ℹ️ [EmailService (Simulated)] Password reset token for ${toEmail}: ${resetToken}`)
-  return { sent: true, provider: 'simulated', token: resetToken, link: resetLink, htmlContent }
+  // Fallback simulation mode deliberately does not expose the reset token in logs or return values.
+  console.warn(`⚠️ [EmailService] SMTP is not configured; password reset email was not delivered to ${toEmail}`)
+  return { sent: false, provider: 'simulated' }
 }
 
 /**

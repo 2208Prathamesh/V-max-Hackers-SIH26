@@ -34,13 +34,39 @@ import {
 
 const app = express()
 
-// Cross-Origin Resource Sharing
+// 1. Security Headers (Defense-in-depth protection against clickjacking, sniffing, reflection)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+  res.setHeader('X-XSS-Protection', '1; mode=block')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('Permissions-Policy', 'geolocation=(self), microphone=(self)')
+  if (env.IS_PRODUCTION) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  next()
+})
 
-
+// 2. Cross-Origin Resource Sharing (CORS)
+const allowedOrigins = [
+  env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174'
+].filter(Boolean)
 
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+      if (env.IS_DEVELOPMENT && origin.includes('localhost')) {
+        return callback(null, true)
+      }
+      return callback(new Error('Origin is not allowed by CORS'))
+    },
     credentials: true
   })
 )

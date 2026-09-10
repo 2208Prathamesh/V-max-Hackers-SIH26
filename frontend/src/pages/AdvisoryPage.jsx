@@ -1126,7 +1126,7 @@ export const AdvisoryPage = () => {
         reason
       };
     });
-  }, [windSpeed, rainNext3Days, temp, forecastData, weatherData, agroData, lat, language]);
+  }, [windSpeed, rainNext3Days, temp, forecastData, weatherData, agroData, lat, language, currentTime]);
 
   // Dynamic Weather-Impact Suggestions (NON-FIXED: Dynamically computed from weather & crop)
   const dynamicSuggestions = useMemo(() => {

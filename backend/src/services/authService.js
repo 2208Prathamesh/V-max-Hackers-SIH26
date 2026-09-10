@@ -70,8 +70,8 @@ const login = async (email, password) => {
     email: email.toLowerCase()
   }).select('+passwordHash')
 
-  // Auto-provision standard demo accounts if not yet present in database
-  if (!user && password === 'password123') {
+  // Demo accounts are useful locally, but must never be provisioned by production traffic.
+  if (!user && !env.IS_PRODUCTION && password === 'password123') {
     const demoProfiles = {
       'sidpatil@gmail.com': { name: 'Sid Patil', role: 'user' },
       'ramesh.kisan@weathergpt.ai': { name: 'Ramesh Kisan (शेतकरी)', role: 'farmer' },
@@ -176,10 +176,7 @@ const forgotPassword = async email => {
     console.warn('Could not dispatch password reset email:', err.message)
   }
 
-  return {
-    resetToken,
-    expiresAt: user.passwordResetExpiresAt
-  }
+  return true
 }
 
 /**
@@ -247,6 +244,11 @@ const changePassword = async (userId, currentPassword, newPassword) => {
  * Social OAuth Login (Google, Microsoft, Apple)
  */
 const socialLogin = async ({ provider, providerId, email, name, avatar, isFarmer = false }) => {
+  const error = new Error('Social login requires verified provider authentication')
+  error.statusCode = 501
+  throw error
+
+  /* istanbul ignore next -- retained below until provider verification is wired */
   const prov = (provider || '').toLowerCase().trim()
   if (!['google', 'microsoft', 'apple'].includes(prov)) {
     const error = new Error('Unsupported social provider')
