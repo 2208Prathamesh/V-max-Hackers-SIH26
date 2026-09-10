@@ -15,7 +15,9 @@ async function getMarineForecast(latitude, longitude) {
         timezone: "auto"
     });
 
-    const response = await fetch(`${BASE_URL}?${params}`);
+    const response = await fetch(`${BASE_URL}?${params}`, {
+        signal: AbortSignal.timeout(4000)
+    });
 
     if (!response.ok) {
         throw new Error(`Marine API error: ${response.status}`);

@@ -24,7 +24,13 @@ const invalidateCache = () => {
   cache.clear()
 }
 
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 25000) => {
+const getTimeoutForPath = path => {
+  if (path.includes('/messages') || path.includes('/chat')) return 20000
+  if (path.includes('/voice')) return 15000
+  return 8000 // Fast 8s timeout for weather, alerts, maps, geocoding to trigger offline fallback promptly
+}
+
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 8000) => {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -45,6 +51,7 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 25000) => {
 const request = async (path, options = {}) => {
   const method = (options.method || 'GET').toUpperCase()
   const isGet = method === 'GET'
+  const pathTimeout = options.timeoutMs || getTimeoutForPath(path)
 
   // For mutating requests (POST, PUT, DELETE, PATCH), invalidate cache and run directly
   if (!isGet) {
@@ -57,7 +64,7 @@ const request = async (path, options = {}) => {
     const response = await fetchWithTimeout(`${API_BASE_URL}${path}`, {
       ...options,
       headers
-    })
+    }, pathTimeout)
 
     if (response.status === 401) {
       localStorage.removeItem('weathergpt_token')
@@ -95,7 +102,7 @@ const request = async (path, options = {}) => {
       const response = await fetchWithTimeout(`${API_BASE_URL}${path}`, {
         ...options,
         headers
-      })
+      }, pathTimeout)
 
       if (response.status === 401) {
         localStorage.removeItem('weathergpt_token')

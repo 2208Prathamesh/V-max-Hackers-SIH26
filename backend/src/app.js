@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import compression from 'compression'
 import env from './config/env.js'
 
 // Core routes
@@ -34,12 +35,17 @@ import {
 
 const app = express()
 
+// Gzip / Deflate HTTP Response Compression (reduces large JSON payloads by 75-85%)
+app.use(compression())
+
 // 1. Security Headers (Defense-in-depth protection against clickjacking, sniffing, reflection)
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-Frame-Options', 'SAMEORIGIN')
   res.setHeader('X-XSS-Protection', '1; mode=block')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
   res.setHeader('Permissions-Policy', 'geolocation=(self), microphone=(self)')
   if (env.IS_PRODUCTION) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')

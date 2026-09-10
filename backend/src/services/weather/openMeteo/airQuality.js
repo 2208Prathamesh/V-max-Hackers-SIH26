@@ -15,7 +15,9 @@ async function getAirQuality(latitude, longitude) {
         timezone: "auto"
     });
 
-    const response = await fetch(`${BASE_URL}?${params}`);
+    const response = await fetch(`${BASE_URL}?${params}`, {
+        signal: AbortSignal.timeout(6000)
+    });
 
     if (!response.ok) {
         throw new Error(`Air Quality API error: ${response.status}`);

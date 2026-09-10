@@ -25,7 +25,9 @@ async function getForecast(latitude, longitude, days = 7) {
     timezone: 'auto'
   });
 
-  const response = await fetch(`${BASE_URL}?${params}`);
+  const response = await fetch(`${BASE_URL}?${params}`, {
+    signal: AbortSignal.timeout(8000)
+  });
 
   if (!response.ok) {
     throw new Error(`Open-Meteo API error: ${response.status}`);

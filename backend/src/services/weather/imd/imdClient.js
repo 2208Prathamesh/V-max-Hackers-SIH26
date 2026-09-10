@@ -12,7 +12,7 @@ async function imdGet(url, params = {}) {
   const fullUrl = queryString ? `${url}?${queryString}` : url;
 
   const response = await fetch(fullUrl, {
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(6000),
     headers: {
       Accept: "application/json"
     }
