@@ -7,7 +7,11 @@ import { LoginPage } from './pages/LoginPage'
 import { ToastContainer } from './components/common/Toast'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 
-// Route-Level Code Splitting: Reduces initial JS bundle by >90%
+// ---------------------------------------------------------------------------
+// Route-Level Code Splitting — reduces initial JS bundle by >90%
+// ---------------------------------------------------------------------------
+
+// Shared / Citizen / Farmer pages
 const WeatherMapPage = lazy(() => import('./pages/WeatherMapPage').then(m => ({ default: m.WeatherMapPage })))
 const SavedLocationsPage = lazy(() => import('./pages/SavedLocationsPage').then(m => ({ default: m.SavedLocationsPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
@@ -19,10 +23,18 @@ const ForecastPage = lazy(() => import('./pages/ForecastPage').then(m => ({ defa
 const AdvisoryPage = lazy(() => import('./pages/AdvisoryPage').then(m => ({ default: m.AdvisoryPage })))
 const NewsPage = lazy(() => import('./pages/NewsPage').then(m => ({ default: m.NewsPage })))
 const DisasterSopPage = lazy(() => import('./pages/DisasterSopPage').then(m => ({ default: m.DisasterSopPage })))
+
+// Authority pages
 const AuthorityDashboardPage = lazy(() => import('./pages/authority/AuthorityDashboardPage').then(m => ({ default: m.AuthorityDashboardPage })))
 const AuthorityAlertsPage = lazy(() => import('./pages/authority/AuthorityAlertsPage').then(m => ({ default: m.AuthorityAlertsPage })))
 const AuthorityWeatherMapPage = lazy(() => import('./pages/authority/AuthorityWeatherMapPage').then(m => ({ default: m.AuthorityWeatherMapPage })))
 const AuthorityAnalyticsPage = lazy(() => import('./pages/authority/AuthorityAnalyticsPage').then(m => ({ default: m.AuthorityAnalyticsPage })))
+
+// Admin pages
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
+const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage').then(m => ({ default: m.AdminAnalyticsPage })))
+const AdminSystemPage = lazy(() => import('./pages/admin/AdminSystemPage').then(m => ({ default: m.AdminSystemPage })))
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
@@ -56,36 +68,90 @@ const AppContent = () => {
   }
 
   const renderCurrentPage = () => {
-    const isAuthority = user?.role === 'authority' || user?.role === 'admin'
+    const role = user?.role || 'user'
 
-    // Authority Specific Routing
-    if (isAuthority) {
+    // -----------------------------------------------------------------------
+    // ADMIN — System management portal
+    // -----------------------------------------------------------------------
+    if (role === 'admin') {
       switch (currentPage) {
+        case 'admin-users':
+          return <AdminUsersPage />
+        case 'admin-analytics':
+          return <AdminAnalyticsPage />
+        case 'admin-system':
+          return <AdminSystemPage />
+        case 'settings':
+          return <SettingsPage />
         case 'dashboard':
-          return <AuthorityDashboardPage />
+        default:
+          return <AdminDashboardPage />
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // AUTHORITY — Disaster management portal
+    // -----------------------------------------------------------------------
+    if (role === 'authority') {
+      switch (currentPage) {
+        case 'authority-alerts':
         case 'alerts':
           return <AuthorityAlertsPage />
+        case 'authority-map':
         case 'weather-map':
           return <AuthorityWeatherMapPage />
+        case 'authority-analytics':
         case 'analytics':
           return <AuthorityAnalyticsPage />
         case 'disaster-sops':
           return <DisasterSopPage />
         case 'settings':
           return <SettingsPage />
+        case 'authority-dashboard':
+        case 'dashboard':
         default:
           return <AuthorityDashboardPage />
       }
     }
 
-    // Standard User Routing (Preserved 100%)
+    // -----------------------------------------------------------------------
+    // FARMER — Citizen pages + agro advisory
+    // -----------------------------------------------------------------------
+    if (role === 'farmer') {
+      switch (currentPage) {
+        case 'chat':
+          return <ChatPage />
+        case 'advisory':
+          return <AdvisoryPage />
+        case 'alerts':
+          return <AlertsPage />
+        case 'disaster-sops':
+          return <DisasterSopPage />
+        case 'weather-map':
+          return <WeatherMapPage />
+        case 'forecast':
+          return <ForecastPage />
+        case 'news':
+          return <NewsPage />
+        case 'climate-historical':
+        case 'history':
+          return <ClimateHistorical />
+        case 'saved-locations':
+          return <SavedLocationsPage />
+        case 'settings':
+          return <SettingsPage />
+        case 'dashboard':
+        default:
+          return <DashboardPage />
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // CITIZEN (user) — Standard weather information portal
+    // -----------------------------------------------------------------------
     switch (currentPage) {
-      case 'dashboard':
-        return <DashboardPage />
       case 'chat':
         return <ChatPage />
-      case 'advisory':
-        return <AdvisoryPage />
       case 'alerts':
         return <AlertsPage />
       case 'disaster-sops':
@@ -94,15 +160,16 @@ const AppContent = () => {
         return <WeatherMapPage />
       case 'forecast':
         return <ForecastPage />
-      case 'saved-locations':
-        return <SavedLocationsPage />
+      case 'news':
+        return <NewsPage />
       case 'climate-historical':
       case 'history':
         return <ClimateHistorical />
-      case 'news':
-        return <NewsPage />
+      case 'saved-locations':
+        return <SavedLocationsPage />
       case 'settings':
         return <SettingsPage />
+      case 'dashboard':
       default:
         return <DashboardPage />
     }

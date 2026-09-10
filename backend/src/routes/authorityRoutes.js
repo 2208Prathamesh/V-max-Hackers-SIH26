@@ -14,7 +14,7 @@ const router = express.Router()
 
 // Enforce authMiddleware and requireRole('authority') on all authority routes
 router.use(authMiddleware)
-router.use(requireRole('authority'))
+router.use(requireRole(['authority', 'admin']))
 
 router.get('/me', getMe)
 router.get('/alerts', getAlerts)

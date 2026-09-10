@@ -466,7 +466,28 @@ export const api = {
     if (startDate) params.set('startDate', startDate)
     if (endDate) params.set('endDate', endDate)
     return request(`/climate/full?${params.toString()}`)
-  }
+  },
+
+  // Admin — User Management
+  listAdminUsers: ({ page = 1, limit = 20, search = '', role = '' } = {}) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+    if (search) params.set('search', search)
+    if (role) params.set('role', role)
+    return request(`/admin/users?${params.toString()}`)
+  },
+  changeUserRole: (userId, role) =>
+    request(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role })
+    }),
+  deleteUserByAdmin: userId =>
+    request(`/admin/users/${userId}`, { method: 'DELETE' }),
+  resetUserPasswordByAdmin: userId =>
+    request(`/admin/users/${userId}/reset-password`, { method: 'POST' }),
+
+  // Admin — Analytics & System Health
+  getAdminAnalytics: () => request('/admin/analytics'),
+  getSystemHealth: () => request('/admin/health')
 }
 
 export default api

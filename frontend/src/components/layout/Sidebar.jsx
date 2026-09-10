@@ -24,18 +24,25 @@ import {
   Newspaper,
   BarChart2,
   Shield,
-  ShieldAlert
+  ShieldAlert,
+  Users,
+  Server,
+  TrendingUp,
+  LayoutDashboard,
+  Activity,
+  AlertOctagon,
+  Cpu
 } from 'lucide-react'
 
-// 3D Styled Cloud & Sun Logo for Sidebar
-const WeatherGPTSidebarLogo = ({ collapsed, isAuthority }) => (
+// ---------------------------------------------------------------------------
+// Logo Component
+// ---------------------------------------------------------------------------
+const WeatherGPTSidebarLogo = ({ collapsed, roleLabel }) => (
   <div className='flex items-center gap-2.5 select-none min-w-0'>
     <div className='relative w-9 h-8 flex items-center justify-center shrink-0'>
-      {/* Golden Glowing Sun behind cloud */}
       <div className='absolute top-0 right-0.5 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-yellow-200 shadow-[0_0_8px_rgba(250,204,21,0.7)] flex items-center justify-center'>
         <SunMedium className='w-3 h-3 text-amber-800/40' />
       </div>
-      {/* 3D Puffy Cloud */}
       <div className='relative z-10 filter drop-shadow-xs'>
         <svg className='w-8 h-6' viewBox='0 0 64 44' fill='none'>
           <path
@@ -43,14 +50,7 @@ const WeatherGPTSidebarLogo = ({ collapsed, isAuthority }) => (
             fill='url(#sidebarCloudGrad)'
           />
           <defs>
-            <linearGradient
-              id='sidebarCloudGrad'
-              x1='10'
-              y1='5'
-              x2='55'
-              y2='40'
-              gradientUnits='userSpaceOnUse'
-            >
+            <linearGradient id='sidebarCloudGrad' x1='10' y1='5' x2='55' y2='40' gradientUnits='userSpaceOnUse'>
               <stop stopColor='#38BDF8' />
               <stop offset='0.5' stopColor='#60A5FA' />
               <stop offset='1' stopColor='#2563EB' />
@@ -64,9 +64,9 @@ const WeatherGPTSidebarLogo = ({ collapsed, isAuthority }) => (
         <span className='text-xl font-bold tracking-tight text-[#2563EB] dark:text-blue-400 font-sans leading-none block truncate'>
           WeatherGPT
         </span>
-        {isAuthority && (
+        {roleLabel && (
           <span className='text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase'>
-            Authority
+            {roleLabel}
           </span>
         )}
       </div>
@@ -74,6 +74,88 @@ const WeatherGPTSidebarLogo = ({ collapsed, isAuthority }) => (
   </div>
 )
 
+// ---------------------------------------------------------------------------
+// Role → nav items
+// ---------------------------------------------------------------------------
+const getNavItems = (role, t, language) => {
+  const sopLabel = language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली' : 'Disaster Safety SOPs'
+
+  if (role === 'admin') {
+    return [
+      { id: 'dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
+      { id: 'admin-users', label: 'User Management', icon: Users },
+      { id: 'admin-analytics', label: 'Platform Analytics', icon: TrendingUp },
+      { id: 'admin-system', label: 'System Health', icon: Server },
+      { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
+    ]
+  }
+
+  if (role === 'authority') {
+    return [
+      { id: 'dashboard', label: 'Authority Dashboard', icon: Home },
+      { id: 'alerts', label: 'Alert Management', icon: AlertOctagon, badge: '12' },
+      { id: 'weather-map', label: 'Weather Map', icon: Map },
+      { id: 'analytics', label: 'Deep Analytics', icon: BarChart2 },
+      { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+      { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
+    ]
+  }
+
+  if (role === 'farmer') {
+    return [
+      { id: 'dashboard', label: t('dashboard') || 'Dashboard', icon: Home },
+      { id: 'chat', label: t('chat') || 'Weather Chat', icon: MessageSquare },
+      { id: 'advisory', label: t('advisory') || 'Agro Advisory', icon: Sprout },
+      { id: 'alerts', label: t('alerts') || 'Alerts', icon: Bell, badge: '3' },
+      { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+      { id: 'weather-map', label: t('weatherMap') || 'Weather Map', icon: Map },
+      { id: 'forecast', label: t('forecast') || '7-Day Forecast', icon: Calendar },
+      { id: 'news', label: t('news') || 'News', icon: Newspaper },
+      { id: 'climate-historical', label: t('climateHistorical') || 'Climate & Historical', icon: CloudSun },
+      { id: 'saved-locations', label: t('savedLocations') || 'Saved Locations', icon: Star },
+      { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
+    ]
+  }
+
+  // Default: citizen (role === 'user' or anything else)
+  return [
+    { id: 'dashboard', label: t('dashboard') || 'Dashboard', icon: Home },
+    { id: 'chat', label: t('chat') || 'Weather Chat', icon: MessageSquare },
+    { id: 'alerts', label: t('alerts') || 'Alerts', icon: Bell, badge: '3' },
+    { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+    { id: 'weather-map', label: t('weatherMap') || 'Weather Map', icon: Map },
+    { id: 'forecast', label: t('forecast') || '7-Day Forecast', icon: Calendar },
+    { id: 'news', label: t('news') || 'News', icon: Newspaper },
+    { id: 'climate-historical', label: t('climateHistorical') || 'Climate & Historical', icon: CloudSun },
+    { id: 'saved-locations', label: t('savedLocations') || 'Saved Locations', icon: Star },
+    { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
+  ]
+}
+
+const getRoleLabel = role => {
+  if (role === 'admin') return 'Administrator'
+  if (role === 'authority') return 'Authority'
+  if (role === 'farmer') return 'Farmer'
+  return null
+}
+
+const getRoleBadgeStyle = role => {
+  if (role === 'admin') return 'bg-purple-600 text-white'
+  if (role === 'authority') return 'bg-blue-600 text-white'
+  if (role === 'farmer') return 'bg-emerald-600 text-white'
+  return 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+}
+
+const getRoleBadgeLabel = role => {
+  if (role === 'admin') return 'Administrator'
+  if (role === 'authority') return 'Authority Officer'
+  if (role === 'farmer') return 'Farmer'
+  return 'Citizen'
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------
 export const Sidebar = ({
   isMobileOpen,
   setIsMobileOpen,
@@ -94,7 +176,6 @@ export const Sidebar = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const userMenuRef = useRef(null)
 
-  // Local collapsed fallback if not controlled from parent
   const [internalCollapsed, setInternalCollapsed] = useState(() => {
     try {
       return localStorage.getItem('weathergpt_sidebar_collapsed') === 'true'
@@ -107,11 +188,8 @@ export const Sidebar = ({
 
   const toggleCollapsed = () => {
     const next = !collapsed
-    if (setIsCollapsed) {
-      setIsCollapsed(next)
-    } else {
-      setInternalCollapsed(next)
-    }
+    if (setIsCollapsed) setIsCollapsed(next)
+    else setInternalCollapsed(next)
     try {
       localStorage.setItem('weathergpt_sidebar_collapsed', String(next))
     } catch (_) {}
@@ -129,77 +207,17 @@ export const Sidebar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isUserMenuOpen])
 
-  const isAuthority = user?.role === 'authority' || user?.role === 'admin'
+  const role = user?.role || 'user'
+  const navItems = getNavItems(role, t, language)
+  const roleLabel = getRoleLabel(role)
+  const isAuthority = role === 'authority'
+  const isAdmin = role === 'admin'
 
-  const authorityNavItems = [
-    {
-      id: 'dashboard',
-      label: t('authorityDashboard') || t('dashboard'),
-      icon: Home
-    },
-    {
-      id: 'alerts',
-      label: t('authorityAlerts') || t('alerts'),
-      icon: Bell,
-      badge: '12'
-    },
-    {
-      id: 'weather-map',
-      label: t('authorityWeatherMap') || t('weatherMap'),
-      icon: Map
-    },
-    {
-      id: 'analytics',
-      label: t('authorityAnalytics') || 'Analytics',
-      icon: BarChart2
-    },
-    {
-      id: 'disaster-sops',
-      label: language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली (SOP)' : 'Disaster Safety SOPs',
-      icon: ShieldAlert
-    },
-    {
-      id: 'settings',
-      label: t('authoritySettings') || t('settings'),
-      icon: Settings
-    }
-  ]
-
-  const userNavItems = [
-    { id: 'dashboard', label: t('dashboard'), icon: Home },
-    { id: 'chat', label: t('chat'), icon: MessageSquare },
-    { id: 'advisory', label: t('advisory'), icon: Sprout },
-    { id: 'alerts', label: t('alerts'), icon: Bell, badge: '3' },
-    {
-      id: 'disaster-sops',
-      label: language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली (SOP)' : 'Disaster Safety SOPs',
-      icon: ShieldAlert
-    },
-    { id: 'weather-map', label: t('weatherMap'), icon: Map },
-    { id: 'forecast', label: t('forecast'), icon: Calendar },
-    { id: 'news', label: t('news') || 'Weather News', icon: Newspaper },
-    {
-      id: 'climate-historical',
-      label: t('climateHistorical') || 'Climate & Historical Data',
-      icon: CloudSun
-    },
-    { id: 'saved-locations', label: t('savedLocations'), icon: Star },
-    { id: 'settings', label: t('settings'), icon: Settings }
-  ]
-
-  const navItems = isAuthority ? authorityNavItems : userNavItems
-
-  const recentChats = conversations.length
+  const recentChats = (role === 'user' || role === 'farmer') && conversations.length
     ? conversations.slice(0, 5).map(c => ({
         id: c.id,
         title: c.title,
-        time:
-          c.time ||
-          (language === 'mr'
-            ? 'अलीकडील'
-            : language === 'hi'
-            ? 'हालिया'
-            : 'Recent')
+        time: c.time || (language === 'mr' ? 'अलीकडील' : 'Recent')
       }))
     : []
 
@@ -237,10 +255,7 @@ export const Sidebar = ({
             }`}
             title='WeatherGPT'
           >
-            <WeatherGPTSidebarLogo
-              collapsed={collapsed}
-              isAuthority={isAuthority}
-            />
+            <WeatherGPTSidebarLogo collapsed={collapsed} roleLabel={!collapsed ? roleLabel : null} />
           </div>
 
           {!collapsed && (
@@ -330,7 +345,7 @@ export const Sidebar = ({
           })}
         </nav>
 
-        {/* Middle Section: For User -> Recent Chats; For Authority -> State Advisory System */}
+        {/* Authority info panel */}
         {!collapsed && isAuthority && (
           <div className='pt-3 border-t border-slate-100 dark:border-slate-800/60 space-y-3'>
             <div className='p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40 space-y-2'>
@@ -345,20 +360,35 @@ export const Sidebar = ({
               </p>
               <div className='pt-1 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 border-t border-blue-200/60 dark:border-blue-900/40'>
                 <span>Emergency: 1070 / 112</span>
-                <span className='text-emerald-600 dark:text-emerald-400'>
-                  ONLINE
-                </span>
+                <span className='text-emerald-600 dark:text-emerald-400'>ONLINE</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Recent Conversations (Only shown when expanded & not authority) */}
-        {!collapsed && !isAuthority && recentChats.length > 0 && (
+        {/* Admin info panel */}
+        {!collapsed && isAdmin && (
+          <div className='pt-3 border-t border-slate-100 dark:border-slate-800/60 space-y-3'>
+            <div className='p-3.5 rounded-2xl bg-purple-50/80 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40 space-y-2'>
+              <div className='flex items-center gap-1.5'>
+                <Cpu className='w-4 h-4 text-purple-600 dark:text-purple-400' />
+                <span className='text-xs font-bold text-purple-900 dark:text-purple-200'>
+                  Admin Controls
+                </span>
+              </div>
+              <p className='text-[11px] text-purple-800/80 dark:text-purple-300/80 leading-relaxed'>
+                Full platform access. Changes are immediate and irreversible.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Conversations (citizen & farmer only) */}
+        {!collapsed && (role === 'user' || role === 'farmer') && recentChats.length > 0 && (
           <div className='pt-3 border-t border-slate-100 dark:border-slate-800/60'>
             <div className='flex items-center justify-between px-2 mb-2'>
               <span className='text-[11px] font-bold text-slate-900 dark:text-slate-200 tracking-tight'>
-                {t('recentConversations')}
+                {t('recentConversations') || 'Recent Chats'}
               </span>
             </div>
             <div className='space-y-1'>
@@ -381,13 +411,13 @@ export const Sidebar = ({
               onClick={() => handleNavClick('history')}
               className='flex items-center gap-1 px-2.5 py-1 mt-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
             >
-              <span>{t('viewAll')}</span>
+              <span>{t('viewAll') || 'View all'}</span>
               <ChevronRight className='w-3 h-3' />
             </button>
           </div>
         )}
 
-        {/* Expand Button (Only shown when collapsed) */}
+        {/* Expand Button (collapsed only) */}
         {collapsed && (
           <div className='pt-2 border-t border-slate-100 dark:border-slate-800/60 flex justify-center'>
             <button
@@ -427,21 +457,13 @@ export const Sidebar = ({
               />
             ) : (
               <div className='w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs'>
-                {user?.avatarInitials ||
-                  (isAuthority
-                    ? 'AA'
-                    : user?.name
-                    ? user.name.slice(0, 2).toUpperCase()
-                    : 'SP')}
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U?'}
               </div>
             )}
 
             {!isUserMenuOpen && (
               <div className='absolute left-full ml-3 px-3 py-1.5 bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xl whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 border border-slate-700/60'>
-                <span>
-                  {user?.name ||
-                    (isAuthority ? 'Authority Admin' : 'Account & Profile')}
-                </span>
+                <span>{user?.name || 'Account'}</span>
                 <div className='absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900 dark:border-r-slate-800' />
               </div>
             )}
@@ -460,43 +482,19 @@ export const Sidebar = ({
                 />
               ) : (
                 <div className='w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0'>
-                  {user?.avatarInitials ||
-                    (isAuthority
-                      ? 'AA'
-                      : user?.name
-                      ? user.name.slice(0, 2).toUpperCase()
-                      : 'SP')}
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U?'}
                 </div>
               )}
               <div className='text-left min-w-0'>
                 <p className='text-xs font-bold text-slate-800 dark:text-slate-200 truncate'>
-                  {user?.name || (isAuthority ? 'Dr. A. Sharma' : 'Guest User')}
+                  {user?.name || 'Guest User'}
                 </p>
                 <p className='text-[11px] text-slate-400 dark:text-slate-500 truncate'>
-                  {isAuthority
-                    ? user?.state || 'Maharashtra State'
-                    : user?.email || 'guest@weathergpt.in'}
+                  {(role === 'authority' || role === 'admin') ? (user?.state || user?.email || '') : (user?.email || '')}
                 </p>
-                {user?.role === 'farmer' && (
-                  <span className='inline-block mt-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-md shadow-xs'>
-                    🌾 Farmer (शेतकरी)
-                  </span>
-                )}
-                {user?.role === 'authority' && (
-                  <span className='inline-block mt-1 px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-md shadow-xs'>
-                    🏛️ Authority Officer
-                  </span>
-                )}
-                {user?.role === 'admin' && (
-                  <span className='inline-block mt-1 px-2 py-0.5 bg-purple-600 text-white text-[10px] font-bold rounded-md shadow-xs'>
-                    ⚡ Administrator
-                  </span>
-                )}
-                {(!user?.role || user?.role === 'user') && (
-                  <span className='inline-block mt-1 px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-md shadow-xs'>
-                    👤 Citizen
-                  </span>
-                )}
+                <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-md shadow-xs ${getRoleBadgeStyle(role)}`}>
+                  {getRoleBadgeLabel(role)}
+                </span>
               </div>
             </div>
             <ChevronDown className='w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 shrink-0' />
@@ -517,7 +515,7 @@ export const Sidebar = ({
                 {user?.name || 'Guest User'}
               </p>
               <p className='text-[11px] text-slate-400 dark:text-slate-500 truncate'>
-                {user?.email || 'guest@weathergpt.in'}
+                {user?.email || ''}
               </p>
             </div>
             <button
@@ -528,7 +526,7 @@ export const Sidebar = ({
               className='w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer'
             >
               <UserIcon className='w-4 h-4 text-slate-400' />
-              <span>{t('editProfile')}</span>
+              <span>{t('editProfile') || 'Edit Profile'}</span>
             </button>
             <button
               onClick={() => {
@@ -542,7 +540,7 @@ export const Sidebar = ({
               ) : (
                 <Moon className='w-4 h-4 text-slate-400' />
               )}
-              <span>{isDark ? t('lightTheme') : t('darkTheme')}</span>
+              <span>{isDark ? (t('lightTheme') || 'Light Mode') : (t('darkTheme') || 'Dark Mode')}</span>
             </button>
             <button
               onClick={() => {
@@ -552,7 +550,7 @@ export const Sidebar = ({
               className='w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer'
             >
               <Settings className='w-4 h-4 text-slate-400' />
-              <span>{t('accountSettings')}</span>
+              <span>{t('accountSettings') || 'Account Settings'}</span>
             </button>
             <div className='border-t border-slate-100 dark:border-slate-800 my-1' />
             <button
@@ -563,7 +561,7 @@ export const Sidebar = ({
               className='w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition cursor-pointer'
             >
               <LogOut className='w-4 h-4 text-rose-500' />
-              <span>{t('logout')}</span>
+              <span>{t('logout') || 'Sign Out'}</span>
             </button>
           </div>
         )}

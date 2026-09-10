@@ -25,6 +25,7 @@ import voiceRoutes from './routes/voiceRoutes.js'
 import satelliteRoutes from './routes/satelliteRoutes.js'
 import authorityRoutes from './routes/authorityRoutes.js'
 import newsRoutes from './routes/newsRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
 
 import errorMiddleware from './middleware/errorMiddleware.js'
 
@@ -122,6 +123,7 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/subscriptions', subscriptionRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/authority', authorityRoutes)
+app.use('/api/admin', adminRoutes)
 
 // 404 Fallback Handler for Unknown Routes
 app.use((req, res) => {
