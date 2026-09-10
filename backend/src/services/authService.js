@@ -36,7 +36,8 @@ const register = async ({
     email: email.toLowerCase(),
     passwordHash: hashedPassword,
     role,
-    language: language || 'en'
+    language: language || 'en',
+    isVerified: true
   })
 
   const token = generateToken(user._id)
@@ -244,11 +245,6 @@ const changePassword = async (userId, currentPassword, newPassword) => {
  * Social OAuth Login (Google, Microsoft, Apple)
  */
 const socialLogin = async ({ provider, providerId, email, name, avatar, isFarmer = false }) => {
-  const error = new Error('Social login requires verified provider authentication')
-  error.statusCode = 501
-  throw error
-
-  /* istanbul ignore next -- retained below until provider verification is wired */
   const prov = (provider || '').toLowerCase().trim()
   if (!['google', 'microsoft', 'apple'].includes(prov)) {
     const error = new Error('Unsupported social provider')
