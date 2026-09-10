@@ -2,6 +2,7 @@ import { getForecast as getOpenMeteoForecast } from '../openMeteo/client.js'
 import { getECMWFWeather } from './ecmwf/service.js'
 import { getGFSWeather } from './noaaGfs/service.js'
 import { normalizeForecast } from '../normalizers/weatherNormalizer.js'
+import { enqueueNWP } from './nwpQueue.js'
 
 const AGREEMENT_SCORE_THRESHOLDS = Object.freeze({
   high: 90,
@@ -293,16 +294,29 @@ async function fetchMultiModelFeed (latitude, longitude) {
  * @returns {Promise<object>}
  */
 export async function compareNWPModels (latitude, longitude) {
+  const openMeteoPromise = getOpenMeteoForecast(latitude, longitude).catch(
+    () => null
+  )
+  const multiModelPromise = fetchMultiModelFeed(latitude, longitude)
+  const locKey = `${Number(latitude).toFixed(2)}_${Number(longitude).toFixed(
+    2
+  )}`
+  const { ecmwfData, gfsRaw } = await enqueueNWP(locKey, async () => {
+    const ecmwf = await fetchECMWF(latitude, longitude)
+    await new Promise(resolve => setImmediate(resolve))
+    if (global.gc) global.gc()
+    const gfs = await getGFSWeather(latitude, longitude, 1).catch(() => null)
+    return { ecmwfData: ecmwf, gfsRaw: gfs }
+  })
   const [openMeteoRaw, multiModelFeed] = await Promise.all([
-    getOpenMeteoForecast(latitude, longitude).catch(() => null),
-    fetchMultiModelFeed(latitude, longitude)
+    openMeteoPromise,
+    multiModelPromise
   ])
 
   const openMeteoNorm = openMeteoRaw
     ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
     : null
-  const ecmwfData = null
-  const gfsNorm = null
+  const gfsNorm = gfsRaw
 
   // Build daily arrays from multiModelFeed if available
   const dailyDates = multiModelFeed?.daily?.time || []

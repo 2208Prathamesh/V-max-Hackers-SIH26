@@ -18,7 +18,9 @@ const getLocations = async (req, res, next) => {
       locations.map(async location => {
         try {
           const [weatherData, forecastData] = await Promise.all([
-            weatherService.getWeather(location.latitude, location.longitude),
+            weatherService.getWeather(location.latitude, location.longitude, {
+              includeNWP: false
+            }),
             weatherService.getForecast(location.latitude, location.longitude, 3)
           ])
 
@@ -32,9 +34,7 @@ const getLocations = async (req, res, next) => {
             lat: location.latitude,
             lng: location.longitude,
             condition:
-              current?.weatherDescription ||
-              current?.condition ||
-              'Clear',
+              current?.weatherDescription || current?.condition || 'Clear',
             tempC: current?.temperature ?? null,
             feelsLikeC: current?.apparentTemperature ?? null,
             humidity: current?.humidity ?? null,
@@ -50,14 +50,8 @@ const getLocations = async (req, res, next) => {
                     weekday: 'short'
                   })
                 : '--',
-              condition:
-                day.weatherDescription ||
-                day.condition ||
-                'Clear',
-              temp:
-                day.temperature ??
-                day.maxTemperature ??
-                null
+              condition: day.weatherDescription || day.condition || 'Clear',
+              temp: day.temperature ?? day.maxTemperature ?? null
             }))
           }
         } catch (weatherError) {

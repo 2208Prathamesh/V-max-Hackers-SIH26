@@ -11,6 +11,12 @@ import {
   DEFAULT_LOCATION
 } from '../config/defaults'
 import { api } from '../services/api'
+import {
+  weatherCache,
+  alertCache,
+  offlineManager,
+  getAlertScopeKey
+} from '../services/offline'
 
 const WeatherContext = createContext()
 
@@ -76,6 +82,12 @@ export const WeatherProvider = ({ children }) => {
   })
   const [alerts, setAlerts] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [isOffline, setIsOffline] = useState(() => !offlineManager.isOnline())
+  const selectedLocationRef = useRef(selectedMapLocation)
+
+  useEffect(() => {
+    selectedLocationRef.current = selectedMapLocation
+  }, [selectedMapLocation])
 
   const [weatherData, setWeatherData] = useState(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
@@ -210,6 +222,21 @@ export const WeatherProvider = ({ children }) => {
   }, [])
 
   const refreshAlerts = async () => {
+    const token = localStorage.getItem('weathergpt_token')
+    const scope = getAlertScopeKey(Boolean(token))
+
+    // 1. If offline, use IndexedDB directly
+    if (!offlineManager.isOnline()) {
+      try {
+        const cached = await alertCache.getAlerts(scope)
+        if (Array.isArray(cached) && cached.length > 0) {
+          setAlerts(cached)
+        }
+      } catch (_) {}
+      return
+    }
+
+    // 2. If online, try network
     try {
       const token = localStorage.getItem('weathergpt_token')
       const serverAlerts = token
@@ -217,9 +244,17 @@ export const WeatherProvider = ({ children }) => {
         : await api.alerts()
       if (Array.isArray(serverAlerts)) {
         setAlerts(serverAlerts)
+        alertCache.saveAlerts(scope, serverAlerts).catch(() => {})
       }
     } catch (err) {
       console.warn('Could not refresh alerts from API:', err)
+      // 3. Network failed — fallback to cached alerts
+      try {
+        const cached = await alertCache.getAlerts(scope)
+        if (Array.isArray(cached) && cached.length > 0) {
+          setAlerts(cached)
+        }
+      } catch (_) {}
     }
   }
 
@@ -421,13 +456,50 @@ export const WeatherProvider = ({ children }) => {
 
     setWeatherLoading(true)
     setWeatherError(null)
+
+    // 1. If offline, use IndexedDB directly
+    if (!offlineManager.isOnline()) {
+      try {
+        const cached = await weatherCache.getCurrentWeather(latitude, longitude)
+        if (weatherRequestRef.current.version === requestVersion) {
+          if (cached) {
+            setWeatherData(cached)
+          } else {
+            setWeatherError(
+              'You are offline and no cached weather data is available for this location.'
+            )
+          }
+        }
+        return cached
+      } finally {
+        if (weatherRequestRef.current.version === requestVersion) {
+          setWeatherLoading(false)
+        }
+      }
+    }
+
+    // 2. If online, try backend request
     try {
       const data = await api.weather({ latitude, longitude })
       if (weatherRequestRef.current.version === requestVersion) {
         setWeatherData(data)
+        weatherCache
+          .saveCurrentWeather(latitude, longitude, data)
+          .catch(() => {})
       }
       return data
     } catch (error) {
+      // 3. Backend failed — attempt fallback to IndexedDB
+      try {
+        const cached = await weatherCache.getCurrentWeather(latitude, longitude)
+        if (weatherRequestRef.current.version === requestVersion && cached) {
+          setWeatherData(cached)
+          addToast('Network unavailable. Displaying cached weather.', 'warning')
+          return cached
+        }
+      } catch (_) {}
+
+      // 4. Both failed — preserve existing error state
       if (weatherRequestRef.current.version === requestVersion) {
         setWeatherError(error.message || 'Could not load current weather')
         addToast(error.message || 'Could not load current weather', 'warning')
@@ -452,6 +524,31 @@ export const WeatherProvider = ({ children }) => {
     const requestPromise = (async () => {
       setForecastLoading(true)
       setForecastError(null)
+
+      // 1. If offline, use IndexedDB directly
+      if (!offlineManager.isOnline()) {
+        try {
+          const cached = await weatherCache.getForecast(latitude, longitude)
+          if (forecastRequestRef.current.version === requestVersion) {
+            if (cached) {
+              forecastStateRef.current = { key: requestKey, data: cached }
+              setForecastData(cached)
+            } else {
+              setForecastError(
+                'You are offline and no cached forecast is available for this location.'
+              )
+            }
+          }
+          return cached
+        } finally {
+          if (forecastRequestRef.current.version === requestVersion) {
+            forecastRequestRef.current.promise = null
+            setForecastLoading(false)
+          }
+        }
+      }
+
+      // 2. If online, try backend request
       try {
         const data = await api.forecast({ latitude, longitude, days: 7 })
         const latestRequest = forecastRequestRef.current
@@ -466,8 +563,20 @@ export const WeatherProvider = ({ children }) => {
 
         forecastStateRef.current = { key: requestKey, data }
         setForecastData(data)
+        weatherCache.saveForecast(latitude, longitude, data).catch(() => {})
         return data
       } catch (error) {
+        // 3. Backend failed — attempt fallback to IndexedDB
+        try {
+          const cached = await weatherCache.getForecast(latitude, longitude)
+          if (forecastRequestRef.current.version === requestVersion && cached) {
+            forecastStateRef.current = { key: requestKey, data: cached }
+            setForecastData(cached)
+            return cached
+          }
+        } catch (_) {}
+
+        // 4. Both failed — preserve existing error state
         if (forecastRequestRef.current.version === requestVersion) {
           setForecastError(error.message || 'Could not load forecast')
           addToast(error.message || 'Could not load forecast', 'warning')
@@ -500,6 +609,28 @@ export const WeatherProvider = ({ children }) => {
       refreshForecast(latitude, longitude)
     }
   }, [selectedMapLocation])
+
+  // Subscribe to network online/offline changes
+  useEffect(() => {
+    const unsubscribe = offlineManager.subscribe(({ isOnline }) => {
+      setIsOffline(!isOnline)
+      if (isOnline) {
+        addToast('Back online. Refreshing weather data...', 'info')
+        const loc = selectedLocationRef.current || DEFAULT_LOCATION
+        const latitude = loc?.lat ?? loc?.latitude ?? DEFAULT_LOCATION.lat
+        const longitude = loc?.lng ?? loc?.longitude ?? DEFAULT_LOCATION.lng
+        if (latitude !== undefined && longitude !== undefined) {
+          refreshWeather(latitude, longitude)
+          refreshForecast(latitude, longitude)
+        }
+        refreshAlerts()
+      } else {
+        addToast('You are offline. Showing cached weather.', 'warning')
+      }
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   // Toast Notification helper
   const addToast = (message, type = 'info') => {
@@ -1130,6 +1261,7 @@ export const WeatherProvider = ({ children }) => {
         alerts,
         refreshAlerts,
         notifications,
+        isOffline,
         weatherData,
         weatherLoading,
         weatherError,

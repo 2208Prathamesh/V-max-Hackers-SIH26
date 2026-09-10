@@ -1,6 +1,8 @@
 {
   "ignore": [
     ".nwp_cache/*",
+    "../.nwp_cache/*",
+    "**/.nwp_cache/**",
     "src/scripts/*"
   ]
 }
