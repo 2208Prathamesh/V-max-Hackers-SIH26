@@ -20,7 +20,8 @@ import {
   Sprout,
   ShieldAlert,
   Cpu,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react'
 import { ForgotPasswordModal } from '../components/modals/ForgotPasswordModal'
 import { SocialAuthModal } from '../components/modals/SocialAuthModal'
@@ -104,7 +105,16 @@ const WeatherGPTLogo = () => (
 )
 
 export const LoginPage = () => {
-  const { login, signUp, socialLogin, setIsForgotPasswordOpen, addToast } = useWeather()
+  const {
+    login,
+    signUp,
+    socialLogin,
+    setIsForgotPasswordOpen,
+    addToast,
+    setUser,
+    setIsAuthenticated,
+    setCurrentPage
+  } = useWeather()
   const { language, setLanguage, t, supportedLanguages } = useLanguage()
 
   const [isSignUpMode, setIsSignUpMode] = useState(false)
@@ -117,6 +127,44 @@ export const LoginPage = () => {
     email: '',
     password: ''
   })
+
+  const handleDemoLogin = async (
+    demoEmail = 'sidpatil@gmail.com',
+    demoPassword = 'password123',
+    demoName = 'Sid Patil',
+    demoRole = 'user'
+  ) => {
+    setIsLoading(true)
+    setFormData({
+      name: demoName,
+      email: demoEmail,
+      password: demoPassword
+    })
+    try {
+      await login(demoEmail, demoPassword)
+      triggerLoginSuccessConfetti()
+    } catch (error) {
+      // Offline / standalone dev fallback for 100% reliable 1-click access
+      console.warn('Backend login unavailable, activating local demo session:', error?.message || error)
+      const mockUser = {
+        _id: 'demo_user_123',
+        name: demoName,
+        email: demoEmail,
+        role: demoRole,
+        isFarmer: demoRole === 'farmer',
+        location: 'Pune, Maharashtra'
+      }
+      localStorage.setItem('weathergpt_token', 'demo_jwt_token_temporary')
+      localStorage.setItem('weathergpt_user', JSON.stringify(mockUser))
+      if (setUser) setUser(mockUser)
+      if (setIsAuthenticated) setIsAuthenticated(true)
+      if (setCurrentPage) setCurrentPage(demoRole === 'farmer' ? 'advisory' : 'dashboard')
+      triggerLoginSuccessConfetti()
+      addToast(`Logged in as Demo ${demoName} (${demoRole})`, 'success')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Password strength calculator
   const passwordStrength = useMemo(() => {
@@ -532,6 +580,54 @@ export const LoginPage = () => {
                   </>
                 )}
               </button>
+
+              {/* Temporary Demo Login Section */}
+              <div className='mt-3.5 pt-3 border-t border-dashed border-slate-200 dark:border-slate-700/80'>
+                <button
+                  type='button'
+                  onClick={() => handleDemoLogin('sidpatil@gmail.com', 'password123', 'Sid Patil', 'user')}
+                  disabled={isLoading}
+                  className='w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:via-amber-700 hover:to-orange-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75'
+                >
+                  <Zap className='w-4 h-4 fill-amber-200 text-amber-200' />
+                  <span>⚡ Demo Login (Instant 1-Click Access)</span>
+                </button>
+
+                <div className='flex items-center justify-between px-1 mt-2 text-[11px] text-slate-500 dark:text-slate-400'>
+                  <span className='font-medium'>Quick switch role:</span>
+                  <div className='flex items-center gap-2 font-semibold'>
+                    <button
+                      type='button'
+                      onClick={() => handleDemoLogin('sidpatil@gmail.com', 'password123', 'Sid Patil', 'user')}
+                      disabled={isLoading}
+                      className='hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer'
+                      title='Citizen / Standard User (Sid Patil)'
+                    >
+                      User
+                    </button>
+                    <span>•</span>
+                    <button
+                      type='button'
+                      onClick={() => handleDemoLogin('ramesh.kisan@weathergpt.ai', 'password123', 'Ramesh Kisan', 'farmer')}
+                      disabled={isLoading}
+                      className='hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer'
+                      title='Farmer (Ramesh Kisan - Agro Advisory Mode)'
+                    >
+                      Farmer 🌾
+                    </button>
+                    <span>•</span>
+                    <button
+                      type='button'
+                      onClick={() => handleDemoLogin('officer.pune@disaster.gov.in', 'password123', 'Dr. A. Sharma', 'authority')}
+                      disabled={isLoading}
+                      className='hover:text-rose-600 dark:hover:text-rose-400 transition cursor-pointer'
+                      title='Disaster Management Authority (Dr. A. Sharma)'
+                    >
+                      Authority 🚨
+                    </button>
+                  </div>
+                </div>
+              </div>
             </form>
 
             {/* Social Divider */}
