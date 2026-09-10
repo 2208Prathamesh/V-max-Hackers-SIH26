@@ -593,37 +593,51 @@ export const LoginPage = () => {
                   <span>⚡ Demo Login (Instant 1-Click Access)</span>
                 </button>
 
-                <div className='flex items-center justify-between px-1 mt-2 text-[11px] text-slate-500 dark:text-slate-400'>
-                  <span className='font-medium'>Quick switch role:</span>
-                  <div className='flex items-center gap-2 font-semibold'>
+                <div className='mt-2.5'>
+                  <div className='flex items-center justify-between mb-1.5 px-0.5'>
+                    <span className='text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500'>
+                      1-Click Role Login:
+                    </span>
+                    <span className='text-[10px] text-amber-600 dark:text-amber-400 font-medium'>
+                      Temporary Mode
+                    </span>
+                  </div>
+                  <div className='grid grid-cols-4 gap-1.5'>
                     <button
                       type='button'
                       onClick={() => handleDemoLogin('sidpatil@gmail.com', 'password123', 'Sid Patil', 'user')}
                       disabled={isLoading}
-                      className='hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer'
+                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-amber-50 dark:bg-slate-800 dark:hover:bg-amber-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400 dark:hover:border-amber-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 transition text-center cursor-pointer truncate'
                       title='Citizen / Standard User (Sid Patil)'
                     >
                       User
                     </button>
-                    <span>•</span>
                     <button
                       type='button'
                       onClick={() => handleDemoLogin('ramesh.kisan@weathergpt.ai', 'password123', 'Ramesh Kisan', 'farmer')}
                       disabled={isLoading}
-                      className='hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer'
+                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-400 dark:hover:border-emerald-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition text-center cursor-pointer truncate'
                       title='Farmer (Ramesh Kisan - Agro Advisory Mode)'
                     >
                       Farmer 🌾
                     </button>
-                    <span>•</span>
                     <button
                       type='button'
                       onClick={() => handleDemoLogin('officer.pune@disaster.gov.in', 'password123', 'Dr. A. Sharma', 'authority')}
                       disabled={isLoading}
-                      className='hover:text-rose-600 dark:hover:text-rose-400 transition cursor-pointer'
+                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-rose-400 dark:hover:border-rose-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 transition text-center cursor-pointer truncate'
                       title='Disaster Management Authority (Dr. A. Sharma)'
                     >
                       Authority 🚨
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => handleDemoLogin('admin@weathergpt.ai', 'password123', 'System Administrator', 'admin')}
+                      disabled={isLoading}
+                      className='py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-950/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500/50 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-center cursor-pointer truncate'
+                      title='System Administrator (Full System Access)'
+                    >
+                      Admin ⚙️
                     </button>
                   </div>
                 </div>
