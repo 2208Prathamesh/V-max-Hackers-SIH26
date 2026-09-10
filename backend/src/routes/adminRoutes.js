@@ -6,7 +6,12 @@ import {
   deleteUser,
   resetUserPassword,
   getPlatformAnalytics,
-  getSystemHealth
+  getSystemHealth,
+  getMaintenanceStatus,
+  updateMaintenanceStatus,
+  getSecurityAuditLogs,
+  revokeSessions,
+  exportDatabaseBackup
 } from '../controllers/adminController.js'
 
 const router = express.Router()
@@ -24,5 +29,16 @@ router.post('/users/:id/reset-password', resetUserPassword)
 // Analytics & System
 router.get('/analytics', getPlatformAnalytics)
 router.get('/health', getSystemHealth)
+
+// Maintenance Mode
+router.get('/maintenance', getMaintenanceStatus)
+router.post('/maintenance', updateMaintenanceStatus)
+
+// Advanced Security & Audit
+router.get('/security/audit', getSecurityAuditLogs)
+router.post('/security/revoke-sessions', revokeSessions)
+
+// System Database Backup Export
+router.get('/backup/export', exportDatabaseBackup)
 
 export default router

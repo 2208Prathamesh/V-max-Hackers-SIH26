@@ -136,6 +136,69 @@ const cancelAlert = async (req, res, next) => {
   }
 }
 
+/**
+ * Get operational dashboard stats for authority
+ */
+const getStats = async (req, res, next) => {
+  try {
+    const stats = await alertService.getAuthorityStats()
+    return successResponse(res, stats, 'Authority statistics retrieved successfully', 200)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Get live weather & hazard profiles for state districts
+ */
+const getDistricts = async (req, res, next) => {
+  try {
+    const districts = await alertService.getAuthorityDistricts()
+    return successResponse(res, districts, 'District weather and risk profiles retrieved', 200)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Get emergency relief resources (shelters, response teams)
+ */
+const getResources = async (req, res, next) => {
+  try {
+    const resources = await alertService.getAuthorityResources()
+    return successResponse(res, resources, 'Disaster relief resources retrieved', 200)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Get time-series analytics and risk rankings
+ */
+const getAnalytics = async (req, res, next) => {
+  try {
+    const analytics = await alertService.getAuthorityAnalytics(req.query.timeRange)
+    return successResponse(res, analytics, 'Authority analytics retrieved', 200)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * Export official State Disaster Incident Log report as downloadable CSV
+ */
+const exportReport = async (req, res, next) => {
+  try {
+    const csvContent = await alertService.generateAuthorityExportReport()
+    const filename = `State_Disaster_Incident_Report_${new Date().toISOString().slice(0, 10)}.csv`
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    return res.status(200).send(csvContent)
+  } catch (error) {
+    next(error)
+  }
+}
+
 export {
   getMe,
   getAlerts,
@@ -143,7 +206,12 @@ export {
   createAlert,
   updateAlert,
   publishAlert,
-  cancelAlert
+  cancelAlert,
+  getStats,
+  getDistricts,
+  getResources,
+  getAnalytics,
+  exportReport
 }
 
 export default {
@@ -153,5 +221,10 @@ export default {
   createAlert,
   updateAlert,
   publishAlert,
-  cancelAlert
+  cancelAlert,
+  getStats,
+  getDistricts,
+  getResources,
+  getAnalytics,
+  exportReport
 }

@@ -3,7 +3,8 @@ import React, {
   useContext,
   useState,
   useEffect,
-  useRef
+  useRef,
+  useCallback
 } from 'react'
 import {
   DEFAULT_SETTINGS,
@@ -29,7 +30,46 @@ const normalizeUser = user => ({
 })
 
 export const WeatherProvider = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState('dashboard')
+  // Persist currentPage so browser refresh doesn't lose the active page
+  const [currentPage, setCurrentPageState] = useState(() => {
+    try {
+      const hash = typeof window !== 'undefined' && window.location.hash ? window.location.hash.replace(/^#\/?/, '') : ''
+      if (hash && hash !== 'login') return hash
+      const saved = localStorage.getItem('weathergpt_current_page')
+      return saved || 'dashboard'
+    } catch {
+      return 'dashboard'
+    }
+  })
+
+  const setCurrentPage = (page) => {
+    setCurrentPageState(page)
+    try {
+      localStorage.setItem('weathergpt_current_page', page)
+      if (typeof window !== 'undefined') {
+        const currentHash = window.location.hash.replace(/^#\/?/, '')
+        if (currentHash !== page) {
+          window.history.replaceState(null, '', `#${page}`)
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Listen to hash changes (back/forward buttons in browser)
+  useEffect(() => {
+    const handleHashChange = () => {
+      try {
+        const hash = window.location.hash.replace(/^#\/?/, '')
+        if (hash && hash !== 'login') {
+          setCurrentPageState(prev => (prev !== hash ? hash : prev))
+          localStorage.setItem('weathergpt_current_page', hash)
+        }
+      } catch (_) {}
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('weathergpt_token') !== null
   })
@@ -84,6 +124,31 @@ export const WeatherProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([])
   const [isOffline, setIsOffline] = useState(() => !offlineManager.isOnline())
   const selectedLocationRef = useRef(selectedMapLocation)
+
+  // System-wide maintenance mode telemetry
+  const [maintenanceMode, setMaintenanceMode] = useState({
+    enabled: false,
+    title: 'Scheduled Platform Maintenance',
+    message: 'We are currently performing essential infrastructure upgrades and meteorological model sync. Normal operations will resume shortly.',
+    estimatedEnd: null,
+    affectedServices: ['AI Weather Advisory', 'Doppler Radar Pipeline']
+  })
+
+  const refreshMaintenanceMode = useCallback(async () => {
+    try {
+      const res = await api.getPublicMaintenanceStatus()
+      if (res?.data) {
+        setMaintenanceMode(res.data)
+      }
+    } catch (_) {}
+  }, [])
+
+  useEffect(() => {
+    refreshMaintenanceMode()
+    const timer = setInterval(refreshMaintenanceMode, 15000)
+    return () => clearInterval(timer)
+  }, [refreshMaintenanceMode])
+
 
   useEffect(() => {
     selectedLocationRef.current = selectedMapLocation
@@ -632,10 +697,22 @@ export const WeatherProvider = ({ children }) => {
     return () => unsubscribe()
   }, [])
 
-  // Toast Notification helper
-  const addToast = (message, type = 'info') => {
+  // Toast Notification helper (supports addToast('msg', 'info') and addToast({ message: 'msg', type: 'info' }))
+  const addToast = (messageOrObj, type = 'info') => {
+    let messageText = messageOrObj
+    let toastType = type
+
+    if (messageOrObj && typeof messageOrObj === 'object') {
+      messageText = messageOrObj.message || messageOrObj.title || messageOrObj.text || JSON.stringify(messageOrObj)
+      toastType = messageOrObj.type || type || 'info'
+    }
+
+    if (typeof messageText !== 'string') {
+      messageText = String(messageText ?? '')
+    }
+
     const id = Date.now() + Math.random()
-    setToasts(prev => [...prev, { id, message, type }])
+    setToasts(prev => [...prev, { id, message: messageText, type: toastType }])
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id))
     }, 3500)
@@ -1212,6 +1289,12 @@ export const WeatherProvider = ({ children }) => {
     }
     localStorage.removeItem('weathergpt_token')
     localStorage.removeItem('weathergpt_user')
+    localStorage.removeItem('weathergpt_current_page')
+    if (typeof window !== 'undefined' && window.location.hash) {
+      try {
+        window.history.replaceState(null, '', window.location.pathname)
+      } catch (_) {}
+    }
     setUser(null)
     setSavedLocations([])
     setConversations([])
@@ -1221,7 +1304,7 @@ export const WeatherProvider = ({ children }) => {
     setSelectedMapLocation(null)
     setActiveConversationId(null)
     setIsAuthenticated(false)
-    setCurrentPage('login')
+    setCurrentPageState('login')
     addToast('Logged out successfully', 'info')
   }
 
@@ -1286,7 +1369,11 @@ export const WeatherProvider = ({ children }) => {
         setIsAirQualityOpen,
         toasts,
         addToast,
-        removeToast
+        removeToast,
+        // Maintenance Mode
+        maintenanceMode,
+        setMaintenanceMode,
+        refreshMaintenanceMode
       }}
     >
       {children}

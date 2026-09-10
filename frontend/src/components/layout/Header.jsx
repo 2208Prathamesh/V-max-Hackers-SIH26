@@ -79,6 +79,37 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
   }
 
   const getPageInfo = () => {
+    if (user?.role === 'admin') {
+      switch (currentPage) {
+        case 'admin-users':
+          return {
+            title: 'User Management',
+            subtitle: 'Manage user credentials, role permissions, and access privileges'
+          }
+        case 'admin-analytics':
+          return {
+            title: 'Platform Analytics',
+            subtitle: 'System engagement metrics, user demographics, and service telemetry'
+          }
+        case 'admin-system':
+          return {
+            title: 'System Health',
+            subtitle: 'Live process telemetry, memory allocation, and database connectivity'
+          }
+        case 'settings':
+          return {
+            title: 'Admin Settings',
+            subtitle: 'Configure administrative system parameters and security controls'
+          }
+        case 'dashboard':
+        default:
+          return {
+            title: `Admin Console • ${user?.name || 'Administrator'}`,
+            subtitle: 'Overview of platform users, health metrics, and operations'
+          }
+      }
+    }
+
     if (user?.role === 'authority') {
       switch (currentPage) {
         case 'dashboard':
@@ -125,6 +156,8 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
           }
       }
     }
+
+
 
     switch (currentPage) {
       case 'settings':

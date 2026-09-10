@@ -610,4 +610,66 @@ describe('Integration: Authority Alerts Lifecycle & Public Notification Delivery
     assert.ok(cancelledItem.createdBy && cancelledItem.createdBy.email)
     assert.ok(cancelledItem.cancelledBy && cancelledItem.cancelledBy.email)
   })
+
+  test('GET /api/authority/stats returns operational stats & resource readiness', async () => {
+    const res = await fetch(`${baseUrl}/api/authority/stats`, {
+      headers: { Authorization: `Bearer ${authorityToken}` }
+    })
+    assert.equal(res.status, 200)
+    const payload = await res.json()
+    assert.ok(payload.data.summary)
+    assert.ok(payload.data.summary.totalAlerts >= 0)
+    assert.ok(Array.isArray(payload.data.severityBreakdown))
+    assert.ok(Array.isArray(payload.data.recentAlerts))
+    assert.ok(payload.data.resourceReadiness)
+    assert.ok(payload.data.resourceReadiness.sdrfUnitsDeployed > 0)
+  })
+
+  test('GET /api/authority/districts returns live weather & risk profile for districts', async () => {
+    const res = await fetch(`${baseUrl}/api/authority/districts`, {
+      headers: { Authorization: `Bearer ${authorityToken}` }
+    })
+    assert.equal(res.status, 200)
+    const payload = await res.json()
+    assert.ok(Array.isArray(payload.data))
+    assert.ok(payload.data.length >= 10)
+    const pune = payload.data.find(d => d.name === 'Pune')
+    assert.ok(pune)
+    assert.ok(typeof pune.rainMm === 'number')
+    assert.ok(typeof pune.tempC === 'number')
+  })
+
+  test('GET /api/authority/resources returns disaster relief shelters and battalions', async () => {
+    const res = await fetch(`${baseUrl}/api/authority/resources`, {
+      headers: { Authorization: `Bearer ${authorityToken}` }
+    })
+    assert.equal(res.status, 200)
+    const payload = await res.json()
+    assert.ok(Array.isArray(payload.data.shelters))
+    assert.ok(payload.data.shelters.length > 0)
+    assert.ok(Array.isArray(payload.data.battalions))
+    assert.ok(payload.data.equipmentSummary)
+  })
+
+  test('GET /api/authority/analytics returns timeframe analytics and district rankings', async () => {
+    const res = await fetch(`${baseUrl}/api/authority/analytics?timeRange=Last%2030%20Days`, {
+      headers: { Authorization: `Bearer ${authorityToken}` }
+    })
+    assert.equal(res.status, 200)
+    const payload = await res.json()
+    assert.ok(payload.data.summary)
+    assert.ok(Array.isArray(payload.data.timeline))
+    assert.ok(Array.isArray(payload.data.topDistricts))
+    assert.ok(payload.data.kpis)
+  })
+
+  test('GET /api/authority/reports/export streams CSV incident log report', async () => {
+    const res = await fetch(`${baseUrl}/api/authority/reports/export`, {
+      headers: { Authorization: `Bearer ${authorityToken}` }
+    })
+    assert.equal(res.status, 200)
+    const text = await res.text()
+    assert.ok(text.includes('Alert ID,Title,Severity,Type,District/Location'))
+  })
 })
+

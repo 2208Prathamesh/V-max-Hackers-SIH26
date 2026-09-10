@@ -13,12 +13,18 @@ import {
   CheckCircle2,
   X,
   Loader2,
-  Filter
+  Filter,
+  RefreshCw,
+  Mail,
+  ShieldCheck,
+  ShieldAlert,
+  ArrowRight,
+  Copy,
+  Check
 } from 'lucide-react'
 
 const ROLES = ['user', 'farmer', 'authority', 'admin']
-
-const roleLabel = role => ({ user: 'Citizen', farmer: 'Farmer', authority: 'Authority', admin: 'Admin' }[role] ?? role)
+const roleLabel = r => ({ user: 'Citizen', farmer: 'Farmer', authority: 'Authority', admin: 'Admin' }[r] ?? r)
 
 const RoleBadge = ({ role }) => {
   const styles = {
@@ -34,38 +40,177 @@ const RoleBadge = ({ role }) => {
   )
 }
 
-const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, danger = true }) => {
-  if (!isOpen) return null
+const AuthProviderBadge = ({ provider }) => {
+  const map = {
+    local: { label: 'Password', cls: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400' },
+    google: { label: 'Google', cls: 'bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400' },
+    microsoft: { label: 'Microsoft', cls: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' },
+    apple: { label: 'Apple', cls: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }
+  }
+  const cfg = map[provider] ?? map.local
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
-      <div className='bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-sm mx-4 space-y-4'>
-        <div className='flex items-start gap-3'>
-          {danger ? (
-            <div className='w-9 h-9 rounded-xl bg-red-100 dark:bg-red-950/40 flex items-center justify-center shrink-0'>
-              <AlertTriangle className='w-5 h-5 text-red-600 dark:text-red-400' />
-            </div>
-          ) : (
-            <div className='w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0'>
-              <KeyRound className='w-5 h-5 text-amber-600 dark:text-amber-400' />
-            </div>
-          )}
+    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cfg.cls}`}>{cfg.label}</span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// High-Visibility Critical Action Warning Modal
+// ---------------------------------------------------------------------------
+const CriticalActionModal = ({ isOpen, action, onConfirm, onCancel, loading }) => {
+  if (!isOpen || !action) return null
+  const { type, user, newRole } = action
+
+  const isDelete = type === 'delete'
+  const isReset = type === 'reset'
+  const isRole = type === 'role'
+
+  const getRoleWarning = (target) => {
+    if (target === 'admin') {
+      return {
+        level: 'CRITICAL PRIVILEGE ESCALATION',
+        badge: 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-300',
+        text: 'This user will be granted full administrative access. They will be able to delete accounts, alter roles, toggle system maintenance mode, and inspect raw database records.',
+        danger: true
+      }
+    }
+    if (target === 'authority') {
+      return {
+        level: 'HIGH AUTHORIZATION WARNING',
+        badge: 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border-blue-300',
+        text: 'This user will be authorized to publish emergency disaster warnings, severe weather alerts, and public broadcast bulletins to all citizens and farmers.',
+        danger: true
+      }
+    }
+    if (target === 'farmer') {
+      return {
+        level: 'ROLE ASSIGNMENT NOTICE',
+        badge: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300',
+        text: 'User profile will be configured with specialized agricultural advisories, crop calendar engines, and soil telemetry tools.',
+        danger: false
+      }
+    }
+    return {
+      level: 'ACCESS PRIVILEGE REVOCATION',
+      badge: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-300',
+      text: 'User will be reverted to standard citizen access. Any previous administrative or authority broadcast permissions will be immediately revoked.',
+      danger: false
+    }
+  }
+
+  const roleWarning = isRole ? getRoleWarning(newRole) : null
+
+  return (
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
+      <div className='bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md space-y-5'>
+        
+        {/* Header with Danger/Warning Icon */}
+        <div className='flex items-start gap-3.5'>
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+            isDelete ? 'bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400' :
+            isRole && roleWarning?.danger ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400' :
+            'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400'
+          }`}>
+            {isDelete ? <ShieldAlert className='w-6 h-6' /> :
+             isReset ? <KeyRound className='w-6 h-6' /> :
+             <AlertTriangle className='w-6 h-6' />}
+          </div>
+
           <div>
-            <h3 className='text-sm font-bold text-slate-900 dark:text-white'>{title}</h3>
-            <p className='text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed'>{message}</p>
+            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider mb-1 ${
+              isDelete ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' :
+              isRole && roleWarning?.danger ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300' :
+              'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+            }`}>
+              {isDelete ? 'Critical Destructive Action' : isReset ? 'Security Session Invalidation' : roleWarning?.level}
+            </span>
+            <h3 className='text-base font-black text-slate-900 dark:text-white'>
+              {isDelete ? 'Permanently Delete User Account?' :
+               isReset ? 'Reset User Password & Invalidate Sessions?' :
+               'Confirm User Role Change'}
+            </h3>
           </div>
         </div>
-        <div className='flex items-center gap-2 justify-end'>
+
+        {/* Affected User Profile Card */}
+        <div className='p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5'>
+          <div className='flex items-center justify-between text-xs'>
+            <span className='text-slate-400 font-semibold'>Target User:</span>
+            <span className='font-bold text-slate-900 dark:text-white'>{user?.name}</span>
+          </div>
+          <div className='flex items-center justify-between text-xs'>
+            <span className='text-slate-400 font-semibold'>Email Address:</span>
+            <span className='font-mono text-[11px] text-slate-700 dark:text-slate-300'>{user?.email}</span>
+          </div>
+          {isRole && (
+            <div className='flex items-center justify-between text-xs pt-1.5 border-t border-slate-200 dark:border-slate-700/60'>
+              <span className='text-slate-400 font-semibold'>Role Transition:</span>
+              <div className='flex items-center gap-1.5'>
+                <RoleBadge role={user?.role} />
+                <ArrowRight className='w-3 h-3 text-slate-400' />
+                <RoleBadge role={newRole} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Detailed Warning Notice */}
+        <div className={`p-4 rounded-2xl border text-xs leading-relaxed ${
+          isDelete
+            ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/40 text-red-800 dark:text-red-300'
+            : isReset
+            ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300'
+            : roleWarning?.danger
+            ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-900/40 text-purple-800 dark:text-purple-300'
+            : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+        }`}>
+          {isDelete && (
+            <p className='font-medium'>
+              <strong className='font-bold block mb-1'>WARNING: This action is permanent and cannot be undone.</strong>
+              All saved geographical coordinates, AI chat transcripts, and notification histories will be immediately eradicated from the primary database cluster.
+            </p>
+          )}
+
+          {isReset && (
+            <p className='font-medium'>
+              <strong className='font-bold block mb-1'>Security Impact:</strong>
+              Executing this will immediately invalidate all active JWT tokens for this account across all devices. A cryptographically generated password reset link will be dispatched to <strong>{user?.email}</strong>.
+            </p>
+          )}
+
+          {isRole && (
+            <p className='font-medium'>
+              <strong className='font-bold block mb-1'>Security Consequence:</strong>
+              {roleWarning?.text}
+            </p>
+          )}
+        </div>
+
+        {/* Modal Actions */}
+        <div className='flex items-center gap-3 justify-end pt-1'>
           <button
             onClick={onCancel}
-            className='px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition'
+            disabled={loading}
+            className='px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer disabled:opacity-50'
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 py-2 text-xs font-bold text-white rounded-xl transition ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-500 hover:bg-amber-600'}`}
+            disabled={loading}
+            className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white rounded-xl transition shadow-sm cursor-pointer disabled:opacity-50 ${
+              isDelete
+                ? 'bg-red-600 hover:bg-red-700'
+                : isRole && roleWarning?.danger
+                ? 'bg-purple-600 hover:bg-purple-700'
+                : 'bg-amber-600 hover:bg-amber-700'
+            }`}
           >
-            Confirm
+            {loading && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+            <span>
+              {isDelete ? 'Permanently Delete User' :
+               isReset ? 'Proceed with Reset' :
+               'Confirm Role Change'}
+            </span>
           </button>
         </div>
       </div>
@@ -73,23 +218,73 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, danger = tr
   )
 }
 
-const RoleChangeDropdown = ({ userId, currentRole, onRoleChanged }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const { addToast } = useWeather()
+// ---------------------------------------------------------------------------
+// Password Reset Result Success Modal
+// ---------------------------------------------------------------------------
+const ResetResultModal = ({ isOpen, token, email, onClose }) => {
+  const [copied, setCopied] = useState(false)
+  if (!isOpen) return null
 
-  const handleRoleChange = async newRole => {
-    if (newRole === currentRole) { setIsOpen(false); return }
-    setLoading(true)
+  const handleCopy = () => {
+    if (token) {
+      navigator.clipboard.writeText(token)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
+      <div className='bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-sm space-y-4 text-center'>
+        <div className='w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto'>
+          <CheckCircle2 className='w-6 h-6' />
+        </div>
+        <div>
+          <h3 className='text-sm font-bold text-slate-900 dark:text-white'>Password Reset Generated</h3>
+          <p className='text-xs text-slate-500 dark:text-slate-400 mt-1'>
+            A secure reset token has been registered and dispatched to <strong>{email}</strong>.
+          </p>
+        </div>
+
+        {token && (
+          <div className='p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left space-y-1.5'>
+            <div className='flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase'>
+              <span>Reset Token</span>
+              <button
+                onClick={handleCopy}
+                className='flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'
+              >
+                {copied ? <Check className='w-3 h-3 text-emerald-500' /> : <Copy className='w-3 h-3' />}
+                <span>{copied ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+            <p className='font-mono text-xs break-all text-slate-800 dark:text-slate-200 select-all'>
+              {token}
+            </p>
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          className='w-full py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition cursor-pointer'
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Role Change Dropdown (Calls Modal before firing API)
+// ---------------------------------------------------------------------------
+const RoleChangeDropdown = ({ user, onRequestRoleChange }) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleSelectRole = (newRole) => {
     setIsOpen(false)
-    try {
-      await api.changeUserRole(userId, newRole)
-      onRoleChanged(userId, newRole)
-      addToast?.({ message: `Role changed to ${roleLabel(newRole)}`, type: 'success' })
-    } catch (err) {
-      addToast?.({ message: err.message || 'Failed to change role', type: 'error' })
-    } finally {
-      setLoading(false)
+    if (newRole !== user.role) {
+      onRequestRoleChange(user, newRole)
     }
   }
 
@@ -97,27 +292,29 @@ const RoleChangeDropdown = ({ userId, currentRole, onRoleChanged }) => {
     <div className='relative'>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        disabled={loading}
-        className='flex items-center gap-1.5 p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition'
-        title='Change role'
+        className='flex items-center gap-1.5 p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer'
+        title='Change user role'
         aria-label='Change user role'
       >
-        {loading ? <Loader2 className='w-4 h-4 animate-spin' /> : <UserCog className='w-4 h-4' />}
+        <UserCog className='w-4 h-4' />
       </button>
       {isOpen && (
-        <div className='absolute right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 w-36 py-1 overflow-hidden'>
+        <div className='absolute right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 w-40 py-1 overflow-hidden'>
+          <div className='px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800'>
+            Assign New Role
+          </div>
           {ROLES.map(r => (
             <button
               key={r}
-              onClick={() => handleRoleChange(r)}
-              className={`w-full text-left px-3 py-2 text-xs font-semibold transition flex items-center gap-2 ${
-                r === currentRole
+              onClick={() => handleSelectRole(r)}
+              className={`w-full text-left px-3 py-2 text-xs font-semibold transition flex items-center justify-between cursor-pointer ${
+                r === user.role
                   ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
-              {r === currentRole && <CheckCircle2 className='w-3 h-3 shrink-0' />}
-              {roleLabel(r)}
+              <span>{roleLabel(r)}</span>
+              {r === user.role && <CheckCircle2 className='w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400' />}
             </button>
           ))}
         </div>
@@ -126,228 +323,354 @@ const RoleChangeDropdown = ({ userId, currentRole, onRoleChanged }) => {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Inline expandable user detail panel
+// ---------------------------------------------------------------------------
+const UserDetailPanel = ({ user: u, onClose }) => {
+  const formatDate = iso => iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+  const fields = [
+    { label: 'User ID', value: u._id, mono: true },
+    { label: 'Email', value: u.email },
+    { label: 'Role', value: roleLabel(u.role) },
+    { label: 'Auth Provider', value: u.authProvider || 'local' },
+    { label: 'Language', value: u.language || 'en' },
+    { label: 'Timezone', value: u.timezone || '—' },
+    { label: 'Email Verified', value: u.isVerified ? 'Yes' : 'No' },
+    { label: 'Registered', value: formatDate(u.createdAt) },
+    { label: 'Last Updated', value: formatDate(u.updatedAt) }
+  ]
+  return (
+    <div className='border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/70 dark:bg-slate-800/30 px-5 py-4'>
+      <div className='flex items-center justify-between mb-3'>
+        <span className='text-xs font-bold text-slate-800 dark:text-slate-200'>Full User Record</span>
+        <button onClick={onClose} className='p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer'>
+          <X className='w-3.5 h-3.5 text-slate-400' />
+        </button>
+      </div>
+      <div className='grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2.5'>
+        {fields.map(f => (
+          <div key={f.label}>
+            <p className='text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide'>{f.label}</p>
+            <p className={`text-xs font-semibold text-slate-700 dark:text-slate-200 mt-0.5 truncate ${f.mono ? 'font-mono text-[11px]' : ''}`}>{f.value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main Admin Users Page Component
+// ---------------------------------------------------------------------------
 export const AdminUsersPage = () => {
-  const { addToast, user: adminUser } = useWeather()
+  const { addToast } = useWeather()
   const [users, setUsers] = useState([])
   const [pagination, setPagination] = useState(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [expandedRow, setExpandedRow] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const [confirmModal, setConfirmModal] = useState({ open: false, type: null, userId: null, userName: '' })
-  const [actionLoading, setActionLoading] = useState(null)
+  // Critical Action Warning Modal State
+  const [actionModal, setActionModal] = useState({
+    isOpen: false,
+    action: null // { type: 'role'|'reset'|'delete', user, newRole }
+  })
+  const [actionLoading, setActionLoading] = useState(false)
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true)
+  // Reset Result Success Modal
+  const [resetResult, setResetResult] = useState({ isOpen: false, token: null, email: null })
+
+  const fetchUsers = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    else setRefreshing(true)
     try {
       const data = await api.listAdminUsers({ page, limit: 20, search, role: roleFilter })
       setUsers(data.users || [])
       setPagination(data.pagination || null)
     } catch (err) {
-      addToast?.({ message: err.message || 'Failed to load users', type: 'error' })
+      addToast?.(err.message || 'Failed to load users', 'error')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }, [page, search, roleFilter])
+  }, [page, search, roleFilter, addToast])
 
   useEffect(() => {
-    const timer = setTimeout(fetchUsers, search ? 400 : 0)
+    const timer = setTimeout(() => fetchUsers(false), search ? 400 : 0)
     return () => clearTimeout(timer)
   }, [fetchUsers])
 
-  const handleRoleChanged = (userId, newRole) => {
-    setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole } : u))
+  // Silent auto-refresh every 30s
+  useEffect(() => {
+    const interval = setInterval(() => fetchUsers(true), 30000)
+    return () => clearInterval(interval)
+  }, [fetchUsers])
+
+  // Triggers the Warning Modal before changing role
+  const handleRequestRoleChange = (user, targetRole) => {
+    setActionModal({
+      isOpen: true,
+      action: { type: 'role', user, newRole: targetRole }
+    })
   }
 
-  const openDeleteConfirm = (userId, userName) => {
-    setConfirmModal({ open: true, type: 'delete', userId, userName })
+  // Triggers the Warning Modal before resetting password
+  const handleRequestPasswordReset = (user) => {
+    setActionModal({
+      isOpen: true,
+      action: { type: 'reset', user }
+    })
   }
 
-  const openResetConfirm = (userId, userName) => {
-    setConfirmModal({ open: true, type: 'reset', userId, userName })
+  // Triggers the Warning Modal before deleting user
+  const handleRequestDelete = (user) => {
+    setActionModal({
+      isOpen: true,
+      action: { type: 'delete', user }
+    })
   }
 
-  const handleConfirm = async () => {
-    const { type, userId } = confirmModal
-    setConfirmModal({ open: false })
-    setActionLoading(userId)
+  // Execute confirmed critical action
+  const handleExecuteConfirmedAction = async () => {
+    if (!actionModal.action) return
+    const { type, user, newRole } = actionModal.action
+    setActionLoading(true)
+
     try {
-      if (type === 'delete') {
-        await api.deleteUserByAdmin(userId)
-        setUsers(prev => prev.filter(u => u._id !== userId))
-        addToast?.({ message: 'User deleted successfully', type: 'success' })
+      if (type === 'role') {
+        await api.changeUserRole(user._id, newRole)
+        setUsers(prev => prev.map(u => u._id === user._id ? { ...u, role: newRole } : u))
+        addToast?.(`Role changed to ${roleLabel(newRole)} for ${user.name}`, 'success')
+        setActionModal({ isOpen: false, action: null })
       } else if (type === 'reset') {
-        await api.resetUserPasswordByAdmin(userId)
-        addToast?.({ message: 'Password reset email sent', type: 'success' })
+        const res = await api.resetUserPasswordByAdmin(user._id)
+        setActionModal({ isOpen: false, action: null })
+        setResetResult({
+          isOpen: true,
+          token: res?.temporaryToken || 'SECURE_RESET_LINK_DISPATCHED',
+          email: user.email
+        })
+        addToast?.(`Password reset dispatched to ${user.email}`, 'success')
+      } else if (type === 'delete') {
+        await api.deleteUserByAdmin(user._id)
+        setUsers(prev => prev.filter(u => u._id !== user._id))
+        addToast?.(`User ${user.name} permanently deleted`, 'success')
+        setActionModal({ isOpen: false, action: null })
       }
     } catch (err) {
-      addToast?.({ message: err.message || 'Action failed', type: 'error' })
+      addToast?.(err.message || 'Critical action failed', 'error')
     } finally {
-      setActionLoading(null)
+      setActionLoading(false)
     }
   }
 
-  const formatDate = iso => iso
-    ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—'
+  const totalShowing = pagination
+    ? `Showing ${((pagination.page - 1) * pagination.limit) + 1}–${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total.toLocaleString()} users`
+    : ''
 
   return (
-    <div className='space-y-5 p-6 max-w-7xl mx-auto'>
+    <div className='space-y-6 p-6 max-w-7xl mx-auto'>
       {/* Header */}
-      <div>
-        <h1 className='text-2xl font-bold text-slate-900 dark:text-white'>User Management</h1>
-        <p className='text-sm text-slate-500 dark:text-slate-400 mt-1'>
-          View, search, change roles, reset passwords, and delete user accounts
-        </p>
+      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+        <div>
+          <div className='flex items-center gap-3'>
+            <h1 className='text-2xl font-black text-slate-900 dark:text-white tracking-tight'>
+              User Directory & Access Control
+            </h1>
+            <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'>
+              <ShieldCheck className='w-3 h-3' />
+              RBAC Guard Active
+            </span>
+          </div>
+          <p className='text-xs text-slate-500 dark:text-slate-400 mt-1'>
+            Manage platform identity, authorization privileges, security credentials, and role escalation
+          </p>
+        </div>
+
+        <button
+          onClick={() => fetchUsers(true)}
+          disabled={loading || refreshing}
+          className='self-start sm:self-auto flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs disabled:opacity-50 cursor-pointer'
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
+          <span>{refreshing ? 'Syncing...' : 'Sync Directory'}</span>
+        </button>
       </div>
 
-      {/* Controls */}
+      {/* Filter and Search Bar */}
       <div className='flex flex-col sm:flex-row gap-3'>
         <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+          <Search className='w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none' />
           <input
             type='text'
-            placeholder='Search by name or email...'
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
-            className='w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-slate-900 dark:text-white placeholder-slate-400 transition'
+            placeholder='Search users by name, email, or credentials...'
+            className='w-full pl-9 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-xs'
           />
         </div>
-        <div className='relative'>
-          <Filter className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
-          <select
-            value={roleFilter}
-            onChange={e => { setRoleFilter(e.target.value); setPage(1) }}
-            className='pl-9 pr-8 py-2.5 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white transition appearance-none cursor-pointer'
-          >
-            <option value=''>All Roles</option>
-            {ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
-          </select>
+
+        <div className='flex items-center gap-2'>
+          <div className='relative'>
+            <Filter className='w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none' />
+            <select
+              value={roleFilter}
+              onChange={e => { setRoleFilter(e.target.value); setPage(1) }}
+              className='pl-8 pr-8 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs focus:outline-none cursor-pointer'
+            >
+              <option value=''>All Roles</option>
+              {ROLES.map(r => (
+                <option key={r} value={r}>{roleLabel(r)}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className='bg-white dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800/80 rounded-2xl overflow-hidden'>
+      {/* Users Table */}
+      <div className='bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-xs'>
         <div className='overflow-x-auto'>
-          <table className='w-full text-sm'>
-            <thead>
-              <tr className='border-b border-slate-100 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/40'>
-                <th className='text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide'>User</th>
-                <th className='text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide'>Role</th>
-                <th className='text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide'>Joined</th>
-                <th className='text-left px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide'>Verified</th>
-                <th className='text-right px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide'>Actions</th>
+          <table className='w-full text-xs'>
+            <thead className='bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800'>
+              <tr>
+                <th className='text-left px-5 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider'>User Profile</th>
+                <th className='text-left px-5 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider'>Role</th>
+                <th className='text-left px-5 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider'>Authentication</th>
+                <th className='text-left px-5 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider'>Registered</th>
+                <th className='text-right px-5 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider'>Security Actions</th>
               </tr>
             </thead>
             <tbody className='divide-y divide-slate-100 dark:divide-slate-800/60'>
               {loading ? (
-                [...Array(8)].map((_, i) => (
+                [1, 2, 3, 4, 5].map(i => (
                   <tr key={i}>
-                    <td colSpan={5} className='px-4 py-3'>
-                      <div className='h-8 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse' />
+                    <td colSpan={5} className='px-5 py-4'>
+                      <div className='h-5 bg-slate-100 dark:bg-slate-800 rounded animate-pulse' />
                     </td>
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className='px-4 py-12 text-center text-sm text-slate-400'>
-                    No users found matching your criteria.
+                  <td colSpan={5} className='px-5 py-12 text-center text-slate-400'>
+                    No user accounts found matching your query
                   </td>
                 </tr>
               ) : (
-                users.map(u => {
-                  const isSelf = u._id === adminUser?._id
-                  const isActioning = actionLoading === u._id
-                  return (
-                    <tr key={u._id} className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition ${isSelf ? 'bg-blue-50/30 dark:bg-blue-950/10' : ''}`}>
-                      <td className='px-4 py-3'>
-                        <div className='flex items-center gap-2.5'>
-                          <div className='w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0'>
-                            {u.name?.slice(0, 2).toUpperCase() || 'U?'}
+                users.map(u => (
+                  <React.Fragment key={u._id}>
+                    <tr
+                      onClick={() => setExpandedRow(expandedRow === u._id ? null : u._id)}
+                      className='hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition cursor-pointer group'
+                    >
+                      <td className='px-5 py-3.5'>
+                        <div className='flex items-center gap-2'>
+                          <div className='w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 text-xs shrink-0'>
+                            {u.name?.charAt(0).toUpperCase() || 'U'}
                           </div>
                           <div className='min-w-0'>
-                            <p className='font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[160px]'>
+                            <p className='font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-600 transition'>
                               {u.name}
-                              {isSelf && <span className='ml-1.5 text-[10px] text-blue-500 font-bold'>(You)</span>}
                             </p>
-                            <p className='text-xs text-slate-400 dark:text-slate-500 truncate max-w-[160px]'>{u.email}</p>
+                            <p className='text-slate-400 font-mono text-[11px] truncate flex items-center gap-1'>
+                              <Mail className='w-3 h-3' />
+                              <span>{u.email}</span>
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className='px-4 py-3'>
+
+                      <td className='px-5 py-3.5'>
                         <RoleBadge role={u.role} />
                       </td>
-                      <td className='px-4 py-3 text-xs text-slate-500 dark:text-slate-400'>{formatDate(u.createdAt)}</td>
-                      <td className='px-4 py-3'>
-                        {u.isVerified
-                          ? <CheckCircle2 className='w-4 h-4 text-emerald-500' />
-                          : <X className='w-4 h-4 text-slate-300 dark:text-slate-600' />}
+
+                      <td className='px-5 py-3.5'>
+                        <AuthProviderBadge provider={u.authProvider} />
                       </td>
-                      <td className='px-4 py-3'>
-                        <div className='flex items-center justify-end gap-1'>
-                          {isActioning ? (
-                            <Loader2 className='w-4 h-4 animate-spin text-slate-400' />
-                          ) : (
-                            <>
-                              <RoleChangeDropdown
-                                userId={u._id}
-                                currentRole={u.role}
-                                onRoleChanged={handleRoleChanged}
-                              />
-                              <button
-                                onClick={() => openResetConfirm(u._id, u.name)}
-                                className='p-1.5 rounded-lg text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition'
-                                title='Send password reset email'
-                                aria-label='Reset password'
-                              >
-                                <KeyRound className='w-4 h-4' />
-                              </button>
-                              {!isSelf && (
-                                <button
-                                  onClick={() => openDeleteConfirm(u._id, u.name)}
-                                  className='p-1.5 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition'
-                                  title='Delete user'
-                                  aria-label='Delete user'
-                                >
-                                  <Trash2 className='w-4 h-4' />
-                                </button>
-                              )}
-                            </>
-                          )}
+
+                      <td className='px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-[11px]'>
+                        {new Date(u.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </td>
+
+                      <td
+                        className='px-5 py-3.5 text-right'
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <div className='flex items-center justify-end gap-1.5'>
+                          {/* Role Change with Warning Popup */}
+                          <RoleChangeDropdown
+                            user={u}
+                            onRequestRoleChange={handleRequestRoleChange}
+                          />
+
+                          {/* Reset Password with Warning Popup */}
+                          <button
+                            onClick={() => handleRequestPasswordReset(u)}
+                            className='p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition cursor-pointer'
+                            title='Reset user password & invalidate sessions'
+                            aria-label='Reset password'
+                          >
+                            <KeyRound className='w-4 h-4' />
+                          </button>
+
+                          {/* Delete Account with Warning Popup */}
+                          <button
+                            onClick={() => handleRequestDelete(u)}
+                            className='p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer'
+                            title='Permanently delete user account'
+                            aria-label='Delete account'
+                          >
+                            <Trash2 className='w-4 h-4' />
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  )
-                })
+
+                    {/* Expandable row detail panel */}
+                    {expandedRow === u._id && (
+                      <tr>
+                        <td colSpan={5} className='p-0'>
+                          <UserDetailPanel
+                            user={u}
+                            onClose={() => setExpandedRow(null)}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination Footer */}
         {pagination && pagination.totalPages > 1 && (
-          <div className='flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-slate-800/60'>
-            <p className='text-xs text-slate-500 dark:text-slate-400'>
-              Showing {((pagination.page - 1) * pagination.limit) + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total.toLocaleString()} users
-            </p>
-            <div className='flex items-center gap-1'>
+          <div className='flex items-center justify-between px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40'>
+            <span className='text-xs text-slate-500 dark:text-slate-400 font-medium'>
+              {totalShowing}
+            </span>
+            <div className='flex items-center gap-2'>
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={!pagination.hasPrev}
-                className='p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition'
-                aria-label='Previous page'
+                className='p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer'
               >
                 <ChevronLeft className='w-4 h-4' />
               </button>
-              <span className='px-2 text-xs font-semibold text-slate-700 dark:text-slate-300'>
-                {pagination.page} / {pagination.totalPages}
+              <span className='text-xs font-bold text-slate-700 dark:text-slate-200 px-2'>
+                Page {pagination.page} of {pagination.totalPages}
               </span>
               <button
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                 disabled={!pagination.hasNext}
-                className='p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition'
-                aria-label='Next page'
+                className='p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer'
               >
                 <ChevronRight className='w-4 h-4' />
               </button>
@@ -356,18 +679,21 @@ export const AdminUsersPage = () => {
         )}
       </div>
 
-      {/* Confirm Modal */}
-      <ConfirmModal
-        isOpen={confirmModal.open}
-        danger={confirmModal.type === 'delete'}
-        title={confirmModal.type === 'delete' ? 'Delete User Account' : 'Send Password Reset'}
-        message={
-          confirmModal.type === 'delete'
-            ? `This will permanently delete "${confirmModal.userName}" and all their data (conversations, locations, notifications). This cannot be undone.`
-            : `A password reset link will be emailed to "${confirmModal.userName}". The link expires in 1 hour.`
-        }
-        onConfirm={handleConfirm}
-        onCancel={() => setConfirmModal({ open: false })}
+      {/* Critical Action Warning Modal */}
+      <CriticalActionModal
+        isOpen={actionModal.isOpen}
+        action={actionModal.action}
+        onConfirm={handleExecuteConfirmedAction}
+        onCancel={() => setActionModal({ isOpen: false, action: null })}
+        loading={actionLoading}
+      />
+
+      {/* Password Reset Result Success Modal */}
+      <ResetResultModal
+        isOpen={resetResult.isOpen}
+        token={resetResult.token}
+        email={resetResult.email}
+        onClose={() => setResetResult({ isOpen: false, token: null, email: null })}
       />
     </div>
   )

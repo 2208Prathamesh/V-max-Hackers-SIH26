@@ -182,9 +182,9 @@ describe('Unit: Forecast Reconciler Tests', () => {
   })
 
   test('safety boundary: discards retained points exceeding maximum usable stale age', () => {
-    // 72 hours ago
+    // 72 hours prior to newFetchedAt
     const ancientFetchedAt = new Date(
-      Date.now() - 72 * 3600 * 1000
+      new Date(newFetchedAt).getTime() - 72 * 3600 * 1000
     ).toISOString()
     const oldHourly = [
       {

@@ -184,15 +184,19 @@ const createPinIcon = severity => {
   })
 }
 
-export const CreateAdvisoryModal = ({ isOpen, onClose, onAlertCreated }) => {
+export const CreateAdvisoryModal = ({ isOpen, onClose, onAlertCreated, onCreated, initialDistrict }) => {
   const { addToast } = useWeather()
+  const matchedPreset = initialDistrict
+    ? DISTRICT_PRESETS.find(p => p.name.toLowerCase() === initialDistrict.toLowerCase())
+    : null
+
   const [formData, setFormData] = useState({
     title: '',
     type: 'Heavy Rainfall',
-    district: 'Pune',
-    location: 'Pune District, Maharashtra',
-    latitude: 18.5204,
-    longitude: 73.8567,
+    district: matchedPreset ? matchedPreset.name : initialDistrict || 'Pune',
+    location: matchedPreset ? `${matchedPreset.name} District, Maharashtra` : `${initialDistrict || 'Pune'} District, Maharashtra`,
+    latitude: matchedPreset ? matchedPreset.lat : 18.5204,
+    longitude: matchedPreset ? matchedPreset.lng : 73.8567,
     severity: 'Orange',
     durationHours: 12,
     action: '',
@@ -334,9 +338,8 @@ export const CreateAdvisoryModal = ({ isOpen, onClose, onAlertCreated }) => {
       const payload = buildPayload()
       const draft = await api.createAuthorityAlert(payload)
       addToast(`Advisory draft created for ${formData.district}`, 'info')
-      if (onAlertCreated) {
-        onAlertCreated(draft)
-      }
+      if (onAlertCreated) onAlertCreated(draft)
+      if (onCreated) onCreated(draft)
       onClose()
     } catch (err) {
       console.error('Failed to create draft advisory:', err)
@@ -379,9 +382,8 @@ export const CreateAdvisoryModal = ({ isOpen, onClose, onAlertCreated }) => {
         `Official Advisory published and broadcast to ${formData.district}!`,
         'success'
       )
-      if (onAlertCreated) {
-        onAlertCreated(published)
-      }
+      if (onAlertCreated) onAlertCreated(published)
+      if (onCreated) onCreated(published)
       onClose()
     } catch (err) {
       console.error('Failed to publish advisory:', err)
@@ -594,8 +596,9 @@ export const CreateAdvisoryModal = ({ isOpen, onClose, onAlertCreated }) => {
                     />
                     <LocationPickerEvents onPick={handleMapLocationPick} />
                     <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                      url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                      className='leaflet-tile-dark'
                     />
                     <Marker
                       position={[formData.latitude, formData.longitude]}

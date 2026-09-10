@@ -7,7 +7,12 @@ import {
   createAlert,
   updateAlert,
   publishAlert,
-  cancelAlert
+  cancelAlert,
+  getStats,
+  getDistricts,
+  getResources,
+  getAnalytics,
+  exportReport
 } from '../controllers/authorityController.js'
 
 const router = express.Router()
@@ -17,6 +22,12 @@ router.use(authMiddleware)
 router.use(requireRole(['authority', 'admin']))
 
 router.get('/me', getMe)
+router.get('/stats', getStats)
+router.get('/districts', getDistricts)
+router.get('/resources', getResources)
+router.get('/analytics', getAnalytics)
+router.get('/reports/export', exportReport)
+
 router.get('/alerts', getAlerts)
 router.get('/alerts/:id', getAlertById)
 router.post('/alerts', createAlert)

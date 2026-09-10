@@ -32,7 +32,11 @@ export const ToastContainer = () => {
               {isWarning && <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />}
               {isError && <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />}
               {!isSuccess && !isWarning && !isError && <Info className="w-5 h-5 text-blue-500 shrink-0" />}
-              <p className="text-sm font-medium">{toast.message}</p>
+              <p className="text-sm font-medium">
+                {typeof toast.message === 'object' && toast.message !== null
+                  ? toast.message.message || toast.message.title || JSON.stringify(toast.message)
+                  : String(toast.message ?? '')}
+              </p>
             </div>
             <button
               onClick={() => removeToast(toast.id)}

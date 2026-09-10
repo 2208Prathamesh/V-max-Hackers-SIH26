@@ -212,7 +212,17 @@ function MiniIncidentMap({ alerts = [], selectedLocation, onSelectAlert }) {
             zIndex={250}
           />
         )}
-        {alerts.slice(0, 20).map((a) => {
+        {alerts
+          .filter(a => {
+            const s = String(a.status || '').toLowerCase()
+            if (s === 'cancelled' || s === 'cancel' || s === 'expired' || s === 'draft') return false
+            const now = Date.now()
+            if (a.endTime && new Date(a.endTime).getTime() <= now) return false
+            if (a.expiresAt && new Date(a.expiresAt).getTime() <= now) return false
+            return true
+          })
+          .slice(0, 20)
+          .map((a) => {
           const coords = getAlertCoords(a);
           const isExtreme = a.rawSeverity === 'extreme';
           const isHigh = a.rawSeverity === 'high';

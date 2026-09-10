@@ -36,6 +36,9 @@ const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then(m 
 const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage').then(m => ({ default: m.AdminAnalyticsPage })))
 const AdminSystemPage = lazy(() => import('./pages/admin/AdminSystemPage').then(m => ({ default: m.AdminSystemPage })))
 
+// Maintenance Page
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage').then(m => ({ default: m.MaintenancePage })))
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="flex flex-col items-center gap-3">
@@ -46,7 +49,7 @@ const PageLoader = () => (
 )
 
 const AppContent = () => {
-  const { currentPage, isAuthenticated, user, settings } = useWeather()
+  const { currentPage, setCurrentPage, isAuthenticated, user, settings, maintenanceMode } = useWeather()
   const { language, setLanguage } = useLanguage()
 
   // Keep language in sync with authenticated user's preferred language
@@ -57,8 +60,35 @@ const AppContent = () => {
     }
   }, [user?.language, settings?.language])
 
-  // If not authenticated or on login page, display the WeatherGPT Login Page
-  if (!isAuthenticated || currentPage === 'login') {
+  const isAuthorityOrAdmin = user?.role === 'admin' || user?.role === 'authority'
+  const isAccessRoute = currentPage === 'access' || (typeof window !== 'undefined' && window.location.hash.replace(/^#\/?/, '') === 'access')
+
+  // 1. Maintenance Mode Interlock Gate
+  if (maintenanceMode?.enabled && !isAuthorityOrAdmin) {
+    if (isAccessRoute || currentPage === 'login') {
+      return (
+        <>
+          <div className="bg-amber-500 text-slate-950 px-4 py-2 text-center text-xs font-black tracking-wide flex items-center justify-center gap-2">
+            <span>🛡️ Platform Maintenance Active — Authorized Personnel Login (/access)</span>
+          </div>
+          <LoginPage />
+          <ToastContainer />
+        </>
+      )
+    }
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <MaintenancePage
+          maintenance={maintenanceMode}
+          onStaffAccess={() => setCurrentPage('access')}
+        />
+        <ToastContainer />
+      </Suspense>
+    )
+  }
+
+  // 2. Standard Login Gate (if not authenticated or explicitly on login/access page)
+  if (!isAuthenticated || currentPage === 'login' || (currentPage === 'access' && !isAuthenticated)) {
     return (
       <>
         <LoginPage />
@@ -195,6 +225,11 @@ const AppContent = () => {
 
   return (
     <Layout>
+      {maintenanceMode?.enabled && isAuthorityOrAdmin && (
+        <div className='bg-amber-500/90 text-slate-950 px-4 py-2 text-center text-xs font-black tracking-wide flex items-center justify-center gap-2 shadow-xs'>
+          <span>🛠️ Maintenance Mode Active — Site restricted to Authorized Staff ({user?.role?.toUpperCase()}). Public traffic is blocked.</span>
+        </div>
+      )}
       <Suspense fallback={<PageLoader />}>
         {renderCurrentPage()}
       </Suspense>

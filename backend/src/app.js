@@ -93,6 +93,17 @@ app.get('/api/health', (req, res) => {
   })
 })
 
+// Public Maintenance Status Check
+app.get('/api/maintenance/status', async (req, res, next) => {
+  try {
+    const { getPublicMaintenanceStatus } = await import('./controllers/adminController.js')
+    return getPublicMaintenanceStatus(req, res, next)
+  } catch (err) {
+    return res.status(200).json({ success: true, data: { enabled: false } })
+  }
+})
+
+
 // General API rate limiting
 app.use('/api', apiLimiter)
 

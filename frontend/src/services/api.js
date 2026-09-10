@@ -409,12 +409,17 @@ export const api = {
   },
 
   // Authority Dashboard & Official Alerts
-  getAuthorityAlerts: status =>
-    request(
+  getAuthorityAlerts: (statusOrParams = '') => {
+    const status =
+      typeof statusOrParams === 'object' && statusOrParams !== null
+        ? statusOrParams.status
+        : statusOrParams
+    return request(
       status && status !== 'all'
         ? `/authority/alerts?status=${encodeURIComponent(status)}`
         : '/authority/alerts'
-    ),
+    )
+  },
   getAuthorityAlertById: id => request(`/authority/alerts/${id}`),
   createAuthorityAlert: data =>
     request('/authority/alerts', {
@@ -436,6 +441,27 @@ export const api = {
     }),
   authorityStats: () => request('/authority/stats'),
   authorityDistricts: () => request('/authority/districts'),
+  authorityResources: () => request('/authority/resources'),
+  authorityAnalytics: timeRange =>
+    request(timeRange ? `/authority/analytics?timeRange=${encodeURIComponent(timeRange)}` : '/authority/analytics'),
+  downloadAuthorityReport: async () => {
+    const token = localStorage.getItem('weathergpt_token')
+    const response = await fetch(`${API_BASE_URL}/authority/reports/export`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    })
+    if (!response.ok) throw new Error('Failed to export authority report')
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `State_Disaster_Incident_Report_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  },
 
   // Climate & Historical Reanalysis
   climateHistory: ({ city, latitude, longitude, startDate, endDate }) => {
@@ -487,7 +513,47 @@ export const api = {
 
   // Admin — Analytics & System Health
   getAdminAnalytics: () => request('/admin/analytics'),
-  getSystemHealth: () => request('/admin/health')
+  getSystemHealth: () => request('/admin/health'),
+
+  // Admin — Maintenance Mode
+  getMaintenanceStatus: () => request('/admin/maintenance'),
+  updateMaintenanceStatus: data =>
+    request('/admin/maintenance', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  // Admin — Advanced Security & Audit
+  getSecurityAuditLogs: () => request('/admin/security/audit'),
+  revokeSessions: userId =>
+    request('/admin/security/revoke-sessions', {
+      method: 'POST',
+      body: JSON.stringify({ userId })
+    }),
+
+  // Public & Admin Maintenance Status
+  getPublicMaintenanceStatus: () => request('/maintenance/status'),
+
+  // Admin — Database Backup
+  downloadDatabaseBackup: async () => {
+    const token = localStorage.getItem('weathergpt_token')
+    const response = await fetch(`${API_BASE}/admin/backup/export`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    })
+    if (!response.ok) throw new Error('Backup download failed')
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `weathergpt_backup_${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+    return true
+  }
 }
 
 export default api
