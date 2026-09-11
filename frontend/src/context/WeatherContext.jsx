@@ -284,6 +284,48 @@ export const WeatherProvider = ({ children }) => {
       }
 
       setSelectedMapLocation(loc)
+      try {
+        localStorage.setItem('weathergpt_selected_location', JSON.stringify(loc))
+      } catch (_) {}
+
+      // Prepend or update detected location in savedLocations so it appears in quick city pills
+      setSavedLocations(prev => {
+        const cityNameLower = finalCity.toLowerCase()
+        const exists = prev.some(
+          l => (l.city || l.name || '').toLowerCase() === cityNameLower
+        )
+        if (exists) {
+          return prev.map(l =>
+            (l.city || l.name || '').toLowerCase() === cityNameLower
+              ? { ...l, lat: finalLat, lng: finalLng, region: finalRegion }
+              : l
+          )
+        }
+        const detectedLoc = {
+          ...loc,
+          id: `loc_detected_${Date.now()}`,
+          isFavorite: false,
+          updatedTime: 'Just now'
+        }
+        return [detectedLoc, ...prev]
+      })
+
+      // If authenticated, sync detected location to backend in background
+      const token = localStorage.getItem('weathergpt_token')
+      if (token) {
+        api
+          .addLocation({
+            name: `${finalCity} (Current)`,
+            city: finalCity,
+            state: finalRegion,
+            country: finalCountry,
+            latitude: finalLat,
+            longitude: finalLng,
+            isFavorite: false
+          })
+          .catch(() => {})
+      }
+
       if (showToast) {
         addToast(
           `📍 ${loc.city}${loc.region ? `, ${loc.region}` : ''}`,
@@ -860,6 +902,10 @@ export const WeatherProvider = ({ children }) => {
     }
     const updated = [...savedLocations, updatedLocation]
     setSavedLocations(updated)
+    setSelectedMapLocation(updatedLocation)
+    try {
+      localStorage.setItem('weathergpt_selected_location', JSON.stringify(updatedLocation))
+    } catch (_) {}
     setUser(prev =>
       prev
         ? {
@@ -868,7 +914,7 @@ export const WeatherProvider = ({ children }) => {
           }
         : prev
     )
-    addToast(`📍 ${cityName} saved successfully!`, 'success')
+    addToast(`📍 ${cityName} saved and activated!`, 'success')
   }
 
   const removeLocation = async id => {

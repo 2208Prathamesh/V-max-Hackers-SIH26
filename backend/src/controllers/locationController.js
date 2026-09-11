@@ -17,11 +17,16 @@ const getLocations = async (req, res, next) => {
     const enrichedLocations = await Promise.all(
       locations.map(async location => {
         try {
-          const [weatherData, forecastData] = await Promise.all([
-            weatherService.getWeather(location.latitude, location.longitude, {
-              includeNWP: false
-            }),
-            weatherService.getForecast(location.latitude, location.longitude, 3)
+          const [weatherData, forecastData] = await Promise.race([
+            Promise.all([
+              weatherService.getWeather(location.latitude, location.longitude, {
+                includeNWP: false
+              }),
+              weatherService.getForecast(location.latitude, location.longitude, 3)
+            ]),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Location weather enrich timeout')), 1000)
+            )
           ])
 
           const current = weatherData?.forecast?.current
