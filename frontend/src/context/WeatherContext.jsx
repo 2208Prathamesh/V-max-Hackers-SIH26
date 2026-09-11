@@ -229,41 +229,68 @@ export const WeatherProvider = ({ children }) => {
     setIsDetectingLocation(true)
 
     const resolveAndApply = async (coords = null) => {
+      let resolved = null
+      const lat = coords?.latitude
+      const lng = coords?.longitude
+
+      // Step 1: Fast Backend API reverse-geocode with 2.5s race timeout
       try {
-        const resolved = await api.reverseGeocode(
+        const backendPromise = api.reverseGeocode(
           coords
             ? { latitude: coords.latitude, longitude: coords.longitude }
             : {}
         )
-        if (resolved && (resolved.city || resolved.lat)) {
-          const loc = {
-            city: resolved.city || 'Current Location',
-            region: resolved.region || '',
-            country: resolved.country || 'India',
-            lat:
-              resolved.latitude ||
-              resolved.lat ||
-              coords?.latitude ||
-              DEFAULT_LOCATION.lat,
-            lng:
-              resolved.longitude ||
-              resolved.lng ||
-              coords?.longitude ||
-              DEFAULT_LOCATION.lng
-          }
-          setSelectedMapLocation(loc)
-          if (showToast) {
-            addToast(
-              `📍 ${loc.city}${loc.region ? `, ${loc.region}` : ''}`,
-              'success'
-            )
-          }
-          return loc
-        }
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Backend reverse-geocode timeout')), 2500)
+        )
+        resolved = await Promise.race([backendPromise, timeoutPromise])
       } catch (err) {
-        console.warn('Reverse geocode error:', err.message)
+        console.warn('Backend reverse geocode delayed, attempting direct client resolution:', err.message)
       }
-      return null
+
+      // Step 2: Direct Client-Side BigDataCloud Reverse Geocode (Sub-400ms, CORS-friendly)
+      if (!resolved || (!resolved.city && !resolved.latitude && !resolved.lat)) {
+        if (lat && lng) {
+          try {
+            const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en&latitude=${lat}&longitude=${lng}`
+            const bdcRes = await fetch(bdcUrl, { signal: AbortSignal.timeout(2500) })
+            if (bdcRes.ok) {
+              const bdc = await bdcRes.json()
+              resolved = {
+                city: bdc.city || bdc.locality || bdc.principalSubdivision || 'Current Location',
+                region: bdc.principalSubdivision || '',
+                country: bdc.countryName || 'India',
+                latitude: lat,
+                longitude: lng
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      // Step 3: Instant Coordinates / Default Location Fallback
+      const finalCity = resolved?.city || (lat ? `Location (${lat.toFixed(2)}, ${lng.toFixed(2)})` : 'Pune')
+      const finalRegion = resolved?.region || (lat ? '' : 'Maharashtra')
+      const finalCountry = resolved?.country || 'India'
+      const finalLat = resolved?.latitude || resolved?.lat || lat || DEFAULT_LOCATION.lat
+      const finalLng = resolved?.longitude || resolved?.lng || lng || DEFAULT_LOCATION.lng
+
+      const loc = {
+        city: finalCity,
+        region: finalRegion,
+        country: finalCountry,
+        lat: finalLat,
+        lng: finalLng
+      }
+
+      setSelectedMapLocation(loc)
+      if (showToast) {
+        addToast(
+          `📍 ${loc.city}${loc.region ? `, ${loc.region}` : ''}`,
+          'success'
+        )
+      }
+      return loc
     }
 
     if (typeof navigator !== 'undefined' && navigator.geolocation) {

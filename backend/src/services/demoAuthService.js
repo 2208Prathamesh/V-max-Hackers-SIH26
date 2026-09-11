@@ -73,21 +73,27 @@ export const executeDemoLogin = async (personaKey = 'citizen') => {
   let dbUser = null
   try {
     if (User.db?.readyState === 1) {
-      dbUser = await User.findOne({ email: persona.email })
+      dbUser = await Promise.race([
+        User.findOne({ email: persona.email }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 800))
+      ]).catch(() => null)
       if (!dbUser) {
-        dbUser = await User.create({
-          name: persona.name,
-          email: persona.email,
-          role: persona.role,
-          language: persona.language,
-          isVerified: true,
-          passwordHash: 'DEMO_ACCOUNT_NO_PASSWORD'
-        }).catch(() => null)
+        dbUser = await Promise.race([
+          User.create({
+            name: persona.name,
+            email: persona.email,
+            role: persona.role,
+            language: persona.language,
+            isVerified: true,
+            passwordHash: 'DEMO_ACCOUNT_NO_PASSWORD'
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 800))
+        ]).catch(() => null)
       }
     }
   } catch (err) {
     // Database error - continue gracefully with in-memory demo user
-    console.warn('⚠️ [DemoAuth] DB lookup skipped (running demo fallback):', err.message)
+    console.warn('⚠️ [DemoAuth] Fast in-memory demo user fallback:', err.message)
   }
 
   const userId = dbUser?._id ? dbUser._id.toString() : persona.id

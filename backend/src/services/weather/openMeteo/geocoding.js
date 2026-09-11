@@ -26,7 +26,9 @@ async function searchLocation(name, countryCode) {
 
   const params = new URLSearchParams(queryParams);
   try {
-    const response = await fetch(`${BASE_URL}?${params}`);
+    const response = await fetch(`${BASE_URL}?${params}`, {
+      signal: AbortSignal.timeout(2500)
+    });
 
     if (!response.ok) {
       throw new Error(`Geocoding API error: ${response.status}`);
