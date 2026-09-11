@@ -8,12 +8,20 @@ import { parseAndValidateCoordinates } from '../utils/coordinates.js';
  * Helper to resolve coordinates from query (either city name or lat/lon)
  */
 const resolveCoordinates = async (query) => {
-  const { city, latitude, longitude } = query;
+  const { city, latitude, longitude, lat: altLat, lon: altLon, lng: altLng } = query;
 
-  let lat = latitude !== undefined && latitude !== '' ? Number(latitude) : undefined;
-  let lon = longitude !== undefined && longitude !== '' ? Number(longitude) : undefined;
+  const rawLat = latitude !== undefined && latitude !== '' ? latitude : altLat;
+  const rawLon =
+    longitude !== undefined && longitude !== ''
+      ? longitude
+      : altLon !== undefined && altLon !== ''
+      ? altLon
+      : altLng;
 
-  if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
+  let lat = rawLat !== undefined && rawLat !== '' ? Number(rawLat) : undefined;
+  let lon = rawLon !== undefined && rawLon !== '' ? Number(rawLon) : undefined;
+
+  if (lat !== undefined && lon !== undefined && Number.isFinite(lat) && Number.isFinite(lon)) {
     return {
       ...parseAndValidateCoordinates(lat, lon),
       cityName: city || null

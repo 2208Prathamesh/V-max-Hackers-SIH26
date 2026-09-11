@@ -68,23 +68,36 @@ export function ForecastScreen ({
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const loadForecast = async (cityName = activeCity) => {
-    setIsLoading(true)
-    try {
-      await api.ensureAuth()
-      const res = await api.forecast({ city: cityName, days: 7 })
-      if (res) {
-        setLiveForecast(res)
-      }
-    } catch (err) {
-      console.warn('Forecast fetch warning:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   useEffect(() => {
-    loadForecast(activeCity)
+    let isMounted = true
+    setIsLoading(true)
+
+    const run = async () => {
+      try {
+        await api.ensureAuth()
+        const res = await api.forecast({ city: activeCity, days: 7 })
+        if (isMounted && res) {
+          setLiveForecast(res)
+        }
+      } catch (err) {
+        if (err?.name === 'AbortError' || err?.message?.toLowerCase()?.includes('canceled')) {
+          return
+        }
+        if (isMounted) {
+          console.warn('Forecast fetch notice:', err?.message || err)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    run()
+
+    return () => {
+      isMounted = false
+    }
   }, [activeCity, backendReady])
 
   const dailyList = useMemo(() => {

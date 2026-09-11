@@ -57,12 +57,24 @@ const errorMiddleware = (err, req, res, next) => {
     });
   }
 
+  // Malformed JSON payload from body-parser
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      message: 'Malformed JSON payload in request body'
+    });
+  }
+
   // Custom application error
   const statusCode = err.statusCode || 500;
+  const safeMessage =
+    env.IS_PRODUCTION && statusCode >= 500
+      ? 'Internal server error'
+      : (err.message || 'Internal server error');
 
   return res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal server error',
+    message: safeMessage,
     ...(env.IS_DEVELOPMENT && err.stack ? { stack: err.stack } : {})
   });
 };

@@ -25,7 +25,9 @@ const CANDIDATE_HOSTS = [
   '10.0.2.2'
 ].filter(Boolean)
 
-let activeBaseUrl = `http://${getAutoDetectedHost()}:5000/api`
+let activeBaseUrl =
+  (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_URL) ||
+  `http://${getAutoDetectedHost()}:5000/api`
 let inMemoryToken = null
 
 // Low-latency in-memory cache and in-flight request deduplication
@@ -194,20 +196,24 @@ export const ensureAuth = async () => {
   const existingToken = getAuthToken()
   if (existingToken) return true
 
-  try {
-    const res = await request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: 'sidpatil@gmail.com',
-        password: 'password123'
-      }),
-      timeoutMs: 4000
-    })
-    if (res?.token) {
-      setAuthToken(res.token)
-      return true
-    }
-  } catch {}
+  const demoAccounts = [
+    { email: 'citizen@weathergpt.ai', password: 'password123' },
+    { email: 'sidpatil@gmail.com', password: 'password123' }
+  ]
+
+  for (const account of demoAccounts) {
+    try {
+      const res = await request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(account),
+        timeoutMs: 4000
+      })
+      if (res?.token) {
+        setAuthToken(res.token)
+        return true
+      }
+    } catch {}
+  }
   return false
 }
 
@@ -227,27 +233,43 @@ export const api = {
     }),
   currentUser: () => request('/auth/me'),
   logout: () => request('/auth/logout', { method: 'POST' }),
+  forgotPassword: email =>
+    request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+  resetPassword: ({ token, password }) =>
+    request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password })
+    }),
 
   // Weather & Forecasts
-  weather: ({ latitude, longitude, city } = {}) => {
+  weather: ({ latitude, longitude, lat, lon, city } = {}) => {
+    const finalLat = latitude !== undefined ? latitude : lat
+    const finalLon = longitude !== undefined ? longitude : lon
     const params = new URLSearchParams()
     if (city) params.set('city', city)
-    if (latitude !== undefined) params.set('latitude', String(latitude))
-    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (finalLat !== undefined) params.set('latitude', String(finalLat))
+    if (finalLon !== undefined) params.set('longitude', String(finalLon))
     return request(`/weather/current?${params.toString()}`)
   },
-  forecast: ({ latitude, longitude, city, days = 7 } = {}) => {
+  forecast: ({ latitude, longitude, lat, lon, city, days = 7 } = {}) => {
+    const finalLat = latitude !== undefined ? latitude : lat
+    const finalLon = longitude !== undefined ? longitude : lon
     const params = new URLSearchParams({ days: String(days) })
     if (city) params.set('city', city)
-    if (latitude !== undefined) params.set('latitude', String(latitude))
-    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (finalLat !== undefined) params.set('latitude', String(finalLat))
+    if (finalLon !== undefined) params.set('longitude', String(finalLon))
     return request(`/weather/forecast?${params.toString()}`)
   },
-  hourlyForecast: ({ latitude, longitude, city, hours = 24 } = {}) => {
+  hourlyForecast: ({ latitude, longitude, lat, lon, city, hours = 24 } = {}) => {
+    const finalLat = latitude !== undefined ? latitude : lat
+    const finalLon = longitude !== undefined ? longitude : lon
     const params = new URLSearchParams({ hours: String(hours) })
     if (city) params.set('city', city)
-    if (latitude !== undefined) params.set('latitude', String(latitude))
-    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (finalLat !== undefined) params.set('latitude', String(finalLat))
+    if (finalLon !== undefined) params.set('longitude', String(finalLon))
     return request(`/weather/hourly?${params.toString()}`)
   },
   searchLocations: query => {

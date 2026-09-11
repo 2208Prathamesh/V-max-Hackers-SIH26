@@ -167,6 +167,7 @@ export default function App () {
             isDark={isDark}
             unit={unit}
             onNotification={showToast}
+            onNavigate={handleNavigate}
             backendReady={backendReady}
           />
         )
@@ -344,23 +345,29 @@ export default function App () {
         <View
           style={[
             styles.ambientOrbTop,
-            { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(147, 197, 253, 0.28)' }
+            {
+              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(147, 197, 253, 0.28)',
+              pointerEvents: 'none'
+            }
           ]}
-          pointerEvents='none'
         />
         <View
           style={[
             styles.ambientOrbMid,
-            { backgroundColor: isDark ? 'rgba(6, 182, 212, 0.08)' : 'rgba(165, 243, 252, 0.22)' }
+            {
+              backgroundColor: isDark ? 'rgba(6, 182, 212, 0.08)' : 'rgba(165, 243, 252, 0.22)',
+              pointerEvents: 'none'
+            }
           ]}
-          pointerEvents='none'
         />
         <View
           style={[
             styles.ambientOrbBottom,
-            { backgroundColor: isDark ? 'rgba(139, 92, 246, 0.08)' : 'rgba(216, 180, 254, 0.22)' }
+            {
+              backgroundColor: isDark ? 'rgba(139, 92, 246, 0.08)' : 'rgba(216, 180, 254, 0.22)',
+              pointerEvents: 'none'
+            }
           ]}
-          pointerEvents='none'
         />
 
         <StatusBar

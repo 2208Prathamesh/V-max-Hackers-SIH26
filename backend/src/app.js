@@ -1,6 +1,9 @@
 import express from 'express'
 import cors from 'cors'
 import compression from 'compression'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
 import env from './config/env.js'
 
 // Core routes
@@ -91,7 +94,7 @@ app.use(
       ) {
         return callback(null, true)
       }
-      return callback(new Error('Origin is not allowed by CORS'))
+      return callback(null, false)
     },
     credentials: true
   })
@@ -159,10 +162,6 @@ app.use('/api/authority', authorityRoutes)
 app.use('/api/admin', adminRoutes)
 
 // Serve production frontend assets from frontend/dist
-import path from 'path'
-import { fileURLToPath } from 'url'
-import fs from 'fs'
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const frontendDist = path.resolve(__dirname, '../../frontend/dist')

@@ -78,8 +78,10 @@ const login = async (identifier, password) => {
   // Role aliases for quick access
   const aliasMap = {
     admin: 'admin@weathergpt.ai',
-    farmer: 'ramesh.kisan@weathergpt.ai',
-    authority: 'officer.pune@disaster.gov.in',
+    farmer: 'farmer@weathergpt.ai',
+    authority: 'authority@weathergpt.ai',
+    citizen: 'citizen@weathergpt.ai',
+    user: 'citizen@weathergpt.ai',
     sid: 'sidpatil@gmail.com'
   }
   const searchTarget = aliasMap[clean] || clean
@@ -95,10 +97,13 @@ const login = async (identifier, password) => {
   // Demo accounts are useful locally, but must never be provisioned by production traffic.
   if (!user && !env.IS_PRODUCTION && password === 'password123') {
     const demoProfiles = {
+      'citizen@weathergpt.ai': { name: 'Citizen User', role: 'user' },
+      'farmer@weathergpt.ai': { name: 'Ramesh Kisan (शेतकरी)', role: 'farmer' },
+      'authority@weathergpt.ai': { name: 'Dr. A. Sharma (Disaster Cell)', role: 'authority' },
+      'admin@weathergpt.ai': { name: 'System Administrator', role: 'admin' },
       'sidpatil@gmail.com': { name: 'Sid Patil', role: 'user' },
       'ramesh.kisan@weathergpt.ai': { name: 'Ramesh Kisan (शेतकरी)', role: 'farmer' },
-      'officer.pune@disaster.gov.in': { name: 'Dr. A. Sharma (Disaster Cell)', role: 'authority' },
-      'admin@weathergpt.ai': { name: 'System Administrator', role: 'admin' }
+      'officer.pune@disaster.gov.in': { name: 'Dr. A. Sharma (Disaster Cell)', role: 'authority' }
     }
     const targetEmail = searchTarget.includes('@') ? searchTarget : (demoProfiles[searchTarget]?.email || `${clean}@weathergpt.ai`)
     const existing = await User.findOne({ email: targetEmail }).select('+passwordHash')
