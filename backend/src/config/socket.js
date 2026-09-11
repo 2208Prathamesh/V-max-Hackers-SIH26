@@ -19,16 +19,24 @@ export const initializeSocket = (server) => {
           "http://127.0.0.1:5174"
         ].filter(Boolean);
 
-        if (allowedOrigins.includes(origin)) {
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.endsWith('.vercel.app') ||
+          origin.endsWith('.onrender.com') ||
+          origin.endsWith('.railway.app')
+        ) {
           return callback(null, true);
         }
 
         // In development, allow localhost origins
-        if (env.IS_DEVELOPMENT && origin.includes("localhost")) {
+        if (
+          env.IS_DEVELOPMENT &&
+          (origin.includes("localhost") || origin.includes("127.0.0.1"))
+        ) {
           return callback(null, true);
         }
 
-        return callback(new Error("Origin is not allowed by CORS"));
+        return callback(null, false);
       },
       credentials: true,
     },

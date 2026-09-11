@@ -78,7 +78,12 @@ app.use(
       if (!origin) {
         return callback(null, true)
       }
-      if (allowedOrigins.includes(origin)) {
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com') ||
+        origin.endsWith('.railway.app')
+      ) {
         return callback(null, true)
       }
       // In development mode, allow localhost, 127.0.0.1, LAN IPs (192.168.*, 10.*, 172.*), and Expo
