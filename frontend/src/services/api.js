@@ -25,12 +25,12 @@ const invalidateCache = () => {
 }
 
 const getTimeoutForPath = path => {
-  if (path.includes('/messages') || path.includes('/chat')) return 20000
-  if (path.includes('/voice')) return 15000
-  return 8000 // Fast 8s timeout for weather, alerts, maps, geocoding to trigger offline fallback promptly
+  if (path.includes('/messages') || path.includes('/chat')) return 25000
+  if (path.includes('/voice')) return 20000
+  return 18000 // 18s resilient timeout for cloud tiers
 }
 
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 8000) => {
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 18000) => {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeoutMs)
   try {

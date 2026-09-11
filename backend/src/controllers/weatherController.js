@@ -178,8 +178,10 @@ const searchLocations = async (req, res, next) => {
   }
 };
 
+const reverseGeocodeCache = new Map();
+
 /**
- * Legit reverse geocoding for GPS or IP location
+ * High-speed reverse geocoding for GPS or IP location with in-memory cache
  * GET /api/weather/reverse-geocode?latitude=18.5204&longitude=73.8567
  */
 const reverseGeocode = async (req, res, next) => {
@@ -195,17 +197,22 @@ const reverseGeocode = async (req, res, next) => {
       lon = 73.8567;
     }
 
+    const cacheKey = `${lat.toFixed(2)}_${lon.toFixed(2)}`;
+    if (reverseGeocodeCache.has(cacheKey)) {
+      return successResponse(res, reverseGeocodeCache.get(cacheKey), 'Location resolved (cached)', 200);
+    }
+
     let city = null;
     let region = null;
     let country = 'India';
     let countryCode = 'IN';
 
-    // Tier 1: BigDataCloud Reverse Geocode
+    // Tier 1: Fast BigDataCloud Reverse Geocode (2s timeout)
     try {
       const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en&latitude=${lat}&longitude=${lon}`;
       const bdcRes = await fetch(bdcUrl, {
         headers: { 'User-Agent': 'WeatherGPT/2.0 (SIH-2026; Smart India Hackathon)' },
-        signal: AbortSignal.timeout(4000)
+        signal: AbortSignal.timeout(2000)
       });
       if (bdcRes.ok) {
         const bdcData = await bdcRes.json();
@@ -216,13 +223,13 @@ const reverseGeocode = async (req, res, next) => {
       }
     } catch (_) {}
 
-    // Tier 2: OpenStreetMap Nominatim Fallback
+    // Tier 2: OpenStreetMap Nominatim Fallback (2s timeout)
     if (!city) {
       try {
         const nomUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
         const nomRes = await fetch(nomUrl, {
           headers: { 'User-Agent': 'WeatherGPT/2.0 (contact@weathergpt.ai)' },
-          signal: AbortSignal.timeout(3500)
+          signal: AbortSignal.timeout(2000)
         });
         if (nomRes.ok) {
           const nomData = await nomRes.json();
@@ -235,7 +242,7 @@ const reverseGeocode = async (req, res, next) => {
       } catch (_) {}
     }
 
-    // Tier 3: High-accuracy Local Catalog Nearest Match
+    // Tier 3: Instant High-accuracy Local Catalog Nearest Match
     if (!city) {
       const nearest = findNearestCatalogLocation(lat, lon);
       city = nearest.name;
@@ -255,6 +262,9 @@ const reverseGeocode = async (req, res, next) => {
       lat,
       lng: lon
     };
+
+    if (reverseGeocodeCache.size > 500) reverseGeocodeCache.clear();
+    reverseGeocodeCache.set(cacheKey, result);
 
     return successResponse(res, result, 'Location resolved successfully', 200);
   } catch (error) {

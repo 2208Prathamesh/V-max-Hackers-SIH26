@@ -611,8 +611,8 @@ export async function getForecast (latitude, longitude, days = 7) {
       }
 
       // Save in L1 and L2 (latest and retained)
+      setForecastCache(cacheKey, result)
       if (!openMeteo.isFallback) {
-        setForecastCache(cacheKey, result)
         weatherCacheService
           .setForecast(latNum, lonNum, daysNum, result)
           .catch(err =>
@@ -620,9 +620,10 @@ export async function getForecast (latitude, longitude, days = 7) {
           )
       }
 
-      // Background refresh: serialize NWP requests so multiple parallel requests never exhaust memory
-      const locKey = `${latNum.toFixed(2)}_${lonNum.toFixed(2)}`
-      enqueueNWP(locKey, async () => {
+      // Background NWP refresh: only trigger if explicitly enabled via environment variable
+      if (process.env.ENABLE_BACKGROUND_NWP === 'true') {
+        const locKey = `${latNum.toFixed(2)}_${lonNum.toFixed(2)}`
+        enqueueNWP(locKey, async () => {
         let gfsResult
         try {
           const val = await fetchGFSWithFallback(latNum, lonNum, daysNum)
@@ -719,6 +720,7 @@ export async function getForecast (latitude, longitude, days = 7) {
             .catch(() => {})
         }
       })
+    }
 
       return result
     } catch (error) {
