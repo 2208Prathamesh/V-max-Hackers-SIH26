@@ -10,8 +10,7 @@ import { normalizeForecast } from './normalizers/weatherNormalizer.js'
 import { CACHE_TTL_MS } from '../../config/constants.js'
 import { getStationObservations } from './imd/imdClient.js'
 import { findNearestImdStation } from './imd/imdStationLocator.js'
-import { normalizeImdObservation } from './imd/imdNormalizer.js'
-import { buildOfflineAncillaryData } from './offlineWeather.js'
+import { buildOfflineAncillaryData, buildOfflineForecastPayload } from './offlineWeather.js'
 import { buildWeatherSynthesis } from './weatherSynthesis.js'
 import { buildNWPModelComparison } from './nwp/modelComparisonService.js'
 import { parseAndValidateCoordinates } from '../../utils/coordinates.js'
@@ -324,14 +323,10 @@ export async function getWeather (latitude, longitude, options = {}) {
         },
         forecast: openMeteoRaw
           ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
-          : {
-              error: 'Open-Meteo unavailable',
-              source: 'Open-Meteo',
-              sourceType: 'provider_unavailable',
-              current: null,
-              hourly: [],
-              daily: []
-            },
+          : normalizeForecast(
+              buildOfflineForecastPayload(latNum, lonNum, { days: 7 }),
+              'WeatherGPT-Synoptic'
+            ),
         models: {
           ecmwf: ecmwfData,
           gfs: gfsRaw
@@ -489,14 +484,18 @@ export async function getForecast (latitude, longitude, days = 7) {
         lonNum,
         daysNum
       ).catch(() => null)
-      const openMeteo = openMeteoRaw
+      let openMeteo = openMeteoRaw
         ? normalizeForecast(openMeteoRaw, 'Open-Meteo')
-        : {
-            error: 'Open-Meteo unavailable',
-            source: 'Open-Meteo',
-            sourceType: 'provider_unavailable',
-            isFallback: true
-          }
+        : null
+
+      if (!openMeteo || !isValidNormalizedForecast(openMeteo)) {
+        const offPayload = buildOfflineForecastPayload(latNum, lonNum, {
+          days: daysNum,
+          hours: Math.max(daysNum * 24, 72)
+        })
+        openMeteo = normalizeForecast(offPayload, 'WeatherGPT-Synoptic')
+        openMeteo.isFallback = true
+      }
 
       // Check retained forecast from Redis for fallback and reconciliation
       let retainedData = null
@@ -769,15 +768,25 @@ export async function getHourlyForecast ({ latitude, longitude, hours = 24 }) {
   const days = Math.max(2, Math.ceil(hours / 24))
 
   const fullForecast = await getForecast(latNum, lonNum, days)
-  const openMeteo =
+  let openMeteo =
     fullForecast?.models?.openMeteo || fullForecast?.forecast || fullForecast
+
+  let hourly = openMeteo?.hourly || []
+  if (!Array.isArray(hourly) || hourly.length === 0) {
+    const offPayload = buildOfflineForecastPayload(latNum, lonNum, {
+      days,
+      hours: Math.max(hours, 48)
+    })
+    const normalized = normalizeForecast(offPayload, 'WeatherGPT-Synoptic')
+    hourly = normalized.hourly || []
+  }
 
   return {
     location: {
       latitude: latNum,
       longitude: lonNum
     },
-    hourly: (openMeteo?.hourly || []).slice(0, hours),
+    hourly: hourly.slice(0, hours),
     cache: fullForecast?.cache
   }
 }

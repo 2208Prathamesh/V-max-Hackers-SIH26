@@ -80,7 +80,18 @@ export const ForecastPage = () => {
     }
   }, [latitude, longitude, city?.city])
 
-  const liveForecast = forecastData?.models?.openMeteo
+  const liveForecast = useMemo(() => {
+    if (forecastData?.models?.openMeteo?.hourly?.length) {
+      return forecastData.models.openMeteo
+    }
+    if (forecastData?.forecast?.hourly?.length) {
+      return forecastData.forecast
+    }
+    if (weatherData?.forecast?.hourly?.length) {
+      return weatherData.forecast
+    }
+    return forecastData?.models?.openMeteo || forecastData?.forecast || weatherData?.forecast || null
+  }, [forecastData, weatherData])
   const currentLocale = language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN'
 
   // Format Helper

@@ -170,7 +170,9 @@ export const DashboardPage = () => {
   const forecastHours = useMemo(() => {
     return forecastData?.models?.openMeteo?.hourly?.length
       ? forecastData.models.openMeteo.hourly
-      : weatherData?.forecast?.hourly || []
+      : forecastData?.forecast?.hourly?.length
+        ? forecastData.forecast.hourly
+        : weatherData?.forecast?.hourly || []
   }, [forecastData, weatherData])
 
   // Fetch decision brief when location changes
@@ -202,8 +204,8 @@ export const DashboardPage = () => {
     return match || forecastHours[0]
   }, [forecastHours])
 
-  const forecastCurrent = forecastData?.models?.openMeteo?.current
-  const forecastHour = forecastData?.models?.openMeteo?.hourly?.[0]
+  const forecastCurrent = forecastData?.models?.openMeteo?.current || forecastData?.forecast?.current
+  const forecastHour = forecastData?.models?.openMeteo?.hourly?.[0] || forecastData?.forecast?.hourly?.[0]
 
   const currentConditions =
     weatherData?.forecast?.current?.temperature != null
@@ -217,7 +219,9 @@ export const DashboardPage = () => {
   const dailyForecastData = useMemo(() => {
     const raw = forecastData?.models?.openMeteo?.daily?.length
       ? forecastData.models.openMeteo.daily
-      : weatherData?.forecast?.daily || []
+      : forecastData?.forecast?.daily?.length
+        ? forecastData.forecast.daily
+        : weatherData?.forecast?.daily || []
     if (raw.length) return raw
     const baseTemp = currentConditions?.temperature ?? 28
     return Array.from({ length: 7 }, (_, i) => {

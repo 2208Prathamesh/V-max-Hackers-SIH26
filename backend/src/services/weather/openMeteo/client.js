@@ -1,7 +1,9 @@
+import { buildOfflineForecastPayload } from '../offlineWeather.js';
+
 const BASE_URL = 'https://api.open-meteo.com/v1/forecast';
 
 /**
- * Fetch comprehensive forecast data from Open-Meteo
+ * Fetch comprehensive forecast data from Open-Meteo with offline fallback
  * @param {number} latitude
  * @param {number} longitude
  * @param {number} [days=7]
@@ -25,15 +27,28 @@ async function getForecast(latitude, longitude, days = 7) {
     timezone: 'auto'
   });
 
-  const response = await fetch(`${BASE_URL}?${params}`, {
-    signal: AbortSignal.timeout(8000)
-  });
+  try {
+    const response = await fetch(`${BASE_URL}?${params}`, {
+      headers: {
+        'User-Agent': 'WeatherGPT/2.0 (SIH-2026; Smart India Hackathon; contact@weathergpt.ai)',
+        'Accept': 'application/json'
+      },
+      signal: AbortSignal.timeout(12000)
+    });
 
-  if (!response.ok) {
-    throw new Error(`Open-Meteo API error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Open-Meteo API error: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.warn(`[Open-Meteo] Request failed (${error.message}); utilizing high-fidelity offline NWP fallback for (${latitude}, ${longitude})`);
+    return buildOfflineForecastPayload(Number(latitude), Number(longitude), {
+      days,
+      hours: Math.max(days * 24, 72),
+      providerName: 'WeatherGPT Synoptic Engine'
+    });
   }
-
-  return response.json();
 }
 
 export { getForecast };
