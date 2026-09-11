@@ -39,8 +39,20 @@ const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then(m 
 const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage').then(m => ({ default: m.AdminAnalyticsPage })))
 const AdminSystemPage = lazy(() => import('./pages/admin/AdminSystemPage').then(m => ({ default: m.AdminSystemPage })))
 
-// Maintenance Page
+// Maintenance & Error Pages
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage').then(m => ({ default: m.MaintenancePage })))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage || m.default })))
+
+// Comprehensive set of known valid platform routes
+const KNOWN_ROUTES = new Set([
+  '', 'dashboard', 'chat', 'alerts', 'authority-alerts', 'disaster-sops',
+  'weather-map', 'authority-map', 'forecast', 'advisory', 'news',
+  'climate-historical', 'history', 'saved-locations', 'aviation',
+  'marine', 'urban-flood', 'settings', 'authority-dashboard',
+  'authority-analytics', 'analytics', 'weather-dashboard', 'citizen-dashboard',
+  'admin-dashboard', 'admin-users', 'admin-analytics', 'admin-system',
+  'login', 'access', '404', 'not-found'
+])
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
@@ -103,6 +115,11 @@ const AppContent = () => {
   const renderCurrentPage = () => {
     const role = user?.role || 'user'
 
+    // Explicit 404 route or completely unknown route outside platform routing table
+    if (currentPage === '404' || currentPage === 'not-found' || (!KNOWN_ROUTES.has(currentPage) && currentPage !== '')) {
+      return <NotFoundPage />
+    }
+
     // -----------------------------------------------------------------------
     // ADMIN — System management portal
     // -----------------------------------------------------------------------
@@ -151,6 +168,8 @@ const AppContent = () => {
           return <WeatherMapPage />
         case 'forecast':
           return <ForecastPage />
+        case 'advisory':
+          return <AdvisoryPage />
         case 'news':
           return <NewsPage />
         case 'climate-historical':
@@ -229,6 +248,8 @@ const AppContent = () => {
         return <WeatherMapPage />
       case 'forecast':
         return <ForecastPage />
+      case 'advisory':
+        return <AdvisoryPage />
       case 'news':
         return <NewsPage />
       case 'climate-historical':

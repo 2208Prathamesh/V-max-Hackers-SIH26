@@ -2,6 +2,7 @@ import express from 'express'
 import {
   register,
   login,
+  demoLogin,
   socialLogin,
   logout,
   getCurrentUser,
@@ -23,6 +24,7 @@ const router = express.Router()
 
 router.post('/register', registerLimiter, validationMiddleware(registerSchema), register)
 router.post('/login', authLimiter, login)
+router.post('/demo-login', demoLogin)
 router.post('/social-login', authLimiter, socialLogin)
 router.post('/logout', authMiddleware, logout)
 router.get('/me', authMiddleware, getCurrentUser)

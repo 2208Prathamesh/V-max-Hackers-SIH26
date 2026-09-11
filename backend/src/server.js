@@ -29,8 +29,13 @@ initializeSocket(httpServer)
 
 async function startServer () {
   try {
-    await connectDB()
-    await seedDefaultRolesUsers()
+    try {
+      await connectDB()
+      await seedDefaultRolesUsers()
+    } catch (dbErr) {
+      console.warn('⚠️ [MongoDB] Database connection notice:', dbErr.message)
+      console.log('⚡ [Prototype Mode] Continuing with in-memory & demo authentication fallback.')
+    }
 
     // Connect Redis asynchronously (non-blocking, server works even if Redis fails)
     connectRedis().catch(err => {

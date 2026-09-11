@@ -26,7 +26,7 @@ const messageSchema = new mongoose.Schema(
 
     messageType: {
       type: String,
-      enum: ['text', 'weather', 'forecast', 'alert', 'climate', 'advisory'],
+      enum: ['text', 'weather', 'forecast', 'alert', 'climate', 'advisory', 'decision'],
       default: 'text'
     },
 

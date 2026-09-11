@@ -450,25 +450,25 @@ export const AlertsPage = () => {
   // Dynamic severity triage counts
   const immediateDangerCount = useMemo(() => normalizedAlerts.filter((a) => a.rawSeverity === 'extreme').length, [normalizedAlerts]);
   const immediateDangerPlaces = useMemo(() => {
-    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'extreme').map((a) => a.location.split(',')[0].trim());
+    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'extreme').map((a) => (a.location || 'Unknown').split(',')[0].trim());
     return list.slice(0, 3).join(', ') || 'None';
   }, [normalizedAlerts]);
 
   const highRainCount = useMemo(() => normalizedAlerts.filter((a) => a.rawSeverity === 'high').length, [normalizedAlerts]);
   const highRainPlaces = useMemo(() => {
-    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'high').map((a) => a.location.split(',')[0].trim());
+    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'high').map((a) => (a.location || 'Unknown').split(',')[0].trim());
     return list.slice(0, 3).join(' & ') || 'None';
   }, [normalizedAlerts]);
 
   const moderateCount = useMemo(() => normalizedAlerts.filter((a) => a.rawSeverity === 'moderate').length, [normalizedAlerts]);
   const moderatePlaces = useMemo(() => {
-    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'moderate').map((a) => a.location.split(',')[0].trim());
+    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'moderate').map((a) => (a.location || 'Unknown').split(',')[0].trim());
     return list.slice(0, 3).join(', ') || 'None';
   }, [normalizedAlerts]);
 
   const lowCount = useMemo(() => normalizedAlerts.filter((a) => a.rawSeverity === 'low').length, [normalizedAlerts]);
   const lowPlaces = useMemo(() => {
-    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'low').map((a) => a.location.split(',')[0].trim());
+    const list = normalizedAlerts.filter((a) => a.rawSeverity === 'low').map((a) => (a.location || 'Unknown').split(',')[0].trim());
     return list.slice(0, 3).join(', ') || 'None';
   }, [normalizedAlerts]);
 

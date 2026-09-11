@@ -143,6 +143,9 @@ export const DashboardPage = () => {
   const [activeChartMetric, setActiveChartMetric] = useState('temp') // 'temp' | 'pop' | 'wind'
   const [isRefreshing, setIsRefreshing] = useState(false)
   const factsScrollRef = useRef(null)
+  const [decisionBrief, setDecisionBrief] = useState(null)
+  const [decisionBriefLoading, setDecisionBriefLoading] = useState(false)
+  const [showScienceFacts, setShowScienceFacts] = useState(false)
 
 
   const scrollFacts = (direction) => {
@@ -169,6 +172,23 @@ export const DashboardPage = () => {
       ? forecastData.models.openMeteo.hourly
       : weatherData?.forecast?.hourly || []
   }, [forecastData, weatherData])
+
+  // Fetch decision brief when location changes
+  useEffect(() => {
+    const loc = selectedMapLocation || savedLocations?.[0]
+    if (!loc) return
+    const lat = loc.lat ?? loc.latitude
+    const lon = loc.lng ?? loc.longitude
+    if (!lat || !lon) return
+
+    setDecisionBriefLoading(true)
+    api.decisionBrief({ latitude: lat, longitude: lon, role: user?.role || 'user' })
+      .then(res => {
+        if (res?.data) setDecisionBrief(res.data)
+      })
+      .catch(() => {})
+      .finally(() => setDecisionBriefLoading(false))
+  }, [selectedMapLocation, savedLocations, user?.role])
 
   // Find the closest hourly entry matching current real-time hour (NOT just midnight index 0)
   const currentHourEntry = useMemo(() => {
@@ -1377,67 +1397,174 @@ export const DashboardPage = () => {
       {/* =========================================================================
           7. "DO YOU KNOW?" MANUAL HORIZONTAL SCROLL WITH ILLUSTRATION CARDS
           ========================================================================= */}
-      <div className='pt-2 pb-2'>
-        <div className='flex items-center justify-between gap-2 mb-3.5 px-1'>
-          <h3 className='text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight'>
-            {language === 'mr' ? 'तुम्हाला माहिती आहे का?' : language === 'hi' ? 'क्या आप जानते हैं?' : 'Do You know?'}
-          </h3>
+      {/* =========================================================================
+          7. WEATHER INTELLIGENCE SUMMARY + COLLAPSIBLE SCIENCE FACTS
+          ========================================================================= */}
 
-          {/* Manual Scroll Buttons */}
-          <div className='flex items-center gap-1.5'>
-            <button
-              type='button'
-              onClick={() => scrollFacts('left')}
-              aria-label='Scroll left'
-              className='w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs'
-            >
-              <ChevronLeft className='w-4 h-4' />
-            </button>
-            <button
-              type='button'
-              onClick={() => scrollFacts('right')}
-              aria-label='Scroll right'
-              className='w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs'
-            >
-              <ChevronRight className='w-4 h-4' />
-            </button>
+      {/* === Decision Intelligence Summary Card === */}
+      {(decisionBrief || decisionBriefLoading) && (
+        <div className='bg-white dark:bg-slate-800/95 rounded-3xl border border-slate-200/80 dark:border-slate-700/70 shadow-xs overflow-hidden'>
+          <div className='p-5 sm:p-6'>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-base font-bold text-slate-900 dark:text-white flex items-center gap-2'>
+                <Sparkles className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+                <span>Weather Intelligence Summary</span>
+              </h3>
+              {decisionBrief && (
+                <span className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
+                  decisionBrief.overallRisk === 'extreme' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' :
+                  decisionBrief.overallRisk === 'high' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300' :
+                  decisionBrief.overallRisk === 'moderate' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' :
+                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                }`}>
+                  {decisionBrief.overallRisk} risk
+                </span>
+              )}
+            </div>
+
+            {decisionBriefLoading && !decisionBrief && (
+              <div className='flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 py-4'>
+                <div className='w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin' />
+                <span>Analyzing conditions for {locationLabel}...</span>
+              </div>
+            )}
+
+            {decisionBrief && (
+              <div className='space-y-4'>
+                {/* Headline */}
+                <div className={`p-4 rounded-2xl border ${
+                  decisionBrief.overallRisk === 'extreme' || decisionBrief.overallRisk === 'high'
+                    ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50'
+                    : decisionBrief.overallRisk === 'moderate'
+                      ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50'
+                      : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50'
+                }`}>
+                  <p className='text-sm font-bold text-slate-900 dark:text-white'>{decisionBrief.headline}</p>
+                  {decisionBrief.primaryImpact && (
+                    <p className='text-xs text-slate-600 dark:text-slate-300 mt-1'>{decisionBrief.primaryImpact}</p>
+                  )}
+                </div>
+
+                {/* Recommended Actions */}
+                {decisionBrief.actions?.length > 0 && (
+                  <div>
+                    <p className='text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2'>Recommended Actions</p>
+                    <div className='space-y-1.5'>
+                      {decisionBrief.actions.slice(0, 4).map((action, i) => (
+                        <div key={i} className='flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-200'>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black ${
+                            action.category === 'official' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300' :
+                            action.category === 'farm' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                            action.category === 'ops' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' :
+                            'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                          }`}>{i + 1}</div>
+                          <span>{action.action}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Timeline Events */}
+                {decisionBrief.timelineEvents?.length > 0 && (
+                  <div>
+                    <p className='text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2'>Forecast Timeline</p>
+                    <div className='flex flex-wrap gap-2'>
+                      {decisionBrief.timelineEvents.slice(0, 3).map((event, i) => (
+                        <div key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border ${
+                          event.riskLevel === 'high' ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300' :
+                          event.riskLevel === 'moderate' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-300' :
+                          'bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-800/60 dark:border-slate-600 dark:text-slate-300'
+                        }`}>
+                          <span className='font-bold'>{event.period}:</span>
+                          <span>{event.event}</span>
+                          {event.detail && <span className='opacity-70'>({event.detail})</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Source transparency footer */}
+                <p className='text-[10px] text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-700/50'>
+                  AI interpretation of verified Open-Meteo + IMD data. Not a substitute for official IMD warnings.
+                  {decisionBrief.confidence?.sources?.length > 0 && ` Sources: ${decisionBrief.confidence.sources.join(', ')}.`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Manual Swipeable / Scrollable Cards Row */}
-        <div
-          ref={factsScrollRef}
-          className='flex items-stretch gap-4 sm:gap-5 overflow-x-auto scrollbar-none pb-2 pt-1 scroll-smooth snap-x'
+      {/* === Collapsible Science Facts Carousel === */}
+      <div className='pt-2 pb-2'>
+        <button
+          type='button'
+          onClick={() => setShowScienceFacts(v => !v)}
+          className='flex items-center justify-between w-full gap-2 mb-3.5 px-1 group cursor-pointer'
         >
-          {SCIENCE_FACTS.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => {
-                sendChatMessage(item.prompt)
-                setCurrentPage('chat')
-              }}
-              title='Click to ask WeatherGPT AI about this'
-              className='w-[250px] sm:w-[280px] shrink-0 bg-white dark:bg-slate-800/95 rounded-3xl p-3 border border-slate-200/80 dark:border-slate-700/70 shadow-xs hover:shadow-md transition-all flex flex-col justify-between snap-start cursor-pointer group'
-            >
-              {/* Illustration / Photo Thumbnail */}
-              <div className='w-full h-40 sm:h-44 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-700 relative shrink-0'>
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                  }}
-                />
-              </div>
+          <h3 className='text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight'>
+            {language === 'mr' ? 'तुम्हाला माहिती आहे का?' : language === 'hi' ? 'क्या आप जानते हैं?' : 'Did You Know?'}
+          </h3>
+          <div className='flex items-center gap-2'>
+            <span className='text-xs text-slate-400 dark:text-slate-500'>{showScienceFacts ? 'Collapse' : 'Expand'}</span>
+            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${showScienceFacts ? 'rotate-90' : ''}`} />
+          </div>
+        </button>
 
-              {/* Fact Text Below Image */}
-              <p className='text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 font-medium leading-relaxed mt-3 px-0.5 pb-1'>
-                {item.fact}
-              </p>
+        {showScienceFacts && (
+          <>
+            <div className='flex items-center justify-end gap-1.5 mb-3'>
+              <button
+                type='button'
+                onClick={() => scrollFacts('left')}
+                aria-label='Scroll left'
+                className='w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs'
+              >
+                <ChevronLeft className='w-4 h-4' />
+              </button>
+              <button
+                type='button'
+                onClick={() => scrollFacts('right')}
+                aria-label='Scroll right'
+                className='w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs'
+              >
+                <ChevronRight className='w-4 h-4' />
+              </button>
             </div>
-          ))}
-        </div>
+
+            <div
+              ref={factsScrollRef}
+              className='flex items-stretch gap-4 sm:gap-5 overflow-x-auto scrollbar-none pb-2 pt-1 scroll-smooth snap-x'
+            >
+              {SCIENCE_FACTS.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    sendChatMessage(item.prompt)
+                    setCurrentPage('chat')
+                  }}
+                  title='Click to ask WeatherGPT AI about this'
+                  className='w-[250px] sm:w-[280px] shrink-0 bg-white dark:bg-slate-800/95 rounded-3xl p-3 border border-slate-200/80 dark:border-slate-700/70 shadow-xs hover:shadow-md transition-all flex flex-col justify-between snap-start cursor-pointer group'
+                >
+                  <div className='w-full h-40 sm:h-44 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-700 relative shrink-0'>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                      }}
+                    />
+                  </div>
+                  <p className='text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 font-medium leading-relaxed mt-3 px-0.5 pb-1'>
+                    {item.fact}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* =========================================================================

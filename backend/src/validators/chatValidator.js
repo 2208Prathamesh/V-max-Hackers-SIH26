@@ -35,9 +35,16 @@ const sendMessageSchema = Joi.object({
             "text",
             "weather",
             "forecast",
-            "alert"
+            "alert",
+            "climate",
+            "advisory",
+            "decision"
         )
-        .default("text")
+        .default("text"),
+
+    latitude: Joi.number().min(-90).max(90).optional().allow(null),
+    longitude: Joi.number().min(-180).max(180).optional().allow(null),
+    location: Joi.string().max(200).optional().allow(null, "")
 });
 
 

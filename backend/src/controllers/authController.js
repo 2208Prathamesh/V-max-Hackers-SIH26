@@ -29,6 +29,20 @@ const login = async (req, res, next) => {
 }
 
 /**
+ * 1-Click Demo Login for Hackathon Judges
+ */
+const demoLogin = async (req, res, next) => {
+  try {
+    const persona = req.body.persona || req.body.role || 'citizen'
+    const { executeDemoLogin } = await import('../services/demoAuthService.js')
+    const result = await executeDemoLogin(persona)
+    return successResponse(res, result, `Logged in as Demo Persona (${result.user.role})`, 200)
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
  * Logout user
  */
 const logout = async (req, res, next) => {
@@ -147,6 +161,7 @@ const getEmailPreview = async (req, res, next) => {
 export {
   register,
   login,
+  demoLogin,
   socialLogin,
   logout,
   getCurrentUser,
@@ -158,6 +173,7 @@ export {
 export default {
   register,
   login,
+  demoLogin,
   socialLogin,
   logout,
   getCurrentUser,

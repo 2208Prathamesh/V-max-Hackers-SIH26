@@ -26,6 +26,7 @@ import {
 
 export const ChatPage = () => {
   const {
+    user,
     conversations,
     activeConversationId,
     sendChatMessage,
@@ -229,34 +230,32 @@ export const ChatPage = () => {
     }
   }, [lastMsg, language]);
 
-  const samplePrompts = [
-    language === 'hi'
-      ? 'क्या आज पुणे में बारिश होगी?'
-      : language === 'mr'
-      ? 'पुण्यात आज पाऊस पडेल का?'
-      : language === 'bn'
-      ? 'কলকাতায় আজকের আবহাওয়া কেমন?'
-      : language === 'ta'
-      ? 'சென்னையில் இன்று மழை பெய்யுமா?'
-      : language === 'te'
-      ? 'హైదరాబాద్‌లో ఈరోజు వర్షం పడుతుందా?'
-      : 'Will it rain today in Pune?',
-    language === 'hi'
-      ? 'कपास की फसल के लिए सिंचाई और छिड़काव सलाह'
-      : language === 'mr'
-      ? 'कापूस आणि सोयाबीन पिकासाठी खत व पाणी सल्ला'
-      : 'Crop advisory for cotton and soybean this week',
-    language === 'hi'
-      ? 'मुंबई के लिए 7 दिनों का मौसम पूर्वानुमान'
-      : language === 'mr'
-      ? 'मुंबई आणि पुण्यासाठी पुढील ७ दिवसांचा अंदाज'
-      : 'Compare ECMWF vs NOAA GFS forecast for Mumbai',
-    language === 'hi'
-      ? 'आज के सरकारी मौसम विभाग (IMD) अलर्ट दिखाएं'
-      : language === 'mr'
-      ? 'आजचे हवामान विभागाचे (IMD) अधिकृत इशारे दाखवा'
-      : 'Show official IMD weather warnings for today'
-  ];
+  // Role-aware suggested questions — farmers/authority/citizen get different prompts
+  const samplePrompts = (() => {
+    const role = user?.role || 'user';
+    if (role === 'farmer') {
+      return [
+        language === 'mr' ? 'आज कीटकनाशक फवारणी करणे योग्य आहे का?' : language === 'hi' ? 'क्या मैं आज कीटनाशक स्प्रे कर सकता हूं?' : 'Is it safe to spray pesticides today?',
+        language === 'mr' ? 'पुढील ३ दिवसांत सिंचाई करावी का?' : language === 'hi' ? 'अगले 3 दिनों में सिंचाई करनी चाहिए?' : 'Should I irrigate crops in the next 3 days?',
+        language === 'mr' ? 'पिकांसाठी दंव किंवा उष्णतेचा धोका आहे का?' : 'Any frost or heat stress risk for crops tonight?',
+        language === 'mr' ? 'पुण्यात कापसासाठी हवामान कसे आहे?' : 'Crop weather advisory for Pune this week'
+      ];
+    }
+    if (role === 'authority' || role === 'admin') {
+      return [
+        'Current IMD warnings for Maharashtra — situation summary',
+        'What is the flood risk for low-lying districts today?',
+        'Give me a disaster management briefing for Nashik district',
+        language === 'mr' ? 'महाराष्ट्रातील आज सक्रिय चेतावण्या कोणत्या आहेत?' : 'Active alerts requiring emergency response today'
+      ];
+    }
+    return [
+      language === 'hi' ? 'क्या आज पुणे में बारिश होगी?' : language === 'mr' ? 'पुण्यात आज पाऊस पडेल का?' : language === 'bn' ? 'কলকাতায় আজকের আবহাওয়া কেমন?' : language === 'ta' ? 'சென்னையில் இன்று மழை பெய்யுமா?' : language === 'te' ? 'హైదరాబాద్‌లో ఈరోజు వర్షం పడుతుందా?' : 'Will it rain today in Pune?',
+      language === 'hi' ? 'मुंबई के लिए 7 दिनों का मौसम पूर्वानुमान' : language === 'mr' ? 'मुंबई आणि पुण्यासाठी पुढील ७ दिवसांचा अंदाज' : 'Compare ECMWF vs NOAA GFS forecast for Mumbai',
+      language === 'hi' ? 'आज दिल्ली में वायु गुणवत्ता कैसी है?' : language === 'mr' ? 'आजची हवेची गुणवत्ता कशी आहे?' : 'What is the air quality in Delhi today?',
+      language === 'hi' ? 'आज के सरकारी मौसम विभाग (IMD) अलर्ट दिखाएं' : language === 'mr' ? 'आजचे हवामान विभागाचे (IMD) अधिकृत इशारे दाखवा' : 'Show official IMD weather warnings for today'
+    ];
+  })();
 
   const handleSend = (e) => {
     e.preventDefault();

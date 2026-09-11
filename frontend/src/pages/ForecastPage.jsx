@@ -186,18 +186,22 @@ export const ForecastPage = () => {
       humidity: h => `${h.humidity}%`
     }
 
-    const rawVals = samples.map(valueExtractors[activeChartParam])
-    const minVal = Math.min(...rawVals)
-    const maxVal = Math.max(...rawVals)
-    const range = maxVal - minVal || 1
+    if (!samples.length) return []
+    const extractor = valueExtractors[activeChartParam] || (h => Number(h.rawTemp ?? 0))
+    const formatter = valueFormatters[activeChartParam] || (h => String(h.temp ?? ''))
+
+    const rawVals = samples.map(extractor).filter(v => typeof v === 'number' && !isNaN(v))
+    const minVal = rawVals.length ? Math.min(...rawVals) : 0
+    const maxVal = rawVals.length ? Math.max(...rawVals) : 100
+    const range = (maxVal - minVal) || 1
 
     return samples.map(h => {
-      const v = valueExtractors[activeChartParam](h)
+      const v = extractor(h)
       const normalized = (v - minVal) / range
       const y = Math.round(135 - normalized * 100)
       return {
         time: h.time,
-        displayVal: valueFormatters[activeChartParam](h),
+        displayVal: formatter(h),
         y,
         val: v
       }

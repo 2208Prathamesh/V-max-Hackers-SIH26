@@ -16,10 +16,21 @@ const authMiddleware = async (req, res, next) => {
 
         const decoded = jwt.verify(
             token,
-            env.JWT_SECRET
+            env.JWT_SECRET || process.env.JWT_SECRET || 'weathergpt-prototype-secret-key-2026'
         );
 
-        const user = await User.findById(decoded.userId);
+        let user = null;
+        try {
+            if (User.db?.readyState === 1 && !String(decoded.userId).startsWith('demo-')) {
+                user = await User.findById(decoded.userId);
+            }
+        } catch (_) {}
+
+        // Fallback for Demo tokens or when DB is disconnected
+        if (!user && (decoded.isDemo || String(decoded.userId).startsWith('demo-'))) {
+            const { getDemoUser } = await import('../services/demoAuthService.js');
+            user = getDemoUser(decoded.userId, decoded.role);
+        }
 
         if (!user) {
             const error = new Error("User not found");

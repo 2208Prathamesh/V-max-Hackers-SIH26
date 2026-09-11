@@ -4,6 +4,8 @@
   "type": "module",
   "description": "WeatherGPT - Multi-Model NWP Weather Intelligence & AI Chatbot",
   "scripts": {
+    "start": "node backend/src/server.js",
+    "build": "npm --prefix frontend run build",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "seed": "node seed/index.js",

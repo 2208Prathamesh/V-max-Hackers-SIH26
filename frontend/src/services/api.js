@@ -158,6 +158,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(credentials)
     }),
+  demoLogin: persona =>
+    request('/auth/demo-login', {
+      method: 'POST',
+      body: JSON.stringify({ persona })
+    }),
   register: details =>
     request('/auth/register', {
       method: 'POST',
@@ -413,6 +418,14 @@ export const api = {
     if (longitude !== undefined) params.set('longitude', String(longitude))
     return request(`/advisories/disaster?${params.toString()}`)
   },
+  decisionBrief: ({ city, latitude, longitude, role } = {}) => {
+    const params = new URLSearchParams()
+    if (city) params.set('city', city)
+    if (latitude !== undefined) params.set('latitude', String(latitude))
+    if (longitude !== undefined) params.set('longitude', String(longitude))
+    if (role) params.set('role', role)
+    return request(`/advisories/decision?${params.toString()}`)
+  },
 
   // Authority Dashboard & Official Alerts
   getAuthorityAlerts: (statusOrParams = '') => {
@@ -469,36 +482,7 @@ export const api = {
     window.URL.revokeObjectURL(url)
   },
 
-  // Climate & Historical Reanalysis
-  climateHistory: ({ city, latitude, longitude, startDate, endDate }) => {
-    const params = new URLSearchParams()
-    if (city) params.set('city', city)
-    if (latitude !== undefined) params.set('latitude', String(latitude))
-    if (longitude !== undefined) params.set('longitude', String(longitude))
-    if (startDate) params.set('startDate', startDate)
-    if (endDate) params.set('endDate', endDate)
-    return request(`/climate/history?${params.toString()}`)
-  },
-  climateTrends: ({ city, latitude, longitude, startYear, endYear }) => {
-    const params = new URLSearchParams()
-    if (city) params.set('city', city)
-    if (latitude !== undefined) params.set('latitude', String(latitude))
-    if (longitude !== undefined) params.set('longitude', String(longitude))
-    if (startYear) params.set('startYear', String(startYear))
-    if (endYear) params.set('endYear', String(endYear))
-    return request(`/climate/trends?${params.toString()}`)
-  },
-  fullClimateData: ({ city, latitude, longitude, startYear, endYear, startDate, endDate }) => {
-    const params = new URLSearchParams()
-    if (city) params.set('city', city)
-    if (latitude !== undefined) params.set('latitude', String(latitude))
-    if (longitude !== undefined) params.set('longitude', String(longitude))
-    if (startYear) params.set('startYear', String(startYear))
-    if (endYear) params.set('endYear', String(endYear))
-    if (startDate) params.set('startDate', startDate)
-    if (endDate) params.set('endDate', endDate)
-    return request(`/climate/full?${params.toString()}`)
-  },
+  // Climate & Historical Reanalysis (duplicate block removed — definitions above at lines 323-351 are canonical)
 
   // Admin — User Management
   listAdminUsers: ({ page = 1, limit = 20, search = '', role = '' } = {}) => {
@@ -546,7 +530,7 @@ export const api = {
   // Admin — Database Backup
   downloadDatabaseBackup: async () => {
     const token = localStorage.getItem('weathergpt_token')
-    const response = await fetch(`${API_BASE}/admin/backup/export`, {
+    const response = await fetch(`${API_BASE_URL}/admin/backup/export`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       }

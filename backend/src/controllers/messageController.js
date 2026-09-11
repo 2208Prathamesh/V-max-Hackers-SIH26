@@ -41,11 +41,15 @@ const sendMessage = async (req, res, next) => {
     })
 
     console.log('[BACKEND CHAT] Calling AI...');
-    // Generate WeatherGPT response
+    // Generate WeatherGPT response — pass user role and optional location for role-aware intelligence
     const aiResponse = await chatService.generateResponse({
       conversationId,
       userId: req.user._id,
-      message: content.trim()
+      message: content.trim(),
+      userRole: req.user?.role || 'user',
+      latitude: req.body.latitude || null,
+      longitude: req.body.longitude || null,
+      userLocation: req.body.location || req.user?.location || null
     })
     console.log('[BACKEND CHAT] AI RESPONSE:', aiResponse);
 

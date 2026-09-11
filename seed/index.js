@@ -71,7 +71,8 @@ async function runSeeder() {
   console.log(`📡 MongoDB URI: ${mongoUri}`)
   console.log('==============================================')
 
-  await mongoose.connect(mongoUri)
+  const { connectDB } = await import('../backend/src/config/db.js')
+  await connectDB(mongoUri)
   console.log('🔌 Connected to MongoDB.')
 
   if (isCleanOnly) {

@@ -106,6 +106,7 @@ const WeatherGPTLogo = () => (
 export const LoginPage = () => {
   const {
     login,
+    loginDemo,
     signUp,
     socialLogin,
     setIsForgotPasswordOpen,
@@ -126,6 +127,18 @@ export const LoginPage = () => {
     email: '',
     password: ''
   })
+
+  const handleDemoLogin = async (persona) => {
+    setIsLoading(true)
+    try {
+      await loginDemo(persona)
+      triggerLoginSuccessConfetti()
+    } catch (err) {
+      addToast(err.message || 'Demo login failed', 'error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
 
   // Password strength calculator
@@ -337,6 +350,90 @@ export const LoginPage = () => {
           </div>
 
           <div className='w-full max-w-lg'>
+            {/* =========================================================================
+                SIH 2026 JUDGE PORTAL — 1-CLICK DEMO ACCESS
+                ========================================================================= */}
+            <div className='mb-6 p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-purple-500/10 border border-blue-500/20 dark:border-blue-400/20 shadow-sm'>
+              <div className='flex items-center justify-between mb-2'>
+                <div className='flex items-center gap-2'>
+                  <span className='w-2 h-2 rounded-full bg-emerald-500 animate-ping' />
+                  <span className='text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-300'>
+                    SIH 2026 Judge Portal • 1-Click Demo
+                  </span>
+                </div>
+                <span className='text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold'>
+                  No Password Needed
+                </span>
+              </div>
+              <p className='text-[11px] text-slate-600 dark:text-slate-400 mb-3'>
+                Select an official demo persona to immediately experience role-tailored decision intelligence:
+              </p>
+
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-2.5'>
+                {/* Citizen Persona */}
+                <button
+                  type='button'
+                  onClick={() => handleDemoLogin('citizen')}
+                  disabled={isLoading}
+                  className='flex flex-col items-start p-2.5 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition text-left cursor-pointer group disabled:opacity-50'
+                >
+                  <div className='flex items-center justify-between w-full mb-1'>
+                    <div className='w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center'>
+                      <User className='w-3.5 h-3.5' />
+                    </div>
+                    <span className='text-[10px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform'>→</span>
+                  </div>
+                  <span className='text-xs font-bold text-slate-900 dark:text-white'>Citizen Demo</span>
+                  <span className='text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5'>Priya • Timeline, Risk & AI Chat</span>
+                </button>
+
+                {/* Farmer Persona */}
+                <button
+                  type='button'
+                  onClick={() => handleDemoLogin('farmer')}
+                  disabled={isLoading}
+                  className='flex flex-col items-start p-2.5 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-400 hover:shadow-md transition text-left cursor-pointer group disabled:opacity-50'
+                >
+                  <div className='flex items-center justify-between w-full mb-1'>
+                    <div className='w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center'>
+                      <Sprout className='w-3.5 h-3.5' />
+                    </div>
+                    <span className='text-[10px] font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform'>→</span>
+                  </div>
+                  <span className='text-xs font-bold text-slate-900 dark:text-white'>Farmer Demo 🌾</span>
+                  <span className='text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5'>Ramesh • Crop, Spraying & Krishi</span>
+                </button>
+
+                {/* Authority Persona */}
+                <button
+                  type='button'
+                  onClick={() => handleDemoLogin('authority')}
+                  disabled={isLoading}
+                  className='flex flex-col items-start p-2.5 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-400 hover:shadow-md transition text-left cursor-pointer group disabled:opacity-50'
+                >
+                  <div className='flex items-center justify-between w-full mb-1'>
+                    <div className='w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center'>
+                      <ShieldAlert className='w-3.5 h-3.5' />
+                    </div>
+                    <span className='text-[10px] font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform'>→</span>
+                  </div>
+                  <span className='text-xs font-bold text-slate-900 dark:text-white'>Authority Demo 🏛️</span>
+                  <span className='text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5'>Dr. Sharma • EOC, Radar & Triage</span>
+                </button>
+              </div>
+            </div>
+
+            <div className='relative mb-5'>
+              <div className='absolute inset-0 flex items-center'>
+                <div className='w-full border-t border-slate-200 dark:border-slate-700/60' />
+              </div>
+              <div className='relative flex justify-center text-xs'>
+                <span className='bg-white dark:bg-[#121316] px-3 text-slate-400 font-medium'>
+                  or sign in with credentials
+                </span>
+              </div>
+            </div>
+
             {/* Mode Toggle Tabs: Sign In / Create Account */}
             <div className='flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700/60'>
               <button

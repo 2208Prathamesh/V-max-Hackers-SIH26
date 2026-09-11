@@ -1,5 +1,5 @@
 import env from '../../config/env.js';
-import { SYSTEM_INSTRUCTION, buildGroundedContextPrompt } from './promptTemplates.js';
+import { SYSTEM_INSTRUCTION, buildGroundedContextPrompt, buildDecisionContextPrompt } from './promptTemplates.js';
 
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -11,17 +11,18 @@ const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/mo
  * @param {string} [param0.language='en'] - Output language ('en', 'hi', 'mr', 'bn', 'ta', 'te')
  * @returns {Promise<string>} Natural language response
  */
-export async function generateGeminiWeatherResponse({ userMessage, groundedContext, language = 'en' }) {
+export async function generateGeminiWeatherResponse({ userMessage, groundedContext, language = 'en', userRole = 'user' }) {
   const apiKey = env.GEMINI_API_KEY;
 
   const contextPrompt = buildGroundedContextPrompt({
     ...groundedContext,
-    language
+    language,
+    userRole
   });
 
   // Fallback to local rule-based explanation if API key is not configured
   if (!apiKey || apiKey.trim() === '') {
-    return generateOfflineGroundedResponse({ userMessage, groundedContext, language });
+    return generateOfflineGroundedResponse({ userMessage, groundedContext, language, userRole });
   }
 
   try {
@@ -35,28 +36,44 @@ export async function generateGeminiWeatherResponse({ userMessage, groundedConte
           parts: [
             { text: SYSTEM_INSTRUCTION },
             { text: contextPrompt },
-            { text: `User Question: "${userMessage}". Please answer exclusively in language code: ${language}. Provide a warm, polite, lively and natural conversational response.` }
+            {
+              text: `USER QUERY: "${userMessage}"
+TARGET LANGUAGE: ${language}
+RESPONSE DIRECTIVE:
+1. Strictly answer ONLY what the user asked directly.
+   - If user asked for temperature/temp: state ONLY the current temperature, feels-like, and today's min/max. DO NOT mention crops, farming, laundry, umbrellas, car washes, or disaster protocols.
+   - If user asked about rain: focus ONLY on rain probability, sky condition, and precipitation timing.
+   - If user asked about umbrella: answer directly Yes/No with the rain chance.
+   - If user asked about agricultural decisions (spray/irrigation): give targeted advice for that specific task.
+2. NEVER mention 'N/A' or 'N/A location'.
+3. Keep the response crisp, natural, and concise (under 3 sentences unless a detailed breakdown was explicitly requested).`
+            }
           ]
         }
       ],
       generationConfig: {
-        temperature: 0.3,
-        topP: 0.85,
-        maxOutputTokens: 800
+        temperature: 0.2,
+        topP: 0.8,
+        maxOutputTokens: 500
       }
     };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.warn(`Gemini API returned ${response.status}. Using offline grounded fallback.`);
-      return generateOfflineGroundedResponse({ userMessage, groundedContext, language });
+      return generateOfflineGroundedResponse({ userMessage, groundedContext, language, userRole });
     }
 
     const data = await response.json();
@@ -66,123 +83,178 @@ export async function generateGeminiWeatherResponse({ userMessage, groundedConte
       return candidate.trim();
     }
 
-    return generateOfflineGroundedResponse({ userMessage, groundedContext, language });
+    return generateOfflineGroundedResponse({ userMessage, groundedContext, language, userRole });
   } catch (err) {
     console.warn('Gemini API call failed:', err.message);
-    return generateOfflineGroundedResponse({ userMessage, groundedContext, language });
+    return generateOfflineGroundedResponse({ userMessage, groundedContext, language, userRole });
   }
 }
 
 /**
- * Deterministic lively multilingual grounded generator
+ * Dynamic, personalized, and API-grounded weather intelligence generator
+ * Responds conversationally to WHAT the user said + REAL API telemetry + USER ROLE personalization
  */
-function generateOfflineGroundedResponse({ userMessage, groundedContext, language = 'en' }) {
+/**
+ * Concise, laser-focused, and query-targeted grounded response generator.
+ * Responds strictly to WHAT was asked, citing real API metrics, without dumping unrelated topics.
+ */
+function generateOfflineGroundedResponse({ userMessage, groundedContext, language = 'en', userRole = 'user' }) {
   const { location, currentWeather, forecastDaily = [], imdWarning, agroAdvisory } = groundedContext;
+
+  const cleanLoc = (location && location !== 'N/A' && location !== 'undefined') ? location : null;
   const current = currentWeather || {};
-  const todayForecast = forecastDaily[0] || {};
-  const query = (userMessage || '').toLowerCase();
+  const today = forecastDaily[0] || {};
+  const tomorrow = forecastDaily[1] || {};
+  const query = (userMessage || '').toLowerCase().trim();
 
-  const temp = current.temperature ?? '28';
-  const humidity = current.humidity ?? '65';
-  const wind = current.windSpeed ?? '12';
-  const rainProb = todayForecast.precipitationProbability ?? current.precipitation ?? 0;
-  const condition = current.weatherDescription || current.condition || 'निरभ्र';
-
-  // 1. Marathi (मराठी - Lively & Natural)
-  if (language === 'mr' || query.includes('काय') || query.includes('आहे') || query.includes('हवामान')) {
-    let answer = `नमस्कार! सध्या **${location}** मध्ये हवामान **${condition}** असून तापमान **${temp}°C** आहे (जाणवणारे तापमान: ${current.apparentTemperature ?? temp}°C).\n\n`;
-    answer += `📊 **मुख्य हवामान घटक:**\n`;
-    answer += `• हवेतील ओलावा (आर्द्रता): **${humidity}%**\n`;
-    answer += `• वाऱ्याचा वेग: **${wind} किमी/तास**\n`;
-
-    if (todayForecast.maxTemperature !== undefined) {
-      answer += `• आजचे अपेक्षित तापमान: **${todayForecast.minTemperature}°C ते ${todayForecast.maxTemperature}°C** दरम्यान राहील.\n`;
+  // If no valid location was resolved and query needs location, ask for location directly!
+  if (!cleanLoc) {
+    if (/\b(temp|temperature|how hot|how cold|heat|warm|cold|tapman|तापमान)\b/.test(query)) {
+      return language === 'mr'
+        ? 'कोणत्या शहराचे किंवा परिसराचे तापमान तुम्हाला जाणून घ्यायचे आहे?'
+        : language === 'hi'
+          ? 'आप किस शहर या स्थान का तापमान जानना चाहते हैं?'
+          : 'Which city or location would you like to know the temperature for?';
     }
-
-    if (rainProb > 40) {
-      answer += `\n🌧️ **पावसाचा अंदाज:** आज पाऊस पडण्याची शक्यता **${rainProb}%** आहे. बाहेर पडताना छत्री किंवा रेनकोट सोबत ठेवा!`;
-    } else {
-      answer += `\n☀️ **पावसाचा अंदाज:** आज पावसाची शक्यता फारच कमी (**${rainProb}%**) असून दिवसभर हवामान कोरडे राहण्याचा अंदाज आहे.`;
+    if (/\b(rain|raining|rainfall|baarish|paus|पाऊस|बारिश)\b/.test(query)) {
+      return language === 'mr'
+        ? 'कोणत्या शहराचा पावसाचा अंदाज तुम्हाला पाहायचा आहे?'
+        : language === 'hi'
+          ? 'आप किस स्थान का बारिश का अनुमान देखना चाहते हैं?'
+          : 'Which city or location would you like to check the rain forecast for?';
     }
-
-    if (imdWarning && imdWarning.hasActiveWarning) {
-      answer += `\n\n🚨 **हवामान विभागाचा (IMD) इशारा:** ${imdWarning.warningLevel} अलर्ट (${imdWarning.action}) जारी करण्यात आला आहे. धोका: ${imdWarning.hazard} - ${imdWarning.advice}`;
-    }
-
-    if (agroAdvisory?.recommendations?.cropSpecificAdvisory || query.includes('पीक') || query.includes('शेत')) {
-      answer += `\n\n🌾 **शेतकरी मित्रांसाठी सल्ला:** ${agroAdvisory?.recommendations?.cropSpecificAdvisory || 'पिकांमधील ओलावा तपासा आणि हवामानानुसार पाणी व्यवस्थापन करा.'}`;
-    }
-
-    return answer;
+    return language === 'mr'
+      ? 'कृपया शहर किंवा जिल्ह्याचे नाव सांगा ज्याचे हवामान तुम्हाला पाहायचे आहे.'
+      : language === 'hi'
+        ? 'कृपया उस शहर या जिले का नाम बताएं जिसका मौसम आप जानना चाहते हैं।'
+        : 'Which city or location would you like to check the weather for?';
   }
 
-  // 2. Hindi (हिन्दी - Lively & Natural)
-  if (language === 'hi' || query.includes('kaisa') || query.includes('hogi') || query.includes('mausam') || query.includes('baarish')) {
-    let answer = `नमस्ते! वर्तमान में **${location}** में मौसम **${condition}** है और तापमान **${temp}°C** बना हुआ है।\n\n`;
-    answer += `📊 **प्रमुख मौसम आंकड़े:**\n`;
-    answer += `• आर्द्रता: **${humidity}%**\n`;
-    answer += `• हवा की गति: **${wind} किमी/घंटा**\n`;
+  const temp = Math.round(Number(current.temperature ?? 28));
+  const apparentTemp = Math.round(Number(current.apparentTemperature ?? temp));
+  const humidity = Math.round(Number(current.humidity ?? 65));
+  const wind = Math.round(Number(current.windSpeed ?? 12));
+  const condition = current.condition || current.weatherDescription || 'Mainly clear';
 
-    if (rainProb > 40) {
-      answer += `\n🌧️ **बारिश की संभावना:** आज **${rainProb}%** बारिश होने के आसार हैं। बाहर निकलते समय सावधानी बरतें।`;
-    } else {
-      answer += `\n☀️ **बारिश की संभावना:** आज बारिश की संभावना कम (**${rainProb}%**) है और मौसम सामान्य रहेगा।`;
+  const todayRainProb = Math.round(Number(today.precipitationProbability ?? current.precipitation ?? 0));
+  const tomorrowRainProb = Math.round(Number(tomorrow.precipitationProbability ?? 0));
+  const todayMin = Math.round(Number(today.minTemperature ?? (temp - 4)));
+  const todayMax = Math.round(Number(today.maxTemperature ?? (temp + 4)));
+
+  const hasWarning = imdWarning && (imdWarning.hasActiveWarning || imdWarning.warningLevel);
+  const warningLevel = imdWarning?.warningLevel || 'Active';
+  const warningHazard = imdWarning?.hazard || 'Weather Warning';
+
+  // 1. GREETING
+  if (/\b(hi|hello|hey|namaste|who are you|what can you do|help me|start)\b/.test(query)) {
+    if (userRole === 'farmer') {
+      return `🌾 **Namaste! I am WeatherGPT Krishi Advisor for ${cleanLoc}.**\n\nCurrent field weather is **${condition}, ${temp}°C** (Wind: **${wind} km/h**, Rain Chance: **${todayRainProb}%**). Ask me about pesticide spray windows, irrigation timing, or crop advisories.`;
     }
+    return `Hello! I am **WeatherGPT** for **${cleanLoc}**.\n\nCurrent conditions: **${condition}**, **${temp}°C** (feels like **${apparentTemp}°C**). Ask me directly about temperature, rain, umbrellas, forecasts, or clothing advice.`;
+  }
 
-    if (imdWarning?.hasActiveWarning) {
-      answer += `\n\n🚨 **मौसम विभाग (IMD) चेतावनी:** ${imdWarning.warningLevel} अलर्ट जारी है (${imdWarning.hazard})। कृपया स्थानीय सुरक्षा निर्देशों का पालन करें।`;
+  // 2. TEMPERATURE ONLY (What is the temp / How hot / Feels like)
+  if (/\b(temp|temperature|how hot|how cold|feels like|heat|warm|cold|tapman|तापमान)\b/.test(query) && !query.includes('spray') && !query.includes('irrigat')) {
+    if (language === 'mr') {
+      return `🌡️ **${cleanLoc}** चे सध्याचे तापमान **${temp}°C** आहे (जाणवणारे तापमान: **${apparentTemp}°C**).\n• आजचे अपेक्षित तापमान: **${todayMin}°C (किमान) ते ${todayMax}°C (कमाल)**\n• हवेतील स्थिती: **${condition}** (आर्द्रता: **${humidity}%**)`;
     }
-
-    return answer;
-  }
-
-  // 3. Bengali (বাংলা)
-  if (language === 'bn') {
-    let answer = `নমস্কার! বর্তমানে **${location}**-এ আবহাওয়া **${condition}** এবং তাপমাত্রা **${temp}°C**। বাতাসের আর্দ্রতা **${humidity}%** এবং বাতাসের গতি **${wind} কিমি/ঘণ্টা**।`;
-    if (rainProb > 40) {
-      answer += `\n🌧️ বৃষ্টির সম্ভাবনা **${rainProb}%**।`;
+    if (language === 'hi') {
+      return `🌡️ **${cleanLoc}** में वर्तमान तापमान **${temp}°C** है (महसूस: **${apparentTemp}°C**)।\n• आज का तापमान दायरा: **${todayMin}°C (न्यूनतम) से ${todayMax}°C (अधिकतम)**\n• वर्तमान स्थिति: **${condition}** (आर्द्रता: **${humidity}%**)`;
     }
-    return answer;
+    return `🌡️ The current temperature in **${cleanLoc}** is **${temp}°C** (feels like **${apparentTemp}°C**).\n\n• **Today's Range:** Minimum **${todayMin}°C** to Maximum **${todayMax}°C**\n• **Conditions:** ${condition} with **${humidity}%** relative humidity and **${wind} km/h** winds.`;
   }
 
-  // 4. Tamil (தமிழ்)
-  if (language === 'ta') {
-    let answer = `வணக்கம்! தற்போது **${location}** பகுதியில் வெப்பநிலை **${temp}°C** ஆகவும், வானிலை **${condition}** ஆகவும் உள்ளது. ஈரப்பதம் **${humidity}%** மற்றும் காற்றின் வேகம் **${wind} கி.மீ/மணி**।`;
-    if (rainProb > 40) {
-      answer += `\n🌧️ மழை பெய்ய வாய்ப்பு **${rainProb}%** உள்ளது.`;
+  // 3. TOMORROW FORECAST
+  if (/\b(tomorrow|kal|udya|उद्या|कल)\b/.test(query)) {
+    const willRain = tomorrowRainProb >= 40;
+    return `📅 **Tomorrow's Weather in ${cleanLoc}:**\n\n• **Condition:** ${tomorrow.condition || condition}\n• **Temperature:** **${Math.round(tomorrow.minTemperature ?? todayMin)}°C** to **${Math.round(tomorrow.maxTemperature ?? todayMax)}°C**\n• **Rain Probability:** **${tomorrowRainProb}%** (${willRain ? 'Rain is expected tomorrow' : 'Mostly dry weather expected'})`;
+  }
+
+  // 4. UMBRELLA ONLY
+  if (/\b(umbrella|raincoat|chhati|छत्री)\b/.test(query)) {
+    if (todayRainProb >= 40) {
+      return `☔ **Yes, carry an umbrella in ${cleanLoc} today!** Rain probability is elevated at **${todayRainProb}%** with **${condition}** skies.`;
     }
-    return answer;
+    return `☀️ **No, you likely won't need an umbrella in ${cleanLoc} today.** Rain chance is only **${todayRainProb}%** under **${condition}** skies.`;
   }
 
-  // 5. Telugu (తెలుగు)
-  if (language === 'te') {
-    let answer = `నమస్కారం! ప్రస్తుతం **${location}** లో ఉష్ణోగ్రత **${temp}°C** మరియు వాతావరణం **${condition}** గా ఉంది. గాలిలో తేమ **${humidity}%** మరియు గాలి వేగం **${wind} కి.మీ/గం**।`;
-    if (rainProb > 40) {
-      answer += `\n🌧️ వర్షం పడే అవకాశం **${rainProb}%** ఉంది.`;
+  // 5. RAIN ONLY (Will it rain / Raining)
+  if (/\b(rain|raining|rainfall|baarish|paus|पाऊस|बारिश|drizzle|shower|monsoon)\b/.test(query) && !query.includes('spray') && !query.includes('irrigat') && !query.includes('wash')) {
+    if (todayRainProb >= 50) {
+      return `🌧️ **Rain is likely in ${cleanLoc} today.** Precipitation chance is **${todayRainProb}%** with **${condition}** skies and **${humidity}%** humidity.`;
     }
-    return answer;
+    if (todayRainProb >= 25) {
+      return `⛅ **Low-to-moderate rain risk in ${cleanLoc} today (${todayRainProb}%).** Passing brief showers are possible, but continuous rain is unlikely.`;
+    }
+    return `☀️ **Dry conditions expected in ${cleanLoc} today.** Rain probability is only **${todayRainProb}%** with **${condition}** weather.`;
   }
 
-  // 6. Default English
-  let answer = `Hello! Currently in **${location}**, the weather is **${condition}** with a temperature of **${temp}°C** (feels like ${current.apparentTemperature ?? temp}°C).\n\n`;
-  answer += `• Humidity: **${humidity}%**\n`;
-  answer += `• Wind Speed: **${wind} km/h**\n`;
-
-  if (rainProb > 40) {
-    answer += `🌧️ **Precipitation:** Rain is likely today with a **${rainProb}%** probability.`;
-  } else {
-    answer += `☀️ **Precipitation:** Dry conditions expected with low rainfall chance (**${rainProb}%**).`;
+  // 6. WIND ONLY
+  if (/\b(wind|windy|winds|hawa|वाऱ्याचा वेग|हवा)\b/.test(query) && !query.includes('spray')) {
+    return `💨 The wind velocity in **${cleanLoc}** is currently **${wind} km/h** (${wind > 20 ? 'moderate breeze' : 'gentle breeze'}).`;
   }
 
-  if (imdWarning && imdWarning.hasActiveWarning) {
-    answer += `\n\n🚨 **IMD Official Warning**: ${imdWarning.warningLevel} Alert (${imdWarning.action}) due to ${imdWarning.hazard}. ${imdWarning.advice}`;
+  // 7. HUMIDITY ONLY
+  if (/\b(humidity|humid|moisture in air|आर्द्रता|ओलावा)\b/.test(query) && !query.includes('soil')) {
+    return `💧 The relative humidity in **${cleanLoc}** is currently **${humidity}%** (Current temp: **${temp}°C**).`;
   }
 
-  if (agroAdvisory?.recommendations?.cropSpecificAdvisory && query.includes('crop')) {
-    answer += `\n\n🌾 **Crop Advisory**: ${agroAdvisory.recommendations.cropSpecificAdvisory}`;
+  // 8. CAR WASH
+  if (/\b(car|wash)\b/.test(query) && !query.includes('crop') && !query.includes('clothes')) {
+    if (todayRainProb > 30) {
+      return `🚗 **Hold off on washing your car in ${cleanLoc} today.** Rain risk is **${todayRainProb}% today** and **${tomorrowRainProb}% tomorrow**. Washing now risks rain spots.`;
+    }
+    return `🚗 **Good day to wash your vehicle in ${cleanLoc}!** Rain probability is low at **${todayRainProb}%** and conditions are mostly **${condition}**.`;
   }
 
-  return answer;
+  // 9. CLOTHES DRYING
+  if (/\b(clothes|laundry|dry clothes)\b/.test(query) && !query.includes('crop') && !query.includes('harvest')) {
+    if (todayRainProb > 35 || humidity > 80) {
+      return `🧺 **Indoor drying recommended in ${cleanLoc}.** Rain risk is **${todayRainProb}%** and humidity is high at **${humidity}%**. Clothes will dry slowly outside.`;
+    }
+    return `🧺 **Great day to dry clothes outside in ${cleanLoc}!** Rain chance is low at **${todayRainProb}%** with **${wind} km/h** breeze to assist drying.`;
+  }
+
+  // 10. HARVEST / CROP DRYING (Farmer specific)
+  if ((query.includes('crop') || query.includes('harvest') || query.includes('grain')) && (query.includes('dry') || query.includes('drying'))) {
+    if (todayRainProb > 30 || tomorrowRainProb > 30) {
+      return `🌾 **Do not dry harvested produce in open yards in ${cleanLoc} today.** Rain risk is **${todayRainProb}% today** and **${tomorrowRainProb}% tomorrow**. Keep grain covered under tarpaulins.`;
+    }
+    return `🌾 **Safe to dry harvested crops in open yards in ${cleanLoc}.** Low precipitation risk (**${todayRainProb}%**) and temperatures reaching **${todayMax}°C**.`;
+  }
+
+  // 11. SPRAYING PESTICIDES
+  if (/\b(spray|spraying|pesticide|pesticides|fungicide|chemical|weedicide|फवारणी|छिड़काव)\b/.test(query)) {
+    if (wind > 15) {
+      return `⚠️ **Pesticide Spray in ${cleanLoc}: NOT RECOMMENDED (High Wind)**\n\nWind speed is **${wind} km/h** (exceeds the 15 km/h safety threshold). Fine spray droplets will drift into non-target areas. Wait for calm morning or evening conditions.`;
+    }
+    if (todayRainProb > 35) {
+      return `⚠️ **Pesticide Spray in ${cleanLoc}: NOT RECOMMENDED (Rain Risk)**\n\nRain probability is **${todayRainProb}%**. Any rainfall within 4–6 hours will wash off foliar chemicals. Wait for a clear dry window.`;
+    }
+    return `✅ **Pesticide Spray in ${cleanLoc}: SAFE TO SPRAY**\n\nWind velocity is calm at **${wind} km/h** (< 15 km/h limit) and rain risk is low at **${todayRainProb}%**. Best applied early morning (6–9 AM) or late afternoon.`;
+  }
+
+  // 12. IRRIGATION
+  if (/\b(irrigat|irrigation|water crops|water the field|सिंचाई|पाणी)\b/.test(query)) {
+    if (todayRainProb > 40 || tomorrowRainProb > 40) {
+      return `🌧️ **Irrigation Guidance for ${cleanLoc}: POSTPONE IRRIGATION**\n\nRain probability is **${todayRainProb}% today** and **${tomorrowRainProb}% tomorrow**. Avoid excess field moisture and root rot.`;
+    }
+    return `💧 **Irrigation Guidance for ${cleanLoc}: PROCEED WITH IRRIGATION**\n\nDry conditions forecast with only **${todayRainProb}%** rain risk. Provide regular drip or canal watering as per crop stage.`;
+  }
+
+  // 13. WHAT TO WEAR
+  if (/\b(wear|dress|jacket|sweater|what should i wear)\b/.test(query)) {
+    if (temp >= 32 || apparentTemp >= 35) {
+      return `👕 In **${cleanLoc}**, it feels like **${apparentTemp}°C** (${temp}°C with ${humidity}% humidity). Wear loose, light-colored cotton clothes and carry drinking water.`;
+    }
+    if (temp <= 18) {
+      return `🧥 In **${cleanLoc}**, it's **${temp}°C**. A light jacket or sweater is recommended today.`;
+    }
+    return `👕 In **${cleanLoc}**, temperature is **${temp}°C** (feels like **${apparentTemp}°C**). Comfortable casual everyday wear is suitable today.`;
+  }
+
+  // 14. DEFAULT / GENERAL WEATHER OVERVIEW (Crisp 3-line status)
+  return `🌤️ **Current Weather in ${cleanLoc}:**\n\n• **Status:** **${condition}**, **${temp}°C** (feels like **${apparentTemp}°C**)\n• **Today's Range:** **${todayMin}°C to ${todayMax}°C**\n• **Precipitation Chance:** **${todayRainProb}%**\n• **Wind & Moisture:** **${wind} km/h** | **${humidity}%** humidity\n${hasWarning ? `\n🚨 **IMD Alert:** ${warningLevel} Alert (${warningHazard})` : ''}`;
 }
 
 export default {

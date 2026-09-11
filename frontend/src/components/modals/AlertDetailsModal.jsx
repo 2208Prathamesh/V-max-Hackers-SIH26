@@ -189,36 +189,66 @@ export const AlertDetailsModal = ({ alert, isOpen, onClose, onShare }) => {
             </div>
           </div>
 
-          {/* Safety Recommendations */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">
-              {t('safetyGuidelines')}
-            </h4>
-            <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span>
-                  {alert.action || (language === 'mr' 
-                    ? 'घरामध्येच राहा आणि पाणी साचणाऱ्या सखल भागातून प्रवास करणे टाळा.'
-                    : 'Stay indoors and avoid travel through known waterlogged passages.')}
+          {/* 4-Tier Impact-Based Decision Support */}
+          <div className="space-y-3">
+            {/* 1. Official Warning */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span>🏛️ 1. OFFICIAL WARNING</span>
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">
+                  {alert.source || 'IMD / MoES'}
                 </span>
               </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span>
-                  {language === 'mr'
-                    ? 'आपत्कालीन विजेरी (टॉर्च), पिण्याचे पाणी आणि आवश्यक औषधे तयार ठेवा.'
-                    : 'Keep emergency flashlights, drinking water, and essential medicines ready.'}
-                </span>
-              </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span>
-                  {language === 'mr'
-                    ? 'आपत्कालीन मदतीसाठी किसान कॉल सेंटर १८००-१८०-१५५१ किंवा आपत्कालीन ११२ वर संपर्क साधा.'
-                    : 'For emergency agro-assistance call Kisan Call Center 1800-180-1551 or Emergency 112.'}
-                </span>
-              </div>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                {translateAlertDescription(alert.description || alert.fullDescription || alert.title)}
+              </p>
+            </div>
+
+            {/* 2. What This Means */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5 mb-1.5">
+                <span>💡 2. WHAT THIS MEANS (PLAIN LANGUAGE)</span>
+              </span>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                {alert.meaning || (isSevere
+                  ? 'Severe disruption is expected to local transport, power supplies, and outdoor activities. Low-lying passages and subways face rapid water buildup within 30–45 minutes of heavy convective showers.'
+                  : 'Noticeable weather shift that will affect daily commute, outdoor work, or field operations. Be prepared for sudden changes in road grip and visibility.')}
+              </p>
+            </div>
+
+            {/* 3. What You Should Do */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 mb-1.5">
+                <span>🎯 3. WHAT YOU SHOULD DO (ACTION)</span>
+              </span>
+              <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">•</span>
+                  <span>{alert.action || 'Avoid waterlogged arterial roads and do not walk or drive through flowing water.'}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">•</span>
+                  <span>Farmers: Pause all chemical/fertilizer spraying and inspect root drainage channels.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">•</span>
+                  <span>Emergency Assistance: State Disaster Control Room 1070 / Police & Medical 112.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* 4. Why (Data Reason) */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1.5">
+                <span>📊 4. WHY (METEOROLOGICAL TRIGGER)</span>
+              </span>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-mono">
+                {alert.reason || (isSevere
+                  ? 'Rainfall rate > 45 mm/hr detected on Doppler radar, combined with high soil moisture saturation (>85%) inhibiting drainage.'
+                  : 'Numerical forecast ensemble indicates >65% probability of precipitation and localized wind gusts exceeding 35 km/h.')}
+              </p>
             </div>
           </div>
 
