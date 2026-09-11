@@ -1,6 +1,10 @@
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-// Load environment variables
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// Load backend/.env explicitly, falling back to root .env if running from monorepo root
+dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 dotenv.config()
 
 const nodeEnv = process.env.NODE_ENV || 'development';
