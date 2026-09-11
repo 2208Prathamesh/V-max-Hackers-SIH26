@@ -20,7 +20,7 @@ export const DEMO_PERSONAS = {
     name: 'Ramesh Kisan (शेतकरी)',
     email: 'farmer@weathergpt.ai',
     role: 'farmer',
-    language: 'mr',
+    language: 'en',
     isVerified: true,
     isDemo: true,
     location: 'Nashik, Maharashtra'

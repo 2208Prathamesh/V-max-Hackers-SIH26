@@ -6,8 +6,8 @@ export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     try {
       const stored = localStorage.getItem('weathergpt_theme');
-      if (stored) return stored;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      if (stored === 'dark' || stored === 'light') return stored;
+      return 'light';
     } catch (e) {
       return 'light';
     }

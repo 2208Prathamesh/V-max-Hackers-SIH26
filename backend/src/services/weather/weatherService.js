@@ -226,8 +226,8 @@ export async function getWeather (latitude, longitude, options = {}) {
   // false so current-weather responses are fast, non-blocking, and never trigger GRIB downloads.
   const includeNWP = options.includeNWP === true
   const cacheKey = `${includeNWP ? 'weather' : 'fast_weather'}_${latNum.toFixed(
-    4
-  )}_${lonNum.toFixed(4)}`
+    2
+  )}_${lonNum.toFixed(2)}`
 
   const cached = getCached(cacheKey)
   if (cached) return cached
@@ -441,8 +441,8 @@ export async function getForecast (latitude, longitude, days = 7) {
   const latNum = coordinates.latitude
   const lonNum = coordinates.longitude
   const daysNum = Math.min(Math.max(Number(days) || 7, 1), 14)
-  const cacheKey = `forecast_${latNum.toFixed(4)}_${lonNum.toFixed(
-    4
+  const cacheKey = `forecast_${latNum.toFixed(2)}_${lonNum.toFixed(
+    2
   )}_${daysNum}`
 
   // 1. Check L1 in-memory cache

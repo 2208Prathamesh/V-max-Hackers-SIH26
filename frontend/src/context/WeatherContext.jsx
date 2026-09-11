@@ -273,14 +273,20 @@ export const WeatherProvider = ({ children }) => {
           setIsDetectingLocation(false)
         },
         async err => {
-          console.warn(
-            'Browser geolocation denied or timed out, falling back to network IP location:',
-            err.message
+          console.warn('High-accuracy GPS delayed or unavailable, retrying with fast network location:', err.message)
+          navigator.geolocation.getCurrentPosition(
+            async pos => {
+              await resolveAndApply(pos.coords)
+              setIsDetectingLocation(false)
+            },
+            async () => {
+              await resolveAndApply(null)
+              setIsDetectingLocation(false)
+            },
+            { enableHighAccuracy: false, timeout: 6000, maximumAge: 120000 }
           )
-          await resolveAndApply(null)
-          setIsDetectingLocation(false)
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
       )
     } else {
       await resolveAndApply(null)
@@ -782,34 +788,47 @@ export const WeatherProvider = ({ children }) => {
     return `${pressureHpa} hPa`
   }
 
-  // Saved location actions
+  // Saved location actions with guest & backend sync support
   const addLocation = async cityData => {
+    const cityName = cityData.city || cityData.name || 'Saved Location'
     const exists = savedLocations.some(
-      l => l.city.toLowerCase() === cityData.city.toLowerCase()
+      l => (l.city || l.name || '').toLowerCase() === cityName.toLowerCase()
     )
     if (exists) {
       addToast(
-        `${cityData.city} is already in your saved locations!`,
+        `${cityName} is already in your saved locations!`,
         'warning'
       )
       return
     }
-    const newLoc = await api.addLocation({
-      name: cityData.name || `${cityData.city} Location`,
-      city: cityData.city,
-      state: cityData.region || cityData.state || '',
-      country: cityData.country || 'India',
-      latitude: Number(cityData.lat ?? cityData.latitude ?? 18.5204),
-      longitude: Number(cityData.lng ?? cityData.longitude ?? 73.8567),
-      isFavorite: Boolean(cityData.isFavorite)
-    })
+
+    let newLoc = null
+    const token = localStorage.getItem('weathergpt_token')
+    if (token) {
+      try {
+        newLoc = await api.addLocation({
+          name: cityData.name || `${cityName} Location`,
+          city: cityName,
+          state: cityData.region || cityData.state || '',
+          country: cityData.country || 'India',
+          latitude: Number(cityData.lat ?? cityData.latitude ?? 18.5204),
+          longitude: Number(cityData.lng ?? cityData.longitude ?? 73.8567),
+          isFavorite: Boolean(cityData.isFavorite)
+        })
+      } catch (err) {
+        console.warn('Backend addLocation sync skipped for offline/guest:', err.message)
+      }
+    }
+
     const updatedLocation = {
       ...cityData,
-      ...newLoc,
-      id: newLoc._id || newLoc.id,
-      region: newLoc.state || cityData.region,
-      lat: newLoc.latitude,
-      lng: newLoc.longitude,
+      ...(newLoc || {}),
+      id: newLoc?._id || newLoc?.id || `loc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      city: cityName,
+      region: newLoc?.state || cityData.region || cityData.state || '',
+      country: newLoc?.country || cityData.country || 'India',
+      lat: Number(newLoc?.latitude ?? cityData.lat ?? cityData.latitude ?? 18.5204),
+      lng: Number(newLoc?.longitude ?? cityData.lng ?? cityData.longitude ?? 73.8567),
       updatedTime: 'Just now'
     }
     const updated = [...savedLocations, updatedLocation]
@@ -822,12 +841,19 @@ export const WeatherProvider = ({ children }) => {
           }
         : prev
     )
-    addToast(`${cityData.city} added to saved locations!`, 'success')
+    addToast(`📍 ${cityName} saved successfully!`, 'success')
   }
 
   const removeLocation = async id => {
     const loc = savedLocations.find(l => l.id === id)
-    await api.deleteLocation(id)
+    const token = localStorage.getItem('weathergpt_token')
+    if (token && id && !String(id).startsWith('loc_')) {
+      try {
+        await api.deleteLocation(id)
+      } catch (err) {
+        console.warn('Backend deleteLocation skipped:', err.message)
+      }
+    }
     const updated = savedLocations.filter(l => l.id !== id)
     setSavedLocations(updated)
     setUser(prev =>
@@ -846,13 +872,22 @@ export const WeatherProvider = ({ children }) => {
   }
 
   const toggleFavorite = async id => {
-    const favoriteLocation = await api.favoriteLocation(id)
+    const token = localStorage.getItem('weathergpt_token')
+    let favoriteLocation = null
+    if (token && id && !String(id).startsWith('loc_')) {
+      try {
+        favoriteLocation = await api.favoriteLocation(id)
+      } catch (err) {
+        console.warn('Backend favorite sync skipped:', err.message)
+      }
+    }
     setSavedLocations(prev =>
-      prev.map(location => ({
-        ...location,
-        isFavorite:
-          location.id === (favoriteLocation._id || favoriteLocation.id)
-      }))
+      prev.map(location => {
+        if (location.id === id || (favoriteLocation && location.id === (favoriteLocation._id || favoriteLocation.id))) {
+          return { ...location, isFavorite: !location.isFavorite }
+        }
+        return location
+      })
     )
   }
 
@@ -1248,7 +1283,7 @@ export const WeatherProvider = ({ children }) => {
         name: 'Ramesh Kisan (शेतकरी)',
         email: 'farmer@weathergpt.ai',
         role: 'farmer',
-        language: 'mr',
+        language: 'en',
         isDemo: true,
         location: 'Nashik, Maharashtra'
       },
@@ -1291,7 +1326,8 @@ export const WeatherProvider = ({ children }) => {
     localStorage.setItem('weathergpt_user', JSON.stringify(normalized))
     setUser(normalized)
 
-    const lang = result.user?.language || (persona === 'farmer' ? 'mr' : 'en')
+    const existingLang = localStorage.getItem('weathergpt_language')
+    const lang = existingLang || result.user?.language || 'en'
     localStorage.setItem('weathergpt_language', lang)
     setSettings(prev => ({ ...prev, language: lang }))
     setIsAuthenticated(true)

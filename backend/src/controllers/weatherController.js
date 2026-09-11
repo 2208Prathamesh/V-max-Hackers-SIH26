@@ -1,5 +1,6 @@
 import weatherService from '../services/weather/weatherService.js';
 import { searchLocation } from '../services/weather/openMeteo/geocoding.js';
+import { findNearestCatalogLocation } from '../services/weather/locationCatalog.js';
 import { compareNWPModels } from '../services/weather/nwp/modelComparisonService.js';
 import { successResponse } from '../utils/response.js';
 import { parseAndValidateCoordinates } from '../utils/coordinates.js';
@@ -183,30 +184,96 @@ const searchLocations = async (req, res, next) => {
  */
 const reverseGeocode = async (req, res, next) => {
   try {
-    const { latitude, longitude } = req.query;
-    let url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en';
-    if (latitude && longitude) {
-      url += `&latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`;
+    const rawLat = req.query.latitude ?? req.query.lat;
+    const rawLon = req.query.longitude ?? req.query.lon ?? req.query.lng;
+
+    let lat = rawLat !== undefined && rawLat !== '' ? Number(rawLat) : 18.5204;
+    let lon = rawLon !== undefined && rawLon !== '' ? Number(rawLon) : 73.8567;
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      lat = 18.5204;
+      lon = 73.8567;
     }
-    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!response.ok) {
-      throw new Error(`Reverse geocode failed with status ${response.status}`);
+
+    let city = null;
+    let region = null;
+    let country = 'India';
+    let countryCode = 'IN';
+
+    // Tier 1: BigDataCloud Reverse Geocode
+    try {
+      const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en&latitude=${lat}&longitude=${lon}`;
+      const bdcRes = await fetch(bdcUrl, {
+        headers: { 'User-Agent': 'WeatherGPT/2.0 (SIH-2026; Smart India Hackathon)' },
+        signal: AbortSignal.timeout(4000)
+      });
+      if (bdcRes.ok) {
+        const bdcData = await bdcRes.json();
+        city = bdcData.city || bdcData.locality || bdcData.principalSubdivision;
+        region = bdcData.principalSubdivision || '';
+        country = bdcData.countryName || 'India';
+        countryCode = bdcData.countryCode || 'IN';
+      }
+    } catch (_) {}
+
+    // Tier 2: OpenStreetMap Nominatim Fallback
+    if (!city) {
+      try {
+        const nomUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+        const nomRes = await fetch(nomUrl, {
+          headers: { 'User-Agent': 'WeatherGPT/2.0 (contact@weathergpt.ai)' },
+          signal: AbortSignal.timeout(3500)
+        });
+        if (nomRes.ok) {
+          const nomData = await nomRes.json();
+          const addr = nomData.address || {};
+          city = addr.city || addr.town || addr.village || addr.suburb || addr.county;
+          region = addr.state || '';
+          country = addr.country || 'India';
+          countryCode = (addr.country_code || 'in').toUpperCase();
+        }
+      } catch (_) {}
     }
-    const data = await response.json();
+
+    // Tier 3: High-accuracy Local Catalog Nearest Match
+    if (!city) {
+      const nearest = findNearestCatalogLocation(lat, lon);
+      city = nearest.name;
+      region = nearest.admin1;
+      country = nearest.country;
+      countryCode = nearest.countryCode;
+    }
+
     const result = {
-      city: data.city || data.locality || data.principalSubdivision || 'Current Location',
-      locality: data.locality || '',
-      region: data.principalSubdivision || '',
-      country: data.countryName || 'India',
-      countryCode: data.countryCode || 'IN',
-      latitude: Number(data.latitude) || (latitude ? Number(latitude) : 18.5204),
-      longitude: Number(data.longitude) || (longitude ? Number(longitude) : 73.8567),
-      lat: Number(data.latitude) || (latitude ? Number(latitude) : 18.5204),
-      lng: Number(data.longitude) || (longitude ? Number(longitude) : 73.8567)
+      city: city || 'Pune',
+      locality: city || 'Pune',
+      region: region || 'Maharashtra',
+      country: country || 'India',
+      countryCode: countryCode || 'IN',
+      latitude: lat,
+      longitude: lon,
+      lat,
+      lng: lon
     };
-    return successResponse(res, result, 'Location resolved', 200);
+
+    return successResponse(res, result, 'Location resolved successfully', 200);
   } catch (error) {
-    next(error);
+    return successResponse(
+      res,
+      {
+        city: 'Pune',
+        locality: 'Pune',
+        region: 'Maharashtra',
+        country: 'India',
+        countryCode: 'IN',
+        latitude: 18.5204,
+        longitude: 73.8567,
+        lat: 18.5204,
+        lng: 73.8567
+      },
+      'Location resolved via default fallback',
+      200
+    );
   }
 };
 

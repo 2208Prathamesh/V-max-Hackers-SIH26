@@ -207,7 +207,32 @@ export function findCatalogLocationByName(name, countryCode) {
   return candidates[0]?.location || null
 }
 
+export function findNearestCatalogLocation(latitude, longitude) {
+  const lat = Number(latitude)
+  const lon = Number(longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return LOCATION_CATALOG[0]
+
+  let closest = LOCATION_CATALOG[0]
+  let minDist = Infinity
+
+  for (const loc of LOCATION_CATALOG) {
+    const dLat = (loc.latitude - lat) * 111
+    const dLon = (loc.longitude - lon) * 111 * Math.cos((lat * Math.PI) / 180)
+    const dist = Math.sqrt(dLat * dLat + dLon * dLon)
+    if (dist < minDist) {
+      minDist = dist
+      closest = loc
+    }
+  }
+
+  return {
+    ...closest,
+    distanceKm: Math.round(minDist)
+  }
+}
+
 export default {
   getLocationCatalog,
-  findCatalogLocationByName
+  findCatalogLocationByName,
+  findNearestCatalogLocation
 }

@@ -14,7 +14,7 @@ const DEMO_USERS = [
     email: 'farmer@weathergpt.ai',
     password: 'password123',
     role: 'farmer',
-    language: 'mr'
+    language: 'en'
   },
   {
     name: 'Dr. A. Sharma (Disaster Cell)',
