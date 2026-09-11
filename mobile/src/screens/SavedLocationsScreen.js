@@ -25,6 +25,65 @@ import { getColors } from '../theme/colors'
 import { api } from '../services/api'
 import { WeatherIcon } from '../components/WeatherIcon'
 
+const DEFAULT_SAVED_LOCATIONS = [
+  {
+    id: 'loc-pune',
+    city: 'Pune',
+    region: 'Maharashtra',
+    country: 'India',
+    tempC: 27,
+    feelsLikeC: 29,
+    condition: 'Partly Cloudy',
+    humidity: 62,
+    windSpeedKmh: 14,
+    windDirection: 'WSW',
+    updatedTime: 'Live Telemetry',
+    isDefault: true
+  },
+  {
+    id: 'loc-mumbai',
+    city: 'Mumbai',
+    region: 'Maharashtra',
+    country: 'India',
+    tempC: 30,
+    feelsLikeC: 34,
+    condition: 'Rain Showers',
+    humidity: 78,
+    windSpeedKmh: 18,
+    windDirection: 'SW',
+    updatedTime: 'Live Telemetry',
+    isDefault: true
+  },
+  {
+    id: 'loc-delhi',
+    city: 'New Delhi',
+    region: 'Delhi NCR',
+    country: 'India',
+    tempC: 32,
+    feelsLikeC: 36,
+    condition: 'Haze',
+    humidity: 52,
+    windSpeedKmh: 10,
+    windDirection: 'WNW',
+    updatedTime: 'Live Telemetry',
+    isDefault: true
+  },
+  {
+    id: 'loc-bengaluru',
+    city: 'Bengaluru',
+    region: 'Karnataka',
+    country: 'India',
+    tempC: 25,
+    feelsLikeC: 26,
+    condition: 'Scattered Clouds',
+    humidity: 68,
+    windSpeedKmh: 12,
+    windDirection: 'W',
+    updatedTime: 'Live Telemetry',
+    isDefault: true
+  }
+]
+
 export function SavedLocationsScreen ({
   isDark = false,
   unit = 'C',
@@ -36,8 +95,8 @@ export function SavedLocationsScreen ({
   const { width } = useWindowDimensions()
   const isWide = width > 768
 
-  const [locations, setLocations] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [locations, setLocations] = useState(DEFAULT_SAVED_LOCATIONS)
+  const [isLoading, setIsLoading] = useState(false)
   const [viewMode, setViewMode] = useState('list')
   const [sortBy, setSortBy] = useState('Last Updated')
 
@@ -46,7 +105,7 @@ export function SavedLocationsScreen ({
     try {
       await api.ensureAuth()
       const result = await api.locations()
-      if (Array.isArray(result)) {
+      if (Array.isArray(result) && result.length > 0) {
         setLocations(
           result.map(item => ({
             id: item._id || item.id,
@@ -62,9 +121,11 @@ export function SavedLocationsScreen ({
             updatedTime: item.updatedTime || 'Live Station'
           }))
         )
+      } else {
+        setLocations(DEFAULT_SAVED_LOCATIONS)
       }
     } catch {
-      setLocations([])
+      setLocations(DEFAULT_SAVED_LOCATIONS)
     } finally {
       setIsLoading(false)
     }

@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   ActivityIndicator
 } from 'react-native'
+import { WebView } from 'react-native-webview'
 import {
   Plus,
   Minus,
@@ -94,6 +95,8 @@ export function WeatherMapScreen ({
   const [timelineIndex, setTimelineIndex] = useState(2)
   const [isLoadingTelemetry, setIsLoadingTelemetry] = useState(false)
   const [radarTimestamp, setRadarTimestamp] = useState(null)
+  const [liveTelemetry, setLiveTelemetry] = useState(null)
+  const webViewRef = useRef(null)
 
   // Fetch real-time RainViewer radar timestamps from public API
   useEffect(() => {
@@ -148,23 +151,65 @@ export function WeatherMapScreen ({
     return () => clearInterval(timer)
   }, [isPlaying])
 
-  // Listen for station clicks from the embedded interactive Leaflet map
+  // Listen for station clicks from the embedded interactive Leaflet map (Web only)
   useEffect(() => {
+    if (Platform.OS !== 'web') return
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return
+
     const handleMessage = event => {
       if (event?.data?.type === 'STATION_SELECT') {
         const found = REFERENCE_STATIONS.find(
-          s => s.id === event.data.id || s.city.toLowerCase() === event.data.city.toLowerCase()
+          s => s.id === event.data.id || s.city?.toLowerCase() === event.data.city?.toLowerCase()
         )
         if (found) {
           setSelectedStation(found)
         }
       }
     }
-    if (typeof window !== 'undefined') {
-      window.addEventListener('message', handleMessage)
-      return () => window.removeEventListener('message', handleMessage)
+    window.addEventListener('message', handleMessage)
+    return () => {
+      if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+        window.removeEventListener('message', handleMessage)
+      }
     }
   }, [])
+
+  const handleZoomIn = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && typeof window.postMessage === 'function') {
+        window.postMessage({ type: 'ZOOM_IN' }, '*')
+      }
+    } else if (webViewRef.current) {
+      try {
+        webViewRef.current.injectJavaScript('if (typeof map !== "undefined") { map.zoomIn(); } true;')
+      } catch (e) {}
+    }
+  }
+
+  const handleZoomOut = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && typeof window.postMessage === 'function') {
+        window.postMessage({ type: 'ZOOM_OUT' }, '*')
+      }
+    } else if (webViewRef.current) {
+      try {
+        webViewRef.current.injectJavaScript('if (typeof map !== "undefined") { map.zoomOut(); } true;')
+      } catch (e) {}
+    }
+  }
+
+  const handleLocateStation = station => {
+    setSelectedStation(station)
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && typeof window.postMessage === 'function') {
+        window.postMessage({ type: 'FLY_TO', lat: station.lat, lng: station.lng, zoom: 8 }, '*')
+      }
+    } else if (webViewRef.current) {
+      try {
+        webViewRef.current.injectJavaScript(`if (typeof map !== "undefined") { map.flyTo([${station.lat}, ${station.lng}], 8, { duration: 1.2 }); } true;`)
+      } catch (e) {}
+    }
+  }
 
   // High-fidelity interactive Leaflet Map HTML Document (100% Free, Zero API Keys Required)
   const leafletMapHtml = useMemo(() => {
@@ -353,20 +398,32 @@ export function WeatherMapScreen ({
       const marker = L.marker([st.lat, st.lng], { icon: customIcon }).addTo(map);
       marker.on('click', () => {
         map.flyTo([st.lat, st.lng], Math.max(map.getZoom(), 7), { duration: 1.0 });
-        window.parent.postMessage({ type: 'STATION_SELECT', id: st.id, city: st.city }, '*');
+        const payload = JSON.stringify({ type: 'STATION_SELECT', id: st.id, city: st.city });
+        if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+          window.ReactNativeWebView.postMessage(payload);
+        } else if (window.parent && typeof window.parent.postMessage === 'function') {
+          window.parent.postMessage({ type: 'STATION_SELECT', id: st.id, city: st.city }, '*');
+        }
       });
     });
 
-    // Window message listener for external controls
-    window.addEventListener('message', (event) => {
-      if (event.data?.type === 'FLY_TO') {
-        map.flyTo([event.data.lat, event.data.lng], event.data.zoom || 8, { duration: 1.2 });
-      } else if (event.data?.type === 'ZOOM_IN') {
+    // Window/document message listener for external controls
+    function handleIncoming(msgData) {
+      let data = msgData;
+      if (typeof msgData === 'string') {
+        try { data = JSON.parse(msgData); } catch(e) {}
+      }
+      if (!data) return;
+      if (data.type === 'FLY_TO') {
+        map.flyTo([data.lat, data.lng], data.zoom || 8, { duration: 1.2 });
+      } else if (data.type === 'ZOOM_IN') {
         map.zoomIn();
-      } else if (event.data?.type === 'ZOOM_OUT') {
+      } else if (data.type === 'ZOOM_OUT') {
         map.zoomOut();
       }
-    });
+    }
+    window.addEventListener('message', (e) => handleIncoming(e.data));
+    document.addEventListener('message', (e) => handleIncoming(e.data));
   </script>
 </body>
 </html>
@@ -524,7 +581,7 @@ export function WeatherMapScreen ({
 
       {/* Main Map Container: Real Slippy Leaflet Canvas */}
       <View style={[styles.mapCard, { backgroundColor: '#0B0E14', borderColor: c.border }]}>
-        {/* Real Interactive Web Leaflet Map */}
+        {/* Real Interactive Web / Mobile Leaflet Map */}
         <View style={styles.mapCanvasWrapper}>
           {Platform.OS === 'web' ? (
             <iframe
@@ -538,22 +595,43 @@ export function WeatherMapScreen ({
               }}
             />
           ) : (
-            <View style={styles.nativeFallbackMap}>
-              <ActivityIndicator size='large' color={c.blue} />
-              <Text style={[styles.nativeMapText, { color: c.inkSecondary }]}>
-                Doppler Radar GIS Telemetry
-              </Text>
-            </View>
+            <WebView
+              ref={webViewRef}
+              originWhitelist={['*']}
+              source={{ html: leafletMapHtml }}
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: 20,
+                backgroundColor: '#0B0E14'
+              }}
+              containerStyle={{
+                borderRadius: 20,
+                overflow: 'hidden'
+              }}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              scalesPageToFit={true}
+              scrollEnabled={false}
+              mixedContentMode='always'
+              onMessage={(event) => {
+                try {
+                  const data = JSON.parse(event.nativeEvent.data)
+                  if (data?.type === 'STATION_SELECT') {
+                    const found = REFERENCE_STATIONS.find(
+                      s => s.id === data.id || s.city?.toLowerCase() === data.city?.toLowerCase()
+                    )
+                    if (found) setSelectedStation(found)
+                  }
+                } catch (err) {}
+              }}
+            />
           )}
 
           {/* Map Controls Floating Toolbar */}
           <View style={[styles.floatingControls, { backgroundColor: isDark ? 'rgba(18, 19, 22, 0.92)' : 'rgba(255, 255, 255, 0.92)', borderColor: c.border }]}>
             <Pressable
-              onPress={() => {
-                if (typeof window !== 'undefined') {
-                  window.postMessage({ type: 'ZOOM_IN' }, '*')
-                }
-              }}
+              onPress={handleZoomIn}
               style={styles.floatingBtn}
               accessibilityLabel='Zoom In'
             >
@@ -561,11 +639,7 @@ export function WeatherMapScreen ({
             </Pressable>
             <View style={[styles.floatingDivider, { backgroundColor: c.borderLight }]} />
             <Pressable
-              onPress={() => {
-                if (typeof window !== 'undefined') {
-                  window.postMessage({ type: 'ZOOM_OUT' }, '*')
-                }
-              }}
+              onPress={handleZoomOut}
               style={styles.floatingBtn}
               accessibilityLabel='Zoom Out'
             >
@@ -573,12 +647,7 @@ export function WeatherMapScreen ({
             </Pressable>
             <View style={[styles.floatingDivider, { backgroundColor: c.borderLight }]} />
             <Pressable
-              onPress={() => {
-                setSelectedStation(REFERENCE_STATIONS[0])
-                if (typeof window !== 'undefined') {
-                  window.postMessage({ type: 'FLY_TO', lat: 18.5204, lng: 73.8567, zoom: 8 }, '*')
-                }
-              }}
+              onPress={() => handleLocateStation(REFERENCE_STATIONS[0])}
               style={styles.floatingBtn}
               accessibilityLabel='Locate Station'
             >
@@ -646,6 +715,43 @@ export function WeatherMapScreen ({
             })}
           </ScrollView>
         </View>
+      </View>
+
+      {/* Quick Station Selection Chips */}
+      <View style={{ marginBottom: 14 }}>
+        <Text style={{ color: c.muted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, paddingHorizontal: 2 }}>
+          Radar Stations ({REFERENCE_STATIONS.length} Cities)
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {REFERENCE_STATIONS.map((st) => {
+            const isSelected = st.id === selectedStation.id
+            return (
+              <Pressable
+                key={st.id}
+                onPress={() => handleLocateStation(st)}
+                style={[
+                  styles.stationChip,
+                  {
+                    backgroundColor: isSelected ? c.blue : c.card,
+                    borderColor: isSelected ? c.blue : c.border
+                  }
+                ]}
+              >
+                <MapPin size={12} color={isSelected ? '#FFFFFF' : c.blue} />
+                <Text style={{ fontSize: 12, fontWeight: isSelected ? '800' : '600', color: isSelected ? '#FFFFFF' : c.ink }}>
+                  {st.city}
+                </Text>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#BAE6FD' : c.muted }}>
+                  {st.temp}°
+                </Text>
+              </Pressable>
+            )
+          })}
+        </ScrollView>
       </View>
 
       {/* =========================================================================
@@ -809,6 +915,15 @@ const styles = StyleSheet.create({
   },
   layerChipText: {
     fontSize: 12
+  },
+  stationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1
   },
   mapCard: {
     borderRadius: 24,

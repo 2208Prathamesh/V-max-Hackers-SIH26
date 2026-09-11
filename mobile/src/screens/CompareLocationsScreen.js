@@ -321,6 +321,108 @@ export function CompareLocationsScreen ({
           )
         })}
       </View>
+
+      {/* Comparative Visual Bars / Differential Graphs */}
+      <View
+        style={[
+          styles.matrixCard,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
+        <Text style={[styles.matrixTitle, { color: c.ink }]}>
+          Visual Gradient Differential
+        </Text>
+
+        {/* Legend */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c.blue }} />
+            <Text style={{ fontSize: 11, fontWeight: '700', color: c.ink }}>{city1.city}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#10B981' }} />
+            <Text style={{ fontSize: 11, fontWeight: '700', color: c.ink }}>{city2.city}</Text>
+          </View>
+        </View>
+
+        {/* Metric 1: Temperature */}
+        <View style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={{ fontSize: 11, color: c.muted, fontWeight: '600' }}>Temperature (°C)</Text>
+            <Text style={{ fontSize: 11, color: c.ink, fontWeight: '700' }}>
+              {temp1 > temp2 ? `${city1.city} is +${temp1 - temp2}°C warmer` : temp2 > temp1 ? `${city2.city} is +${temp2 - temp1}°C warmer` : 'Equal temperatures'}
+            </Text>
+          </View>
+          <View style={{ gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 9, width: 48, color: c.muted }} numberOfLines={1}>{city1.city}</Text>
+              <View style={{ flex: 1, height: 8, backgroundColor: c.borderLight, borderRadius: 4 }}>
+                <View style={{ width: `${Math.min(100, Math.round((temp1 / 45) * 100))}%`, height: 8, backgroundColor: c.blue, borderRadius: 4 }} />
+              </View>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: c.ink, width: 34, textAlign: 'right' }}>{temp1}°C</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 9, width: 48, color: c.muted }} numberOfLines={1}>{city2.city}</Text>
+              <View style={{ flex: 1, height: 8, backgroundColor: c.borderLight, borderRadius: 4 }}>
+                <View style={{ width: `${Math.min(100, Math.round((temp2 / 45) * 100))}%`, height: 8, backgroundColor: '#10B981', borderRadius: 4 }} />
+              </View>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: c.ink, width: 34, textAlign: 'right' }}>{temp2}°C</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Metric 2: Humidity */}
+        <View style={{ marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={{ fontSize: 11, color: c.muted, fontWeight: '600' }}>Relative Humidity (%)</Text>
+            <Text style={{ fontSize: 11, color: c.ink, fontWeight: '700' }}>
+              {hum1 > hum2 ? `${city1.city} +${hum1 - hum2}% higher` : hum2 > hum1 ? `${city2.city} +${hum2 - hum1}% higher` : 'Equal humidity'}
+            </Text>
+          </View>
+          <View style={{ gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 9, width: 48, color: c.muted }} numberOfLines={1}>{city1.city}</Text>
+              <View style={{ flex: 1, height: 8, backgroundColor: c.borderLight, borderRadius: 4 }}>
+                <View style={{ width: `${Math.min(100, hum1)}%`, height: 8, backgroundColor: c.blue, borderRadius: 4 }} />
+              </View>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: c.ink, width: 34, textAlign: 'right' }}>{hum1}%</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 9, width: 48, color: c.muted }} numberOfLines={1}>{city2.city}</Text>
+              <View style={{ flex: 1, height: 8, backgroundColor: c.borderLight, borderRadius: 4 }}>
+                <View style={{ width: `${Math.min(100, hum2)}%`, height: 8, backgroundColor: '#10B981', borderRadius: 4 }} />
+              </View>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: c.ink, width: 34, textAlign: 'right' }}>{hum2}%</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Metric 3: Wind Speed */}
+        <View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={{ fontSize: 11, color: c.muted, fontWeight: '600' }}>Wind Velocity (km/h)</Text>
+            <Text style={{ fontSize: 11, color: c.ink, fontWeight: '700' }}>
+              {wind1 > wind2 ? `${city1.city} +${wind1 - wind2} km/h` : wind2 > wind1 ? `${city2.city} +${wind2 - wind1} km/h` : 'Equal wind'}
+            </Text>
+          </View>
+          <View style={{ gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 9, width: 48, color: c.muted }} numberOfLines={1}>{city1.city}</Text>
+              <View style={{ flex: 1, height: 8, backgroundColor: c.borderLight, borderRadius: 4 }}>
+                <View style={{ width: `${Math.min(100, Math.round((wind1 / 50) * 100))}%`, height: 8, backgroundColor: c.blue, borderRadius: 4 }} />
+              </View>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: c.ink, width: 34, textAlign: 'right' }}>{wind1}k</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 9, width: 48, color: c.muted }} numberOfLines={1}>{city2.city}</Text>
+              <View style={{ flex: 1, height: 8, backgroundColor: c.borderLight, borderRadius: 4 }}>
+                <View style={{ width: `${Math.min(100, Math.round((wind2 / 50) * 100))}%`, height: 8, backgroundColor: '#10B981', borderRadius: 4 }} />
+              </View>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: c.ink, width: 34, textAlign: 'right' }}>{wind2}k</Text>
+            </View>
+          </View>
+        </View>
+      </View>
     </ScrollView>
   )
 }

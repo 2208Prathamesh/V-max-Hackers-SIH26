@@ -81,8 +81,10 @@ const WeatherGPTSidebarLogo = ({ collapsed, roleLabel }) => (
 // Role → nav items
 // ---------------------------------------------------------------------------
 const getNavItems = (role, t, language) => {
-  const sopLabel = language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली' : 'Disaster Safety SOPs'
-  const floodLabel = language === 'mr' ? 'शहरी पूर निर्देशांक' : language === 'hi' ? 'शहरी बाढ़ निर्देशांक' : 'Urban Flood Index'
+  const sopLabel = language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली' : language === 'hi' ? 'आपदा सुरक्षा एसओपी' : 'Disaster Safety SOPs'
+  const floodLabel = language === 'mr' ? 'शहरी पूर निर्देशांक' : language === 'hi' ? 'शहरी बाढ़ निर्देशांक' : (t('urbanFlood') || 'Urban Flood Index')
+  const aviationLabel = language === 'mr' ? 'विमान वाहतूक हवामान' : language === 'hi' ? 'विमानन मौसम (METAR)' : (t('aviation') || 'Aviation Weather')
+  const marineLabel = language === 'mr' ? 'सागरी व मच्छीमार' : language === 'hi' ? 'समुद्री मौसम' : (t('marine') || 'Marine & Fishermen')
 
   if (role === 'admin') {
     return [
@@ -90,7 +92,9 @@ const getNavItems = (role, t, language) => {
       { id: 'admin-users', label: 'User Management', icon: Users },
       { id: 'admin-analytics', label: 'Platform Analytics', icon: TrendingUp },
       { id: 'admin-system', label: 'System Health', icon: Server },
+      { id: 'aviation', label: aviationLabel, icon: Plane },
       { id: 'urban-flood', label: floodLabel, icon: Droplets },
+      { id: 'marine', label: marineLabel, icon: Waves },
       { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
     ]
   }
@@ -103,13 +107,13 @@ const getNavItems = (role, t, language) => {
       { id: 'analytics', label: 'Deep Analytics', icon: BarChart2 },
       { divider: true, sectionLabel: 'Weather Intelligence' },
       { id: 'weather-dashboard', label: 'Weather Dashboard', icon: LayoutDashboard },
+      { id: 'aviation', label: aviationLabel, icon: Plane },
       { id: 'urban-flood', label: floodLabel, icon: Droplets },
+      { id: 'marine', label: marineLabel, icon: Waves },
       { id: 'weather-map', label: 'Weather Map', icon: Map },
       { id: 'forecast', label: '7-Day Forecast', icon: Calendar },
       { id: 'news', label: 'News', icon: Newspaper },
       { id: 'climate-historical', label: 'Climate & Historical', icon: CloudSun },
-      { id: 'aviation', label: 'Aviation Briefing', icon: Plane },
-      { id: 'marine', label: 'Marine & Fishermen', icon: Waves },
       { id: 'chat', label: 'Weather Chat', icon: MessageSquare },
       { id: 'saved-locations', label: 'Saved Locations', icon: Star },
       { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
@@ -123,8 +127,9 @@ const getNavItems = (role, t, language) => {
       { id: 'advisory', label: t('advisory') || 'Agro Advisory', icon: Sprout },
       { id: 'alerts', label: t('alerts') || 'Alerts', icon: Bell, badge: '3' },
       { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+      { id: 'aviation', label: aviationLabel, icon: Plane },
       { id: 'urban-flood', label: floodLabel, icon: Droplets },
-      { id: 'marine', label: language === 'mr' ? 'सागरी व मच्छीमार' : 'Marine & Fishermen', icon: Waves },
+      { id: 'marine', label: marineLabel, icon: Waves },
       { id: 'weather-map', label: t('weatherMap') || 'Weather Map', icon: Map },
       { id: 'forecast', label: t('forecast') || '7-Day Forecast', icon: Calendar },
       { id: 'news', label: t('news') || 'News', icon: Newspaper },
@@ -140,9 +145,9 @@ const getNavItems = (role, t, language) => {
     { id: 'chat', label: t('chat') || 'Weather Chat', icon: MessageSquare },
     { id: 'alerts', label: t('alerts') || 'Alerts', icon: Bell, badge: '3' },
     { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+    { id: 'aviation', label: aviationLabel, icon: Plane },
     { id: 'urban-flood', label: floodLabel, icon: Droplets },
-    { id: 'aviation', label: language === 'mr' ? 'विमान वाहतूक हवामान' : 'Aviation Weather', icon: Plane },
-    { id: 'marine', label: language === 'mr' ? 'सागरी व मच्छीमार' : 'Marine & Fishermen', icon: Waves },
+    { id: 'marine', label: marineLabel, icon: Waves },
     { id: 'weather-map', label: t('weatherMap') || 'Weather Map', icon: Map },
     { id: 'forecast', label: t('forecast') || '7-Day Forecast', icon: Calendar },
     { id: 'news', label: t('news') || 'News', icon: Newspaper },

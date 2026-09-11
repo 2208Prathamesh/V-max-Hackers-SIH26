@@ -48,6 +48,72 @@ const HOTSPOTS_FALLBACK = {
     { name: 'Silk Board Junction', status: 'HIGH', depthCm: 30, advice: 'Heavy gridlock due to stormwater pooling' },
     { name: 'Bellandur EcoSpace', status: 'CRITICAL', depthCm: 50, advice: 'Use Outer Ring Road elevated lanes' },
     { name: 'Hebbal Flyover Loops', status: 'CLEAR', depthCm: 8, advice: 'Free flow reported by traffic telemetry' }
+  ],
+  Delhi: [
+    { name: 'Minto Bridge Underpass', status: 'CLOSED', depthCm: 65, advice: 'Underpass submerged; traffic diverted via Connaught Place' },
+    { name: 'ITO Road Junction', status: 'HIGH', depthCm: 32, advice: 'Heavy surface accumulation; avoid low sedans' },
+    { name: 'Zakhira Underpass (Rohtak Rd)', status: 'CRITICAL', depthCm: 48, advice: 'Pumping operations ongoing; use ring road bypass' }
+  ],
+  Chennai: [
+    { name: 'Velachery Lake Bypass', status: 'CRITICAL', depthCm: 52, advice: 'Canal overflow active; motorized boats on standby' },
+    { name: 'Vyasarpadi Subway', status: 'CLOSED', depthCm: 58, advice: 'Northern transit corridor diverted via Perambur bridge' },
+    { name: 'Tambaram Mudichur Lowland', status: 'HIGH', depthCm: 36, advice: 'Adyar basin catchment discharge alert in effect' }
+  ],
+  Kolkata: [
+    { name: 'Thanthania Kalibari (College St)', status: 'HIGH', depthCm: 38, advice: 'Lock-gates operating; tram services temporarily halted' },
+    { name: 'Park Circus Underpass', status: 'CRITICAL', depthCm: 46, advice: 'Waterlogged approach lanes; use EM Bypass link' },
+    { name: 'Ultadanga Flyover Base', status: 'MODERATE', depthCm: 22, advice: 'Slow transit; municipal gully emptiers deployed' }
+  ]
+}
+
+const HYDROGRAPH_FALLBACK = {
+  Mumbai: [
+    { time: '10:00', rainfallMm: 8, runoffCm: 14 },
+    { time: '11:00', rainfallMm: 16, runoffCm: 22 },
+    { time: '12:00', rainfallMm: 34, runoffCm: 38 },
+    { time: '13:00', rainfallMm: 48, runoffCm: 50 },
+    { time: '14:00', rainfallMm: 38, runoffCm: 45 },
+    { time: '15:00', rainfallMm: 28, runoffCm: 38 }
+  ],
+  Pune: [
+    { time: '10:00', rainfallMm: 4, runoffCm: 8 },
+    { time: '11:00', rainfallMm: 10, runoffCm: 14 },
+    { time: '12:00', rainfallMm: 22, runoffCm: 26 },
+    { time: '13:00', rainfallMm: 30, runoffCm: 35 },
+    { time: '14:00', rainfallMm: 24, runoffCm: 30 },
+    { time: '15:00', rainfallMm: 18, runoffCm: 22 }
+  ],
+  Bengaluru: [
+    { time: '10:00', rainfallMm: 6, runoffCm: 10 },
+    { time: '11:00', rainfallMm: 18, runoffCm: 24 },
+    { time: '12:00', rainfallMm: 36, runoffCm: 42 },
+    { time: '13:00', rainfallMm: 44, runoffCm: 50 },
+    { time: '14:00', rainfallMm: 26, runoffCm: 38 },
+    { time: '15:00', rainfallMm: 16, runoffCm: 28 }
+  ],
+  Delhi: [
+    { time: '10:00', rainfallMm: 5, runoffCm: 12 },
+    { time: '11:00', rainfallMm: 14, runoffCm: 20 },
+    { time: '12:00', rainfallMm: 28, runoffCm: 36 },
+    { time: '13:00', rainfallMm: 42, runoffCm: 54 },
+    { time: '14:00', rainfallMm: 32, runoffCm: 40 },
+    { time: '15:00', rainfallMm: 20, runoffCm: 28 }
+  ],
+  Chennai: [
+    { time: '10:00', rainfallMm: 8, runoffCm: 15 },
+    { time: '11:00', rainfallMm: 22, runoffCm: 30 },
+    { time: '12:00', rainfallMm: 40, runoffCm: 48 },
+    { time: '13:00', rainfallMm: 52, runoffCm: 58 },
+    { time: '14:00', rainfallMm: 36, runoffCm: 44 },
+    { time: '15:00', rainfallMm: 24, runoffCm: 34 }
+  ],
+  Kolkata: [
+    { time: '10:00', rainfallMm: 6, runoffCm: 12 },
+    { time: '11:00', rainfallMm: 16, runoffCm: 24 },
+    { time: '12:00', rainfallMm: 32, runoffCm: 38 },
+    { time: '13:00', rainfallMm: 46, runoffCm: 48 },
+    { time: '14:00', rainfallMm: 28, runoffCm: 34 },
+    { time: '15:00', rainfallMm: 18, runoffCm: 25 }
   ]
 }
 
@@ -146,6 +212,19 @@ export function UrbanFloodScreen ({
 
   const hotspots =
     HOTSPOTS_FALLBACK[selectedCity] || HOTSPOTS_FALLBACK.Mumbai
+  const hydrograph =
+    HYDROGRAPH_FALLBACK[selectedCity] || HYDROGRAPH_FALLBACK.Mumbai
+
+  const maxRain = Math.max(...hydrograph.map(h => h.rainfallMm), 40)
+  const maxDepth = Math.max(...hydrograph.map(h => h.runoffCm), 50)
+  const latestHydro = hydrograph[hydrograph.length - 1] || { rainfallMm: 20, runoffCm: 25 }
+
+  const transitClearance = [
+    { type: 'Pedestrians', limit: '15 cm', status: latestHydro.runoffCm > 15 ? 'UNSAFE' : 'PASSABLE', color: latestHydro.runoffCm > 15 ? c.statusDanger : c.statusSafe },
+    { type: 'Two Wheelers', limit: '20 cm', status: latestHydro.runoffCm > 20 ? 'RISKY' : 'CLEAR', color: latestHydro.runoffCm > 20 ? c.statusDanger : c.statusSafe },
+    { type: 'Low Sedans', limit: '30 cm', status: latestHydro.runoffCm > 30 ? 'CLOSED' : 'ALERT', color: latestHydro.runoffCm > 30 ? c.statusDanger : c.statusWarning },
+    { type: 'Heavy Transit / SUV', limit: '50 cm', status: latestHydro.runoffCm > 50 ? 'CAUTION' : 'OPERATIONAL', color: latestHydro.runoffCm > 50 ? c.statusWarning : c.statusSafe }
+  ]
 
   const isCritical = telemetry.saturationLevelPct > 75
   const statusColor = isCritical ? c.statusDanger : c.statusWarning
@@ -326,6 +405,89 @@ export function UrbanFloodScreen ({
             </Pressable>
           )
         })}
+      </View>
+
+      {/* 6-Hour Inundation Hydrograph & Catchment Runoff Visualizer */}
+      <View style={[styles.cardSection, { backgroundColor: c.glassBg, borderColor: c.glassBorder, borderTopColor: c.glassBorderHighlight }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Waves size={16} color={c.blue} />
+            <Text style={[styles.cardHeaderTitle, { color: c.ink }]}>
+              6-Hour Catchment Hydrograph
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: c.blue }} />
+              <Text style={{ fontSize: 9, color: c.muted }}>Rain (mm)</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: statusColor }} />
+              <Text style={{ fontSize: 9, color: c.muted }}>Runoff (cm)</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Bar Chart Container */}
+        <View style={{ height: 110, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', paddingTop: 10, borderBottomWidth: 1, borderBottomColor: c.borderLight }}>
+          {hydrograph.map((pt, i) => {
+            const rainH = Math.max(8, Math.round((pt.rainfallMm / maxRain) * 80))
+            const depthH = Math.max(8, Math.round((pt.runoffCm / maxDepth) * 80))
+            return (
+              <View key={i} style={{ alignItems: 'center', width: 44 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 82 }}>
+                  {/* Rain Bar */}
+                  <View style={{ width: 14, height: rainH, backgroundColor: c.blue, borderRadius: 3 }}>
+                    <Text style={{ fontSize: 7, color: '#FFF', fontWeight: '700', textAlign: 'center', marginTop: 2 }}>
+                      {pt.rainfallMm}
+                    </Text>
+                  </View>
+                  {/* Runoff Depth Bar */}
+                  <View style={{ width: 14, height: depthH, backgroundColor: statusColor, borderRadius: 3 }}>
+                    <Text style={{ fontSize: 7, color: '#FFF', fontWeight: '700', textAlign: 'center', marginTop: 2 }}>
+                      {pt.runoffCm}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 9, color: c.muted, marginTop: 6, fontWeight: '600' }}>
+                  {pt.time}
+                </Text>
+              </View>
+            )
+          })}
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+          <Text style={{ fontSize: 10, color: c.muted }}>
+            Peak Discharge: <Text style={{ color: c.ink, fontWeight: '700' }}>{Math.max(...hydrograph.map(h => h.rainfallMm))} mm/hr</Text>
+          </Text>
+          <Text style={{ fontSize: 10, color: c.muted }}>
+            Peak Water Depth: <Text style={{ color: statusColor, fontWeight: '700' }}>{Math.max(...hydrograph.map(h => h.runoffCm))} cm</Text>
+          </Text>
+        </View>
+      </View>
+
+      {/* Transit & Commute Clearance Evaluator */}
+      <View style={[styles.cardSection, { backgroundColor: c.glassBg, borderColor: c.glassBorder, borderTopColor: c.glassBorderHighlight }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+          <ShieldAlert size={16} color={statusColor} />
+          <Text style={[styles.cardHeaderTitle, { color: c.ink }]}>
+            Commute & Transit Clearance Evaluator
+          </Text>
+        </View>
+        <View style={{ gap: 8 }}>
+          {transitClearance.map((tc, idx) => (
+            <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, paddingHorizontal: 10, backgroundColor: c.glassBgAlt, borderRadius: 8, borderWidth: 1, borderColor: c.glassBorderLight }}>
+              <View>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: c.ink }}>{tc.type}</Text>
+                <Text style={{ fontSize: 10, color: c.muted }}>Safe limit: {tc.limit}</Text>
+              </View>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: `${tc.color}15`, borderWidth: 1, borderColor: `${tc.color}40` }}>
+                <Text style={{ fontSize: 10, fontWeight: '800', color: tc.color }}>{tc.status}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* Municipal Disaster Advisory Guidance */}
