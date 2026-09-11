@@ -155,7 +155,7 @@ export const WeatherProvider = ({ children }) => {
 
   useEffect(() => {
     refreshMaintenanceMode()
-    const timer = setInterval(refreshMaintenanceMode, 15000)
+    const timer = setInterval(refreshMaintenanceMode, 60000)
     return () => clearInterval(timer)
   }, [refreshMaintenanceMode])
 
