@@ -54,6 +54,8 @@ function normalizeLongitude (longitude) {
 }
 
 function getValue (message, location) {
+  if (!message) return null
+  if (typeof message.value === 'number') return message
   const point = getNearestIndex(message, location.latitude, location.longitude)
 
   return {
@@ -152,4 +154,4 @@ function normalizeECMWF (
   }
 }
 
-export { calculateRelativeHumidity, getNearestIndex, normalizeECMWF }
+export { calculateRelativeHumidity, getNearestIndex, getValue, normalizeECMWF }

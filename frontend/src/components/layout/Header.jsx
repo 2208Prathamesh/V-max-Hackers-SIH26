@@ -234,7 +234,7 @@ export const Header = ({ isMobileOpen, setIsMobileOpen }) => {
   const totalNotificationCount = alerts.length + notifications.length
 
   return (
-    <header className='sticky top-0 z-30 bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between transition-colors duration-200'>
+    <header className='sticky top-0 z-30 bg-white/85 dark:bg-[#0A0B0E]/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/90 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between transition-colors duration-200'>
       {/* Real-time Socket Connection */}
       <NotificationListener
         userId={user?._id || user?.id}

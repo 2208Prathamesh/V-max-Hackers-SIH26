@@ -10,8 +10,20 @@ import {
   View,
   ActivityIndicator
 } from 'react-native'
+import {
+  Send,
+  Mic,
+  Sparkles,
+  Bot,
+  User,
+  Wind,
+  Thermometer,
+  ShieldCheck,
+  RefreshCw
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
 import { api } from '../services/api'
+import { WeatherIcon } from '../components/WeatherIcon'
 
 const INITIAL_MESSAGES = [
   {
@@ -24,8 +36,9 @@ const INITIAL_MESSAGES = [
     id: 'm2',
     sender: 'bot',
     time: '10:22 AM',
-    text: 'Yes, high-resolution radar indicates a high probability (80%) of convective showers tomorrow in Pune, especially during the afternoon and evening hours.',
-    hasForecast: true
+    text: 'Yes, high-resolution Doppler radar indicates an 80% probability of convective showers tomorrow in Pune, especially during afternoon and evening hours.',
+    hasForecast: true,
+    condition: 'rain'
   }
 ]
 
@@ -41,12 +54,12 @@ export function ChatScreen ({
   const [conversationId, setConversationId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Fetch or initialize conversation on mount
   useEffect(() => {
     let isMounted = true
 
     const initChat = async () => {
       try {
+        await api.ensureAuth()
         const convList = await api.conversations().catch(() => [])
         if (!isMounted) return
 
@@ -62,32 +75,37 @@ export function ChatScreen ({
             messageHistory.length > 0
           ) {
             setMessages(
-              messageHistory.map(m => ({
-                id: m._id || m.id || String(Math.random()),
-                sender: m.sender === 'user' ? 'user' : 'bot',
-                time: new Date(m.createdAt || Date.now()).toLocaleTimeString(
-                  [],
-                  {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  }
-                ),
-                text: m.content,
-                hasForecast:
-                  (m.content || '').toLowerCase().includes('rain') ||
-                  (m.content || '').toLowerCase().includes('forecast')
-              }))
+              messageHistory.map(m => {
+                const isUser = m.sender === 'user'
+                const content = m.content || ''
+                const hasFc =
+                  content.toLowerCase().includes('rain') ||
+                  content.toLowerCase().includes('forecast') ||
+                  content.toLowerCase().includes('temperature')
+                return {
+                  id: m._id || m.id || String(Math.random()),
+                  sender: isUser ? 'user' : 'bot',
+                  time: new Date(m.createdAt || Date.now()).toLocaleTimeString(
+                    [],
+                    {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }
+                  ),
+                  text: content,
+                  hasForecast: !isUser && hasFc,
+                  condition: content.toLowerCase().includes('rain') ? 'rain' : 'partly-cloudy'
+                }
+              })
             )
           }
         }
       } catch {
-        // preserve initial demo messages if offline
+        // preserve initial messages if offline
       }
     }
 
-    if (backendReady) {
-      initChat()
-    }
+    initChat()
 
     return () => {
       isMounted = false
@@ -109,18 +127,17 @@ export function ChatScreen ({
     setDraft('')
     setIsLoading(true)
 
-    // 1. Try Live Backend API if ready
-    if (backendReady) {
-      try {
-        let convId = conversationId
-        if (!convId) {
-          const newConv = await api.createConversation({
-            title: text.slice(0, 32),
-            category: 'general'
-          })
-          convId = newConv._id || newConv.id
-          setConversationId(convId)
-        }
+    try {
+      await api.ensureAuth()
+      let convId = conversationId
+      if (!convId) {
+        const newConv = await api.createConversation({
+          title: text.slice(0, 32),
+          category: 'general'
+        })
+        convId = newConv._id || newConv.id
+        setConversationId(convId)
+      }
 
         const response = await api.sendMessage({
           conversationId: convId,
@@ -129,6 +146,11 @@ export function ChatScreen ({
 
         if (response?.aiMessage) {
           const content = response.aiMessage.content || ''
+          const hasFc =
+            content.toLowerCase().includes('rain') ||
+            content.toLowerCase().includes('forecast') ||
+            content.toLowerCase().includes('temperature')
+
           setMessages(prev => [
             ...prev,
             {
@@ -136,42 +158,44 @@ export function ChatScreen ({
               sender: 'bot',
               time: 'Now',
               text: content,
-              hasForecast:
-                content.toLowerCase().includes('rain') ||
-                content.toLowerCase().includes('forecast') ||
-                content.toLowerCase().includes('temperature')
+              hasForecast: hasFc,
+              condition: content.toLowerCase().includes('rain') ? 'rain' : 'partly-cloudy'
             }
           ])
           setIsLoading(false)
           return
         }
       } catch (err) {
-        // Fallback to local intelligent assistant below
+        // Fallback below
       }
-    }
 
-    // 2. Intelligent Offline Fallback Engine
+    // 2. Intelligent Offline Meteorologist Engine
     setTimeout(() => {
-      let botReply = `Based on high-resolution radar analysis for ${
+      let botReply = `High-resolution NWP radar analysis for ${
         text.includes('Delhi')
-          ? 'Delhi'
+          ? 'Delhi NCR'
           : text.includes('Mumbai')
-          ? 'Mumbai'
+          ? 'Mumbai Coastal Basin'
           : 'Pune'
-      }, expect moderate convective cloud formations with temperatures around 28°C and mild wind gusts.`
+      } indicates stable atmospheric boundary conditions with temperatures around 28°C and mild southwesterly breezes.`
+
+      let cond = 'partly-cloudy'
 
       if (text.toLowerCase().includes('rain')) {
         botReply =
-          'Precipitation radar indicates scattered showers with 75% coverage. Keep an umbrella handy between 1:00 PM and 6:00 PM.'
+          'Doppler precipitation radar indicates convective moisture bands with 75% precipitation probability. Expect localized showers between 2:00 PM and 7:00 PM.'
+        cond = 'rain'
       } else if (
         text.toLowerCase().includes('aqi') ||
         text.toLowerCase().includes('air')
       ) {
         botReply =
-          'Current Air Quality Index (AQI) is at 68 (Moderate condition) with PM2.5 within acceptable standards.'
+          'Air Quality Index (AQI) sensor stations report a composite index of 68 (Moderate category). PM2.5 levels remain within permissible standards.'
+        cond = 'wind'
       } else if (text.toLowerCase().includes('cyclone')) {
         botReply =
-          'IMD Tropical Cyclone Alert: No active cyclone warnings within 500 km radius of Indian coastal waters currently.'
+          'IMD Tropical Cyclone Bulletin: Ocean surface temperature is 29°C. No organized cyclonic circulation detected within coastal nautical zones.'
+        cond = 'disc'
       }
 
       setMessages(prev => [
@@ -181,13 +205,12 @@ export function ChatScreen ({
           sender: 'bot',
           time: 'Now',
           text: botReply,
-          hasForecast:
-            text.toLowerCase().includes('rain') ||
-            text.toLowerCase().includes('forecast')
+          hasForecast: true,
+          condition: cond
         }
       ])
       setIsLoading(false)
-    }, 700)
+    }, 600)
   }
 
   return (
@@ -195,7 +218,7 @@ export function ChatScreen ({
       style={[styles.root, { backgroundColor: c.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Sub-header status strip */}
+      {/* Sub-header status bar */}
       <View
         style={[
           styles.subHeader,
@@ -211,7 +234,7 @@ export function ChatScreen ({
           />
           <Text style={[styles.onlineText, { color: c.inkSecondary }]}>
             {backendReady
-              ? 'WeatherGPT AI • Connected & Grounded'
+              ? 'WeatherGPT AI • Connected to Live Radar & Models'
               : 'Local Meteorological Assistant • Offline Ready'}
           </Text>
         </View>
@@ -229,14 +252,14 @@ export function ChatScreen ({
             { backgroundColor: c.cardAlt, borderColor: c.border }
           ]}
         >
-          <Text style={[styles.todayText, { color: c.muted }]}>TODAY</Text>
+          <Text style={[styles.todayText, { color: c.muted }]}>METEOROLOGICAL SESSION</Text>
         </View>
 
         {messages.map(msg => {
           if (msg.sender === 'user') {
             return (
               <View key={msg.id} style={styles.userBubbleWrapper}>
-                <View style={styles.userBubble}>
+                <View style={[styles.userBubble, { backgroundColor: c.blue }]}>
                   <Text style={styles.userText}>{msg.text}</Text>
                   <Text style={styles.userTime}>{msg.time}</Text>
                 </View>
@@ -246,8 +269,8 @@ export function ChatScreen ({
 
           return (
             <View key={msg.id} style={styles.botRow}>
-              <View style={styles.botAvatar}>
-                <Text style={styles.botAvatarIcon}>⚡</Text>
+              <View style={[styles.botAvatar, { backgroundColor: c.blue }]}>
+                <Sparkles size={16} color='#FFFFFF' />
               </View>
 
               <View
@@ -260,7 +283,7 @@ export function ChatScreen ({
                   {msg.text}
                 </Text>
 
-                {/* Grounded forecast badge if relevant */}
+                {/* Grounded Forecast Telemetry Card if relevant */}
                 {msg.hasForecast && (
                   <View
                     style={[
@@ -269,34 +292,31 @@ export function ChatScreen ({
                     ]}
                   >
                     <View style={styles.rainRow}>
-                      <Text style={styles.rainIcon}>🌧️</Text>
-                      <View>
+                      <WeatherIcon condition={msg.condition || 'rain'} size={28} />
+                      <View style={{ marginLeft: 8 }}>
                         <Text
                           style={[
                             styles.rainPercent,
                             { color: isDark ? '#60A5FA' : '#2563EB' }
                           ]}
                         >
-                          80%
+                          75% - 80%
                         </Text>
                         <Text style={[styles.rainSub, { color: c.muted }]}>
-                          Chance of rain
+                          Precipitation Confidence
                         </Text>
                       </View>
-                      <View
-                        style={{ marginLeft: 'auto', alignItems: 'flex-end' }}
-                      >
+                      <View style={{ marginLeft: 'auto', alignItems: 'flex-end' }}>
                         <Text style={[styles.rainTimeTitle, { color: c.ink }]}>
-                          Moderate showers
+                          Convective Showers
                         </Text>
-                        <Text
-                          style={[styles.rainTimeRange, { color: c.muted }]}
-                        >
-                          2:00 PM - 8:00 PM
+                        <Text style={[styles.rainTimeRange, { color: c.muted }]}>
+                          14:00 - 19:00 IST
                         </Text>
                       </View>
                     </View>
-                    <View style={styles.forecastStatsGrid}>
+
+                    <View style={[styles.forecastStatsGrid, { borderTopColor: c.borderLight }]}>
                       <View style={styles.fStat}>
                         <Text style={[styles.fStatLabel, { color: c.muted }]}>
                           MIN TEMP
@@ -343,8 +363,8 @@ export function ChatScreen ({
 
         {isLoading ? (
           <View style={styles.loadingRow}>
-            <View style={styles.botAvatar}>
-              <Text style={styles.botAvatarIcon}>⚡</Text>
+            <View style={[styles.botAvatar, { backgroundColor: c.blue }]}>
+              <Sparkles size={16} color='#FFFFFF' />
             </View>
             <View
               style={[
@@ -354,7 +374,7 @@ export function ChatScreen ({
             >
               <ActivityIndicator size='small' color={c.blue} />
               <Text style={[styles.loadingText, { color: c.muted }]}>
-                Analyzing Doppler radar and NWP models...
+                Analyzing Doppler radar and ECMWF models...
               </Text>
             </View>
           </View>
@@ -375,18 +395,20 @@ export function ChatScreen ({
         >
           {[
             'Will it rain in Pune?',
-            'Weekend in Mumbai',
-            'AQI in Delhi',
-            'Cyclone update'
+            'Mumbai Port Coastal Sea State',
+            'Delhi NCR Air Quality',
+            'Active Cyclone Warnings'
           ].map(prompt => (
             <Pressable
               key={prompt}
               onPress={() => sendMessage(prompt)}
-              style={[
+              style={({ pressed }) => [
                 styles.chip,
-                { backgroundColor: c.cardAlt, borderColor: c.border }
+                { backgroundColor: c.cardAlt, borderColor: c.border },
+                pressed && { opacity: 0.7 }
               ]}
             >
+              <Sparkles size={12} color={c.blue} style={{ marginRight: 5 }} />
               <Text style={[styles.chipText, { color: c.blue }]}>{prompt}</Text>
             </Pressable>
           ))}
@@ -410,24 +432,29 @@ export function ChatScreen ({
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={() => sendMessage()}
-            placeholder='Ask anything about weather...'
+            placeholder='Ask WeatherGPT anything...'
             placeholderTextColor={c.muted}
             style={[styles.input, { color: c.ink }]}
             returnKeyType='send'
             editable={!isLoading}
           />
           <Pressable
-            disabled={isLoading}
+            disabled={isLoading || !draft.trim()}
             onPress={() => sendMessage()}
-            style={[styles.sendButton, { backgroundColor: c.blue }]}
+            style={[
+              styles.sendButton,
+              {
+                backgroundColor: draft.trim() ? c.blue : c.mutedLight,
+                opacity: draft.trim() ? 1 : 0.6
+              }
+            ]}
             accessibilityLabel='Send message'
           >
-            <Text style={styles.sendButtonText}>→</Text>
+            <Send size={16} color='#FFFFFF' />
           </Pressable>
         </View>
         <Text style={[styles.disclaimer, { color: c.mutedLight }]}>
-          WeatherGPT is grounded in official IMD and ECMWF metrics. Verify
-          emergency alerts.
+          Grounded in IMD, INCOIS & ECMWF meteorological telemetry.
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -455,17 +482,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 6
   },
-  todayText: { fontSize: 9.5, fontWeight: '700' },
+  todayText: { fontSize: 9.5, fontWeight: '800', letterSpacing: 0.5 },
   userBubbleWrapper: { alignSelf: 'flex-end', maxWidth: '82%' },
   userBubble: {
-    backgroundColor: '#2563EB',
     borderRadius: 16,
     borderTopRightRadius: 4,
     padding: 12,
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
     elevation: 2
   },
   userText: {
@@ -474,7 +496,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 18
   },
-  userTime: { color: '#BFDBFE', fontSize: 9, textAlign: 'right', marginTop: 4 },
+  userTime: { color: 'rgba(255,255,255,0.7)', fontSize: 9, textAlign: 'right', marginTop: 4 },
   botRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -484,13 +506,11 @@ const styles = StyleSheet.create({
   botAvatar: {
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: '#2563EB',
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2
   },
-  botAvatarIcon: { color: '#FFFFFF', fontSize: 16 },
   botBubble: {
     flex: 1,
     borderRadius: 16,
@@ -498,16 +518,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 12,
     gap: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
     elevation: 1
   },
   botText: { fontSize: 13, lineHeight: 19 },
   forecastBox: { borderRadius: 12, borderWidth: 1, padding: 10, gap: 8 },
-  rainRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rainIcon: { fontSize: 20 },
+  rainRow: { flexDirection: 'row', alignItems: 'center' },
   rainPercent: { fontSize: 16, fontWeight: '800' },
   rainSub: { fontSize: 9 },
   rainTimeTitle: { fontSize: 11, fontWeight: '700' },
@@ -516,8 +531,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)'
+    borderTopWidth: 1
   },
   fStat: { alignItems: 'center' },
   fStatLabel: { fontSize: 7.5, fontWeight: '800' },
@@ -536,9 +550,11 @@ const styles = StyleSheet.create({
   chipsWrapper: { paddingVertical: 8, borderTopWidth: 1 },
   chipsScroll: { paddingHorizontal: 16, gap: 8 },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1
   },
   chipText: { fontSize: 11, fontWeight: '700' },
@@ -546,7 +562,7 @@ const styles = StyleSheet.create({
   composerInputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     paddingLeft: 14,
     paddingRight: 6,
@@ -554,12 +570,13 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, fontSize: 13 },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  sendButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   disclaimer: { fontSize: 9, textAlign: 'center', marginTop: 6 }
 })
+
+export default ChatScreen

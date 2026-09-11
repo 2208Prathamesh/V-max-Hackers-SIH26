@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native'
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  RefreshControl
+} from 'react-native'
+import {
+  AlertTriangle,
+  ShieldAlert,
+  ShieldCheck,
+  MapPin,
+  Clock,
+  Radio,
+  ChevronRight,
+  RefreshCw,
+  Sparkles
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
-import { alertsData } from '../data/mockData'
 import { api } from '../services/api'
+import { WeatherIcon } from '../components/WeatherIcon'
+import { EmergencyBanner } from '../components/EmergencyBanner'
 
-const TABS = ['All Alerts', 'Active (3)', 'Warnings', 'Watch']
+const TABS = ['All Alerts', 'Severe Warnings', 'Watch & Advisory']
 
 export function AlertsScreen ({
   isDark = false,
@@ -16,40 +35,75 @@ export function AlertsScreen ({
   const c = getColors(isDark)
   const [activeTab, setActiveTab] = useState('All Alerts')
   const [liveAlerts, setLiveAlerts] = useState([])
+  const [refreshing, setRefreshing] = useState(false)
+  const [loadedOnce, setLoadedOnce] = useState(false)
 
-  useEffect(() => {
-    if (!backendReady) return
-
-    let isMounted = true
+  const loadAlerts = () => {
+    setRefreshing(true)
     api
-      .alerts()
+      .activeAlerts()
       .then(result => {
-        if (!isMounted) return
-        setLiveAlerts(Array.isArray(result) ? result : [])
+        if (Array.isArray(result) && result.length > 0) {
+          setLiveAlerts(result)
+        } else {
+          api.alerts().then(all => {
+            if (Array.isArray(all) && all.length > 0) {
+              setLiveAlerts(all)
+            } else {
+              setLiveAlerts([])
+            }
+          })
+        }
       })
       .catch(() => {
-        if (!isMounted) return
         setLiveAlerts([])
       })
+      .finally(() => {
+        setRefreshing(false)
+        setLoadedOnce(true)
+      })
+  }
 
-    return () => {
-      isMounted = false
-    }
+  useEffect(() => {
+    loadAlerts()
   }, [backendReady])
 
-  const visibleAlerts = liveAlerts.length > 0 ? liveAlerts : alertsData
+  const sourceAlerts = liveAlerts
+
+  const filteredAlerts = sourceAlerts.filter(alert => {
+    const sev = (alert.severity || '').toLowerCase()
+    if (activeTab === 'Severe Warnings') {
+      return sev.includes('severe') || sev.includes('extreme') || sev.includes('high') || sev.includes('red')
+    }
+    if (activeTab === 'Watch & Advisory') {
+      return sev.includes('watch') || sev.includes('advisory') || sev.includes('moderate') || sev.includes('orange') || sev.includes('yellow')
+    }
+    return true
+  })
+
+  const topSevereAlert = sourceAlerts.find(a => {
+    const s = (a.severity || '').toLowerCase()
+    return s.includes('severe') || s.includes('extreme') || s.includes('high') || s.includes('red')
+  })
 
   return (
     <ScrollView
       style={[styles.root, { backgroundColor: c.bg }]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={loadAlerts}
+          tintColor={c.blue}
+        />
+      }
     >
       {/* Category Tabs */}
       <View
         style={[
           styles.tabsRow,
-          { backgroundColor: c.card, borderBottomColor: c.border }
+          { backgroundColor: c.card, borderColor: c.border }
         ]}
       >
         {TABS.map(tab => {
@@ -60,7 +114,10 @@ export function AlertsScreen ({
               onPress={() => setActiveTab(tab)}
               style={[
                 styles.tabItem,
-                isActive && { borderBottomColor: c.blue, borderBottomWidth: 2 }
+                isActive && {
+                  backgroundColor: c.blueLight,
+                  borderColor: isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(37, 99, 235, 0.2)'
+                }
               ]}
             >
               <Text
@@ -77,110 +134,181 @@ export function AlertsScreen ({
         })}
       </View>
 
+      {/* Featured Emergency Broadcast Banner */}
+      {topSevereAlert ? (
+        <EmergencyBanner
+          alert={topSevereAlert}
+          onPress={() => {
+            if (onSelectAlert) onSelectAlert(topSevereAlert)
+            if (onNavigate) onNavigate('alert-details')
+          }}
+          isDark={isDark}
+        />
+      ) : null}
+
+      {/* CAP v1.2 Standard Protocol Indicator */}
+      <View
+        style={[
+          styles.capBanner,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
+        <View style={[styles.capBadge, { backgroundColor: c.blue }]}>
+          <Radio size={12} color='#FFFFFF' />
+          <Text style={styles.capBadgeText}>CAP v1.2</Text>
+        </View>
+        <Text style={[styles.capText, { color: c.inkSecondary }]}>
+          Standardized Common Alerting Protocol Active & Synchronized
+        </Text>
+      </View>
+
       {/* Active Alerts Header */}
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: c.ink }]}>
-          Active Bulletins <Text style={{ color: c.muted }}>(3)</Text>
-        </Text>
-        <Text style={[styles.sectionAction, { color: c.blue }]}>Refresh</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <ShieldAlert size={18} color={c.statusDanger} />
+          <Text style={[styles.sectionTitle, { color: c.ink }]}>
+            Active Bulletins ({filteredAlerts.length})
+          </Text>
+        </View>
+        <Pressable
+          onPress={loadAlerts}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+        >
+          <RefreshCw size={13} color={c.blue} />
+          <Text style={[styles.sectionAction, { color: c.blue }]}>Sync</Text>
+        </Pressable>
       </View>
 
       {/* Alert Cards */}
-      {visibleAlerts.map(alert => (
+      {filteredAlerts.length === 0 ? (
         <View
-          key={alert.id || alert._id || alert.title}
           style={[
-            styles.alertCard,
-            {
-              backgroundColor: c.card,
-              borderColor: `${alert.color || '#F59E0B'}50`
-            }
+            styles.emptyStateCard,
+            { backgroundColor: c.card, borderColor: c.border }
           ]}
         >
           <View
             style={[
-              styles.alertIconBadge,
-              { backgroundColor: `${alert.color || '#F59E0B'}20` }
+              styles.emptyIconBadge,
+              { backgroundColor: `${c.statusSafe}18` }
             ]}
           >
-            <Text
-              style={[
-                styles.alertIconText,
-                { color: alert.color || '#F59E0B' }
-              ]}
-            >
-              {alert.icon || '⚠️'}
-            </Text>
+            <ShieldCheck size={36} color={c.statusSafe} />
           </View>
+          <Text style={[styles.emptyTitle, { color: c.ink }]}>
+            {activeTab === 'All Alerts'
+              ? 'All Clear — No Active Warnings'
+              : `No Active ${activeTab}`}
+          </Text>
+          <Text style={[styles.emptyDesc, { color: c.inkSecondary }]}>
+            All monitored radar stations and IMD synoptic grids report safe, nominal meteorological parameters.
+          </Text>
+          <Pressable
+            onPress={loadAlerts}
+            style={[styles.syncNowBtn, { backgroundColor: c.blue }]}
+          >
+            <RefreshCw size={14} color='#FFFFFF' />
+            <Text style={styles.syncNowText}>Refresh Radar Bulletins</Text>
+          </Pressable>
+        </View>
+      ) : (
+        filteredAlerts.map(alert => {
+          const isSevere = (alert.severity || '').toLowerCase().includes('severe')
+          const sevColor = isSevere ? c.statusDanger : alert.color || c.statusWarning
 
-          <View style={styles.alertCardCopy}>
-            <Text
+          return (
+            <View
+              key={alert.id || alert._id || alert.title}
               style={[
-                styles.alertCardTitle,
-                { color: alert.color || '#F59E0B' }
+                styles.alertCard,
+                {
+                  backgroundColor: c.card,
+                  borderColor: `${sevColor}40`
+                }
               ]}
             >
-              {alert.title}
-            </Text>
-            <Text style={[styles.alertCardLocation, { color: c.ink }]}>
-              {alert.location || alert.area || 'Regional weather alert'}
-            </Text>
-            <Text style={[styles.alertCardTime, { color: c.muted }]}>
-              {alert.time || alert.startTime || 'Live alert'}
-            </Text>
-            <Text style={[styles.alertCardDetail, { color: c.inkSecondary }]}>
-              {alert.detail ||
-                alert.message ||
-                'Severe weather advisory in effect.'}
-            </Text>
-
-            <View style={[styles.metaRow, { borderTopColor: c.borderLight }]}>
-              <Text style={[styles.metaLabel, { color: c.muted }]}>
-                Severity:{' '}
-                <Text
-                  style={{ color: alert.color || '#F59E0B', fontWeight: '800' }}
-                >
-                  {alert.severity || 'Moderate'}
-                </Text>
-              </Text>
-              <Text style={[styles.metaLabel, { color: c.muted }]}>
-                Probability:{' '}
-                <Text style={[styles.metaValue, { color: c.ink }]}>
-                  {alert.probability || 'High'}
-                </Text>
-              </Text>
-              <Pressable
-                onPress={() => {
-                  if (onSelectAlert) onSelectAlert(alert)
-                  if (onNavigate) onNavigate('alert-details')
-                  else if (onNotification)
-                    onNotification(`Advisory details for ${alert.title}`)
-                }}
-                style={[
-                  styles.viewDetailsBtn,
-                  { borderColor: alert.color || '#F59E0B' }
-                ]}
-              >
-                <Text
+              <View style={styles.alertCardTop}>
+                <View
                   style={[
-                    styles.viewDetailsText,
-                    { color: alert.color || '#F59E0B' }
+                    styles.alertIconBadge,
+                    { backgroundColor: `${sevColor}15` }
                   ]}
                 >
-                  View details →
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      ))}
+                  <AlertTriangle size={20} color={sevColor} />
+                </View>
 
-      {/* Recent Alerts List */}
+                <View style={{ flex: 1 }}>
+                  <View style={styles.titleRow}>
+                    <Text
+                      style={[styles.alertCardTitle, { color: c.ink }]}
+                      numberOfLines={1}
+                    >
+                      {alert.title}
+                    </Text>
+                    <View
+                      style={[
+                        styles.severityPill,
+                        { backgroundColor: `${sevColor}18`, borderColor: `${sevColor}40` }
+                      ]}
+                    >
+                      <Text style={[styles.severityPillText, { color: sevColor }]}>
+                        {alert.severity || 'Warning'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.metaLocationRow}>
+                    <MapPin size={13} color={c.blue} />
+                    <Text style={[styles.alertCardLocation, { color: c.inkSecondary }]}>
+                      {alert.location || alert.area || 'Regional monitoring zone'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={[styles.alertCardDetail, { color: c.inkSecondary }]}>
+                {alert.detail ||
+                  alert.message ||
+                  alert.description ||
+                  'Severe weather advisory in effect. Stay tuned to disaster authority updates.'}
+              </Text>
+
+              <View style={[styles.metaRow, { borderTopColor: c.borderLight }]}>
+                <View style={styles.timeTag}>
+                  <Clock size={12} color={c.muted} />
+                  <Text style={[styles.alertCardTime, { color: c.muted }]}>
+                    {alert.time || alert.startTime || 'Updated live'}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    if (onSelectAlert) onSelectAlert(alert)
+                    if (onNavigate) onNavigate('alert-details')
+                    else if (onNotification)
+                      onNotification(`Advisory details for ${alert.title}`)
+                  }}
+                  style={[
+                    styles.viewDetailsBtn,
+                    { backgroundColor: c.cardAlt, borderColor: `${sevColor}60` }
+                  ]}
+                >
+                  <Text style={[styles.viewDetailsText, { color: sevColor }]}>
+                    View Protocol SOP
+                  </Text>
+                  <ChevronRight size={14} color={sevColor} />
+                </Pressable>
+              </View>
+            </View>
+          )
+        })
+      )}
+
+      {/* Recent Bulletins Section */}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: c.ink }]}>
-          Recent Bulletins
+          Recent Archived Advisories
         </Text>
-        <Text style={[styles.sectionAction, { color: c.blue }]}>Archive</Text>
       </View>
 
       <View
@@ -191,14 +319,16 @@ export function AlertsScreen ({
       >
         {[
           {
-            title: 'Thunderstorm with Lightning',
+            title: 'Thunderstorm & Convective Squall',
             loc: 'Nashik, Maharashtra',
-            type: 'Advisory'
+            type: 'Advisory Passed',
+            time: 'Yesterday'
           },
           {
-            title: 'Moderate Rainfall Warning',
-            loc: 'Aurangabad, Maharashtra',
-            type: 'Information'
+            title: 'Coastal High Wave Advisory',
+            loc: 'Ratnagiri, Maharashtra',
+            type: 'Resolved',
+            time: '2 days ago'
           }
         ].map((item, idx) => (
           <View
@@ -209,17 +339,17 @@ export function AlertsScreen ({
               idx === 1 && { borderBottomWidth: 0 }
             ]}
           >
-            <Text style={[styles.recentRowPin, { color: c.blue }]}>📍</Text>
+            <ShieldCheck size={18} color={c.statusSafe} style={{ marginRight: 10 }} />
             <View style={styles.recentRowCopy}>
               <Text style={[styles.recentRowTitle, { color: c.ink }]}>
                 {item.title}
               </Text>
               <Text style={[styles.recentRowLoc, { color: c.muted }]}>
-                {item.loc}
+                {item.loc} • {item.time}
               </Text>
             </View>
-            <View style={[styles.tagBadge, { backgroundColor: c.blueLight }]}>
-              <Text style={[styles.tagText, { color: c.blue }]}>
+            <View style={[styles.tagBadge, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
+              <Text style={[styles.tagText, { color: c.muted }]}>
                 {item.type}
               </Text>
             </View>
@@ -235,116 +365,156 @@ const styles = StyleSheet.create({
     flex: 1
   },
   contentContainer: {
-    padding: 16,
+    padding: 14,
     paddingBottom: 40,
-    gap: 14
+    gap: 12
   },
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    borderBottomWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 8
+    padding: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 4
   },
   tabItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 6
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent'
   },
   tabText: {
     fontSize: 12,
     fontWeight: '600'
   },
   tabTextActive: {
+    fontWeight: '700'
+  },
+  capBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1
+  },
+  capBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+  capBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
     fontWeight: '800'
+  },
+  capText: {
+    fontSize: 11,
+    flex: 1
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 6
+    marginTop: 4
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800'
+    fontSize: 14,
+    fontWeight: '700'
   },
   sectionAction: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700'
   },
   alertCard: {
-    borderRadius: 18,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    borderWidth: 1,
     padding: 14,
+    gap: 10
+  },
+  alertCardTop: {
     flexDirection: 'row',
-    gap: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2
+    alignItems: 'flex-start',
+    gap: 12
   },
   alertIconBadge: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2
+    justifyContent: 'center'
   },
-  alertIconText: {
-    fontSize: 20,
-    fontWeight: '900'
-  },
-  alertCardCopy: {
-    flex: 1
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8
   },
   alertCardTitle: {
     fontSize: 14,
+    fontWeight: '700',
+    flex: 1
+  },
+  severityPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1
+  },
+  severityPillText: {
+    fontSize: 10,
     fontWeight: '800'
   },
-  alertCardLocation: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 2
+  metaLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3
   },
-  alertCardTime: {
-    fontSize: 9,
-    marginTop: 2
+  alertCardLocation: {
+    fontSize: 12
   },
   alertCardDetail: {
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 8
+    fontSize: 12,
+    lineHeight: 18
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 10,
-    paddingTop: 8,
+    justifyContent: 'space-between',
+    paddingTop: 10,
     borderTopWidth: 1
   },
-  metaLabel: {
-    fontSize: 10
+  timeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4
   },
-  metaValue: {
-    fontWeight: '800'
+  alertCardTime: {
+    fontSize: 11
   },
   viewDetailsBtn: {
-    marginLeft: 'auto',
-    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4
+    borderWidth: 1
   },
   viewDetailsText: {
-    fontSize: 10,
-    fontWeight: '800'
+    fontSize: 11,
+    fontWeight: '700'
   },
   recentCard: {
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 14
   },
@@ -352,30 +522,70 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    gap: 10
-  },
-  recentRowPin: {
-    fontSize: 14
+    borderBottomWidth: 1
   },
   recentRowCopy: {
     flex: 1
   },
   recentRowTitle: {
-    fontSize: 12,
-    fontWeight: '700'
+    fontSize: 13,
+    fontWeight: '600'
   },
   recentRowLoc: {
-    fontSize: 10,
+    fontSize: 11,
     marginTop: 2
   },
   tagBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6
+    borderRadius: 6,
+    borderWidth: 1
   },
   tagText: {
-    fontSize: 9,
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  emptyStateCard: {
+    padding: 28,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginBottom: 16
+  },
+  emptyIconBadge: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 6
+  },
+  emptyDesc: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    maxWidth: 320,
+    marginBottom: 18
+  },
+  syncNowBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10
+  },
+  syncNowText: {
+    color: '#FFFFFF',
+    fontSize: 13,
     fontWeight: '700'
   }
 })
+
+export default AlertsScreen

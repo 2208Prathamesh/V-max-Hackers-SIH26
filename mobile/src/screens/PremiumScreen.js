@@ -6,36 +6,52 @@ import {
   ScrollView,
   Pressable
 } from 'react-native'
+import {
+  Crown,
+  Radio,
+  Zap,
+  Calendar,
+  BookmarkCheck,
+  Sparkles,
+  ShieldCheck,
+  Check
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
 
 const PRO_FEATURES = [
   {
-    icon: '🛰️',
+    icon: Radio,
+    color: '#3B82F6',
     title: 'High-Resolution Satellite & Radar',
     desc: 'Live MOSDAC/ISRO Doppler loops and high-resolution cloud cover layers.'
   },
   {
-    icon: '⚡',
+    icon: Zap,
+    color: '#F59E0B',
     title: 'Instant Severe Weather Push',
     desc: 'Direct IMD red/orange alert dispatch via SMS and push notifications.'
   },
   {
-    icon: '📅',
+    icon: Calendar,
+    color: '#10B981',
     title: '14-Day Extended Forecasting',
     desc: 'Deep multi-model consensus (ECMWF, GFS, Open-Meteo) up to 2 weeks out.'
   },
   {
-    icon: '⭐',
+    icon: BookmarkCheck,
+    color: '#8B5CF6',
     title: 'Unlimited Saved Locations',
     desc: 'Track farm plots, hometowns, and travel destinations without limits.'
   },
   {
-    icon: '💬',
+    icon: Sparkles,
+    color: '#EC4899',
     title: 'Uncapped WeatherGPT AI Queries',
     desc: 'Priority queue on our low-latency meteorological reasoning engine.'
   },
   {
-    icon: '🚫',
+    icon: ShieldCheck,
+    color: '#06B6D4',
     title: '100% Ad-Free Clean UI',
     desc: 'Zero sponsored bulletins or banners across web and mobile.'
   }
@@ -53,7 +69,7 @@ export function PremiumScreen ({
   const handleUpgrade = () => {
     setIsSubscribed(true)
     if (onNotification) {
-      onNotification('🎉 Welcome to WeatherGPT Pro! Premium unlocked.')
+      onNotification('Welcome to WeatherGPT Pro! Premium unlocked.')
     }
   }
 
@@ -68,13 +84,13 @@ export function PremiumScreen ({
         style={[
           styles.heroCard,
           {
-            backgroundColor: isDark ? '#261C14' : '#FFF9EB',
-            borderColor: isDark ? '#4E3820' : '#FCE8BD'
+            backgroundColor: isDark ? '#1C1710' : '#FFFDF5',
+            borderColor: isDark ? '#4E3820' : '#FDE68A'
           }
         ]}
       >
         <View style={styles.crownCircle}>
-          <Text style={styles.crownEmoji}>👑</Text>
+          <Crown size={24} color="#FFFFFF" strokeWidth={2.4} />
         </View>
 
         <Text
@@ -91,14 +107,14 @@ export function PremiumScreen ({
             { color: isDark ? '#E2C799' : '#B45309' }
           ]}
         >
-          Empower your day with mission-critical meteorological intelligence.
+          Empower your operations with mission-critical meteorological intelligence and sub-hourly Doppler feeds.
         </Text>
 
         {/* Billing Switcher */}
         <View
           style={[
             styles.switcherTrack,
-            { backgroundColor: isDark ? '#3D2A1C' : '#FDF4DC' }
+            { backgroundColor: isDark ? '#2D2318' : '#FEF3C7' }
           ]}
         >
           <Pressable
@@ -152,23 +168,28 @@ export function PremiumScreen ({
         ]}
       >
         <Text style={[styles.sectionTitle, { color: c.ink }]}>
-          Everything included in Pro
+          Included in Pro Membership
         </Text>
 
         <View style={styles.featuresList}>
-          {PRO_FEATURES.map((item, idx) => (
-            <View key={idx} style={styles.featureRow}>
-              <Text style={styles.featureIcon}>{item.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.featureTitle, { color: c.ink }]}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.featureDesc, { color: c.muted }]}>
-                  {item.desc}
-                </Text>
+          {PRO_FEATURES.map((item, idx) => {
+            const IconComp = item.icon
+            return (
+              <View key={idx} style={styles.featureRow}>
+                <View style={[styles.featureIconBox, { backgroundColor: isDark ? '#1F2430' : '#EFF6FF' }]}>
+                  <IconComp size={18} color={item.color} strokeWidth={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.featureTitle, { color: c.ink }]}>
+                    {item.title}
+                  </Text>
+                  <Text style={[styles.featureDesc, { color: c.muted }]}>
+                    {item.desc}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            )
+          })}
         </View>
       </View>
 
@@ -187,9 +208,13 @@ export function PremiumScreen ({
             /{billingCycle === 'yearly' ? 'year (₹125/mo)' : 'month'}
           </Text>
         </View>
-        <Text style={[styles.guaranteeText, { color: c.muted }]}>
-          ✓ 7-day free trial • Cancel anytime • Money-back guarantee
-        </Text>
+        
+        <View style={styles.guaranteeRow}>
+          <Check size={14} color="#10B981" strokeWidth={2.5} />
+          <Text style={[styles.guaranteeText, { color: c.muted }]}>
+            7-day free trial • Cancel anytime • 100% money-back guarantee
+          </Text>
+        </View>
 
         <Pressable
           onPress={handleUpgrade}
@@ -198,10 +223,15 @@ export function PremiumScreen ({
             isSubscribed && { backgroundColor: '#10B981' }
           ]}
         >
+          {isSubscribed ? (
+            <Check size={18} color="#FFFFFF" strokeWidth={2.4} style={{ marginRight: 6 }} />
+          ) : (
+            <Zap size={18} color="#FFFFFF" strokeWidth={2.4} style={{ marginRight: 6 }} />
+          )}
           <Text style={styles.ctaButtonText}>
             {isSubscribed
-              ? '✓ Pro Plan Active'
-              : '⚡ Start 7-Day Free Trial'}
+              ? 'Pro Plan Active'
+              : 'Start 7-Day Free Trial'}
           </Text>
         </Pressable>
       </View>
@@ -216,8 +246,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 24,
     borderWidth: 1,
-    alignItems: 'center',
-    textAlign: 'center'
+    alignItems: 'center'
   },
   crownCircle: {
     width: 48,
@@ -226,13 +255,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F59E0B',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10
+    marginBottom: 10,
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4
   },
-  crownEmoji: { fontSize: 24 },
   heroTitle: { fontSize: 20, fontWeight: '900', letterSpacing: -0.4 },
   heroSubtitle: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 11.5,
+    lineHeight: 17,
     textAlign: 'center',
     marginTop: 4,
     marginBottom: 14,
@@ -245,25 +277,29 @@ const styles = StyleSheet.create({
     gap: 4
   },
   switchBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 11,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 11
   },
   switchBtnActive: {
-    backgroundColor: '#F59E0B'
+    backgroundColor: '#D97706',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2
   },
-  switchText: { fontSize: 10.5, fontWeight: '700' },
+  switchText: { fontSize: 11, fontWeight: '700' },
   switchTextActive: { color: '#FFFFFF', fontWeight: '800' },
   saveBadge: {
     backgroundColor: '#10B981',
-    paddingHorizontal: 4,
-    paddingVertical: 1.5,
-    borderRadius: 6
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 6
   },
-  saveBadgeText: { color: '#FFFFFF', fontSize: 7.5, fontWeight: '900' },
+  saveBadgeText: { color: '#FFFFFF', fontSize: 8.5, fontWeight: '900' },
   featuresCard: {
     padding: 16,
     borderRadius: 20,
@@ -271,10 +307,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 13, fontWeight: '800', marginBottom: 12 },
   featuresList: { gap: 12 },
-  featureRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  featureIcon: { fontSize: 20 },
-  featureTitle: { fontSize: 11.5, fontWeight: '800' },
-  featureDesc: { fontSize: 10, lineHeight: 14, marginTop: 1 },
+  featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  featureIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  featureTitle: { fontSize: 12, fontWeight: '700' },
+  featureDesc: { fontSize: 10, lineHeight: 15, marginTop: 1 },
   ctaCard: {
     padding: 18,
     borderRadius: 20,
@@ -282,16 +324,25 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  priceNumber: { fontSize: 28, fontWeight: '900' },
-  pricePeriod: { fontSize: 11, fontWeight: '600' },
-  guaranteeText: { fontSize: 9.5, marginTop: 4, marginBottom: 14 },
-  ctaButton: {
-    width: '100%',
-    backgroundColor: '#F59E0B',
-    paddingVertical: 13,
-    borderRadius: 14,
+  priceNumber: { fontSize: 26, fontWeight: '900' },
+  pricePeriod: { fontSize: 12 },
+  guaranteeRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 14
   },
-  ctaButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' }
+  guaranteeText: { fontSize: 10, textAlign: 'center' },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2563EB',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    width: '100%'
+  },
+  ctaButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' }
 })

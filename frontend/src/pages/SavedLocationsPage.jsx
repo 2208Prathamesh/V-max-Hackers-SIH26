@@ -143,7 +143,7 @@ export const SavedLocationsPage = () => {
               {sortedLocations.map(loc => (
                 <div
                   key={loc.id}
-                  className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card hover:shadow-md transition-all duration-200 relative group'
+                  className='bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card hover:shadow-md transition-all duration-200 relative group'
                 >
                   <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
                     {/* Left: Location header & Condition */}
@@ -302,7 +302,7 @@ export const SavedLocationsPage = () => {
                 <div
                   key={loc.id}
                   onClick={() => handleLocationClick(loc)}
-                  className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card hover:border-blue-500/50 cursor-pointer transition space-y-4'
+                  className='bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card hover:border-blue-500/50 cursor-pointer transition space-y-4'
                 >
                   <div className='flex items-start justify-between'>
                     <div>
@@ -338,7 +338,7 @@ export const SavedLocationsPage = () => {
           {/* Add New Location bottom card button */}
           <button
             onClick={() => setIsAddLocationOpen(true)}
-            className='w-full py-6 px-4 bg-white dark:bg-[#151F32]/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 border-2 border-dashed border-blue-200 dark:border-blue-900/60 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition text-center group cursor-pointer'
+            className='w-full py-6 px-4 bg-white dark:bg-[#121316]/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 border-2 border-dashed border-blue-200 dark:border-blue-900/60 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition text-center group cursor-pointer'
           >
             <div className='flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 group-hover:scale-105 transition'>
               <Plus className='w-4 h-4' />
@@ -353,7 +353,7 @@ export const SavedLocationsPage = () => {
         {/* Right Column: Location Map Preview, Weather Summary, Tips (4 cols) */}
         <div className='lg:col-span-4 space-y-6'>
           {/* Location Map Preview Card */}
-          <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
+          <div className='bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
             <div className='flex items-center justify-between'>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
                 {t('locationMap')}
@@ -401,7 +401,7 @@ export const SavedLocationsPage = () => {
           </div>
 
           {/* Weather Summary Card */}
-          <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
+          <div className='bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
             <div>
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>
                 {t('weatherSummary')}
@@ -463,7 +463,7 @@ export const SavedLocationsPage = () => {
           </div>
 
           {/* Tips Card */}
-          <div className='bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
+          <div className='bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-card space-y-4'>
             <div className='flex items-center gap-2'>
               <Lightbulb className='w-4 h-4 text-amber-500' />
               <h3 className='text-sm font-bold text-slate-900 dark:text-white'>

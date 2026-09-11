@@ -1275,7 +1275,7 @@ export const AdvisoryPage = () => {
       {/* =========================================================================
           1. TOP FARM LOCATION SWITCHER WITH SEARCH HISTORY (LAST 4 LOCAL STORAGE)
           ========================================================================= */}
-      <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+      <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3.5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <MapPin className="w-5 h-5" />
@@ -1342,7 +1342,7 @@ export const AdvisoryPage = () => {
 
             {/* Smart Search Suggestions Dropdown */}
             {isSearchFocused && (
-              <div className="absolute left-0 right-0 top-11 z-50 bg-white/95 dark:bg-[#151F32]/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-2xl space-y-1 max-h-72 overflow-y-auto animate-fadeIn">
+              <div className="absolute left-0 right-0 top-11 z-50 bg-white/95 dark:bg-[#121316]/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-2xl space-y-1 max-h-72 overflow-y-auto animate-fadeIn">
                 {/* 1. Live matching suggestions */}
                 {searchResults.length > 0 ? (
                   <>
@@ -1459,7 +1459,7 @@ export const AdvisoryPage = () => {
       {/* =========================================================================
           2. TOP HEADER BANNER & MULTI-TAB SWITCHER (NO AUDIO, NO SHARE)
           ========================================================================= */}
-      <div className="rounded-3xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
+      <div className="rounded-3xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -1548,7 +1548,7 @@ export const AdvisoryPage = () => {
       {activeTab === 'analytics' && (
         <div className="space-y-6 animate-fadeIn">
           {/* Section Description Bar */}
-          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-[#121316] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black shrink-0">
                 <Gauge className="w-5 h-5" />
@@ -1575,7 +1575,7 @@ export const AdvisoryPage = () => {
           {/* 8 HIGH-PRECISION NUMERICAL TELEMETRY CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {/* Card 1: Soil Moisture */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'जमिनीतील ओलावा (Root Zone)' : 'Soil Moisture (Root Zone)'}
@@ -1608,7 +1608,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 2: Evapotranspiration ET0 */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'दैनिक बाष्पीभवन (ET₀)' : 'Reference ET₀ (Water Loss)'}
@@ -1637,7 +1637,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 3: Delta-T */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'Delta-T फवारणी निर्देशांक' : 'Delta-T Spray Safety'}
@@ -1664,7 +1664,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 4: 72h Rain & Wind */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'पुढील ३ दिवसांत पाऊस' : '72h Precipitation Sum'}
@@ -1691,7 +1691,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 5: VPD (Vapor Pressure Deficit) */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'बाष्प दाब तूट (VPD)' : 'Vapor Pressure Deficit (VPD)'}
@@ -1718,7 +1718,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 6: Soil Temperature */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'मातीचे तापमान (१० सेमी)' : 'Soil Temp (10cm Depth)'}
@@ -1747,7 +1747,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 7: Field Trafficability */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'ट्रॅक्टर व मशागत सुलभता' : 'Field Trafficability Index'}
@@ -1773,7 +1773,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Card 8: Dew Point & Humidity Index */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between h-full min-h-[160px] min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
                   {language === 'mr' ? 'दवबिंदू व हवेतील आर्द्रता' : 'Dew Point & Humidity'}
@@ -1810,7 +1810,7 @@ export const AdvisoryPage = () => {
           {/* PREDICTION GRAPHS ROW: CROP WATER DEMAND VS RAINFALL & 48-HOUR SPRAY WINDOW */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             {/* Chart 1: 7-Day Composed Water Balance */}
-            <div className="lg:col-span-7 bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="lg:col-span-7 bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -1877,7 +1877,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Chart 2: 48-Hour Spray Window Area Chart */}
-            <div className="lg:col-span-5 bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="lg:col-span-5 bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -1936,7 +1936,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* QUANTITATIVE FIELD HYDROLOGY & OPERATIONAL SUMMARY TABLE */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -2026,7 +2026,7 @@ export const AdvisoryPage = () => {
       {activeTab === 'crop_advisory' && (
         <div className="space-y-6 animate-fadeIn">
           {/* REAL-TIME WEATHER DRIVER CONTEXT STRIP */}
-          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50/80 dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50/80 dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3.5">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-11 h-11 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black shrink-0">
                 <Sprout className="w-6 h-6" />
@@ -2065,7 +2065,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* STEP 1: SELECT YOUR CROP (10 MAJOR CROPS) */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-slate-900 dark:text-slate-200 flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-black">1</span>
@@ -2103,7 +2103,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* STEP 2: CROP GROWTH STAGES (5 BIOLOGICAL PHASES) */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-3.5">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-200 flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
               <span className="truncate">
@@ -2165,7 +2165,7 @@ export const AdvisoryPage = () => {
                         ? 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40'
                         : isWarning
                         ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40'
-                        : 'bg-white dark:bg-[#151F32] border-slate-200 dark:border-slate-800'
+                        : 'bg-white dark:bg-[#121316] border-slate-200 dark:border-slate-800'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -2229,7 +2229,7 @@ export const AdvisoryPage = () => {
           {/* STEP 4: BALANCED MODERN "DOs" AND "DON'Ts" CARDS (NOT TOO MUCH HIGHLIGHT, MODERN & CLEAN) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* DO TODAY CARD */}
-            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/30 to-white dark:from-[#151F32] dark:via-emerald-950/20 dark:to-[#151F32] border border-emerald-500/30 p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
+            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-emerald-50/30 to-white dark:from-[#121316] dark:via-emerald-950/20 dark:to-[#121316] border border-emerald-500/30 p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -2301,7 +2301,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* WHAT NOT TO DO CARD */}
-            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-rose-50/30 to-white dark:from-[#151F32] dark:via-rose-950/20 dark:to-[#151F32] border border-rose-500/30 p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
+            <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-rose-50/30 to-white dark:from-[#121316] dark:via-rose-950/20 dark:to-[#121316] border border-rose-500/30 p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
@@ -2376,7 +2376,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* STEP 5: PEST & DISEASE DIAGNOSTIC FLASHCARDS FOR SELECTED CROP */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
@@ -2436,7 +2436,7 @@ export const AdvisoryPage = () => {
 
           {/* STEP 6: FERTILIZER SCHEDULE & STAGE NUTRITION */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs space-y-3.5 min-w-0">
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs space-y-3.5 min-w-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <Sprout className="w-5 h-5" />
@@ -2470,7 +2470,7 @@ export const AdvisoryPage = () => {
             </div>
 
             {/* Current Crop MSP & Yield Benchmark */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between space-y-3.5 min-w-0">
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between space-y-3.5 min-w-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                   <Coins className="w-5 h-5" />
@@ -2515,7 +2515,7 @@ export const AdvisoryPage = () => {
       {activeTab === 'disaster' && (
         <div className="space-y-6 animate-fadeIn">
           {/* Top Banner - Subtle refined emergency gradient */}
-          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-rose-500/10 via-white to-slate-50 dark:from-rose-950/25 dark:via-[#151F32] dark:to-[#151F32] border border-rose-500/30 text-rose-950 dark:text-rose-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-rose-500/10 via-white to-slate-50 dark:from-rose-950/25 dark:via-[#121316] dark:to-[#121316] border border-rose-500/30 text-rose-950 dark:text-rose-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
             <div className="flex items-center gap-3.5 min-w-0">
               <div className="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                 <ShieldAlert className="w-6 h-6" />
@@ -2534,7 +2534,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* DEDICATED GOVERNMENT AGRICULTURAL HELPLINES (TAP TO CALL) */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <PhoneCall className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -2624,7 +2624,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* OFFICIAL GOVERNMENT FARM WEBSITES & DIGITAL PORTALS */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -2718,7 +2718,7 @@ export const AdvisoryPage = () => {
           </div>
 
           {/* 24x7 WEATHER DISASTER & FARM EMERGENCY HELPLINES */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-3">
             <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
               <PhoneCall className="w-5 h-5 text-blue-500 shrink-0" />
               <span>{language === 'mr' ? 'हवामान आपत्ती, पूर व कृषी आपत्कालीन हेल्पलाईन (टॅप करा)' : '24x7 Weather Disaster, Flood & Farm Emergency Helplines (Tap to Call)'}</span>
@@ -2754,7 +2754,7 @@ export const AdvisoryPage = () => {
 
           {/* EXTREME WEATHER SAFETY ACTION PROTOCOLS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
               <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-black text-sm">
                 <Flame className="w-5 h-5" />
                 <span>{language === 'mr' ? 'विजांचा कडकडाट व वादळ (Lightning Protocol)' : 'Lightning & Storm Protocol'}</span>
@@ -2775,7 +2775,7 @@ export const AdvisoryPage = () => {
               </ul>
             </div>
 
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
               <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-black text-sm">
                 <Waves className="w-5 h-5" />
                 <span>{language === 'mr' ? 'पूर व शेतात पाणी साचल्यास (Flood Protocol)' : 'Flood & Waterlogging Protocol'}</span>

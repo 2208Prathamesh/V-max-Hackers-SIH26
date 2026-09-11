@@ -40,6 +40,7 @@ function getNearestGridPoint (message, latitude, longitude) {
 
 function getValue (message, location) {
   if (!message) return null
+  if (typeof message.value === 'number') return message
   const point = getNearestGridPoint(
     message,
     location.latitude,
@@ -90,4 +91,4 @@ function normalizeGFS (messages, location, timestamp = null) {
   }
 }
 
-export { getNearestGridPoint, normalizeGFS, normalizeLongitude }
+export { getNearestGridPoint, normalizeGFS, normalizeLongitude, getValue }

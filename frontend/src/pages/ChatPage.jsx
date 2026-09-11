@@ -274,7 +274,7 @@ export const ChatPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col bg-white dark:bg-[#151F32] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-card overflow-hidden">
+    <div className="h-[calc(100vh-140px)] flex flex-col bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-card overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30">
         <div className="flex items-center gap-3">
@@ -522,7 +522,7 @@ export const ChatPage = () => {
       {/* Input Area */}
       <form
         onSubmit={handleSend}
-        className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#151F32] flex items-center gap-3"
+        className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#121316] flex items-center gap-3"
       >
         <input
           type="text"

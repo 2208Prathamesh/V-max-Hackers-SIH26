@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { api } from '../services/api'
 import { useWeather } from '../context/WeatherContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
@@ -33,7 +34,12 @@ import {
   Navigation2,
   TrendingUp,
   Thermometer,
-  Lightbulb
+  Lightbulb,
+  Building,
+  ShieldAlert,
+  PhoneCall,
+  Car,
+  AlertCircle
 } from 'lucide-react'
 import {
   AreaChart,
@@ -137,6 +143,7 @@ export const DashboardPage = () => {
   const [activeChartMetric, setActiveChartMetric] = useState('temp') // 'temp' | 'pop' | 'wind'
   const [isRefreshing, setIsRefreshing] = useState(false)
   const factsScrollRef = useRef(null)
+
 
   const scrollFacts = (direction) => {
     if (factsScrollRef.current) {
@@ -410,35 +417,29 @@ export const DashboardPage = () => {
   const isCloudy = cloudCoverVal > 55
 
   // Adaptive Hero Card Themes & Gradients
-  // Harmonious with app theme (Dark/Light) and astronomical conditions (Day/Night)
+  // Constant celestial day/night/weather styling, independent of dark/light theme
   const heroStyles = useMemo(() => {
     if (isRainy) {
       return {
-        card: isDark
-          ? 'bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white border border-blue-800/40 shadow-xl shadow-blue-950/40'
-          : 'bg-gradient-to-br from-slate-500 via-blue-600 to-indigo-600 text-white border border-blue-300/30 shadow-xl shadow-blue-600/20',
+        card: 'bg-gradient-to-br from-slate-700 via-blue-800 to-indigo-900 text-white border border-blue-400/30 shadow-xl shadow-blue-950/30',
         progressBarBg: 'bg-black/25'
       }
     }
 
     if (isNightTime) {
+      // Celestial Night: Deep midnight navy to twilight indigo with starry radiance
       return {
-        // Night: "just a little darker" than day, harmonious with the theme
-        card: isDark
-          ? 'bg-gradient-to-br from-slate-900 via-[#121c3b] to-indigo-950 text-white border border-indigo-500/30 shadow-xl shadow-indigo-950/50'
-          : 'bg-gradient-to-br from-indigo-500 via-blue-600 to-indigo-700 text-white border border-indigo-300/40 shadow-xl shadow-indigo-500/20',
-        progressBarBg: isDark ? 'bg-black/30' : 'bg-black/20'
+        card: 'bg-gradient-to-br from-[#0B132B] via-[#1C2541] to-[#1E1B4B] text-white border border-indigo-500/30 shadow-xl shadow-indigo-950/40',
+        progressBarBg: 'bg-black/30'
       }
     }
 
-    // Daytime: "little bright w sun with cloud" - radiant, cheerful sky
+    // Daytime: Rich vibrant sky-to-royal blue gradient (constant and independent of theme)
     return {
-      card: isDark
-        ? 'bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-800 text-white border border-blue-500/30 shadow-xl shadow-blue-900/30'
-        : 'bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500 text-white border border-sky-300/40 shadow-xl shadow-blue-500/20',
-      progressBarBg: isDark ? 'bg-black/25' : 'bg-black/15'
+      card: 'bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white border border-sky-300/40 shadow-xl shadow-blue-500/25',
+      progressBarBg: 'bg-black/20'
     }
-  }, [isNightTime, isRainy, isDark])
+  }, [isNightTime, isRainy])
 
   // Accurate condition label respecting Night vs Day (never shows "Sunny" at night!)
   const conditionDisplay = useMemo(() => {
@@ -1021,7 +1022,7 @@ export const DashboardPage = () => {
       </div>
 
       {/* =========================================================================
-          5. INTERACTIVE 24-HOUR RECHARTS TELEMETRY & HOURLY SLIDER (STARTS AT NOW)
+          5. INTERACTIVE 24-HOUR RECHARTS TELEMETRY & HOURLY TIMELINE (STARTS AT NOW)
           ========================================================================= */}
       <div className='bg-white dark:bg-slate-800/95 rounded-3xl border border-slate-200/80 dark:border-slate-700/70 p-6 shadow-xs space-y-5'>
         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-700/60'>
@@ -1114,14 +1115,14 @@ export const DashboardPage = () => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload
                     return (
-                      <div className='p-2.5 rounded-xl bg-slate-900 text-white text-xs shadow-xl border border-slate-700'>
-                        <p className='font-bold text-sky-300'>{data.fullTime}</p>
-                        <p className='text-white font-extrabold mt-1'>
+                      <div className='p-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs shadow-xl border border-slate-200 dark:border-slate-700'>
+                        <p className='font-bold text-blue-600 dark:text-sky-300'>{data.fullTime}</p>
+                        <p className='text-slate-900 dark:text-white font-extrabold mt-1'>
                           {activeChartMetric === 'temp' && `Temperature: ${data.temp}°C`}
                           {activeChartMetric === 'pop' && `Rain Probability: ${data.pop}%`}
                           {activeChartMetric === 'wind' && `Wind Velocity: ${data.wind} km/h`}
                         </p>
-                        <p className='text-slate-400 text-[10px] mt-0.5'>{data.condition}</p>
+                        <p className='text-slate-500 dark:text-slate-400 text-[10px] mt-0.5'>{data.condition}</p>
                       </div>
                     )
                   }
@@ -1460,7 +1461,7 @@ export const DashboardPage = () => {
             target='_blank'
             rel='noopener noreferrer'
             aria-label='Follow us on X'
-            className='w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black hover:bg-slate-900 text-white flex items-center justify-center shadow-xs hover:shadow-md hover:scale-105 transition-all cursor-pointer'
+            className='w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center shadow-xs hover:shadow-md hover:scale-105 transition-all cursor-pointer'
           >
             <svg className='w-4 h-4 sm:w-4.5 sm:h-4.5 fill-current' viewBox='0 0 24 24'>
               <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z' />

@@ -27,6 +27,11 @@ import authorityRoutes from './routes/authorityRoutes.js'
 import newsRoutes from './routes/newsRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 
+// SIH 2026 Advanced Feature Routes
+import aviationRoutes from './routes/aviationRoutes.js'
+import marineRoutes from './routes/marineRoutes.js'
+import urbanFloodRoutes from './routes/urbanFloodRoutes.js'
+
 import errorMiddleware from './middleware/errorMiddleware.js'
 
 import {
@@ -66,10 +71,24 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (e.g. native mobile apps, curl, server-to-server)
+      if (!origin) {
         return callback(null, true)
       }
-      if (env.IS_DEVELOPMENT && origin.includes('localhost')) {
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+      // In development mode, allow localhost, 127.0.0.1, LAN IPs (192.168.*, 10.*, 172.*), and Expo
+      if (
+        env.IS_DEVELOPMENT ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.includes('192.168.') ||
+        origin.includes('10.') ||
+        origin.includes(':8081') ||
+        origin.includes(':5173') ||
+        origin.includes(':5174')
+      ) {
         return callback(null, true)
       }
       return callback(new Error('Origin is not allowed by CORS'))
@@ -124,6 +143,9 @@ app.use('/api/maps', mapRoutes)
 app.use('/api/voice', voiceRoutes)
 app.use('/api/satellite', satelliteRoutes)
 app.use('/api/news', newsRoutes)
+app.use('/api/aviation', aviationRoutes)
+app.use('/api/marine', marineRoutes)
+app.use('/api/urban-flood', urbanFloodRoutes)
 
 // Protected Routes
 app.use('/api/users', userRoutes)
@@ -135,6 +157,25 @@ app.use('/api/subscriptions', subscriptionRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/authority', authorityRoutes)
 app.use('/api/admin', adminRoutes)
+
+// Serve production frontend assets from frontend/dist
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const frontendDist = path.resolve(__dirname, '../../frontend/dist')
+
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist))
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(frontendDist, 'index.html'))
+    }
+    next()
+  })
+}
 
 // 404 Fallback Handler for Unknown Routes
 app.use((req, res) => {

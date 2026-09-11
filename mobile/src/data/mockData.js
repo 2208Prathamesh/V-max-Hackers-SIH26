@@ -20,9 +20,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 10:21 AM',
     coordinates: { top: '59%', left: '37%' },
     forecast3Day: [
-      { day: 'Wed', temp: '31°', icon: '🌧️' },
-      { day: 'Thu', temp: '30°', icon: '🌧️' },
-      { day: 'Fri', temp: '29°', icon: '☀️' }
+      { day: 'Wed', temp: '31°', icon: 'rain' },
+      { day: 'Thu', temp: '30°', icon: 'rain' },
+      { day: 'Fri', temp: '29°', icon: 'clear' }
     ]
   },
   {
@@ -46,9 +46,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 9:45 AM',
     coordinates: { top: '54%', left: '34%' },
     forecast3Day: [
-      { day: 'Wed', temp: '30°', icon: '🌧️' },
-      { day: 'Thu', temp: '31°', icon: '⛅' },
-      { day: 'Fri', temp: '29°', icon: '🌧️' }
+      { day: 'Wed', temp: '30°', icon: 'rain' },
+      { day: 'Thu', temp: '31°', icon: 'cloudy' },
+      { day: 'Fri', temp: '29°', icon: 'rain' }
     ]
   },
   {
@@ -72,9 +72,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 8:30 AM',
     coordinates: { top: '28%', left: '44%' },
     forecast3Day: [
-      { day: 'Wed', temp: '33°', icon: '☀️' },
-      { day: 'Thu', temp: '34°', icon: '☀️' },
-      { day: 'Fri', temp: '32°', icon: '☀️' }
+      { day: 'Wed', temp: '33°', icon: 'clear' },
+      { day: 'Thu', temp: '34°', icon: 'clear' },
+      { day: 'Fri', temp: '32°', icon: 'clear' }
     ]
   },
   {
@@ -98,9 +98,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated Yesterday, 8:15 PM',
     coordinates: { top: '74%', left: '45%' },
     forecast3Day: [
-      { day: 'Wed', temp: '26°', icon: '⛅' },
-      { day: 'Thu', temp: '25°', icon: '⛅' },
-      { day: 'Fri', temp: '24°', icon: '🌦️' }
+      { day: 'Wed', temp: '26°', icon: 'cloudy' },
+      { day: 'Thu', temp: '25°', icon: 'cloudy' },
+      { day: 'Fri', temp: '24°', icon: 'drizzle' }
     ]
   },
   {
@@ -124,9 +124,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated Yesterday, 6:40 PM',
     coordinates: { top: '34%', left: '37%' },
     forecast3Day: [
-      { day: 'Wed', temp: '36°', icon: '☀️' },
-      { day: 'Thu', temp: '37°', icon: '☀️' },
-      { day: 'Fri', temp: '36°', icon: '☀️' }
+      { day: 'Wed', temp: '36°', icon: 'clear' },
+      { day: 'Thu', temp: '37°', icon: 'clear' },
+      { day: 'Fri', temp: '36°', icon: 'clear' }
     ]
   },
   {
@@ -150,9 +150,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 10:05 AM',
     coordinates: { top: '14%', left: '42%' },
     forecast3Day: [
-      { day: 'Wed', temp: '23°', icon: '☀️' },
-      { day: 'Thu', temp: '24°', icon: '☀️' },
-      { day: 'Fri', temp: '22°', icon: '⛅' }
+      { day: 'Wed', temp: '23°', icon: 'clear' },
+      { day: 'Thu', temp: '24°', icon: 'clear' },
+      { day: 'Fri', temp: '22°', icon: 'cloudy' }
     ]
   },
   {
@@ -176,9 +176,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 10:12 AM',
     coordinates: { top: '33%', left: '54%' },
     forecast3Day: [
-      { day: 'Wed', temp: '34°', icon: '☀️' },
-      { day: 'Thu', temp: '35°', icon: '☀️' },
-      { day: 'Fri', temp: '33°', icon: '☀️' }
+      { day: 'Wed', temp: '34°', icon: 'clear' },
+      { day: 'Thu', temp: '35°', icon: 'clear' },
+      { day: 'Fri', temp: '33°', icon: 'clear' }
     ]
   },
   {
@@ -202,9 +202,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 10:14 AM',
     coordinates: { top: '42%', left: '68%' },
     forecast3Day: [
-      { day: 'Wed', temp: '31°', icon: '⛈️' },
-      { day: 'Thu', temp: '30°', icon: '🌧️' },
-      { day: 'Fri', temp: '31°', icon: '⛈️' }
+      { day: 'Wed', temp: '31°', icon: 'thunderstorm' },
+      { day: 'Thu', temp: '30°', icon: 'rain' },
+      { day: 'Fri', temp: '31°', icon: 'thunderstorm' }
     ]
   },
   {
@@ -228,9 +228,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 10:16 AM',
     coordinates: { top: '58%', left: '50%' },
     forecast3Day: [
-      { day: 'Wed', temp: '30°', icon: '⛅' },
-      { day: 'Thu', temp: '29°', icon: '⛅' },
-      { day: 'Fri', temp: '28°', icon: '🌧️' }
+      { day: 'Wed', temp: '30°', icon: 'cloudy' },
+      { day: 'Thu', temp: '29°', icon: 'cloudy' },
+      { day: 'Fri', temp: '28°', icon: 'rain' }
     ]
   },
   {
@@ -254,9 +254,9 @@ export const allCityDatabase = [
     updatedTime: 'Updated 10:20 AM',
     coordinates: { top: '72%', left: '54%' },
     forecast3Day: [
-      { day: 'Wed', temp: '31°', icon: '☀️' },
-      { day: 'Thu', temp: '31°', icon: '⛅' },
-      { day: 'Fri', temp: '30°', icon: '🌧️' }
+      { day: 'Wed', temp: '31°', icon: 'clear' },
+      { day: 'Thu', temp: '31°', icon: 'cloudy' },
+      { day: 'Fri', temp: '30°', icon: 'rain' }
     ]
   }
 ];
@@ -268,7 +268,7 @@ export const alertsData = [
     location: 'Pune, Maharashtra',
     detail: 'Heavy rainfall expected in the next 24 hours. Avoid low lying areas.',
     color: '#E5483F',
-    icon: '⚠️',
+    icon: 'rain',
     severity: 'Severe',
     probability: '80%',
     time: '21 May 2025 • 8:20 AM',
@@ -280,7 +280,7 @@ export const alertsData = [
     location: 'Mumbai, Maharashtra',
     detail: 'Strong surface winds reaching 40-50 kmph likely to prevail.',
     color: '#F28A1A',
-    icon: '⚠️',
+    icon: 'wind',
     severity: 'Moderate',
     probability: '60%',
     time: '22 May 2025 • 9:00 AM',
@@ -292,7 +292,7 @@ export const alertsData = [
     location: 'Nagpur, Maharashtra',
     detail: 'Heatwave conditions likely in isolated places. Stay hydrated.',
     color: '#E9A411',
-    icon: '⚠️',
+    icon: 'heat',
     severity: 'Watch',
     probability: '45%',
     time: '23 May 2025 • 1:00 PM',
@@ -304,7 +304,7 @@ export const alertsData = [
     location: 'Nashik, Maharashtra',
     detail: 'Isolated convective thunderstorms with lightning strikes expected during afternoon hours.',
     color: '#3B82F6',
-    icon: '⚡',
+    icon: 'thunderstorm',
     severity: 'Advisory',
     probability: '50%',
     time: '21 May 2025 • 4:15 PM',
@@ -323,7 +323,7 @@ export const groupedHistoryData = [
         time: '10:21 AM',
         tag: 'General Query',
         tagType: 'query',
-        icon: '🌧️'
+        icon: 'rain'
       },
       {
         id: 'h2',
@@ -332,7 +332,7 @@ export const groupedHistoryData = [
         time: '9:05 AM',
         tag: 'Alert',
         tagType: 'alert',
-        icon: '⚠️'
+        icon: 'alert'
       },
       {
         id: 'h3',
@@ -341,7 +341,7 @@ export const groupedHistoryData = [
         time: '8:15 AM',
         tag: 'Forecast',
         tagType: 'forecast',
-        icon: '⛅'
+        icon: 'cloudy'
       }
     ]
   },
@@ -355,7 +355,7 @@ export const groupedHistoryData = [
         time: '4:30 PM',
         tag: 'Air Quality',
         tagType: 'air',
-        icon: '💨'
+        icon: 'wind'
       },
       {
         id: 'h5',
@@ -364,7 +364,7 @@ export const groupedHistoryData = [
         time: '11:10 AM',
         tag: 'Alert',
         tagType: 'alert',
-        icon: '🌀'
+        icon: 'alert'
       },
       {
         id: 'h6',
@@ -373,7 +373,7 @@ export const groupedHistoryData = [
         time: '9:40 AM',
         tag: 'General Query',
         tagType: 'query',
-        icon: '📍'
+        icon: 'location'
       }
     ]
   },
@@ -387,7 +387,7 @@ export const groupedHistoryData = [
         time: '6:20 PM',
         tag: 'Forecast',
         tagType: 'forecast',
-        icon: '🌡️'
+        icon: 'temperature'
       },
       {
         id: 'h8',
@@ -396,7 +396,7 @@ export const groupedHistoryData = [
         time: '3:40 PM',
         tag: 'General Query',
         tagType: 'query',
-        icon: '🛡️'
+        icon: 'shield'
       },
       {
         id: 'h9',
@@ -405,7 +405,7 @@ export const groupedHistoryData = [
         time: '10:15 AM',
         tag: 'Forecast',
         tagType: 'forecast',
-        icon: '🌧️'
+        icon: 'rain'
       }
     ]
   }
@@ -450,23 +450,23 @@ export const recentConversationsData = [
 ];
 
 export const forecastDaysData = [
-  { day: 'Wed', date: '21 May', high: 31, low: 22, condition: 'Showers', rainChance: '20%', icon: '⛅', isSelected: true },
-  { day: 'Thu', date: '22 May', high: 30, low: 22, condition: 'Rain', rainChance: '60%', icon: '🌧️' },
-  { day: 'Fri', date: '23 May', high: 29, low: 21, condition: 'Heavy Rain', rainChance: '70%', icon: '🌧️' },
-  { day: 'Sat', date: '24 May', high: 28, low: 21, condition: 'Thunderstorm', rainChance: '80%', icon: '⛈️' },
-  { day: 'Sun', date: '25 May', high: 30, low: 22, condition: 'Partly Cloudy', rainChance: '30%', icon: '⛅' },
-  { day: 'Mon', date: '26 May', high: 31, low: 23, condition: 'Scattered Sun', rainChance: '20%', icon: '⛅' },
-  { day: 'Tue', date: '27 May', high: 32, low: 23, condition: 'Sunny', rainChance: '10%', icon: '☀️' }
+  { day: 'Wed', date: '21 May', high: 31, low: 22, condition: 'Showers', rainChance: '20%', icon: 'cloudy', isSelected: true },
+  { day: 'Thu', date: '22 May', high: 30, low: 22, condition: 'Rain', rainChance: '60%', icon: 'rain' },
+  { day: 'Fri', date: '23 May', high: 29, low: 21, condition: 'Heavy Rain', rainChance: '70%', icon: 'rain' },
+  { day: 'Sat', date: '24 May', high: 28, low: 21, condition: 'Thunderstorm', rainChance: '80%', icon: 'thunderstorm' },
+  { day: 'Sun', date: '25 May', high: 30, low: 22, condition: 'Partly Cloudy', rainChance: '30%', icon: 'cloudy' },
+  { day: 'Mon', date: '26 May', high: 31, low: 23, condition: 'Scattered Sun', rainChance: '20%', icon: 'cloudy' },
+  { day: 'Tue', date: '27 May', high: 32, low: 23, condition: 'Sunny', rainChance: '10%', icon: 'clear' }
 ];
 
 export const hourlyForecastData = [
-  { time: 'Now', temp: 28, chance: '65%', icon: '⛅' },
-  { time: '9 AM', temp: 29, chance: '60%', icon: '🌧️' },
-  { time: '10 AM', temp: 30, chance: '70%', icon: '🌧️' },
-  { time: '11 AM', temp: 31, chance: '80%', icon: '🌧️' },
-  { time: '12 PM', temp: 31, chance: '70%', icon: '☁️' },
-  { time: '1 PM', temp: 30, chance: '60%', icon: '☁️' },
-  { time: '2 PM', temp: 29, chance: '40%', icon: '☁️' },
-  { time: '3 PM', temp: 28, chance: '40%', icon: '🌧️' },
-  { time: '4 PM', temp: 27, chance: '40%', icon: '🌧️' }
+  { time: 'Now', temp: 28, chance: '65%', icon: 'cloudy' },
+  { time: '9 AM', temp: 29, chance: '60%', icon: 'rain' },
+  { time: '10 AM', temp: 30, chance: '70%', icon: 'rain' },
+  { time: '11 AM', temp: 31, chance: '80%', icon: 'rain' },
+  { time: '12 PM', temp: 31, chance: '70%', icon: 'cloudy' },
+  { time: '1 PM', temp: 30, chance: '60%', icon: 'cloudy' },
+  { time: '2 PM', temp: 29, chance: '40%', icon: 'cloudy' },
+  { time: '3 PM', temp: 28, chance: '40%', icon: 'rain' },
+  { time: '4 PM', temp: 27, chance: '40%', icon: 'rain' }
 ];

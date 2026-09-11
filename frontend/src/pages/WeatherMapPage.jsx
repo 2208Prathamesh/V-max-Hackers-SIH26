@@ -967,7 +967,7 @@ export const WeatherMapPage = () => {
       {/* ====================================================================
           ACCUWEATHER-STYLE TOP HEADER BAR
           ==================================================================== */}
-      <div className="bg-white dark:bg-[#151F32] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-[#121316] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
         {/* Row 1: Upper Tag & Dropdown Selector */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
           <div className="flex items-center gap-3">
@@ -1083,7 +1083,7 @@ export const WeatherMapPage = () => {
 
             {/* Search Dropdown */}
             {showSearchDropdown && mapSearchResults.length > 0 && (
-              <div className="absolute left-0 right-0 top-11 z-[500] bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-2xl space-y-1 animate-fadeIn">
+              <div className="absolute left-0 right-0 top-11 z-[500] bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-2xl space-y-1 animate-fadeIn">
                 {mapSearchResults.map((res, i) => (
                   <button
                     key={i}
@@ -1256,9 +1256,9 @@ export const WeatherMapPage = () => {
             />
 
             {/* In-Map Floating Layer Opacity Slider (Top Right) */}
-            <div className="absolute top-4 right-4 z-[400] hidden sm:flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-700/80 shadow-xl text-xs text-white">
-              <Sliders className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-[10px] font-bold text-slate-300">Opacity:</span>
+            <div className="absolute top-4 right-4 z-[400] hidden sm:flex items-center gap-2 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-300/80 dark:border-slate-700/80 shadow-xl text-xs text-slate-800 dark:text-white">
+              <Sliders className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
+              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Opacity:</span>
               <input
                 type="range"
                 min="0.2"
@@ -1266,9 +1266,9 @@ export const WeatherMapPage = () => {
                 step="0.05"
                 value={layerOpacity}
                 onChange={(e) => setLayerOpacity(parseFloat(e.target.value))}
-                className="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400"
+                className="w-16 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-sky-400"
               />
-              <span className="text-[10px] font-black text-sky-400">{Math.round(layerOpacity * 100)}%</span>
+              <span className="text-[10px] font-black text-blue-600 dark:text-sky-400">{Math.round(layerOpacity * 100)}%</span>
             </div>
 
             {/* OpenStreetMap Attribution Badge (Bottom Left, like in reference) */}
@@ -1279,7 +1279,7 @@ export const WeatherMapPage = () => {
             {/* ================================================================
                 ACCUWEATHER-STYLE FLOATING TIMELINE PLAYER BAR (BOTTOM CENTER)
                 ================================================================ */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] sm:w-[480px] z-[400] bg-white/95 dark:bg-[#151F32]/95 backdrop-blur-xl border border-slate-300/80 dark:border-slate-700/80 px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] sm:w-[480px] z-[400] bg-white/95 dark:bg-[#121316]/95 backdrop-blur-xl border border-slate-300/80 dark:border-slate-700/80 px-4 py-2.5 rounded-full shadow-2xl flex items-center justify-between gap-3">
               {/* Play / Pause Circular Button */}
               <button
                 type="button"
@@ -1339,7 +1339,7 @@ export const WeatherMapPage = () => {
           {/* ==================================================================
               ACCUWEATHER-STYLE BOTTOM LEGEND BAR (DIRECTLY BENEATH MAP)
               ================================================================== */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-3 shadow-xs">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-3 shadow-xs">
             {activeLayer === 'aqi' ? (
               // Air Quality Legend (Exact match to AccuWeather screenshot)
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-7 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -1415,7 +1415,7 @@ export const WeatherMapPage = () => {
             RIGHT COLUMN: GROUND TELEMETRY & LIVE POINT FORECAST (4 cols)
             ==================================================================== */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl p-5 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl p-5 shadow-sm space-y-4">
             {/* Inspector Location Title */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2.5">
@@ -1593,7 +1593,7 @@ export const WeatherMapPage = () => {
           </div>
 
           {/* Quick Indian City Telemetry Switcher */}
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl p-4 shadow-sm space-y-2.5">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl p-4 shadow-sm space-y-2.5">
             <span className="text-xs font-black text-slate-900 dark:text-white block">
               {language === 'mr' ? 'महत्त्वाची शहरे व स्थानके' : 'Major Weather Stations'}
             </span>

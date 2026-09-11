@@ -39,6 +39,17 @@ async function startServer () {
 
     Scheduler.init()
 
+    httpServer.on('error', err => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use by another running process.`)
+        console.log(`💡 The backend server is already running on http://localhost:${PORT}`)
+        process.exit(0)
+      } else {
+        console.error('❌ Server error:', err.message)
+        process.exit(1)
+      }
+    })
+
     server = httpServer.listen(PORT, () => {
       console.log(
         `🚀 WeatherGPT API Server running in ${env.NODE_ENV} mode on port ${PORT}`

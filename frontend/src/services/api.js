@@ -562,7 +562,36 @@ export const api = {
     a.remove()
     window.URL.revokeObjectURL(url)
     return true
-  }
+  },
+
+  // ─── SIH 2026 Advanced Features ────────────────────────────────────────────
+
+  // Aviation Weather Briefing
+  getAviationAirports: () => request('/aviation/airports'),
+  getAviationMetar: (icao) => request(`/aviation/metar/${icao}`),
+  getAviationBriefing: (icao) => request(`/aviation/briefing/${icao}`),
+
+  // Marine & Fishermen Safety
+  getMarineDistricts: () => request('/marine/districts'),
+  getMarineForecast: (params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return request(`/marine/forecast?${qs}`)
+  },
+  getMarineCoastal: (district) => request(`/marine/coastal/${district}`),
+
+  // Urban Flash Flood Index
+  getUrbanFloodCities: () => request('/urban-flood/cities'),
+  getUrbanFloodIndex: (city, rainfall, mode = 'live') => {
+    const params = new URLSearchParams()
+    if (city) params.set('city', city)
+    if (rainfall !== undefined && rainfall !== null && rainfall !== '') params.set('rainfall', rainfall)
+    if (mode) params.set('mode', mode)
+    return request(`/urban-flood?${params.toString()}`)
+  },
+
+  // CAP v1.2 Export
+  getAlertCapXml: (alertId) => request(`/alerts/${alertId}/cap-xml`),
+  getAlertCapJson: (alertId) => request(`/alerts/${alertId}/cap-json`)
 }
 
 export default api

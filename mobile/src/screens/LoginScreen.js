@@ -12,6 +12,14 @@ import {
   View,
   Modal
 } from 'react-native'
+import {
+  MessageSquare,
+  Radio,
+  Bell,
+  Zap,
+  ArrowRight,
+  Check
+} from 'lucide-react-native'
 import { Brand } from '../components/Brand'
 import { api } from '../services/api'
 
@@ -74,9 +82,9 @@ export function LoginScreen ({ onLogin, onRegister }) {
       if (api.forgotPassword) {
         await api.forgotPassword(forgotEmail.trim())
       }
-      setForgotStatus('✓ Password reset instructions sent to your inbox!')
+      setForgotStatus('Password reset instructions sent to your inbox!')
     } catch (err) {
-      setForgotStatus(err?.message || '✓ Reset instructions sent if account exists.')
+      setForgotStatus(err?.message || 'Reset instructions sent if account exists.')
     } finally {
       setIsForgotLoading(false)
     }
@@ -115,7 +123,7 @@ export function LoginScreen ({ onLogin, onRegister }) {
             <View style={styles.featureList}>
               <View style={styles.featureRow}>
                 <View style={styles.featureIcon}>
-                  <Text style={styles.featureIconText}>💬</Text>
+                  <MessageSquare size={16} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <View style={styles.featureCopy}>
                   <Text style={styles.featureTitle}>Chat Naturally</Text>
@@ -127,7 +135,7 @@ export function LoginScreen ({ onLogin, onRegister }) {
 
               <View style={styles.featureRow}>
                 <View style={styles.featureIcon}>
-                  <Text style={styles.featureIconText}>🗺️</Text>
+                  <Radio size={16} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <View style={styles.featureCopy}>
                   <Text style={styles.featureTitle}>Doppler Weather Map</Text>
@@ -139,7 +147,7 @@ export function LoginScreen ({ onLogin, onRegister }) {
 
               <View style={styles.featureRow}>
                 <View style={styles.featureIcon}>
-                  <Text style={styles.featureIconText}>🔔</Text>
+                  <Bell size={16} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <View style={styles.featureCopy}>
                   <Text style={styles.featureTitle}>Instant Alerts</Text>
@@ -293,13 +301,14 @@ export function LoginScreen ({ onLogin, onRegister }) {
               <Text style={styles.primaryButtonText}>
                 {mode === 'login' ? 'Sign in' : 'Create Account'}
               </Text>
-              <Text style={styles.buttonArrow}>→</Text>
+              <ArrowRight size={16} color="#FFFFFF" strokeWidth={2.4} style={{ marginLeft: 6 }} />
             </Pressable>
 
             {mode === 'login' ? (
               <Pressable onPress={demo} style={styles.demoButton}>
+                <Zap size={14} color="#2563EB" strokeWidth={2.4} style={{ marginRight: 6 }} />
                 <Text style={styles.demoButtonText}>
-                  ⚡ Try demo account (Instant Access)
+                  Try demo account (Instant Access)
                 </Text>
               </Pressable>
             ) : null}

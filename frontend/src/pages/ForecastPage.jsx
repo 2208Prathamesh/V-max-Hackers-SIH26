@@ -246,7 +246,7 @@ export const ForecastPage = () => {
       {/* =========================================================================
           TOP CONTROL BAR: Location Chip, NWP Status & Mode Switcher
           ========================================================================= */}
-      <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4'>
+      <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
           {/* Location Title & Lat/Long Coordinates */}
           <div className='flex items-start gap-3.5'>
@@ -339,7 +339,7 @@ export const ForecastPage = () => {
       {activeView === 'forecast' && (
         <div className='space-y-6'>
           {/* Top Hero: Current Conditions & Core Meteorological Parameters */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm'>
             <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-center'>
               {/* Left Part: Big Temp, Condition, High/Low (Span 5) */}
               <div className='lg:col-span-5 flex items-center gap-5'>
@@ -463,7 +463,7 @@ export const ForecastPage = () => {
           </div>
 
           {/* 7-Day Interactive Forecast Selector */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex items-center justify-between'>
               <div>
                 <h3 className='text-base font-bold text-slate-900 dark:text-white'>
@@ -543,7 +543,7 @@ export const ForecastPage = () => {
           </div>
 
           {/* 24-Hour Scrubber & Parameter Spline Graph for Selected Day */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
               <div>
                 <h3 className='text-base font-bold text-slate-900 dark:text-white'>
@@ -692,24 +692,24 @@ export const ForecastPage = () => {
       {activeView === 'models' && (
         <div className='space-y-6'>
           {/* Consensus Banner & Overall Score */}
-          <div className='bg-gradient-to-br from-blue-900 via-[#111C2E] to-slate-900 border border-blue-500/30 rounded-3xl p-6 shadow-md text-white space-y-4'>
+          <div className='bg-gradient-to-br from-blue-50 via-indigo-50/50 to-white dark:from-slate-900 dark:via-[#16171B] dark:to-slate-900 border border-blue-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-md text-slate-900 dark:text-white space-y-4'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
               <div className='flex items-center gap-3.5'>
-                <div className='w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-400/30 shrink-0'>
+                <div className='w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-400/30 shrink-0 shadow-xs'>
                   <Layers className='w-6 h-6' />
                 </div>
                 <div>
-                  <h2 className='text-lg sm:text-xl font-black tracking-tight'>
-                    NWP Multi-Model Consensus & Confidence
+                  <h2 className='text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white'>
+                    NWP Multi-Model Consensus &amp; Confidence
                   </h2>
-                  <p className='text-xs text-slate-300 mt-0.5'>
+                  <p className='text-xs text-slate-600 dark:text-slate-300 mt-0.5'>
                     Synchronized inter-model evaluation: ECMWF IFS vs NOAA GFS vs High-Res Ensemble
                   </p>
                 </div>
               </div>
 
               <div className='flex items-center gap-2'>
-                <span className='px-4 py-2 rounded-2xl text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-2'>
+                <span className='px-4 py-2 rounded-2xl text-xs font-black bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 flex items-center gap-2 shadow-xs'>
                   {nwpLoading ? (
                     <RefreshCw className='w-4 h-4 animate-spin' />
                   ) : (
@@ -723,49 +723,49 @@ export const ForecastPage = () => {
             </div>
 
             {/* Consensus Metrics Strip */}
-            <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-700/60'>
-              <div className='p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 space-y-0.5'>
-                <span className='text-[10px] text-slate-400 block font-bold'>Consensus Temperature</span>
-                <span className='text-lg font-black text-white'>
+            <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200 dark:border-slate-700/60'>
+              <div className='p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 space-y-0.5 shadow-xs'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block font-bold'>Consensus Temperature</span>
+                <span className='text-lg font-black text-slate-900 dark:text-white'>
                   {consensus?.temperatureC != null ? `${consensus.temperatureC}°C` : '--'}
                 </span>
-                <span className='text-[10px] text-slate-400 block'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block'>
                   Spread: ±{consensus?.temperatureSpreadC ?? 0}°C
                 </span>
               </div>
 
-              <div className='p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 space-y-0.5'>
-                <span className='text-[10px] text-slate-400 block font-bold'>Rainfall Ceiling</span>
-                <span className='text-lg font-black text-sky-400'>
+              <div className='p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 space-y-0.5 shadow-xs'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block font-bold'>Rainfall Ceiling</span>
+                <span className='text-lg font-black text-sky-600 dark:text-sky-400'>
                   {consensus?.maxExpectedRainMm != null ? `${consensus.maxExpectedRainMm} mm` : '0 mm'}
                 </span>
-                <span className='text-[10px] text-slate-400 block'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block'>
                   Spread: {consensus?.rainSpreadMm ?? 0} mm
                 </span>
               </div>
 
-              <div className='p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 space-y-0.5'>
-                <span className='text-[10px] text-slate-400 block font-bold'>Ensemble Mean Wind</span>
-                <span className='text-lg font-black text-white'>
+              <div className='p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 space-y-0.5 shadow-xs'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block font-bold'>Ensemble Mean Wind</span>
+                <span className='text-lg font-black text-slate-900 dark:text-white'>
                   {consensus?.avgWindSpeedKmh != null ? `${consensus.avgWindSpeedKmh} km/h` : '--'}
                 </span>
-                <span className='text-[10px] text-slate-400 block'>Moderate breeze</span>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block'>Moderate breeze</span>
               </div>
 
-              <div className='p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 space-y-0.5'>
-                <span className='text-[10px] text-slate-400 block font-bold'>Model Agreement</span>
-                <span className='text-lg font-black text-emerald-400'>
+              <div className='p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 space-y-0.5 shadow-xs'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block font-bold'>Model Agreement</span>
+                <span className='text-lg font-black text-emerald-600 dark:text-emerald-400'>
                   {consensus?.modelAgreementScore ?? 90}%
                 </span>
-                <span className='text-[10px] text-slate-400 block'>
+                <span className='text-[10px] text-slate-500 dark:text-slate-400 block'>
                   3 Global Models Aligned
                 </span>
               </div>
             </div>
 
             {/* Plain-Language Verdict */}
-            <div className='p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 leading-relaxed flex items-center gap-2.5'>
-              <Sparkles className='w-4 h-4 text-blue-400 shrink-0' />
+            <div className='p-3 rounded-xl bg-blue-500/10 dark:bg-slate-950/60 border border-blue-500/20 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-300 leading-relaxed flex items-center gap-2.5'>
+              <Sparkles className='w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0' />
               <span>
                 <strong>Synoptic Verdict:</strong>{' '}
                 {consensus?.agreementSummary ||
@@ -783,7 +783,7 @@ export const ForecastPage = () => {
               return (
                 <div
                   key={model.id || model.modelName}
-                  className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4 flex flex-col justify-between'
+                  className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4 flex flex-col justify-between'
                 >
                   <div className='space-y-3'>
                     {/* Header: Model Name & Badge */}
@@ -911,7 +911,7 @@ export const ForecastPage = () => {
       {activeView === 'divergence' && (
         <div className='space-y-6'>
           {/* Divergence Summary Box */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex items-start justify-between gap-4'>
               <div>
                 <h2 className='text-base sm:text-lg font-black text-slate-900 dark:text-white'>
@@ -1045,7 +1045,7 @@ export const ForecastPage = () => {
           ========================================================================= */}
       {activeView === 'advisory' && (
         <div className='space-y-6'>
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div>
               <h2 className='text-base sm:text-lg font-black text-slate-900 dark:text-white'>
                 Agro-Operational Decision Matrix

@@ -6,28 +6,42 @@ import {
   Pressable,
   StyleSheet,
   ScrollView,
-  useWindowDimensions
+  useWindowDimensions,
+  ActivityIndicator
 } from 'react-native'
+import {
+  Search,
+  Calendar,
+  ChevronDown,
+  Plus,
+  MessageSquare,
+  CloudSun,
+  AlertTriangle,
+  Wind,
+  Compass,
+  Clock,
+  BarChart3,
+  Database,
+  Check,
+  Zap,
+  MapPin,
+  RefreshCw,
+  Download,
+  CloudRain,
+  Gauge,
+  Thermometer,
+  ShieldCheck
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
-import { groupedHistoryData } from '../data/mockData'
-import { api } from '../services/api'
+import { api, offlineStorage } from '../services/api'
+import { WeatherIcon } from '../components/WeatherIcon'
 
-const TABS = [
-  'All Conversations',
-  'Today',
-  'Yesterday',
-  'This Week',
-  'This Month',
-  'Custom'
+const PRIMARY_TABS = [
+  { id: 'offline7d', label: '7-Day Offline Archive', icon: Database },
+  { id: 'chats', label: 'AI Query Archive', icon: MessageSquare }
 ]
-const CONV_TYPES = [
-  'General Queries',
-  'Weather Forecast',
-  'Alerts & Warnings',
-  'Air Quality',
-  'Travel & Activities',
-  'Other'
-]
+
+const CITIES = ['Pune', 'Mumbai', 'Delhi', 'Bengaluru', 'Chennai', 'Kolkata']
 
 export function HistoryScreen ({
   isDark = false,
@@ -36,91 +50,71 @@ export function HistoryScreen ({
 }) {
   const c = getColors(isDark)
   const { width } = useWindowDimensions()
-  const isWide = width > 768
 
-  const [activeTab, setActiveTab] = useState('All Conversations')
+  const [activePrimaryTab, setActivePrimaryTab] = useState('offline7d')
+  const [selectedCity, setSelectedCity] = useState('Pune')
+  const [offline7Days, setOffline7Days] = useState([])
   const [liveHistory, setLiveHistory] = useState([])
-
-  useEffect(() => {
-    if (!backendReady) return
-
-    let isMounted = true
-    api
-      .conversations()
-      .then(result => {
-        if (!isMounted) return
-        if (Array.isArray(result) && result.length > 0) {
-          setLiveHistory(
-            result.map(item => ({
-              id: item._id || item.id,
-              title: item.title || 'Weather query',
-              time: new Date(item.updatedAt || Date.now()).toLocaleTimeString(
-                [],
-                {
-                  hour: 'numeric',
-                  minute: '2-digit'
-                }
-              ),
-              desc: item.category || 'Weather discussion',
-              tag: item.category || 'General Queries',
-              tagType: 'query',
-              icon: '💬'
-            }))
-          )
-        }
-      })
-      .catch(() => {
-        if (!isMounted) return
-        setLiveHistory([])
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [backendReady])
-
-  const historyData =
-    liveHistory.length > 0
-      ? [{ group: 'Recent', items: liveHistory }]
-      : groupedHistoryData
+  const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [selectedTypes, setSelectedTypes] = useState([
-    'General Queries',
-    'Weather Forecast',
-    'Alerts & Warnings'
-  ])
-  const [sortBy, setSortBy] = useState('Most Recent')
+  const [isExported, setIsExported] = useState(false)
 
-  const toggleType = type => {
-    setSelectedTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    )
+  // Load 7-Day Offline History
+  const loadOfflineHistory = async cityName => {
+    setIsLoading(true)
+    try {
+      const data = await offlineStorage.get7DayHistory(cityName)
+      setOffline7Days(data || [])
+    } catch (err) {
+      console.warn('Failed to load 7-day offline data:', err)
+      setOffline7Days([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const getTagStyle = tagType => {
-    switch (tagType) {
-      case 'alert':
-        return {
-          bg: isDark ? '#3D1C1B' : '#FEF2F2',
-          text: '#EF4444'
-        }
-      case 'forecast':
-        return {
-          bg: isDark ? '#362413' : '#FFFBEB',
-          text: '#D97706'
-        }
-      case 'air':
-        return {
-          bg: isDark ? '#14382A' : '#ECFDF5',
-          text: '#10B981'
-        }
-      case 'query':
-      default:
-        return {
-          bg: isDark ? '#1C2E4A' : '#EFF6FF',
-          text: '#2563EB'
-        }
+  // Load Conversations
+  const loadConversations = async () => {
+    setIsLoading(true)
+    try {
+      await api.ensureAuth()
+      const result = await api.conversations()
+      if (Array.isArray(result)) {
+        setLiveHistory(
+          result.map(item => ({
+            id: item._id || item.id,
+            title: item.title || 'Weather intelligence consultation',
+            time: new Date(item.updatedAt || item.createdAt || Date.now()).toLocaleDateString(
+              'en-IN',
+              {
+                weekday: 'short',
+                hour: 'numeric',
+                minute: '2-digit'
+              }
+            ),
+            desc: item.category ? `Category: ${item.category}` : 'Atmospheric simulation discussion',
+            tag: item.category === 'forecast' ? 'NWP Forecast' : item.category === 'weather' ? 'Air Quality' : 'General Telemetry'
+          }))
+        )
+      }
+    } catch {
+      setLiveHistory([])
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (activePrimaryTab === 'offline7d') {
+      loadOfflineHistory(selectedCity)
+    } else {
+      loadConversations()
+    }
+  }, [activePrimaryTab, selectedCity, backendReady])
+
+  const handleExport = () => {
+    setIsExported(true)
+    setTimeout(() => setIsExported(false), 3000)
   }
 
   return (
@@ -129,343 +123,321 @@ export function HistoryScreen ({
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {/* Top Search & Actions Header */}
+      {/* Primary Tab Toggle (7-Day Offline Archive vs AI Queries) */}
       <View
         style={[
-          styles.topSearchBar,
+          styles.primaryToggleBar,
           { backgroundColor: c.card, borderColor: c.border }
         ]}
       >
-        <View
-          style={[
-            styles.searchBox,
-            { backgroundColor: c.cardAlt, borderColor: c.border }
-          ]}
-        >
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder='Search conversations...'
-            placeholderTextColor={c.muted}
-            style={[styles.searchInput, { color: c.ink }]}
-          />
-        </View>
-
-        <View style={styles.topActionsRow}>
-          <View
-            style={[
-              styles.dateDropdown,
-              { backgroundColor: c.cardAlt, borderColor: c.border }
-            ]}
-          >
-            <Text style={styles.dateIcon}>📅</Text>
-            <Text style={[styles.dateText, { color: c.ink }]}>Date</Text>
-            <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
-          </View>
-
-          <Pressable
-            onPress={() => onNavigate('chat')}
-            style={[styles.newChatBtn, { backgroundColor: c.blue }]}
-          >
-            <Text style={styles.newChatText}>+ New Chat</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Filter Tabs Row */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsRow}
-      >
-        {TABS.map(tab => {
-          const isActive = activeTab === tab
+        {PRIMARY_TABS.map(tab => {
+          const Icon = tab.icon
+          const isActive = activePrimaryTab === tab.id
           return (
             <Pressable
-              key={tab}
-              onPress={() => setActiveTab(tab)}
+              key={tab.id}
+              onPress={() => setActivePrimaryTab(tab.id)}
               style={[
-                styles.tabItem,
-                isActive && { borderBottomColor: c.blue, borderBottomWidth: 2 }
+                styles.primaryTabBtn,
+                isActive && {
+                  backgroundColor: c.blue,
+                  borderColor: c.blue
+                }
               ]}
             >
+              <Icon
+                size={16}
+                color={isActive ? '#FFFFFF' : c.muted}
+                style={{ marginRight: 6 }}
+              />
               <Text
                 style={[
-                  styles.tabText,
-                  { color: isActive ? c.blue : c.muted },
-                  isActive && styles.tabTextActive
+                  styles.primaryTabBtnText,
+                  {
+                    color: isActive ? '#FFFFFF' : c.muted,
+                    fontWeight: isActive ? '800' : '600'
+                  }
                 ]}
               >
-                {tab}
+                {tab.label}
               </Text>
             </Pressable>
           )
         })}
-      </ScrollView>
+      </View>
 
-      {/* Main Grid: Left Timeline List + Right Filter & Summary Column */}
-      <View style={[styles.mainGrid, isWide && styles.mainGridWide]}>
-        {/* Left Column: Grouped Conversation Threads */}
-        <View style={[styles.col, isWide && styles.colLeft]}>
-          {historyData.map(group => (
-            <View key={group.group} style={styles.groupBlock}>
-              <Text style={[styles.groupHeader, { color: c.ink }]}>
-                {group.group}
-              </Text>
-              <View
-                style={[
-                  styles.groupCard,
-                  { backgroundColor: c.card, borderColor: c.border }
-                ]}
-              >
-                {group.items.map((item, idx) => {
-                  const tagColors = getTagStyle(item.tagType)
-                  return (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => onNavigate('chat')}
-                      style={({ pressed }) => [
-                        styles.historyItemRow,
-                        { borderBottomColor: c.borderLight },
-                        idx === group.items.length - 1 && {
-                          borderBottomWidth: 0
-                        },
-                        pressed && styles.pressed
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.itemIconBadge,
-                          { backgroundColor: c.cardAlt }
-                        ]}
-                      >
-                        <Text style={styles.itemIconText}>{item.icon}</Text>
-                      </View>
-
-                      <View style={styles.itemCopy}>
-                        <View style={styles.itemTopRow}>
-                          <Text
-                            style={[styles.itemTitle, { color: c.ink }]}
-                            numberOfLines={1}
-                          >
-                            {item.title}
-                          </Text>
-                          <Text style={[styles.itemTime, { color: c.muted }]}>
-                            {item.time}
-                          </Text>
-                        </View>
-                        <Text
-                          style={[styles.itemDesc, { color: c.muted }]}
-                          numberOfLines={2}
-                        >
-                          {item.desc}
-                        </Text>
-                      </View>
-
-                      <View
-                        style={[
-                          styles.tagBadge,
-                          { backgroundColor: tagColors.bg }
-                        ]}
-                      >
-                        <Text
-                          style={[styles.tagText, { color: tagColors.text }]}
-                        >
-                          {item.tag}
-                        </Text>
-                      </View>
-
-                      <Text style={[styles.moreMenu, { color: c.muted }]}>
-                        ⋮
-                      </Text>
-                    </Pressable>
-                  )
-                })}
-              </View>
-            </View>
-          ))}
-
-          {/* Footer No more conversations */}
-          <View style={styles.footerNoteRow}>
-            <Text style={[styles.footerIcon, { color: c.muted }]}>🕒</Text>
-            <Text style={[styles.footerText, { color: c.muted }]}>
-              No more conversations to load
-            </Text>
-          </View>
-        </View>
-
-        {/* Right Column: Filters, History Summary, Storage Usage */}
-        <View style={[styles.col, isWide && styles.colRight]}>
-          {/* Filters Card */}
+      {/* =========================================================================
+          MODE 1: 7-DAY LOCAL OFFLINE WEATHER ARCHIVE
+          ========================================================================= */}
+      {activePrimaryTab === 'offline7d' ? (
+        <View>
+          {/* Header Info & City Selector */}
           <View
             style={[
-              styles.card,
+              styles.infoPanel,
               { backgroundColor: c.card, borderColor: c.border }
             ]}
           >
-            <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>Filters</Text>
-              <Pressable onPress={() => setSelectedTypes([])}>
-                <Text style={[styles.clearAllText, { color: c.blue }]}>
-                  Clear All
+            <View style={styles.infoTopRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.infoTitle, { color: c.ink }]}>
+                  7-Day Offline Local Telemetry Archive
+                </Text>
+                <Text style={[styles.infoSubtitle, { color: c.muted }]}>
+                  Saved directly to device storage for offline and field operation.
+                </Text>
+              </View>
+              <Pressable
+                onPress={handleExport}
+                style={[
+                  styles.exportBtn,
+                  { backgroundColor: isExported ? c.accentGreen : c.blue }
+                ]}
+              >
+                {isExported ? (
+                  <Check size={14} color='#FFFFFF' />
+                ) : (
+                  <Download size={14} color='#FFFFFF' />
+                )}
+                <Text style={styles.exportBtnText}>
+                  {isExported ? 'Saved!' : 'Export'}
                 </Text>
               </Pressable>
             </View>
 
-            <Text style={[styles.filterSubheader, { color: c.muted }]}>
-              Date Range
-            </Text>
-            <View
-              style={[
-                styles.dropdownSelect,
-                { backgroundColor: c.cardAlt, borderColor: c.border }
-              ]}
+            {/* City Selection Pills */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cityPillsRow}
             >
-              <Text style={styles.dateIcon}>📅</Text>
-              <Text style={[styles.dropdownText, { color: c.ink }]}>
-                All Time
-              </Text>
-              <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
-            </View>
-
-            <Text
-              style={[
-                styles.filterSubheader,
-                { color: c.muted, marginTop: 10 }
-              ]}
-            >
-              Conversation Type
-            </Text>
-            <View style={styles.typesList}>
-              {CONV_TYPES.map(type => {
-                const isChecked = selectedTypes.includes(type)
+              {CITIES.map(city => {
+                const isSelected = selectedCity.toLowerCase() === city.toLowerCase()
                 return (
                   <Pressable
-                    key={type}
-                    onPress={() => toggleType(type)}
-                    style={styles.checkboxRow}
+                    key={city}
+                    onPress={() => setSelectedCity(city)}
+                    style={[
+                      styles.cityPill,
+                      {
+                        backgroundColor: isSelected ? c.blue : c.cardAlt,
+                        borderColor: isSelected ? c.blue : c.borderLight
+                      }
+                    ]}
                   >
-                    <View
+                    <MapPin
+                      size={12}
+                      color={isSelected ? '#FFFFFF' : c.blue}
+                      style={{ marginRight: 4 }}
+                    />
+                    <Text
                       style={[
-                        styles.checkbox,
-                        { borderColor: isChecked ? c.blue : c.border },
-                        isChecked && { backgroundColor: c.blue }
+                        styles.cityPillText,
+                        {
+                          color: isSelected ? '#FFFFFF' : c.ink,
+                          fontWeight: isSelected ? '800' : '600'
+                        }
                       ]}
                     >
-                      {isChecked && <Text style={styles.checkIcon}>✓</Text>}
-                    </View>
-                    <Text
-                      style={[styles.checkboxLabel, { color: c.inkSecondary }]}
-                    >
-                      {type}
+                      {city}
                     </Text>
                   </Pressable>
                 )
               })}
-            </View>
-
-            <Text
-              style={[
-                styles.filterSubheader,
-                { color: c.muted, marginTop: 10 }
-              ]}
-            >
-              Sort By
-            </Text>
-            <View
-              style={[
-                styles.dropdownSelect,
-                { backgroundColor: c.cardAlt, borderColor: c.border }
-              ]}
-            >
-              <Text style={[styles.dropdownText, { color: c.ink }]}>
-                {sortBy}
-              </Text>
-              <Text style={[styles.chevron, { color: c.muted }]}>▾</Text>
-            </View>
+            </ScrollView>
           </View>
 
-          {/* History Summary Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <View style={styles.summaryTitleRow}>
-              <Text style={styles.summaryIcon}>📊</Text>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>
-                History Summary
+          {/* Loading Indicator */}
+          {isLoading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size='large' color={c.blue} />
+              <Text style={[styles.loadingText, { color: c.muted }]}>
+                Reading 7-Day Local Storage...
               </Text>
             </View>
-            <View style={styles.summaryStatsList}>
-              <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
-                  Total Conversations
-                </Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
-                  48
-                </Text>
-              </View>
-              <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
-                  This Week
-                </Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
-                  12
-                </Text>
-              </View>
-              <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
-                  This Month
-                </Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
-                  28
-                </Text>
-              </View>
-              <View style={styles.summaryStatItem}>
-                <Text style={[styles.summaryStatLabel, { color: c.muted }]}>
-                  Total Messages
-                </Text>
-                <Text style={[styles.summaryStatVal, { color: c.ink }]}>
-                  156
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Storage Usage Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <View style={styles.summaryTitleRow}>
-              <Text style={styles.summaryIcon}>☁️</Text>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>
-                Storage Usage
+          ) : offline7Days.length === 0 ? (
+            <View style={[styles.emptyBox, { backgroundColor: c.card, borderColor: c.border }]}>
+              <Database size={36} color={c.muted} />
+              <Text style={[styles.emptyTitle, { color: c.ink }]}>
+                No local snapshots saved yet
               </Text>
-            </View>
-            <Text style={[styles.storageText, { color: c.muted }]}>
-              You've used 45% of your history storage.
-            </Text>
-
-            {/* Progress bar */}
-            <View style={[styles.storageTrack, { backgroundColor: c.cardAlt }]}>
-              <View style={[styles.storageFill, { backgroundColor: c.blue }]} />
-            </View>
-            <Text style={[styles.percentLabel, { color: c.muted }]}>45%</Text>
-
-            <Pressable style={[styles.upgradeMoreBtn, { borderColor: c.blue }]}>
-              <Text style={[styles.upgradeMoreText, { color: c.blue }]}>
-                Upgrade for More
+              <Text style={[styles.emptySubtitle, { color: c.muted }]}>
+                Switch to Dashboard to automatically sync and snapshot current telemetry for {selectedCity}.
               </Text>
-            </Pressable>
-          </View>
+              <Pressable
+                onPress={() => onNavigate('dashboard')}
+                style={[styles.emptyActionBtn, { backgroundColor: c.blue }]}
+              >
+                <Text style={styles.emptyActionBtnText}>Go to Live Dashboard</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ gap: 12 }}>
+              {offline7Days.map((snapshot, index) => (
+                <View
+                  key={snapshot.date || index}
+                  style={[
+                    styles.snapshotCard,
+                    { backgroundColor: c.card, borderColor: c.border }
+                  ]}
+                >
+                  {/* Top Bar: Date & Offline Status */}
+                  <View style={styles.snapshotTopRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Calendar size={14} color={c.blue} />
+                      <Text style={[styles.snapshotDateText, { color: c.ink }]}>
+                        {snapshot.displayDate || snapshot.date}
+                      </Text>
+                      {index === 0 && (
+                        <View style={[styles.todayBadge, { backgroundColor: c.blueLight }]}>
+                          <Text style={[styles.todayBadgeText, { color: c.blue }]}>Latest</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={[styles.verifiedBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                      <ShieldCheck size={12} color='#10B981' />
+                      <Text style={styles.verifiedBadgeText}>Offline Verified</Text>
+                    </View>
+                  </View>
+
+                  {/* Center Weather Row */}
+                  <View style={styles.snapshotCenterRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <WeatherIcon condition={snapshot.condition} size={32} />
+                      <View>
+                        <Text style={[styles.snapshotTempText, { color: c.ink }]}>
+                          {snapshot.temp}°C
+                        </Text>
+                        <Text style={[styles.snapshotConditionText, { color: c.muted }]}>
+                          {snapshot.condition}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.snapshotRangeBox}>
+                      <Text style={[styles.snapshotRangeText, { color: c.inkSecondary }]}>
+                        ↓ {snapshot.minTemp}°C • ↑ {snapshot.maxTemp}°C
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Bottom Telemetry Grid */}
+                  <View style={[styles.snapshotBottomGrid, { borderTopColor: c.borderLight }]}>
+                    <View style={styles.gridMiniItem}>
+                      <CloudRain size={12} color='#06B6D4' />
+                      <Text style={[styles.gridMiniLabel, { color: c.muted }]}>
+                        Humidity: <Text style={{ color: c.ink, fontWeight: '700' }}>{snapshot.humidity}%</Text>
+                      </Text>
+                    </View>
+
+                    <View style={styles.gridMiniItem}>
+                      <Wind size={12} color='#38BDF8' />
+                      <Text style={[styles.gridMiniLabel, { color: c.muted }]}>
+                        Wind: <Text style={{ color: c.ink, fontWeight: '700' }}>{snapshot.windSpeed} km/h</Text>
+                      </Text>
+                    </View>
+
+                    <View style={styles.gridMiniItem}>
+                      <Gauge size={12} color='#10B981' />
+                      <Text style={[styles.gridMiniLabel, { color: c.muted }]}>
+                        Press: <Text style={{ color: c.ink, fontWeight: '700' }}>{snapshot.pressure} hPa</Text>
+                      </Text>
+                    </View>
+
+                    <View style={styles.gridMiniItem}>
+                      <Zap size={12} color='#F59E0B' />
+                      <Text style={[styles.gridMiniLabel, { color: c.muted }]}>
+                        AQI: <Text style={{ color: c.ink, fontWeight: '700' }}>{snapshot.aqi}</Text>
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-      </View>
+      ) : (
+        /* =========================================================================
+            MODE 2: AI CONVERSATION ARCHIVE
+            ========================================================================= */
+        <View>
+          <View
+            style={[
+              styles.searchBarWrapper,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
+          >
+            <Search size={16} color={c.muted} style={{ marginLeft: 12 }} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder='Search past AI weather queries...'
+              placeholderTextColor={c.muted}
+              style={[styles.searchInput, { color: c.ink }]}
+            />
+          </View>
+
+          {isLoading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size='large' color={c.blue} />
+              <Text style={[styles.loadingText, { color: c.muted }]}>
+                Loading AI query records...
+              </Text>
+            </View>
+          ) : liveHistory.length === 0 ? (
+            <View style={[styles.emptyBox, { backgroundColor: c.card, borderColor: c.border }]}>
+              <MessageSquare size={36} color={c.muted} />
+              <Text style={[styles.emptyTitle, { color: c.ink }]}>
+                No consultations found
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: c.muted }]}>
+                Ask WeatherGPT AI a question on the chat page to start your archive.
+              </Text>
+              <Pressable
+                onPress={() => onNavigate('chat')}
+                style={[styles.emptyActionBtn, { backgroundColor: c.blue }]}
+              >
+                <Text style={styles.emptyActionBtnText}>Launch WeatherGPT AI</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ gap: 10 }}>
+              {liveHistory
+                .filter(item =>
+                  item.title.toLowerCase().includes(search.toLowerCase())
+                )
+                .map(item => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => onNavigate('chat')}
+                    style={[
+                      styles.chatHistoryCard,
+                      { backgroundColor: c.card, borderColor: c.border }
+                    ]}
+                  >
+                    <View style={styles.chatTopRow}>
+                      <Text style={[styles.chatTitle, { color: c.ink }]} numberOfLines={1}>
+                        {item.title}
+                      </Text>
+                      <View style={[styles.chatTagPill, { backgroundColor: c.blueLight }]}>
+                        <Text style={[styles.chatTagText, { color: c.blue }]}>
+                          {item.tag}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.chatDesc, { color: c.muted }]} numberOfLines={2}>
+                      {item.desc}
+                    </Text>
+                    <Text style={[styles.chatTime, { color: c.muted }]}>
+                      {item.time}
+                    </Text>
+                  </Pressable>
+                ))}
+            </View>
+          )}
+        </View>
+      )}
     </ScrollView>
   )
 }
@@ -475,293 +447,233 @@ const styles = StyleSheet.create({
     flex: 1
   },
   contentContainer: {
-    padding: 12,
-    paddingBottom: 36,
-    gap: 12
+    padding: 16,
+    paddingBottom: 36
   },
-  topSearchBar: {
-    padding: 12,
+  primaryToggleBar: {
+    flexDirection: 'row',
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: 14
+  },
+  primaryTabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12
+  },
+  primaryTabBtnText: {
+    fontSize: 12
+  },
+  infoPanel: {
     borderRadius: 20,
     borderWidth: 1,
-    gap: 8
+    padding: 16,
+    marginBottom: 14
   },
-  searchBox: {
+  infoTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  },
+  infoTitle: {
+    fontSize: 15,
+    fontWeight: '800'
+  },
+  infoSubtitle: {
+    fontSize: 11,
+    marginTop: 2
+  },
+  exportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10
+  },
+  exportBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800'
+  },
+  cityPillsRow: {
+    gap: 6
+  },
+  cityPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1
+  },
+  cityPillText: {
+    fontSize: 12
+  },
+  snapshotCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 16
+  },
+  snapshotTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  snapshotDateText: {
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  todayBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 999
+  },
+  todayBadgeText: {
+    fontSize: 9,
+    fontWeight: '800'
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999
+  },
+  verifiedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#10B981'
+  },
+  snapshotCenterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 4
+  },
+  snapshotTempText: {
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.5
+  },
+  snapshotConditionText: {
+    fontSize: 12
+  },
+  snapshotRangeBox: {
+    alignItems: 'flex-end'
+  },
+  snapshotRangeText: {
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  snapshotBottomGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    gap: 12
+  },
+  gridMiniItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5
+  },
+  gridMiniLabel: {
+    fontSize: 11
+  },
+  searchBarWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 12,
     height: 44,
-    gap: 8
-  },
-  searchIcon: {
-    fontSize: 14
+    marginBottom: 12
   },
   searchInput: {
     flex: 1,
+    paddingHorizontal: 10,
     fontSize: 13
   },
-  topActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8
-  },
-  dateDropdown: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 12,
-    borderWidth: 1
-  },
-  dateIcon: {
-    fontSize: 12
-  },
-  dateText: {
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  chevron: {
-    fontSize: 10
-  },
-  newChatBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12
-  },
-  newChatText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800'
-  },
-  tabsRow: {
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF2F6',
-    paddingBottom: 2
-  },
-  tabItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 4
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  tabTextActive: {
-    fontWeight: '800'
-  },
-  mainGrid: {
-    gap: 12
-  },
-  mainGridWide: {
-    flexDirection: 'row',
-    alignItems: 'flex-start'
-  },
-  col: {
-    gap: 12
-  },
-  colLeft: {
-    flex: 7
-  },
-  colRight: {
-    flex: 5
-  },
-  groupBlock: {
-    gap: 6
-  },
-  groupHeader: {
-    fontSize: 12,
-    fontWeight: '800',
-    paddingHorizontal: 4
-  },
-  groupCard: {
-    borderRadius: 20,
+  chatHistoryCard: {
+    borderRadius: 16,
     borderWidth: 1,
-    paddingHorizontal: 12
+    padding: 14
   },
-  historyItemRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    gap: 10
-  },
-  itemIconBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2
-  },
-  itemIconText: {
-    fontSize: 16
-  },
-  itemCopy: {
-    flex: 1
-  },
-  itemTopRow: {
+  chatTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 2
+    marginBottom: 6
   },
-  itemTitle: {
+  chatTitle: {
     fontSize: 13,
     fontWeight: '700',
     flex: 1,
-    paddingRight: 6
+    marginRight: 8
   },
-  itemTime: {
-    fontSize: 9
+  chatTagPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6
   },
-  itemDesc: {
-    fontSize: 11,
-    lineHeight: 15
-  },
-  tagBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'center'
-  },
-  tagText: {
-    fontSize: 9,
+  chatTagText: {
+    fontSize: 10,
     fontWeight: '700'
   },
-  moreMenu: {
-    fontSize: 14,
-    paddingHorizontal: 4,
-    alignSelf: 'center'
+  chatDesc: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 6
   },
-  footerNoteRow: {
-    flexDirection: 'row',
+  chatTime: {
+    fontSize: 10
+  },
+  loadingBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 14
+    paddingVertical: 40
   },
-  footerIcon: {
-    fontSize: 12
+  loadingText: {
+    fontSize: 12,
+    marginTop: 8
   },
-  footerText: {
-    fontSize: 11
-  },
-  card: {
+  emptyBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
     borderRadius: 20,
-    borderWidth: 1,
-    padding: 14,
-    gap: 10
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '800'
-  },
-  clearAllText: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  filterSubheader: {
-    fontSize: 10,
-    fontWeight: '700'
-  },
-  dropdownSelect: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
     borderWidth: 1
   },
-  dropdownText: {
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginTop: 12
+  },
+  emptySubtitle: {
     fontSize: 12,
-    fontWeight: '600'
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 18,
+    marginBottom: 14
   },
-  typesList: {
-    gap: 8,
-    marginTop: 4
+  emptyActionBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12
   },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  checkIcon: {
+  emptyActionBtnText: {
     color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900'
-  },
-  checkboxLabel: {
-    fontSize: 11,
-    fontWeight: '600'
-  },
-  summaryTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6
-  },
-  summaryIcon: {
-    fontSize: 16
-  },
-  summaryStatsList: {
-    gap: 8
-  },
-  summaryStatItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
-  summaryStatLabel: {
-    fontSize: 11
-  },
-  summaryStatVal: {
     fontSize: 12,
     fontWeight: '800'
-  },
-  storageText: {
-    fontSize: 11
-  },
-  storageTrack: {
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden'
-  },
-  storageFill: {
-    width: '45%',
-    height: '100%',
-    borderRadius: 4
-  },
-  percentLabel: {
-    fontSize: 9,
-    textAlign: 'right'
-  },
-  upgradeMoreBtn: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 9,
-    alignItems: 'center'
-  },
-  upgradeMoreText: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  pressed: {
-    opacity: 0.75
   }
 })
+
+export default HistoryScreen

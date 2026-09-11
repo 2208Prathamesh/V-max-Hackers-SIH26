@@ -3,8 +3,6 @@ import { useWeather } from '../../context/WeatherContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { 
   AlertTriangle, 
-  Volume2, 
-  VolumeX, 
   PhoneCall, 
   X, 
   ChevronRight, 
@@ -20,7 +18,6 @@ export const EmergencyBroadcastBanner = ({ onSelectDistrict }) => {
   const { setCurrentPage, addToast, alerts } = useWeather();
   const { language, t, translateCity, translateAlertTitle } = useLanguage();
 
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isHotlineModalOpen, setIsHotlineModalOpen] = useState(false);
   const [selectedQuickDistrict, setSelectedQuickDistrict] = useState(null);
 
@@ -76,77 +73,6 @@ export const EmergencyBroadcastBanner = ({ onSelectDistrict }) => {
     hazardEn: 'Weather Monitoring Active',
     hazardHi: 'मौसम निगरानी सक्रिय',
     hazardMr: 'हवामान निरीक्षण सुरू आहे'
-  };
-
-  // Stop audio on unmount
-  useEffect(() => {
-    return () => {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
-  // Audio Speech Announcer in Selected Language (Marathi, Hindi, English)
-  const handleToggleAudio = () => {
-    if (!('speechSynthesis' in window)) {
-      addToast(
-        language === 'mr'
-          ? 'या ब्राउझरमध्ये ऑडिओ प्रसारण उपलब्ध नाही.'
-          : language === 'hi'
-          ? 'इस ब्राउज़र में ऑडियो प्रसारण समर्थित नहीं है।'
-          : 'Audio broadcast is not supported in this browser.',
-        'warning'
-      );
-      return;
-    }
-
-    if (isAudioPlaying) {
-      window.speechSynthesis.cancel();
-      setIsAudioPlaying(false);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    // Prepare message in selected language
-    let announcementText = '';
-    let voiceLang = 'en-IN';
-
-    const districtName = language === 'mr' ? currentDistrictInfo.nameMr : language === 'hi' ? currentDistrictInfo.nameHi : currentDistrictInfo.nameEn;
-    const hazardText = language === 'mr' ? currentDistrictInfo.hazardMr : language === 'hi' ? currentDistrictInfo.hazardHi : currentDistrictInfo.hazardEn;
-
-    if (language === 'mr') {
-      voiceLang = 'mr-IN';
-      announcementText = `सावधान! भारतीय हवामान विभाग आणि वेदर-जीपीटी आपत्कालीन सूचना. ${districtName} जिल्ह्यासाठी इशारा: ${hazardText}. नागरिकांनी सुरक्षित ठिकाणी राहावे आणि अनावश्यक प्रवास टाळावा. आपत्कालीन मदतीसाठी ११२ डायल करा.`;
-    } else if (language === 'hi') {
-      voiceLang = 'hi-IN';
-      announcementText = `सावधान! भारत मौसम विज्ञान विभाग और वेदर-जीपीटी आपातकालीन चेतावनी। ${districtName} जिले के लिए चेतावनी: ${hazardText}। नागरिक सुरक्षित स्थानों पर रहें और अनावश्यक यात्रा से बचें। आपातकालीन सहायता हेतु 112 डायल करें।`;
-    } else {
-      voiceLang = 'en-IN';
-      announcementText = `Attention! Official Meteorological Warning from WeatherGPT. Weather Alert for ${districtName}: ${hazardText}. Please stay sheltered and avoid unnecessary travel. For immediate disaster assistance, dial 112.`;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(announcementText);
-    utterance.lang = voiceLang;
-    utterance.rate = 0.95; // Slightly slower for emergency clarity
-    utterance.pitch = 1.0;
-
-    utterance.onstart = () => {
-      setIsAudioPlaying(true);
-      addToast(t('audioAnnounceSuccess') || 'Weather alert audio broadcast started', 'info');
-    };
-
-    utterance.onend = () => {
-      setIsAudioPlaying(false);
-    };
-
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis error:', e);
-      setIsAudioPlaying(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
   };
 
   const handleDistrictChange = (district) => {
@@ -316,37 +242,8 @@ export const EmergencyBroadcastBanner = ({ onSelectDistrict }) => {
             </div>
           </div>
 
-          {/* Right: Audio Siren Broadcast Button & Emergency Hotline CTA */}
+          {/* Right: Emergency Hotline CTA & View All Button */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200/60 dark:border-slate-800/80">
-            {/* Audio Speech Announcer (WCAG 2.1 Accessible for Illiterate & Emergency Field Workers) */}
-            <button
-              onClick={handleToggleAudio}
-              className={`min-h-[44px] px-4 py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer shadow-xs ${
-                isAudioPlaying
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30 animate-pulse'
-                  : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
-              }`}
-              title={t('listenAlertAudio')}
-              aria-label={isAudioPlaying ? t('stopAudio') : t('audioBroadcast')}
-            >
-              {isAudioPlaying ? (
-                <>
-                  <div className="flex items-center gap-0.5 h-4">
-                    <span className="w-1 bg-white rounded-full audio-bar-1" />
-                    <span className="w-1 bg-white rounded-full audio-bar-2" />
-                    <span className="w-1 bg-white rounded-full audio-bar-3" />
-                    <span className="w-1 bg-white rounded-full audio-bar-4" />
-                  </div>
-                  <VolumeX className="w-4 h-4" />
-                  <span>{t('stopAudio')}</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-4 h-4 text-rose-500" />
-                  <span>{t('audioBroadcast')}</span>
-                </>
-              )}
-            </button>
 
             {/* Emergency Hotline 112 Button */}
             <button

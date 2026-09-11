@@ -7,6 +7,18 @@ import {
   TextInput,
   Pressable
 } from 'react-native'
+import {
+  Crown,
+  Settings,
+  Clock,
+  ChevronRight,
+  LogOut,
+  MapPin,
+  MessageSquare,
+  Activity,
+  CheckCircle2,
+  ShieldAlert
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
 import { api } from '../services/api'
 
@@ -74,11 +86,13 @@ export function ProfileScreen ({
         <Text style={[styles.userEmail, { color: c.muted }]}>{email}</Text>
 
         <View style={styles.badgeRow}>
-          <View style={[styles.planBadge, { backgroundColor: '#F59E0B20' }]}>
-            <Text style={styles.planBadgeText}>👑 Pro Member</Text>
+          <View style={[styles.planBadge, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7' }]}>
+            <Crown size={12} color="#D97706" strokeWidth={2.4} />
+            <Text style={styles.planBadgeText}>Pro Member</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: '#10B98120' }]}>
-            <Text style={styles.statusBadgeText}>● Active Session</Text>
+          <View style={[styles.statusBadge, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#D1FAE5' }]}>
+            <View style={styles.liveDot} />
+            <Text style={styles.statusBadgeText}>Active Session</Text>
           </View>
         </View>
       </View>
@@ -91,6 +105,9 @@ export function ProfileScreen ({
             { backgroundColor: c.card, borderColor: c.border }
           ]}
         >
+          <View style={styles.statIconBadge}>
+            <MapPin size={14} color={c.blue} strokeWidth={2} />
+          </View>
           <Text style={[styles.statNumber, { color: c.blue }]}>5</Text>
           <Text style={[styles.statLabel, { color: c.muted }]}>
             Saved Cities
@@ -103,6 +120,9 @@ export function ProfileScreen ({
             { backgroundColor: c.card, borderColor: c.border }
           ]}
         >
+          <View style={styles.statIconBadge}>
+            <MessageSquare size={14} color="#8B5CF6" strokeWidth={2} />
+          </View>
           <Text style={[styles.statNumber, { color: '#8B5CF6' }]}>24</Text>
           <Text style={[styles.statLabel, { color: c.muted }]}>AI Queries</Text>
         </View>
@@ -113,6 +133,9 @@ export function ProfileScreen ({
             { backgroundColor: c.card, borderColor: c.border }
           ]}
         >
+          <View style={styles.statIconBadge}>
+            <Activity size={14} color="#10B981" strokeWidth={2} />
+          </View>
           <Text style={[styles.statNumber, { color: '#10B981' }]}>100%</Text>
           <Text style={[styles.statLabel, { color: c.muted }]}>IMD Sync</Text>
         </View>
@@ -199,7 +222,9 @@ export function ProfileScreen ({
           onPress={() => onNavigate && onNavigate('settings')}
           style={[styles.shortcutRow, { borderBottomColor: c.borderLight }]}
         >
-          <Text style={styles.shortcutIcon}>⚙️</Text>
+          <View style={[styles.iconCircle, { backgroundColor: isDark ? '#1C1F26' : '#EFF6FF' }]}>
+            <Settings size={16} color={c.blue} strokeWidth={2} />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.shortcutTitle, { color: c.ink }]}>
               Units & Formatting
@@ -208,14 +233,16 @@ export function ProfileScreen ({
               Celsius / Fahrenheit, wind speed, pressure units
             </Text>
           </View>
-          <Text style={[styles.shortcutChevron, { color: c.muted }]}>›</Text>
+          <ChevronRight size={16} color={c.muted} />
         </Pressable>
 
         <Pressable
           onPress={() => onNavigate && onNavigate('premium')}
           style={[styles.shortcutRow, { borderBottomColor: c.borderLight }]}
         >
-          <Text style={styles.shortcutIcon}>👑</Text>
+          <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7' }]}>
+            <Crown size={16} color="#D97706" strokeWidth={2} />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.shortcutTitle, { color: c.ink }]}>
               Subscription & Plan
@@ -224,14 +251,16 @@ export function ProfileScreen ({
               Manage WeatherGPT Pro membership
             </Text>
           </View>
-          <Text style={[styles.shortcutChevron, { color: c.muted }]}>›</Text>
+          <ChevronRight size={16} color={c.muted} />
         </Pressable>
 
         <Pressable
           onPress={() => onNavigate && onNavigate('history')}
           style={styles.shortcutRow}
         >
-          <Text style={styles.shortcutIcon}>🕒</Text>
+          <View style={[styles.iconCircle, { backgroundColor: isDark ? '#1C1F26' : '#F3F4F6' }]}>
+            <Clock size={16} color={c.muted} strokeWidth={2} />
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.shortcutTitle, { color: c.ink }]}>
               Chat Query History
@@ -240,16 +269,17 @@ export function ProfileScreen ({
               View past conversations and radar inquiries
             </Text>
           </View>
-          <Text style={[styles.shortcutChevron, { color: c.muted }]}>›</Text>
+          <ChevronRight size={16} color={c.muted} />
         </Pressable>
       </View>
 
       {/* Sign Out Button */}
       <Pressable
         onPress={onLogout}
-        style={[styles.logoutBtn, { borderColor: '#EF4444' }]}
+        style={[styles.logoutBtn, { borderColor: isDark ? '#7F1D1D' : '#FEE2E2', backgroundColor: isDark ? 'rgba(239, 68, 68, 0.08)' : '#FEF2F2' }]}
       >
-        <Text style={styles.logoutBtnText}>🚪 Sign Out from Device</Text>
+        <LogOut size={16} color="#EF4444" strokeWidth={2} style={{ marginRight: 8 }} />
+        <Text style={styles.logoutBtnText}>Sign Out from Device</Text>
       </Pressable>
     </ScrollView>
   )
@@ -281,9 +311,29 @@ const styles = StyleSheet.create({
   userName: { fontSize: 17, fontWeight: '900' },
   userEmail: { fontSize: 11, marginTop: 2 },
   badgeRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  planBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  planBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12
+  },
   planBadgeText: { color: '#D97706', fontSize: 10, fontWeight: '800' },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981'
+  },
   statusBadgeText: { color: '#10B981', fontSize: 10, fontWeight: '800' },
   statsRow: { flexDirection: 'row', gap: 10 },
   statCard: {
@@ -293,7 +343,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center'
   },
-  statNumber: { fontSize: 20, fontWeight: '900' },
+  statIconBadge: {
+    marginBottom: 4
+  },
+  statNumber: { fontSize: 18, fontWeight: '900' },
   statLabel: { fontSize: 9.5, fontWeight: '600', marginTop: 2 },
   formCard: {
     padding: 16,
@@ -321,15 +374,21 @@ const styles = StyleSheet.create({
   shortcutRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1
   },
-  shortcutIcon: { fontSize: 18 },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   shortcutTitle: { fontSize: 11.5, fontWeight: '700' },
   shortcutSub: { fontSize: 9, marginTop: 1 },
-  shortcutChevron: { fontSize: 18 },
   logoutBtn: {
+    flexDirection: 'row',
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1,

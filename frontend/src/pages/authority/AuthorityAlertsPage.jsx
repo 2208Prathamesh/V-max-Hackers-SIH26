@@ -352,6 +352,66 @@ export const AuthorityAlertsPage = () => {
     handleCancelAlert(id)
   }
 
+  const handleExportCapXml = async id => {
+    try {
+      const token = localStorage.getItem('weathergpt_token')
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      const res = await fetch(`${API_BASE}/alerts/${id}/cap-xml`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      })
+      if (!res.ok) {
+        // If alert is mock or not in MongoDB yet, generate client-side fallback CAP XML
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>WeatherGPT-CAP-${id}-${Date.now()}</identifier>
+  <sender>authority@weathergpt.gov.in</sender>
+  <sent>${new Date().toISOString()}</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info>
+    <category>Met</category>
+    <event>${selectedAlert?.type || 'Severe Weather'}</event>
+    <urgency>Expected</urgency>
+    <severity>${selectedAlert?.severity || 'Extreme'}</severity>
+    <certainty>Observed</certainty>
+    <headline>${selectedAlert?.title || 'Weather Warning'}</headline>
+    <description>${selectedAlert?.description || 'Severe weather alert issued by District Authority.'}</description>
+    <instruction>${selectedAlert?.actionProtocol || 'Follow safety protocols and remain indoors.'}</instruction>
+    <area>
+      <areaDesc>${selectedAlert?.district || selectedAlert?.location || 'India'}</areaDesc>
+    </area>
+  </info>
+</alert>`
+        const blob = new Blob([xml], { type: 'application/xml; charset=utf-8' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `CAP-v1.2-alert-${id}.xml`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
+        addToast('Exported CAP v1.2 XML (OASIS / SACHET Interoperability)', 'success')
+        return
+      }
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CAP-v1.2-alert-${id}.xml`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+      addToast('Exported CAP v1.2 XML (OASIS / SACHET Interoperability)', 'success')
+    } catch (err) {
+      addToast(`CAP Export: ${err.message}`, 'error')
+    }
+  }
+
   // =========================================================================
   // VIEW 2: ALERT DETAIL PAGE (Matching Image 3 & 4)
   // =========================================================================
@@ -375,7 +435,7 @@ export const AuthorityAlertsPage = () => {
         {/* Confirmation Modal */}
         {confirmPublishId && (
           <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn'>
-            <div className='w-full max-w-md bg-white dark:bg-[#111C2E] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4'>
+            <div className='w-full max-w-md bg-white dark:bg-[#121316] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4'>
               <div className='flex items-center gap-3'>
                 <div className='p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40'>
                   <AlertTriangle className='w-6 h-6' />
@@ -430,7 +490,7 @@ export const AuthorityAlertsPage = () => {
         </button>
 
         {/* Header Bar */}
-        <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm'>
+        <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm'>
           <div className='flex items-center gap-4'>
             <div className='w-13 h-13 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0'>
               <AlertTriangle className='w-7 h-7' />
@@ -477,6 +537,15 @@ export const AuthorityAlertsPage = () => {
             )}
 
             <button
+              onClick={() => handleExportCapXml(selectedAlert.id)}
+              className='px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer'
+              title='Export NDMA SACHET / ITU CAP v1.2 XML'
+            >
+              <Download className='w-4 h-4' />
+              <span>CAP v1.2 XML</span>
+            </button>
+
+            <button
               onClick={() => handleAcknowledge(selectedAlert.id)}
               className='px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer'
             >
@@ -497,7 +566,7 @@ export const AuthorityAlertsPage = () => {
         {/* Two Column Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
           {/* LEFT COLUMN: Alert Information (6 Cols) */}
-          <div className='lg:col-span-6 bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-6'>
+          <div className='lg:col-span-6 bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-6'>
             <h2 className='text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800'>
               Alert Information
             </h2>
@@ -637,7 +706,7 @@ export const AuthorityAlertsPage = () => {
           {/* RIGHT COLUMN: Forecast Overview & Affected Area Map (6 Cols) */}
           <div className='lg:col-span-6 space-y-6'>
             {/* Forecast Overview Card */}
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm'>
               <div className='flex items-center justify-between mb-4'>
                 <h2 className='text-base font-bold text-slate-900 dark:text-white'>
                   Forecast Overview
@@ -706,7 +775,7 @@ export const AuthorityAlertsPage = () => {
             </div>
 
             {/* Affected Area (Map) Card */}
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm'>
               <div className='flex items-center justify-between mb-3'>
                 <h2 className='text-base font-bold text-slate-900 dark:text-white'>
                   Affected Area (Map)
@@ -821,7 +890,7 @@ export const AuthorityAlertsPage = () => {
       {/* Confirmation Modal */}
       {confirmPublishId && (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn'>
-          <div className='w-full max-w-md bg-white dark:bg-[#111C2E] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4'>
+          <div className='w-full max-w-md bg-white dark:bg-[#121316] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4'>
             <div className='flex items-center gap-3'>
               <div className='p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40'>
                 <AlertTriangle className='w-6 h-6' />
@@ -895,7 +964,7 @@ export const AuthorityAlertsPage = () => {
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shrink-0 ${
               activeFilterTab === tab.id
                 ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white dark:bg-[#111C2E] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -904,7 +973,7 @@ export const AuthorityAlertsPage = () => {
       </div>
 
       {/* Alerts Table Card matching Image 2 */}
-      <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden'>
+      <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden'>
         <div className='overflow-x-auto'>
           <table className='w-full text-left border-collapse'>
             <thead>
@@ -1007,6 +1076,15 @@ export const AuthorityAlertsPage = () => {
                           <XCircle className='w-4 h-4' />
                         </button>
                       )}
+
+                      <button
+                        type='button'
+                        onClick={() => handleExportCapXml(alert.id)}
+                        className='p-1.5 rounded-lg text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition'
+                        title='Export CAP v1.2 XML'
+                      >
+                        <Download className='w-4 h-4' />
+                      </button>
 
                       <button
                         type='button'

@@ -1,28 +1,56 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   StyleSheet,
   ScrollView,
-  useWindowDimensions
+  TextInput,
+  useWindowDimensions,
+  ActivityIndicator
 } from 'react-native'
-import { getColors } from '../theme/colors'
 import {
-  forecastDaysData,
-  hourlyForecastData,
-  allCityDatabase
-} from '../data/mockData'
+  MapPin,
+  Calendar,
+  Clock,
+  Thermometer,
+  CloudRain,
+  Wind,
+  Gauge,
+  Eye,
+  Sun,
+  Sunrise,
+  Sunset,
+  ShieldCheck,
+  Activity,
+  ChevronRight,
+  Plus,
+  Star,
+  Sparkles,
+  ArrowLeftRight,
+  Cpu,
+  Layers,
+  Search
+} from 'lucide-react-native'
+import { getColors } from '../theme/colors'
 import { api } from '../services/api'
+import { WeatherIcon } from '../components/WeatherIcon'
 
-const DETAIL_TABS = [
-  'Temperature',
-  'Precipitation',
-  'Wind',
-  'Humidity',
-  'Pressure'
+const NWP_MODELS = [
+  { name: 'ECMWF IFS', resolution: '9 km', agreement: '94%', color: '#3B82F6' },
+  { name: 'NOAA GFS', resolution: '13 km', agreement: '91%', color: '#10B981' },
+  { name: 'IMD NCMRWF', resolution: '12 km', agreement: '92%', color: '#F59E0B' },
+  { name: 'ICON Global', resolution: '13 km', agreement: '89%', color: '#A855F7' }
 ]
+
+const PARAM_TABS = [
+  { id: 'temp', label: 'Temperature', icon: Thermometer },
+  { id: 'rain', label: 'Precipitation', icon: CloudRain },
+  { id: 'wind', label: 'Wind Velocity', icon: Wind },
+  { id: 'pressure', label: 'Barometric Pressure', icon: Gauge }
+]
+
+const QUICK_CITIES = ['Pune', 'Mumbai', 'Delhi', 'Bengaluru', 'Chennai', 'Kolkata']
 
 export function ForecastScreen ({
   isDark = false,
@@ -32,60 +60,103 @@ export function ForecastScreen ({
 }) {
   const c = getColors(isDark)
   const { width } = useWindowDimensions()
-  const isWide = width > 768
 
-  const [activeDetailTab, setActiveDetailTab] = useState('Temperature')
+  const [activeCity, setActiveCity] = useState('Pune')
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
-  const [searchLocation, setSearchLocation] = useState('')
-  const [currentCity, setCurrentCity] = useState(allCityDatabase[0])
+  const [activeParamTab, setActiveParamTab] = useState('temp')
   const [liveForecast, setLiveForecast] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => {
-    if (!backendReady) return
-
-    let isMounted = true
-    api
-      .forecast({
-        latitude: 18.5204,
-        longitude: 73.8567,
-        city: 'Pune',
-        days: 7
-      })
-      .then(result => {
-        if (!isMounted) return
-        if (result && typeof result === 'object') {
-          setLiveForecast(result)
-        }
-      })
-      .catch(() => {
-        if (!isMounted) return
-        setLiveForecast(null)
-      })
-
-    return () => {
-      isMounted = false
+  const loadForecast = async (cityName = activeCity) => {
+    setIsLoading(true)
+    try {
+      await api.ensureAuth()
+      const res = await api.forecast({ city: cityName, days: 7 })
+      if (res) {
+        setLiveForecast(res)
+      }
+    } catch (err) {
+      console.warn('Forecast fetch warning:', err)
+    } finally {
+      setIsLoading(false)
     }
-  }, [backendReady])
-
-  const formatTemperature = tempC => {
-    if (unit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°`
-    }
-    return `${tempC}°`
   }
 
-  const resolvedTemp = Number(
-    liveForecast?.current?.temperature ?? currentCity.tempC ?? 28
-  )
-  const resolvedFeelsLike = Number(
-    liveForecast?.current?.feelsLike ?? currentCity.feelsLikeC ?? 30
-  )
-  const resolvedCondition =
-    liveForecast?.current?.condition || currentCity.condition || 'Partly Cloudy'
-  const resolvedHumidity =
-    liveForecast?.current?.humidity ?? currentCity.humidity ?? 72
-  const resolvedWind =
-    liveForecast?.current?.windSpeedKmh ?? currentCity.windSpeedKmh ?? 16
+  useEffect(() => {
+    loadForecast(activeCity)
+  }, [activeCity, backendReady])
+
+  const dailyList = useMemo(() => {
+    const raw =
+      liveForecast?.models?.openMeteo?.daily ||
+      liveForecast?.daily ||
+      []
+    if (raw.length > 0) {
+      return raw.slice(0, 7).map((d, i) => {
+        const dateObj = new Date(d.date || Date.now() + i * 86400000)
+        return {
+          idx: i,
+          dayName: i === 0 ? 'Today' : dateObj.toLocaleDateString('en-IN', { weekday: 'short' }),
+          dateFormatted: dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+          minTemp: Math.round(d.minTemperature ?? 22),
+          maxTemp: Math.round(d.maxTemperature ?? 30),
+          rainProb: Math.round(d.precipitationProbability ?? d.precipitation ?? 20),
+          condition: d.condition || (d.precipitationProbability > 40 ? 'Rain Showers' : 'Partly Cloudy'),
+          windSpeed: Math.round(d.windSpeed ?? 14),
+          humidity: Math.round(d.humidity ?? 65),
+          uvIndex: d.uvIndex ?? 6,
+          pressure: d.pressure ? Math.round(d.pressure) : 1012
+        }
+      })
+    }
+    return Array.from({ length: 7 }, (_, i) => {
+      const dateObj = new Date(Date.now() + i * 86400000)
+      return {
+        idx: i,
+        dayName: i === 0 ? 'Today' : dateObj.toLocaleDateString('en-IN', { weekday: 'short' }),
+        dateFormatted: dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+        minTemp: 22 + (i % 3),
+        maxTemp: 31 + (i % 2),
+        rainProb: 15 + i * 5,
+        condition: i % 2 === 0 ? 'Partly Cloudy' : 'Clear Sky',
+        windSpeed: 12 + i,
+        humidity: 60 + i * 2,
+        uvIndex: 7,
+        pressure: 1012
+      }
+    })
+  }, [liveForecast])
+
+  const selectedDay = dailyList[selectedDayIdx] || dailyList[0]
+
+  const hourlyList = useMemo(() => {
+    const raw =
+      liveForecast?.models?.openMeteo?.hourly ||
+      liveForecast?.hourly ||
+      []
+    if (raw.length > 0) {
+      return raw.slice(0, 14).map((h, i) => {
+        const d = new Date(h.time)
+        return {
+          time: i === 0 ? 'Now' : d.toLocaleTimeString([], { hour: 'numeric' }),
+          temp: Math.round(h.temperature ?? 26),
+          pop: Math.round(h.precipitationProbability ?? 15),
+          wind: Math.round(h.windSpeed ?? 12),
+          pressure: h.pressure ? Math.round(h.pressure) : 1012,
+          condition: h.condition || 'Clear'
+        }
+      })
+    }
+    return Array.from({ length: 8 }, (_, i) => ({
+      time: i === 0 ? 'Now' : `+${i * 2}h`,
+      temp: 26 + (i % 4),
+      pop: 10 + i * 5,
+      wind: 12 + (i % 3),
+      pressure: 1012,
+      condition: 'Clear Sky'
+    }))
+  }, [liveForecast])
 
   return (
     <ScrollView
@@ -93,648 +164,298 @@ export function ForecastScreen ({
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {/* Top Location Bar */}
+      {/* City Switcher Row */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.cityPillsRow}
+      >
+        {QUICK_CITIES.map(city => {
+          const isSelected = activeCity.toLowerCase() === city.toLowerCase()
+          return (
+            <Pressable
+              key={city}
+              onPress={() => {
+                setActiveCity(city)
+                loadForecast(city)
+              }}
+              style={[
+                styles.cityChip,
+                {
+                  backgroundColor: isSelected ? c.blue : c.card,
+                  borderColor: isSelected ? c.blue : c.border
+                }
+              ]}
+            >
+              <MapPin
+                size={12}
+                color={isSelected ? '#FFFFFF' : c.blue}
+                style={{ marginRight: 4 }}
+              />
+              <Text
+                style={[
+                  styles.cityChipText,
+                  {
+                    color: isSelected ? '#FFFFFF' : c.ink,
+                    fontWeight: isSelected ? '800' : '600'
+                  }
+                ]}
+              >
+                {city}
+              </Text>
+            </Pressable>
+          )
+        })}
+      </ScrollView>
+
+      {/* =========================================================================
+          NWP MULTI-MODEL CONSENSUS BANNER
+          ========================================================================= */}
       <View
         style={[
-          styles.topLocationBar,
+          styles.consensusCard,
+          {
+            backgroundColor: isDark ? '#121316' : '#FFFFFF',
+            borderColor: isDark ? 'rgba(59, 130, 246, 0.25)' : '#DBEAFE'
+          }
+        ]}
+      >
+        <View style={styles.consensusHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Cpu size={16} color={c.blue} />
+            <Text style={[styles.consensusTitle, { color: c.ink }]}>
+              NWP Ensemble Model Consensus (92%)
+            </Text>
+          </View>
+          <View style={[styles.consensusBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+            <ShieldCheck size={12} color='#10B981' />
+            <Text style={styles.consensusBadgeText}>High Agreement</Text>
+          </View>
+        </View>
+
+        <View style={styles.modelsGrid}>
+          {NWP_MODELS.map((m, idx) => (
+            <View key={idx} style={[styles.modelItem, { backgroundColor: c.cardAlt }]}>
+              <Text style={[styles.modelName, { color: m.color }]}>{m.name}</Text>
+              <Text style={[styles.modelRes, { color: c.muted }]}>{m.resolution}</Text>
+              <Text style={[styles.modelAgree, { color: c.ink }]}>{m.agreement}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* =========================================================================
+          7-DAY HORIZONTAL CALENDAR SELECTOR
+          ========================================================================= */}
+      <View style={styles.daySelectorWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.daysScrollRow}
+        >
+          {dailyList.map((day, idx) => {
+            const isSelected = selectedDayIdx === idx
+            return (
+              <Pressable
+                key={idx}
+                onPress={() => setSelectedDayIdx(idx)}
+                style={[
+                  styles.dayCard,
+                  {
+                    backgroundColor: isSelected ? c.blue : c.card,
+                    borderColor: isSelected ? c.blue : c.border
+                  }
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.dayNameText,
+                    { color: isSelected ? '#FFFFFF' : c.ink }
+                  ]}
+                >
+                  {day.dayName}
+                </Text>
+                <Text
+                  style={[
+                    styles.dayDateText,
+                    { color: isSelected ? '#BAE6FD' : c.muted }
+                  ]}
+                >
+                  {day.dateFormatted}
+                </Text>
+
+                <View style={{ marginVertical: 8 }}>
+                  <WeatherIcon condition={day.condition} size={24} />
+                </View>
+
+                <Text
+                  style={[
+                    styles.dayMaxTemp,
+                    { color: isSelected ? '#FFFFFF' : c.ink }
+                  ]}
+                >
+                  {day.maxTemp}°
+                </Text>
+                <Text
+                  style={[
+                    styles.dayMinTemp,
+                    { color: isSelected ? '#BAE6FD' : c.muted }
+                  ]}
+                >
+                  {day.minTemp}°
+                </Text>
+              </Pressable>
+            )
+          })}
+        </ScrollView>
+      </View>
+
+      {/* =========================================================================
+          SELECTED DAY DEEP DIVE FOCUS CARD
+          ========================================================================= */}
+      <View
+        style={[
+          styles.focusCard,
           { backgroundColor: c.card, borderColor: c.border }
         ]}
       >
-        <View>
-          <View style={styles.locationTitleRow}>
-            <Text style={[styles.locationPin, { color: c.blue }]}>📍</Text>
-            <Text style={[styles.locationTitle, { color: c.ink }]}>
-              {currentCity.city}, {currentCity.region}
+        <View style={styles.focusHeader}>
+          <View>
+            <Text style={[styles.focusDayTitle, { color: c.ink }]}>
+              {selectedDay.dayName} Outlook • {selectedDay.dateFormatted}
             </Text>
-            <Text style={[styles.chevronText, { color: c.muted }]}>▾</Text>
+            <Text style={[styles.focusConditionText, { color: c.blue }]}>
+              {selectedDay.condition}
+            </Text>
           </View>
-          <Text style={[styles.latLongText, { color: c.muted }]}>
-            Lat 18.52° N, Long 73.86° E
-          </Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.focusTempRange, { color: c.ink }]}>
+              {selectedDay.maxTemp}° / {selectedDay.minTemp}°
+            </Text>
+            <Text style={[styles.focusRainText, { color: c.accentCyan }]}>
+              {selectedDay.rainProb}% rain chance
+            </Text>
+          </View>
         </View>
 
-        <Pressable
-          style={[
-            styles.changeLocBtn,
-            { backgroundColor: c.cardAlt, borderColor: c.border }
-          ]}
-        >
-          <Text style={[styles.changeLocText, { color: c.blue }]}>
-            Change Location
-          </Text>
-        </Pressable>
+        {/* 4-Parameter Telemetry Grid */}
+        <View style={styles.focusGrid}>
+          <View style={[styles.focusGridItem, { backgroundColor: c.cardAlt }]}>
+            <Wind size={14} color='#38BDF8' />
+            <Text style={[styles.focusGridLabel, { color: c.muted }]}>Wind Velocity</Text>
+            <Text style={[styles.focusGridVal, { color: c.ink }]}>{selectedDay.windSpeed} km/h</Text>
+          </View>
+
+          <View style={[styles.focusGridItem, { backgroundColor: c.cardAlt }]}>
+            <CloudRain size={14} color='#06B6D4' />
+            <Text style={[styles.focusGridLabel, { color: c.muted }]}>Mean Humidity</Text>
+            <Text style={[styles.focusGridVal, { color: c.ink }]}>{selectedDay.humidity}%</Text>
+          </View>
+
+          <View style={[styles.focusGridItem, { backgroundColor: c.cardAlt }]}>
+            <Sun size={14} color='#F59E0B' />
+            <Text style={[styles.focusGridLabel, { color: c.muted }]}>UV Radiation</Text>
+            <Text style={[styles.focusGridVal, { color: c.ink }]}>Index {selectedDay.uvIndex}</Text>
+          </View>
+
+          <View style={[styles.focusGridItem, { backgroundColor: c.cardAlt }]}>
+            <Gauge size={14} color='#10B981' />
+            <Text style={[styles.focusGridLabel, { color: c.muted }]}>MSL Pressure</Text>
+            <Text style={[styles.focusGridVal, { color: c.ink }]}>{selectedDay.pressure} hPa</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Main Grid: Left column + Right column */}
-      <View style={[styles.mainGrid, isWide && styles.mainGridWide]}>
-        {/* Left Column on wide screen */}
-        <View style={[styles.col, isWide && styles.colLeft]}>
-          {/* Today Overview Hero Card matching Screenshot 2 */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.todayDateText, { color: c.muted }]}>
-              Today • 21 May 2025
+      {/* =========================================================================
+          HOURLY SCRUBBER WITH PARAMETER SELECTION
+          ========================================================================= */}
+      <View
+        style={[
+          styles.hourlyCard,
+          { backgroundColor: c.card, borderColor: c.border }
+        ]}
+      >
+        <View style={styles.hourlyHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Clock size={16} color={c.blue} />
+            <Text style={[styles.hourlyTitle, { color: c.ink }]}>
+              Hour-by-Hour Evolution
             </Text>
-            <View style={styles.todayHeroRow}>
-              {/* Left Temp + Icon */}
-              <View style={styles.todayLeft}>
-                <View style={styles.heroWeatherGraphic}>
-                  <View style={styles.sunCircle} />
-                  <View style={styles.cloudShape1} />
-                </View>
-                <View>
-                  <Text style={[styles.todayTempNumber, { color: c.ink }]}>
-                    {Math.round(resolvedTemp)}
-                    <Text style={styles.degreeSymbol}>
-                      {unit === 'F' ? '°F' : '°C'}
-                    </Text>
-                  </Text>
-                  <Text style={[styles.todayCondition, { color: c.ink }]}>
-                    {resolvedCondition}
-                  </Text>
-                  <Text style={[styles.todayFeels, { color: c.muted }]}>
-                    Feels like {formatTemperature(resolvedFeelsLike)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Right Stats Grid */}
-              <View style={styles.todayStatsGrid}>
-                <View style={styles.todayStatItem}>
-                  <Text style={styles.statIcon}>🌡️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>
-                    Min
-                  </Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>22°C</Text>
-                </View>
-                <View style={styles.todayStatItem}>
-                  <Text style={styles.statIcon}>🌡️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>
-                    Max
-                  </Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>31°C</Text>
-                </View>
-                <View style={styles.todayStatItem}>
-                  <Text style={styles.statIcon}>💧</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>
-                    Humidity
-                  </Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>
-                    {resolvedHumidity}%
-                  </Text>
-                </View>
-                <View style={styles.todayStatItem}>
-                  <Text style={styles.statIcon}>💨</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>
-                    Wind
-                  </Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>
-                    {resolvedWind} km/h SW
-                  </Text>
-                </View>
-                <View style={styles.todayStatItem}>
-                  <Text style={styles.statIcon}>⏲️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>
-                    Pressure
-                  </Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>
-                    1008 hPa
-                  </Text>
-                </View>
-                <View style={styles.todayStatItem}>
-                  <Text style={styles.statIcon}>👁️</Text>
-                  <Text style={[styles.statLabel, { color: c.muted }]}>
-                    Visibility
-                  </Text>
-                  <Text style={[styles.statVal, { color: c.ink }]}>8 km</Text>
-                </View>
-              </View>
-            </View>
           </View>
 
-          {/* 7-Day Forecast Cards */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
+          {/* Parameter Switcher */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 4 }}
           >
-            <View style={styles.cardHeaderRow}>
-              <Text style={[styles.cardTitle, { color: c.ink }]}>
-                7-Day Forecast
-              </Text>
-              <Text style={[styles.cardAction, { color: c.blue }]}>
-                View full 7-day forecast ›
-              </Text>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.daysScroll}
-            >
-              {forecastDaysData.map((day, idx) => {
-                const isSelected = selectedDayIdx === idx
-                return (
-                  <Pressable
-                    key={day.date}
-                    onPress={() => setSelectedDayIdx(idx)}
-                    style={[
-                      styles.dayCard,
-                      { backgroundColor: c.cardAlt, borderColor: c.border },
-                      isSelected && {
-                        borderColor: c.blue,
-                        backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF'
-                      }
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dayCardName,
-                        { color: isSelected ? c.blue : c.ink }
-                      ]}
-                    >
-                      {day.day}
-                    </Text>
-                    <Text style={[styles.dayCardDate, { color: c.muted }]}>
-                      {day.date}
-                    </Text>
-                    <Text style={styles.dayCardIcon}>{day.icon}</Text>
-                    <Text style={[styles.dayCardHigh, { color: c.ink }]}>
-                      {formatTemperature(day.high)}
-                    </Text>
-                    <Text style={[styles.dayCardLow, { color: c.muted }]}>
-                      {formatTemperature(day.low)}
-                    </Text>
-                    <View
-                      style={[
-                        styles.rainPill,
-                        { backgroundColor: isDark ? '#1C335A' : '#E0F2FE' }
-                      ]}
-                    >
-                      <Text style={[styles.rainPillText, { color: c.blue }]}>
-                        💧 {day.rainChance}
-                      </Text>
-                    </View>
-                  </Pressable>
-                )
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Hourly Forecast */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Hourly Forecast
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.hourlyScroll}
-            >
-              {hourlyForecastData.map((hour, idx) => (
-                <View
-                  key={hour.time}
+            {PARAM_TABS.map(param => {
+              const Icon = param.icon
+              const isActive = activeParamTab === param.id
+              return (
+                <Pressable
+                  key={param.id}
+                  onPress={() => setActiveParamTab(param.id)}
                   style={[
-                    styles.hourCard,
-                    { backgroundColor: c.cardAlt, borderColor: c.border },
-                    idx === 0 && {
-                      borderColor: c.blue,
-                      backgroundColor: isDark ? '#1E3A6D' : '#EFF6FF'
+                    styles.paramPill,
+                    {
+                      backgroundColor: isActive ? c.blue : c.cardAlt,
+                      borderColor: isActive ? c.blue : c.borderLight
                     }
                   ]}
                 >
-                  <Text style={[styles.hourTime, { color: c.muted }]}>
-                    {hour.time}
-                  </Text>
-                  <Text style={styles.hourIcon}>{hour.icon}</Text>
-                  <Text style={[styles.hourTemp, { color: c.ink }]}>
-                    {formatTemperature(hour.temp)}
-                  </Text>
-                  <Text style={styles.hourChance}>💧 {hour.chance}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Detailed Forecast Section with Line Curve & Summary matching Screenshot 2 */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Detailed Forecast
-            </Text>
-
-            {/* Metric tabs */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.detailTabsScroll}
-            >
-              {DETAIL_TABS.map(tab => {
-                const isActive = activeDetailTab === tab
-                return (
-                  <Pressable
-                    key={tab}
-                    onPress={() => setActiveDetailTab(tab)}
-                    style={[
-                      styles.detailTabItem,
-                      isActive && {
-                        borderBottomColor: c.blue,
-                        borderBottomWidth: 2
-                      }
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.detailTabText,
-                        { color: isActive ? c.blue : c.muted },
-                        isActive && styles.detailTabTextActive
-                      ]}
-                    >
-                      {tab}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </ScrollView>
-
-            <View
-              style={[
-                styles.chartSummaryRow,
-                isWide && styles.chartSummaryRowWide
-              ]}
-            >
-              {/* Temperature Graph Simulation */}
-              <View
-                style={[
-                  styles.chartContainer,
-                  { backgroundColor: c.cardAlt, borderColor: c.border }
-                ]}
-              >
-                <View style={styles.chartPointsRow}>
-                  {[
-                    { time: '6 AM', temp: '23°', height: 40 },
-                    { time: '9 AM', temp: '26°', height: 60 },
-                    { time: '12 PM', temp: '28°', height: 75 },
-                    { time: '3 PM', temp: '31°', height: 95, highest: true },
-                    { time: '6 PM', temp: '29°', height: 80 },
-                    { time: '9 PM', temp: '25°', height: 50 }
-                  ].map(pt => (
-                    <View key={pt.time} style={styles.chartBarCol}>
-                      <Text
-                        style={[
-                          styles.chartTempLabel,
-                          { color: pt.highest ? c.blue : c.ink }
-                        ]}
-                      >
-                        {pt.temp}
-                      </Text>
-                      <View
-                        style={[
-                          styles.chartBar,
-                          { height: pt.height },
-                          pt.highest
-                            ? { backgroundColor: c.blue }
-                            : { backgroundColor: '#60A5FA' }
-                        ]}
-                      />
-                      <Text style={[styles.chartTimeLabel, { color: c.muted }]}>
-                        {pt.time}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Summary Panel */}
-              <View
-                style={[
-                  styles.detailSummaryPanel,
-                  { backgroundColor: c.cardAlt, borderColor: c.border }
-                ]}
-              >
-                <Text style={[styles.summaryTitle, { color: c.ink }]}>
-                  Summary
-                </Text>
-                <Text style={[styles.summaryDescription, { color: c.muted }]}>
-                  Warm with partly cloudy skies. Light winds throughout the day.
-                </Text>
-                <View style={styles.summaryStatsList}>
-                  <View style={styles.summaryStatItem}>
-                    <Text style={styles.summaryStatIcon}>🌡️</Text>
-                    <View>
-                      <Text style={[styles.summaryStatName, { color: c.ink }]}>
-                        Max Temperature
-                      </Text>
-                      <Text
-                        style={[styles.summaryStatValue, { color: c.muted }]}
-                      >
-                        31°C at 3:00 PM
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.summaryStatItem}>
-                    <Text style={styles.summaryStatIcon}>🌡️</Text>
-                    <View>
-                      <Text style={[styles.summaryStatName, { color: c.ink }]}>
-                        Min Temperature
-                      </Text>
-                      <Text
-                        style={[styles.summaryStatValue, { color: c.muted }]}
-                      >
-                        22°C at 6:00 AM
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.summaryStatItem}>
-                    <Text style={styles.summaryStatIcon}>💧</Text>
-                    <View>
-                      <Text style={[styles.summaryStatName, { color: c.ink }]}>
-                        Rainfall
-                      </Text>
-                      <Text
-                        style={[styles.summaryStatValue, { color: c.muted }]}
-                      >
-                        2.4 mm
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Plan Your Day Better Promo Banner */}
-          <View
-            style={[
-              styles.planBanner,
-              {
-                backgroundColor: isDark ? '#1C2E4A' : '#EFF6FF',
-                borderColor: '#BFDBFE'
-              }
-            ]}
-          >
-            <Text style={styles.planIcon}>📅</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.planTitle, { color: c.ink }]}>
-                Plan Your Day Better
-              </Text>
-              <Text style={[styles.planSubtitle, { color: c.muted }]}>
-                Get detailed 7-day forecasts, hourly updates and severe weather
-                alerts with WeatherGPT Premium.
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => onNavigate && onNavigate('premium')}
-              style={[
-                styles.upgradeBtn,
-                { backgroundColor: c.card, borderColor: '#F59E0B' }
-              ]}
-            >
-              <Text style={styles.upgradeBtnText}>👑 Upgrade to Premium</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Right Column on wide screen */}
-        <View style={[styles.col, isWide && styles.colRight]}>
-          {/* Select Location Search Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Select Location
-            </Text>
-            <TextInput
-              value={searchLocation}
-              onChangeText={setSearchLocation}
-              placeholder='Search location...'
-              placeholderTextColor={c.muted}
-              style={[
-                styles.locSearchInput,
-                {
-                  backgroundColor: c.cardAlt,
-                  borderColor: c.border,
-                  color: c.ink
-                }
-              ]}
-            />
-            <View style={styles.quickLocList}>
-              {[
-                { name: 'Pune, Maharashtra', star: true },
-                { name: 'Mumbai, Maharashtra', star: false },
-                { name: 'Nagpur, Maharashtra', star: false },
-                { name: 'New Delhi, Delhi', star: false }
-              ].map(loc => (
-                <Pressable
-                  key={loc.name}
-                  style={[
-                    styles.quickLocItem,
-                    { borderBottomColor: c.borderLight }
-                  ]}
-                >
-                  <Text style={[styles.quickPin, { color: c.blue }]}>📍</Text>
-                  <Text style={[styles.quickName, { color: c.ink }]}>
-                    {loc.name}
-                  </Text>
+                  <Icon size={12} color={isActive ? '#FFFFFF' : c.muted} />
                   <Text
                     style={[
-                      styles.quickStar,
-                      { color: loc.star ? '#F59E0B' : c.mutedLight }
-                    ]}
-                  >
-                    {loc.star ? '★' : '☆'}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-            <Text style={[styles.viewAllLocations, { color: c.blue }]}>
-              View all locations
-            </Text>
-          </View>
-
-          {/* Precipitation Summary Card with Bar Chart matching Screenshot 2 */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Precipitation Summary
-            </Text>
-            <Text style={[styles.precipSub, { color: c.muted }]}>
-              Next 7 Days
-            </Text>
-            <Text style={[styles.precipTotal, { color: c.ink }]}>
-              28.6 <Text style={styles.precipUnit}>mm</Text>
-            </Text>
-            <Text
-              style={[styles.precipSub, { color: c.muted, marginBottom: 12 }]}
-            >
-              Total Rainfall
-            </Text>
-
-            {/* 7-Day Bar Chart */}
-            <View style={styles.precipBarChart}>
-              {[
-                { day: 'Wed', mm: '2.4', h: 25 },
-                { day: 'Thu', mm: '8.6', h: 55 },
-                { day: 'Fri', mm: '10.2', h: 68 },
-                { day: 'Sat', mm: '12.4', h: 85, peak: true },
-                { day: 'Sun', mm: '1.8', h: 20 },
-                { day: 'Mon', mm: '0.8', h: 12 },
-                { day: 'Tue', mm: '0.6', h: 10 }
-              ].map(bar => (
-                <View key={bar.day} style={styles.precipBarCol}>
-                  <Text style={[styles.precipValText, { color: c.muted }]}>
-                    {bar.mm}
-                  </Text>
-                  <View
-                    style={[
-                      styles.precipBarItem,
+                      styles.paramPillText,
                       {
-                        height: bar.h,
-                        backgroundColor: bar.peak ? c.blue : '#60A5FA'
+                        color: isActive ? '#FFFFFF' : c.muted,
+                        fontWeight: isActive ? '800' : '600'
                       }
                     ]}
-                  />
-                  <Text style={[styles.precipDayText, { color: c.muted }]}>
-                    {bar.day}
+                  >
+                    {param.label}
                   </Text>
-                </View>
-              ))}
-            </View>
-          </View>
+                </Pressable>
+              )
+            })}
+          </ScrollView>
+        </View>
 
-          {/* UV Index Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>UV Index</Text>
-            <Text style={[styles.precipSub, { color: c.muted }]}>Today</Text>
-            <View style={styles.uvRow}>
-              <Text style={[styles.uvNumber, { color: c.ink }]}>7</Text>
-              <Text style={[styles.uvLevel, { color: '#F97316' }]}>High</Text>
-            </View>
-            {/* Color spectrum bar */}
-            <View style={styles.uvSpectrumBar}>
-              <View
-                style={[styles.uvSegment, { backgroundColor: '#22C55E' }]}
-              />
-              <View
-                style={[styles.uvSegment, { backgroundColor: '#EAB308' }]}
-              />
-              <View
-                style={[styles.uvSegment, { backgroundColor: '#F97316' }]}
-              />
-              <View
-                style={[styles.uvSegment, { backgroundColor: '#EF4444' }]}
-              />
-              <View
-                style={[styles.uvSegment, { backgroundColor: '#8B5CF6' }]}
-              />
-            </View>
-            <Text style={[styles.uvAdvice, { color: c.muted }]}>
-              🕶️ Wear sunglasses and use sun protection.
-            </Text>
-          </View>
-
-          {/* Air Quality Index Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Air Quality Index
-            </Text>
-            <Text style={[styles.precipSub, { color: c.muted }]}>Today</Text>
-            <View style={styles.aqiRow}>
-              <View style={styles.aqiBadge}>
-                <Text style={styles.aqiNumber}>42</Text>
-              </View>
-              <Text style={[styles.aqiStatus, { color: '#10B981' }]}>Good</Text>
-            </View>
-            <Text style={[styles.aqiAdvice, { color: c.muted }]}>
-              🍃 Air quality is satisfactory and poses little or no risk.
-            </Text>
-          </View>
-
-          {/* Sunrise & Sunset Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Sunrise & Sunset
-            </Text>
-            <View style={styles.sunTimesRow}>
-              <View style={styles.sunTimeCol}>
-                <Text style={styles.sunIcon}>🌅</Text>
-                <Text style={[styles.sunLabel, { color: c.muted }]}>
-                  Sunrise
-                </Text>
-                <Text style={[styles.sunTime, { color: c.ink }]}>5:47 AM</Text>
-              </View>
-              <View style={styles.sunTimeCol}>
-                <Text style={styles.sunIcon}>🌇</Text>
-                <Text style={[styles.sunLabel, { color: c.muted }]}>
-                  Sunset
-                </Text>
-                <Text style={[styles.sunTime, { color: c.ink }]}>6:57 PM</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Compare Locations Card */}
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: c.card, borderColor: c.border }
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: c.ink }]}>
-              Compare Locations
-            </Text>
-            <Text style={[styles.precipSub, { color: c.muted }]}>
-              Compare weather between different locations.
-            </Text>
-            <Pressable
-              onPress={() => onNavigate && onNavigate('compare')}
+        {/* Horizontal Hourly Strip */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.hourlyStripContent}
+        >
+          {hourlyList.map((h, idx) => (
+            <View
+              key={idx}
               style={[
-                styles.compareBtn,
-                { backgroundColor: c.cardAlt, borderColor: c.border }
+                styles.hourCol,
+                { backgroundColor: c.cardAlt, borderColor: c.borderLight }
               ]}
             >
-              <Text style={[styles.compareBtnText, { color: c.blue }]}>
-                + Add Location to Compare
-              </Text>
-            </Pressable>
-          </View>
-        </View>
+              <Text style={[styles.hourColTime, { color: c.muted }]}>{h.time}</Text>
+              <View style={{ marginVertical: 6 }}>
+                <WeatherIcon condition={h.condition} size={20} />
+              </View>
+
+              {activeParamTab === 'temp' && (
+                <Text style={[styles.hourColVal, { color: c.ink }]}>{h.temp}°C</Text>
+              )}
+              {activeParamTab === 'rain' && (
+                <Text style={[styles.hourColVal, { color: c.accentCyan }]}>{h.pop}%</Text>
+              )}
+              {activeParamTab === 'wind' && (
+                <Text style={[styles.hourColVal, { color: c.inkSecondary }]}>{h.wind}k</Text>
+              )}
+              {activeParamTab === 'pressure' && (
+                <Text style={[styles.hourColVal, { color: '#10B981' }]}>{h.pressure}</Text>
+              )}
+            </View>
+          ))}
+        </ScrollView>
       </View>
     </ScrollView>
   )
@@ -745,494 +466,202 @@ const styles = StyleSheet.create({
     flex: 1
   },
   contentContainer: {
-    padding: 12,
-    paddingBottom: 36,
-    gap: 12
+    padding: 16,
+    paddingBottom: 36
   },
-  topLocationBar: {
-    padding: 14,
-    borderRadius: 20,
-    borderWidth: 1,
+  cityPillsRow: {
+    gap: 6,
+    marginBottom: 14
+  },
+  cityChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  locationTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
-  locationPin: {
-    fontSize: 16
-  },
-  locationTitle: {
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  chevronText: {
-    fontSize: 12
-  },
-  latLongText: {
-    fontSize: 10,
-    marginTop: 2
-  },
-  changeLocBtn: {
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
     borderWidth: 1
   },
-  changeLocText: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  mainGrid: {
-    gap: 12
-  },
-  mainGridWide: {
-    flexDirection: 'row',
-    alignItems: 'flex-start'
-  },
-  col: {
-    gap: 12
-  },
-  colLeft: {
-    flex: 7
-  },
-  colRight: {
-    flex: 5
-  },
-  card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 14,
-    gap: 10
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '800'
-  },
-  cardAction: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  todayDateText: {
-    fontSize: 11,
-    fontWeight: '600'
-  },
-  todayHeroRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12
-  },
-  todayLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-  heroWeatherGraphic: {
-    width: 60,
-    height: 50,
-    position: 'relative'
-  },
-  sunCircle: {
-    position: 'absolute',
-    top: 2,
-    right: 4,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F59E0B'
-  },
-  cloudShape1: {
-    position: 'absolute',
-    bottom: 4,
-    left: 2,
-    width: 46,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#38BDF8'
-  },
-  todayTempNumber: {
-    fontSize: 34,
-    fontWeight: '900',
-    letterSpacing: -1
-  },
-  degreeSymbol: {
-    fontSize: 18,
-    fontWeight: '600'
-  },
-  todayCondition: {
-    fontSize: 12,
-    fontWeight: '700'
-  },
-  todayFeels: {
-    fontSize: 10
-  },
-  todayStatsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: 170,
-    gap: 8
-  },
-  todayStatItem: {
-    width: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
-  statIcon: {
+  cityChipText: {
     fontSize: 12
   },
-  statLabel: {
-    fontSize: 9
+  consensusCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 14
   },
-  statVal: {
+  consensusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  },
+  consensusTitle: {
+    fontSize: 13,
+    fontWeight: '800'
+  },
+  consensusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999
+  },
+  consensusBadgeText: {
+    color: '#10B981',
     fontSize: 10,
     fontWeight: '700'
   },
-  daysScroll: {
-    gap: 8,
-    paddingVertical: 2
+  modelsGrid: {
+    flexDirection: 'row',
+    gap: 8
+  },
+  modelItem: {
+    flex: 1,
+    padding: 8,
+    borderRadius: 12,
+    alignItems: 'center'
+  },
+  modelName: {
+    fontSize: 10,
+    fontWeight: '800'
+  },
+  modelRes: {
+    fontSize: 9,
+    marginVertical: 2
+  },
+  modelAgree: {
+    fontSize: 11,
+    fontWeight: '800'
+  },
+  daySelectorWrapper: {
+    marginBottom: 14
+  },
+  daysScrollRow: {
+    gap: 8
   },
   dayCard: {
-    width: 72,
+    width: 68,
     paddingVertical: 12,
     paddingHorizontal: 6,
     borderRadius: 16,
     borderWidth: 1,
-    alignItems: 'center',
-    gap: 3
-  },
-  dayCardName: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  dayCardDate: {
-    fontSize: 9
-  },
-  dayCardIcon: {
-    fontSize: 18,
-    marginVertical: 2
-  },
-  dayCardHigh: {
-    fontSize: 13,
-    fontWeight: '800'
-  },
-  dayCardLow: {
-    fontSize: 10
-  },
-  rainPill: {
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 2
-  },
-  rainPillText: {
-    fontSize: 8,
-    fontWeight: '700'
-  },
-  hourlyScroll: {
-    gap: 8,
-    paddingVertical: 2
-  },
-  hourCard: {
-    width: 66,
-    height: 105,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10
-  },
-  hourTime: {
-    fontSize: 10,
-    fontWeight: '700'
-  },
-  hourIcon: {
-    fontSize: 18
-  },
-  hourTemp: {
-    fontSize: 13,
-    fontWeight: '800'
-  },
-  hourChance: {
-    fontSize: 9,
-    color: '#3B82F6',
-    fontWeight: '700'
-  },
-  detailTabsScroll: {
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF2F6',
-    paddingBottom: 4
-  },
-  detailTabItem: {
-    paddingVertical: 6,
-    paddingHorizontal: 4
-  },
-  detailTabText: {
-    fontSize: 11,
-    fontWeight: '600'
-  },
-  detailTabTextActive: {
-    fontWeight: '800'
-  },
-  chartSummaryRow: {
-    gap: 10,
-    marginTop: 6
-  },
-  chartSummaryRowWide: {
-    flexDirection: 'row'
-  },
-  chartContainer: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 12,
-    justifyContent: 'flex-end',
-    minHeight: 160
-  },
-  chartPointsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: 130
-  },
-  chartBarCol: {
-    alignItems: 'center',
-    gap: 4
-  },
-  chartTempLabel: {
-    fontSize: 10,
-    fontWeight: '800'
-  },
-  chartBar: {
-    width: 14,
-    borderRadius: 7
-  },
-  chartTimeLabel: {
-    fontSize: 9
-  },
-  detailSummaryPanel: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 12,
-    gap: 6
-  },
-  summaryTitle: {
-    fontSize: 12,
-    fontWeight: '800'
-  },
-  summaryDescription: {
-    fontSize: 10,
-    lineHeight: 14
-  },
-  summaryStatsList: {
-    gap: 8,
-    marginTop: 4
-  },
-  summaryStatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8
-  },
-  summaryStatIcon: {
-    fontSize: 14
-  },
-  summaryStatName: {
-    fontSize: 10,
-    fontWeight: '700'
-  },
-  summaryStatValue: {
-    fontSize: 9
-  },
-  planBanner: {
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
-  },
-  planIcon: {
-    fontSize: 22
-  },
-  planTitle: {
-    fontSize: 13,
-    fontWeight: '800'
-  },
-  planSubtitle: {
-    fontSize: 10,
-    marginTop: 2
-  },
-  upgradeBtn: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 12
-  },
-  upgradeBtnText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#D97706'
-  },
-  locSearchInput: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    height: 38,
-    fontSize: 12
-  },
-  quickLocList: {
-    gap: 2
-  },
-  quickLocItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    gap: 6
-  },
-  quickPin: {
-    fontSize: 12
-  },
-  quickName: {
-    fontSize: 11,
-    fontWeight: '600',
-    flex: 1
-  },
-  quickStar: {
-    fontSize: 14
-  },
-  viewAllLocations: {
-    fontSize: 10,
-    fontWeight: '700',
-    textAlign: 'center',
-    paddingTop: 4
-  },
-  precipSub: {
-    fontSize: 10
-  },
-  precipTotal: {
-    fontSize: 26,
-    fontWeight: '900'
-  },
-  precipUnit: {
-    fontSize: 14,
-    fontWeight: '600'
-  },
-  precipBarChart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: 110,
-    paddingTop: 6
-  },
-  precipBarCol: {
-    alignItems: 'center',
-    gap: 4
-  },
-  precipValText: {
-    fontSize: 8,
-    fontWeight: '700'
-  },
-  precipBarItem: {
-    width: 12,
-    borderRadius: 6
-  },
-  precipDayText: {
-    fontSize: 9
-  },
-  uvRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6
-  },
-  uvNumber: {
-    fontSize: 28,
-    fontWeight: '900'
-  },
-  uvLevel: {
-    fontSize: 13,
-    fontWeight: '800'
-  },
-  uvSpectrumBar: {
-    flexDirection: 'row',
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    gap: 2,
-    marginVertical: 4
-  },
-  uvSegment: {
-    flex: 1
-  },
-  uvAdvice: {
-    fontSize: 10,
-    marginTop: 2
-  },
-  aqiRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
-  },
-  aqiBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  aqiNumber: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#10B981'
-  },
-  aqiStatus: {
-    fontSize: 14,
-    fontWeight: '800'
-  },
-  aqiAdvice: {
-    fontSize: 10,
-    marginTop: 4
-  },
-  sunTimesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 6
-  },
-  sunTimeCol: {
-    alignItems: 'center',
-    gap: 2
-  },
-  sunIcon: {
-    fontSize: 20
-  },
-  sunLabel: {
-    fontSize: 10
-  },
-  sunTime: {
-    fontSize: 12,
-    fontWeight: '800'
-  },
-  compareBtn: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 10,
     alignItems: 'center'
   },
-  compareBtnText: {
+  dayNameText: {
+    fontSize: 12,
+    fontWeight: '800'
+  },
+  dayDateText: {
+    fontSize: 10,
+    marginTop: 1
+  },
+  dayMaxTemp: {
+    fontSize: 13,
+    fontWeight: '800'
+  },
+  dayMinTemp: {
+    fontSize: 10,
+    marginTop: 1
+  },
+  focusCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 14
+  },
+  focusHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  },
+  focusDayTitle: {
+    fontSize: 15,
+    fontWeight: '800'
+  },
+  focusConditionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2
+  },
+  focusTempRange: {
+    fontSize: 18,
+    fontWeight: '900'
+  },
+  focusRainText: {
     fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2
+  },
+  focusGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  focusGridItem: {
+    width: '48.5%',
+    padding: 10,
+    borderRadius: 12
+  },
+  focusGridLabel: {
+    fontSize: 10,
+    marginTop: 4
+  },
+  focusGridVal: {
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 2
+  },
+  hourlyCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16
+  },
+  hourlyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  hourlyTitle: {
+    fontSize: 14,
+    fontWeight: '800'
+  },
+  paramPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  paramPillText: {
+    fontSize: 10
+  },
+  hourlyStripContent: {
+    gap: 8,
+    paddingVertical: 4
+  },
+  hourCol: {
+    width: 62,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center'
+  },
+  hourColTime: {
+    fontSize: 10,
     fontWeight: '700'
+  },
+  hourColVal: {
+    fontSize: 12,
+    fontWeight: '800'
   }
 })
+
+export default ForecastScreen

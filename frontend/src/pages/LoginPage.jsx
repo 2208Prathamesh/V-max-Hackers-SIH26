@@ -212,7 +212,7 @@ export const LoginPage = () => {
       />
 
       {/* Main Container Card */}
-      <div className='w-full max-w-6xl min-h-[780px] bg-white dark:bg-[#0F172A] rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-200/80 dark:border-slate-800'>
+      <div className='w-full max-w-6xl min-h-[780px] bg-white dark:bg-[#0B0B0E] rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-slate-200/80 dark:border-slate-800'>
         {/* =========================================================================
             LEFT PANEL: Atmospheric Landscape & Features
             ========================================================================= */}
@@ -224,7 +224,7 @@ export const LoginPage = () => {
               backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop')`
             }}
           />
-          <div className='absolute inset-0 bg-gradient-to-b from-[#2563EB]/95 via-[#1D4ED8]/90 to-[#0F172A]/95 mix-blend-multiply' />
+          <div className='absolute inset-0 bg-gradient-to-b from-[#2563EB]/95 via-[#1D4ED8]/90 to-[#0B0B0E]/95 mix-blend-multiply' />
           <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-blue-600/30' />
 
           {/* Foreground Left Content */}
@@ -314,7 +314,7 @@ export const LoginPage = () => {
         {/* =========================================================================
             RIGHT PANEL: Enhanced Authentication Form & Role Engine
             ========================================================================= */}
-        <div className='lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-10 lg:p-12 bg-white dark:bg-[#111C2E] relative overflow-y-auto max-h-[90vh] lg:max-h-none'>
+        <div className='lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-10 lg:p-12 bg-white dark:bg-[#121316] relative overflow-y-auto max-h-[90vh] lg:max-h-none'>
           {/* Top Bar: Language Selector */}
           <div className='w-full max-w-lg flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800'>
             <div className='flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400'>
@@ -554,7 +554,7 @@ export const LoginPage = () => {
                 <div className='w-full border-t border-slate-200 dark:border-slate-700/80' />
               </div>
               <div className='relative flex justify-center text-xs'>
-                <span className='bg-white dark:bg-[#111C2E] px-4 text-slate-500 dark:text-slate-400 font-medium'>
+                <span className='bg-white dark:bg-[#121316] px-4 text-slate-500 dark:text-slate-400 font-medium'>
                   {t('orContinueWith') || 'Or continue with'}
                 </span>
               </div>

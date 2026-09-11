@@ -29,7 +29,7 @@ export const Layout = ({ children }) => {
   }
 
   return (
-    <div className='flex h-screen overflow-hidden bg-[#F8FAFC] dark:bg-[#0B1120] text-slate-900 dark:text-slate-100'>
+    <div className='flex h-screen overflow-hidden bg-[#F8F9FA] dark:bg-[#0A0B0E] text-slate-900 dark:text-slate-100'>
       {/* Sidebar navigation */}
       <Sidebar
         isMobileOpen={isMobileOpen}

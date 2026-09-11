@@ -22,6 +22,10 @@ Welcome to the central documentation and deep analysis hub of the **WeatherGPT**
 | **[`08_DATABASE_AND_DATA_MODELS.md`](./08_DATABASE_AND_DATA_MODELS.md)** | **Database Schemas & Seeding** | 12 Mongoose schemas, compound indexes, seed scripts, demo user credentials (`sidpatil@gmail.com`, `authority@weathergpt.com`), mock datasets. |
 | **[`09_TESTING_AND_VERIFICATION.md`](./09_TESTING_AND_VERIFICATION.md)** | **Testing & Quality Assurance** | Node.js native test harness (`test-runner.js`), 87+ tests across unit, integration, system, and edge-cases suites, oxlint configuration. |
 | **[`10_DEVELOPER_PLAYBOOK.md`](./10_DEVELOPER_PLAYBOOK.md)** | **Developer Playbook & Runbook** | Local dev setup, seeding commands, environment variables, curl request cheat sheet, debugging tips, and extension guides. |
+| **[`11_AVIATION_WEATHER_SYSTEM.md`](./11_AVIATION_WEATHER_SYSTEM.md)** | **Aviation Aerodrome & Runway Intelligence** | ICAO Annex 3 & DGCA compliance, 34 Indian aerodromes, METAR/TAF parser, runway crosswind decomposition matrix ($V \times \sin(\theta)$), custom bearing tool, cloud base ladder. |
+| **[`12_MARINE_FISHERMEN_SAFETY_SYSTEM.md`](./12_MARINE_FISHERMEN_SAFETY_SYSTEM.md)** | **INCOIS Marine & Fishermen Safety** | INCOIS MEWS & ICG compliance, 36 coastal ports/districts across 9 states, WMO Beaufort scale (0–12), Indian Port Signals (1–11), vessel-class advisories, wave hydrodynamics ($H_s, T_p$), 1554 SAR helpline. |
+| **[`13_URBAN_FLASH_FLOOD_INDEX.md`](./13_URBAN_FLASH_FLOOD_INDEX.md)** | **Urban Flash Flood & Runoff Index** | Rational Runoff Method ($Q = C \times I \times A$), 20 flood-prone Indian metro basins, drainage saturation ratios, waterlogging depth formula, hotspot directory with engineering failure causes, municipal directives. |
+| **[`14_CAP_ALERT_INTEROPERABILITY.md`](./14_CAP_ALERT_INTEROPERABILITY.md)** | **ITU / OASIS CAP v1.2 Alert Engine** | ITU-T X.1303 & OASIS CAP v1.2 XML/JSON generation, NDMA SACHET & IMD schema compatibility, inter-agency export workflow in Authority Command Center. |
 
 ---
 

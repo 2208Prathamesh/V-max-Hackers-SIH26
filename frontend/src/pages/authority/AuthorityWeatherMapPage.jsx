@@ -148,7 +148,7 @@ const createDistrictIcon = (name, severityColor, rainMm, tempC) => {
   return L.divIcon({
     className: 'custom-leaflet-district-icon',
     html: `
-      <div style="background:#0F172A; border:1.5px solid ${severityColor}; border-radius:12px; padding:3px 8px; color:#ffffff; font-size:10px; font-weight:800; display:flex; align-items:center; gap:5px; box-shadow:0 4px 12px rgba(0,0,0,0.5); white-space:nowrap;">
+      <div style="background:#121316; border:1.5px solid ${severityColor}; border-radius:12px; padding:3px 8px; color:#ffffff; font-size:10px; font-weight:800; display:flex; align-items:center; gap:5px; box-shadow:0 4px 12px rgba(0,0,0,0.5); white-space:nowrap;">
         <span style="width:7px; height:7px; border-radius:9999px; background:${severityColor};"></span>
         <span>${name}</span>
         <span style="color:#60A5FA; font-size:9px;">${rainMm}mm</span>
@@ -383,7 +383,7 @@ export const AuthorityWeatherMapPage = () => {
       )}
 
       {/* Top Header & Dropdown Controls */}
-      <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm'>
+      <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm'>
         <div>
           <div className='flex items-center gap-3'>
             <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
@@ -679,7 +679,7 @@ export const AuthorityWeatherMapPage = () => {
         <div className='lg:col-span-4 space-y-4'>
           {/* Selected Item Details Card */}
           {selectedItem?.type === 'alert' && (
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4'>
               <div className='flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800'>
                 <div className='flex items-center gap-2'>
                   <div className='p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'>
@@ -736,7 +736,7 @@ export const AuthorityWeatherMapPage = () => {
           )}
 
           {selectedItem?.type === 'shelter' && (
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4'>
               <div className='flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800'>
                 <div className='flex items-center gap-2'>
                   <div className='p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'>
@@ -787,7 +787,7 @@ export const AuthorityWeatherMapPage = () => {
           )}
 
           {selectedItem?.type === 'district' && (
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4'>
               <div className='flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800'>
                 <div className='flex items-center gap-2'>
                   <div className='p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'>
@@ -848,7 +848,7 @@ export const AuthorityWeatherMapPage = () => {
           )}
 
           {selectedItem?.type === 'coordinate' && (
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4 animate-fadeIn'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4 animate-fadeIn'>
               <div className='flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800'>
                 <div className='flex items-center gap-2'>
                   <div className='p-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400'>
@@ -919,14 +919,14 @@ export const AuthorityWeatherMapPage = () => {
           )}
 
           {!selectedItem && (
-            <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm text-center text-slate-400 text-xs'>
+            <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm text-center text-slate-400 text-xs'>
               <MapPin className='w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600' />
               <p>Click any district badge, official hazard marker, or evacuation shelter on the map to inspect telemetry.</p>
             </div>
           )}
 
           {/* Active Alerts List Card (Click to fly) */}
-          <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-3'>
+          <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-3'>
             <h3 className='font-bold text-xs uppercase tracking-wider text-slate-400'>
               Active Alerts Plotted ({displayableAlerts.length})
             </h3>

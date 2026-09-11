@@ -104,7 +104,7 @@ export const SettingsPage = () => {
         {/* Left Column: Settings Sections (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
           {/* 1. General Section Card */}
-          <div className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
               {t('general')}
             </h2>
@@ -198,7 +198,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* 2. Units & Format Section Card */}
-          <div className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
               {t('unitsAndFormat')}
             </h2>
@@ -295,7 +295,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* 3. Notifications Section Card */}
-          <div className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-6">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
               Notifications
             </h2>
@@ -372,7 +372,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* 4. Language Selection Card */}
-          <div id="language-section" className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-5">
+          <div id="language-section" className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -443,7 +443,7 @@ export const SettingsPage = () => {
         {/* Right Column: Account Summary, Data & Privacy, Need Help (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
           {/* Account Summary Card */}
-          <div className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-5">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-5">
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('accountSummary')}</h2>
 
             <div className="flex items-center gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800/80">
@@ -490,7 +490,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* Data & Privacy Card */}
-          <div className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-4">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-4">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('dataAndPrivacy')}</h2>
@@ -519,7 +519,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* Need Help? Card */}
-          <div className="bg-white dark:bg-[#151F32] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-4">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-card space-y-4">
             <div className="flex items-center gap-2">
               <HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('needHelp')}</h2>

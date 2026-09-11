@@ -19,8 +19,6 @@ import {
   ChevronDown,
   Settings as SettingsIcon,
   Radio,
-  Volume2,
-  VolumeX,
   Share2,
   Phone,
   CheckCircle2,
@@ -517,9 +515,6 @@ export const AlertsPage = () => {
   const [imdDistrictQuery, setImdDistrictQuery] = useState('');
   const [imdDistrictResult, setImdDistrictResult] = useState(null);
 
-  // Audio Speech Synthesis state
-  const [speakingAlertId, setSpeakingAlertId] = useState(null);
-
   // Farmer Defense Checklist state stored in localStorage
   const [checkedFarmTasks, setCheckedFarmTasks] = useState(() => {
     try {
@@ -634,45 +629,6 @@ export const AlertsPage = () => {
       } catch {}
       return next;
     });
-  };
-
-  // Toggle speech synthesis reading for an alert card
-  const handleToggleSpeech = (alert) => {
-    if (!window.speechSynthesis) {
-      addToast('Speech synthesis not available in this browser', 'warning');
-      return;
-    }
-
-    if (speakingAlertId === alert.id) {
-      window.speechSynthesis.cancel();
-      setSpeakingAlertId(null);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const isMr = language === 'mr';
-    const sourceLabel =
-      alert.streamCategory === 'agi'
-        ? (isMr ? 'वेदरजीपीटी एआय विश्लेषण' : 'WeatherGPT AGI Analysis')
-        : alert.streamCategory === 'authority'
-        ? (isMr ? 'जिल्हा आपत्ती व्यवस्थापन आदेश' : 'District Disaster Authority Order')
-        : (isMr ? 'भारतीय हवामान विभाग थेट इशारा' : 'India Meteorological Department Official Warning');
-
-    const textToSpeak = isMr
-      ? `${sourceLabel}! ${alert.severity === 'Severe' ? 'अतिदक्षतेचा इशारा' : alert.severity === 'High' ? 'तीव्र इशारा' : 'दक्षतेचा इशारा'}! ${alert.location} साठी: ${translateAlertTitle(alert.title)}. ${translateAlertDescription(alert.description)}. सुरक्षितता सल्ला: ${alert.action || 'कृपया योग्य ती काळजी घ्या.'}`
-      : `${sourceLabel}. ${alert.severity} alert for ${alert.location}: ${alert.title}. ${alert.description || ''}. Safety instruction: ${alert.action || 'Please take precautions.'}`;
-
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = isMr ? 'mr-IN' : 'en-IN';
-    utterance.rate = 0.95;
-
-    utterance.onend = () => setSpeakingAlertId(null);
-    utterance.onerror = () => setSpeakingAlertId(null);
-
-    setSpeakingAlertId(alert.id);
-    window.speechSynthesis.speak(utterance);
-    addToast(language === 'mr' ? 'ऑडिओ बुलेटिन सुरू झाले...' : 'Playing voice advisory bulletin...', 'info');
   };
 
   // Share alert formatted bulletin to WhatsApp
@@ -857,7 +813,7 @@ export const AlertsPage = () => {
       {/* Community Hazard Report Modal */}
       {isReportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center font-bold">
@@ -1020,7 +976,7 @@ export const AlertsPage = () => {
         </div>
 
         {/* 24/7 Verified Emergency Helplines Quick-Dial Tray */}
-        <div className="bg-white dark:bg-[#151F32] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs">
+        <div className="bg-white dark:bg-[#121316] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs">
           <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <PhoneCall className="w-4 h-4 text-emerald-500" />
@@ -1091,7 +1047,7 @@ export const AlertsPage = () => {
         {/* =====================================================================
             PRIMARY SOURCE CATEGORY SWITCHER (IMD vs AGI vs Authority)
             ===================================================================== */}
-        <div className="p-2 rounded-2xl bg-slate-100 dark:bg-[#151F32] border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none shadow-xs">
+        <div className="p-2 rounded-2xl bg-slate-100 dark:bg-[#121316] border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none shadow-xs">
           <button
             onClick={() => setSourceFilter('all')}
             className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
@@ -1412,7 +1368,6 @@ export const AlertsPage = () => {
                 const isExtreme = alert.rawSeverity === 'extreme';
                 const isHigh = alert.rawSeverity === 'high';
                 const isModerate = alert.rawSeverity === 'moderate';
-                const isSpeaking = speakingAlertId === alert.id;
                 const isChecklistOpen = expandedChecklists[alert.id];
                 const farmProtocols = getFarmDefenseProtocol(alert);
 
@@ -1607,24 +1562,9 @@ export const AlertsPage = () => {
                       )}
                     </div>
 
-                    {/* Action Buttons Toolbar: Audio, WhatsApp Share, Copy, View Details */}
+                    {/* Action Buttons Toolbar: WhatsApp Share, Copy, View Details */}
                     <div className="flex flex-wrap items-center justify-between pt-4 mt-4 border-t border-black/5 dark:border-white/5 gap-2.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* 1-Click Audio Speech Synthesis Readout */}
-                        <button
-                          type="button"
-                          onClick={() => handleToggleSpeech(alert)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                            isSpeaking
-                              ? 'bg-rose-600 text-white border-rose-600 animate-pulse'
-                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
-                          }`}
-                          title="Read advisory aloud in local voice"
-                        >
-                          {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-blue-500" />}
-                          <span>{isSpeaking ? (language === 'mr' ? 'थांबवा' : 'Stop') : (language === 'mr' ? 'ऐका (Audio)' : 'Listen')}</span>
-                        </button>
-
                         {/* WhatsApp Village Share */}
                         <button
                           type="button"
@@ -1671,7 +1611,7 @@ export const AlertsPage = () => {
           </div>
 
           {/* Disaster Safety Standard Operating Procedures (SOPs) Accordion */}
-          <div className="bg-white dark:bg-[#151F32] p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-3">
+          <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-rose-500" />
@@ -1845,7 +1785,7 @@ export const AlertsPage = () => {
               </button>
             </div>
 
-            <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 shadow-2xs overflow-hidden">
+            <div className="bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 shadow-2xs overflow-hidden">
               {recentAlertsStream.map((recent) => (
                 <div
                   key={recent.id}
@@ -1886,7 +1826,7 @@ export const AlertsPage = () => {
             ===================================================================== */}
         <div className="lg:col-span-4 space-y-6">
           {/* Card 1: Real Interactive Leaflet Mini Radar Map */}
-          <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Compass className="w-4 h-4 text-blue-500" />
@@ -1915,7 +1855,7 @@ export const AlertsPage = () => {
           </div>
 
           {/* Card 2: Community Weather Incident Ticker */}
-          <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-amber-500" />
@@ -1956,7 +1896,7 @@ export const AlertsPage = () => {
           </div>
 
           {/* Card 3: Alert Filters */}
-          <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 {t('alertFilters')}
@@ -2058,7 +1998,7 @@ export const AlertsPage = () => {
           </div>
 
           {/* Card 4: Alert Subscriptions */}
-          <div className="bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-slate-600 dark:text-slate-400" />
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">

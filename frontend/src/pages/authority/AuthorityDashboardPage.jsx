@@ -45,7 +45,7 @@ const createMiniAlertIcon = severity => {
 const createMiniDistrictIcon = (name, severityColor) => {
   return L.divIcon({
     className: 'custom-dashboard-district-pin',
-    html: `<div style="background:#0F172A; border:1px solid ${severityColor}; border-radius:8px; padding:2px 5px; color:#ffffff; font-size:9px; font-weight:700; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,0.4);">
+    html: `<div style="background:#121316; border:1px solid ${severityColor}; border-radius:8px; padding:2px 5px; color:#ffffff; font-size:9px; font-weight:700; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,0.4);">
       <span style="display:inline-block; width:5px; height:5px; border-radius:9999px; background:${severityColor}; margin-right:3px;"></span>${name}
     </div>`,
     iconSize: [80, 18],
@@ -184,7 +184,7 @@ export const AuthorityDashboardPage = () => {
   return (
     <div className='space-y-6 animate-fadeIn pb-12 select-none'>
       {/* Top Banner & Header */}
-      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm'>
+      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm'>
         <div>
           <div className='flex items-center gap-3'>
             <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight'>
@@ -238,7 +238,7 @@ export const AuthorityDashboardPage = () => {
           return (
             <div
               key={m.id}
-              className={`bg-white dark:bg-[#111C2E] p-5 rounded-3xl border ${m.borderClass} shadow-sm hover:shadow-md transition duration-200 flex items-center gap-4`}
+              className={`bg-white dark:bg-[#121316] p-5 rounded-3xl border ${m.borderClass} shadow-sm hover:shadow-md transition duration-200 flex items-center gap-4`}
             >
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${m.iconBg}`}>
                 <Icon className='w-6 h-6' />
@@ -293,7 +293,7 @@ export const AuthorityDashboardPage = () => {
       {/* Main Grid: Live Weather Map & Recent Alerts */}
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
         {/* LEFT COLUMN: Live Weather Map (8 Cols) */}
-        <div className='lg:col-span-8 bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col'>
+        <div className='lg:col-span-8 bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col'>
           <div className='px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between flex-wrap gap-3'>
             <div className='flex items-center gap-2'>
               <h2 className='text-base font-bold text-slate-900 dark:text-white'>
@@ -443,7 +443,7 @@ export const AuthorityDashboardPage = () => {
         </div>
 
         {/* RIGHT COLUMN: Recent Alerts Feed (4 Cols) */}
-        <div className='lg:col-span-4 bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between space-y-4'>
+        <div className='lg:col-span-4 bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between space-y-4'>
           <div className='space-y-4'>
             <div className='flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800'>
               <div className='flex items-center gap-2'>
@@ -504,7 +504,7 @@ export const AuthorityDashboardPage = () => {
       </div>
 
       {/* District Risk & Meteorological Intelligence Grid */}
-      <div className='bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-4'>
+      <div className='bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm space-y-4'>
         <div className='flex items-center justify-between flex-wrap gap-2'>
           <div>
             <h2 className='text-base font-bold text-slate-900 dark:text-white flex items-center gap-2'>

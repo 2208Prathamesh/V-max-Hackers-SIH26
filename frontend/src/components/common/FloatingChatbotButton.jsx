@@ -142,7 +142,7 @@ export const FloatingChatbotButton = () => {
       <div
         className={`mr-3 px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-xl border text-xs font-bold flex items-center gap-2 transition-all duration-300 pointer-events-none ${
           isDark 
-            ? 'bg-[#111C2E]/95 text-slate-100 border-slate-700/80 shadow-blue-950/40' 
+            ? 'bg-[#121316]/95 text-slate-100 border-slate-700/80 shadow-black/40' 
             : 'bg-white/95 text-slate-800 border-slate-200/90 shadow-slate-300/40'
         } ${
           isHovered
@@ -165,7 +165,7 @@ export const FloatingChatbotButton = () => {
         onMouseLeave={() => setIsHovered(false)}
         className={`relative group w-14 h-14 sm:w-15 sm:h-15 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer ${
           isDark
-            ? 'bg-gradient-to-tr from-indigo-800 via-blue-600 to-slate-900 border-2 border-blue-400/40 hover:border-blue-400/80 shadow-[0_8px_28px_rgba(30,58,138,0.55)] hover:shadow-[0_12px_36px_rgba(37,99,235,0.7)]'
+            ? 'bg-gradient-to-tr from-[#1C1D22] via-slate-800 to-[#121316] border-2 border-slate-600/50 hover:border-blue-400/80 shadow-[0_8px_28px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_36px_rgba(59,130,246,0.3)]'
             : 'bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 border-2 border-white/70 hover:border-white shadow-[0_8px_25px_rgba(37,99,235,0.38)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.55)]'
         } hover:scale-105 active:scale-95`}
         title={tooltipText}
@@ -174,7 +174,7 @@ export const FloatingChatbotButton = () => {
         {/* Ambient Pulsing Aura tuned to Theme */}
         <div 
           className={`absolute inset-0 rounded-full blur-md -z-10 animate-pulse ${
-            isDark ? 'bg-indigo-500/35' : 'bg-blue-400/30'
+            isDark ? 'bg-slate-700/35' : 'bg-blue-400/30'
           }`} 
         />
 
@@ -182,7 +182,7 @@ export const FloatingChatbotButton = () => {
         <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
           <span className={`relative inline-flex rounded-full h-4 w-4 bg-emerald-500 ring-2 items-center justify-center ${
-            isDark ? 'ring-[#111C2E]' : 'ring-white'
+            isDark ? 'ring-[#121316]' : 'ring-white'
           }`}>
             <span className="w-1.5 h-1.5 rounded-full bg-white" />
           </span>

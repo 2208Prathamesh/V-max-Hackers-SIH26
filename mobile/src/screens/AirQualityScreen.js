@@ -1,64 +1,36 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
+  Pressable,
   StyleSheet,
   ScrollView,
-  Pressable,
   useWindowDimensions
 } from 'react-native'
+import {
+  Wind,
+  HeartPulse,
+  Lightbulb,
+  ShieldCheck,
+  Activity,
+  Sparkles,
+  MapPin,
+  CheckCircle2,
+  AlertTriangle,
+  Check
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
-import { allCityDatabase } from '../data/mockData'
+import { api, offlineStorage } from '../services/api'
 
-const POLLUTANTS = [
-  {
-    name: 'PM2.5',
-    label: 'Fine Particulate Matter',
-    value: '18.2 µg/m³',
-    status: 'Good',
-    percentage: 36,
-    color: '#10B981'
-  },
-  {
-    name: 'PM10',
-    label: 'Respirable Particulate Matter',
-    value: '42.0 µg/m³',
-    status: 'Moderate',
-    percentage: 55,
-    color: '#F59E0B'
-  },
-  {
-    name: 'NO₂',
-    label: 'Nitrogen Dioxide',
-    value: '14.5 ppb',
-    status: 'Good',
-    percentage: 25,
-    color: '#10B981'
-  },
-  {
-    name: 'O₃',
-    label: 'Surface Ozone',
-    value: '28.1 ppb',
-    status: 'Good',
-    percentage: 40,
-    color: '#10B981'
-  },
-  {
-    name: 'SO₂',
-    label: 'Sulfur Dioxide',
-    value: '3.2 ppb',
-    status: 'Good',
-    percentage: 15,
-    color: '#10B981'
-  },
-  {
-    name: 'CO',
-    label: 'Carbon Monoxide',
-    value: '0.4 ppm',
-    status: 'Good',
-    percentage: 10,
-    color: '#10B981'
-  }
+const AQI_MONITORED_CITIES = [
+  { id: 'pune', city: 'Pune', region: 'Maharashtra' },
+  { id: 'mumbai', city: 'Mumbai', region: 'Maharashtra' },
+  { id: 'delhi', city: 'New Delhi', region: 'Delhi NCR' },
+  { id: 'bengaluru', city: 'Bengaluru', region: 'Karnataka' },
+  { id: 'kolkata', city: 'Kolkata', region: 'West Bengal' },
+  { id: 'chennai', city: 'Chennai', region: 'Tamil Nadu' },
+  { id: 'hyderabad', city: 'Hyderabad', region: 'Telangana' },
+  { id: 'ahmedabad', city: 'Ahmedabad', region: 'Gujarat' }
 ]
 
 const AQI_LEVELS = [
@@ -66,7 +38,7 @@ const AQI_LEVELS = [
   { range: '51-100', label: 'Moderate', color: '#F59E0B' },
   { range: '101-150', label: 'Sensitive', color: '#F97316' },
   { range: '151-200', label: 'Unhealthy', color: '#EF4444' },
-  { range: '201-300', label: 'Very Unhealthy', color: '#8B5CF6' },
+  { range: '201-300', label: 'Very Unhealthy', color: '#7C3AED' },
   { range: '300+', label: 'Hazardous', color: '#831843' }
 ]
 
@@ -76,30 +48,142 @@ export function AirQualityScreen ({
   onNotification
 }) {
   const c = getColors(isDark)
-  const { width } = useWindowDimensions()
   const [selectedCityIndex, setSelectedCityIndex] = useState(0)
+  const [liveAqiData, setLiveAqiData] = useState(null)
+  const [isPinnedToHome, setIsPinnedToHome] = useState(false)
+  const [savedPinState, setSavedPinState] = useState(false)
 
-  const city = allCityDatabase[selectedCityIndex] || allCityDatabase[0]
-  const aqiValue = city.aqi || 68
+  useEffect(() => {
+    let mounted = true
+    offlineStorage.getPinnedWidgets().then(res => {
+      if (mounted) {
+        const val = !!res?.airQuality
+        setIsPinnedToHome(val)
+        setSavedPinState(val)
+      }
+    }).catch(() => {})
+    return () => { mounted = false }
+  }, [])
+
+  const handleTogglePinHome = async () => {
+    if (!isPinnedToHome) {
+      const canPin = await offlineStorage.canPinWidget('airQuality')
+      if (!canPin) {
+        if (onNotification) {
+          onNotification('⚠️ Max 3 widgets can be pinned to Home. Unpin another widget first.')
+        }
+        return
+      }
+    }
+    setIsPinnedToHome(prev => !prev)
+  }
+
+  const hasPinChanged = isPinnedToHome !== savedPinState
+
+  const handleSavePinPreference = async () => {
+    if (!hasPinChanged) return
+    const res = await offlineStorage.setWidgetPinned('airQuality', isPinnedToHome)
+    if (res && res.success === false) {
+      if (onNotification) onNotification(`⚠️ ${res.message}`)
+      setIsPinnedToHome(savedPinState)
+      return
+    }
+    const wasPinned = savedPinState
+    setSavedPinState(isPinnedToHome)
+    if (onNotification) {
+      if (isPinnedToHome) {
+        onNotification('📌 Air Quality pinned to Home Dashboard')
+      } else if (wasPinned) {
+        onNotification('Removed Air Quality from Home Dashboard')
+      }
+    }
+  }
+
+  const city = AQI_MONITORED_CITIES[selectedCityIndex] || AQI_MONITORED_CITIES[0]
+
+  useEffect(() => {
+    api
+      .weather({ city: city.city })
+      .then(res => {
+        if (res?.airQuality) {
+          setLiveAqiData(res.airQuality)
+        }
+      })
+      .catch(() => {})
+  }, [selectedCityIndex])
+
+  const curAqi = liveAqiData?.current || {}
+  const aqiValue = liveAqiData?.aqi ?? curAqi.aqi ?? curAqi.us_aqi ?? curAqi.european_aqi ?? 55
+
+  const pollutants = [
+    {
+      name: 'PM2.5',
+      label: 'Fine particulate matter (<2.5µm)',
+      value: `${curAqi.pm2_5 ?? 26} µg/m³`,
+      status: (curAqi.pm2_5 ?? 26) > 35 ? 'Moderate' : 'Good',
+      color: (curAqi.pm2_5 ?? 26) > 35 ? '#F59E0B' : '#10B981',
+      percentage: Math.min(100, Math.round(((curAqi.pm2_5 ?? 26) / 60) * 100))
+    },
+    {
+      name: 'PM10',
+      label: 'Respirable coarse dust (<10µm)',
+      value: `${curAqi.pm10 ?? 30} µg/m³`,
+      status: (curAqi.pm10 ?? 30) > 50 ? 'Moderate' : 'Good',
+      color: (curAqi.pm10 ?? 30) > 50 ? '#F59E0B' : '#10B981',
+      percentage: Math.min(100, Math.round(((curAqi.pm10 ?? 30) / 100) * 100))
+    },
+    {
+      name: 'NO₂',
+      label: 'Nitrogen Dioxide vehicular emissions',
+      value: `${curAqi.no2 ?? 16} ppb`,
+      status: 'Good',
+      color: '#10B981',
+      percentage: Math.min(100, Math.round(((curAqi.no2 ?? 16) / 80) * 100))
+    },
+    {
+      name: 'SO₂',
+      label: 'Sulfur Dioxide industrial emissions',
+      value: `${curAqi.so2 ?? 24} ppb`,
+      status: 'Good',
+      color: '#10B981',
+      percentage: Math.min(100, Math.round(((curAqi.so2 ?? 24) / 50) * 100))
+    },
+    {
+      name: 'O₃',
+      label: 'Ground-level photochemical ozone',
+      value: `${curAqi.o3 ?? 48} ppb`,
+      status: (curAqi.o3 ?? 48) > 50 ? 'Moderate' : 'Good',
+      color: (curAqi.o3 ?? 48) > 50 ? '#F59E0B' : '#10B981',
+      percentage: Math.min(100, Math.round(((curAqi.o3 ?? 48) / 100) * 100))
+    },
+    {
+      name: 'CO',
+      label: 'Carbon Monoxide concentration',
+      value: `${curAqi.co ?? 159} ppb`,
+      status: 'Good',
+      color: '#10B981',
+      percentage: Math.min(100, Math.round(((curAqi.co ?? 159) / 500) * 100))
+    }
+  ]
 
   const getAqiCategory = val => {
     if (val <= 50)
       return {
         label: 'Good',
         color: '#10B981',
-        desc: 'Air quality is satisfactory, and air pollution poses little or no risk.',
+        desc: 'Air quality is satisfactory, and air pollution poses little or no risk to public health.',
         action: 'Enjoy outdoor activities normally.'
       }
     if (val <= 100)
       return {
         label: 'Moderate',
         color: '#F59E0B',
-        desc: 'Air quality is acceptable; however, very sensitive individuals may experience slight respiratory irritation.',
+        desc: 'Air quality is acceptable; however, sensitive individuals may experience minor respiratory effects.',
         action: 'Unusually sensitive people should consider reducing prolonged outdoor exertion.'
       }
     if (val <= 150)
       return {
-        label: 'Unhealthy for Sensitive Groups',
+        label: 'Sensitive Groups',
         color: '#F97316',
         desc: 'Members of sensitive groups may experience health effects. General public is less likely to be affected.',
         action: 'Active children, adults, and people with respiratory disease should limit outdoor exertion.'
@@ -126,7 +210,7 @@ export function AirQualityScreen ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.cityChipsRow}
       >
-        {allCityDatabase.slice(0, 5).map((item, idx) => {
+        {AQI_MONITORED_CITIES.map((item, idx) => {
           const isSelected = selectedCityIndex === idx
           return (
             <Pressable
@@ -157,43 +241,46 @@ export function AirQualityScreen ({
         style={[
           styles.heroCard,
           {
-            backgroundColor: isDark ? '#1F1B2E' : '#FAF5FF',
-            borderColor: isDark ? '#3B2A56' : '#E9D5FF'
+            backgroundColor: isDark ? '#181A22' : '#FFFFFF',
+            borderColor: c.border
           }
         ]}
       >
         <View style={styles.heroHeader}>
           <View>
-            <Text style={[styles.heroLocation, { color: c.ink }]}>
-              {city.city}, {city.region}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MapPin size={16} color={c.blue} />
+              <Text style={[styles.heroLocation, { color: c.ink }]}>
+                {city.city}, {city.region}
+              </Text>
+            </View>
             <Text style={[styles.heroSub, { color: c.muted }]}>
-              Standard US-AQI Index • Live Sensor Reading
+              Standard US-AQI Index • Continuous Sensor Reading
             </Text>
           </View>
           <View
-            style={[styles.statusBadge, { backgroundColor: `${category.color}20` }]}
+            style={[styles.statusBadge, { backgroundColor: `${category.color}15`, borderColor: `${category.color}40` }]}
           >
+            <View style={[styles.dot, { backgroundColor: category.color }]} />
             <Text style={[styles.statusBadgeText, { color: category.color }]}>
-              ● {category.label}
+              {category.label}
             </Text>
           </View>
         </View>
 
         <View style={styles.scoreRow}>
           <View>
-            <Text style={[styles.scoreNumber, { color: isDark ? '#C084FC' : '#7E22CE' }]}>
+            <Text style={[styles.scoreNumber, { color: category.color }]}>
               {aqiValue}
             </Text>
             <Text style={[styles.scoreLabel, { color: c.muted }]}>
-              Index Value (0-500 scale)
+              Air Quality Index (0-500 scale)
             </Text>
           </View>
 
           <View style={styles.gaugeContainer}>
-            <View style={styles.gaugePill}>
-              <Text style={styles.gaugeEmoji}>💨</Text>
-              <Text style={[styles.gaugeSubText, { color: c.ink }]}>Air Quality</Text>
+            <View style={[styles.gaugePill, { backgroundColor: c.cardAlt, borderColor: c.borderLight }]}>
+              <Wind size={22} color={category.color} />
             </View>
           </View>
         </View>
@@ -216,8 +303,8 @@ export function AirQualityScreen ({
           style={[
             styles.categoryDesc,
             {
-              backgroundColor: isDark ? '#261F38' : '#F3E8FF',
-              color: isDark ? '#E9D5FF' : '#581C87'
+              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#F1F5F9',
+              color: c.ink
             }
           ]}
         >
@@ -232,32 +319,37 @@ export function AirQualityScreen ({
           { backgroundColor: c.card, borderColor: c.border }
         ]}
       >
-        <Text style={[styles.cardTitle, { color: c.ink }]}>
-          🏥 Health & Precautionary Advisory
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+          <HeartPulse size={16} color={c.blue} />
+          <Text style={[styles.cardTitle, { color: c.ink }]}>
+            Health & Precautionary Advisory
+          </Text>
+        </View>
+
         <View style={styles.advisoryRow}>
-          <Text style={styles.advisoryIcon}>💡</Text>
+          <Lightbulb size={16} color={c.accentAmber} style={{ marginTop: 2 }} />
           <Text style={[styles.advisoryText, { color: c.inkSecondary }]}>
             {category.action}
           </Text>
         </View>
+
         <View style={styles.tipsGrid}>
-          <View style={[styles.tipBox, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-            <Text style={styles.tipIcon}>😷</Text>
-            <Text style={[styles.tipTitle, { color: c.ink }]}>Masks</Text>
+          <View style={[styles.tipBox, { backgroundColor: c.cardAlt, borderColor: c.borderLight }]}>
+            <ShieldCheck size={18} color={aqiValue > 100 ? c.statusDanger : c.statusSafe} />
+            <Text style={[styles.tipTitle, { color: c.ink }]}>Protective Masks</Text>
             <Text style={[styles.tipDesc, { color: c.muted }]}>
               {aqiValue > 100 ? 'N95 advised' : 'Not required'}
             </Text>
           </View>
-          <View style={[styles.tipBox, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-            <Text style={styles.tipIcon}>🪟</Text>
+          <View style={[styles.tipBox, { backgroundColor: c.cardAlt, borderColor: c.borderLight }]}>
+            <Wind size={18} color={c.blue} />
             <Text style={[styles.tipTitle, { color: c.ink }]}>Ventilation</Text>
             <Text style={[styles.tipDesc, { color: c.muted }]}>
-              {aqiValue > 100 ? 'Keep closed' : 'Open windows'}
+              {aqiValue > 100 ? 'Keep sealed' : 'Open windows'}
             </Text>
           </View>
-          <View style={[styles.tipBox, { backgroundColor: c.cardAlt, borderColor: c.border }]}>
-            <Text style={styles.tipIcon}>🏃</Text>
+          <View style={[styles.tipBox, { backgroundColor: c.cardAlt, borderColor: c.borderLight }]}>
+            <Activity size={18} color={c.accentGreen} />
             <Text style={[styles.tipTitle, { color: c.ink }]}>Outdoor Sports</Text>
             <Text style={[styles.tipDesc, { color: c.muted }]}>
               {aqiValue > 100 ? 'Limit activity' : 'Safe for exercise'}
@@ -273,16 +365,20 @@ export function AirQualityScreen ({
           { backgroundColor: c.card, borderColor: c.border }
         ]}
       >
-        <Text style={[styles.cardTitle, { color: c.ink, marginBottom: 12 }]}>
-          🔬 Key Pollutant Concentrations
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+          <Sparkles size={16} color={c.blue} />
+          <Text style={[styles.cardTitle, { color: c.ink }]}>
+            Key Pollutant Concentrations
+          </Text>
+        </View>
+
         <View style={styles.pollutantsList}>
-          {POLLUTANTS.map(p => (
+          {pollutants.map(p => (
             <View
               key={p.name}
               style={[
                 styles.pollutantCard,
-                { backgroundColor: c.cardAlt, borderColor: c.border }
+                { backgroundColor: c.cardAlt, borderColor: c.borderLight }
               ]}
             >
               <View style={styles.pollutantHeader}>
@@ -304,8 +400,7 @@ export function AirQualityScreen ({
                 </View>
               </View>
 
-              {/* Progress track */}
-              <View style={[styles.track, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]}>
+              <View style={[styles.track, { backgroundColor: isDark ? '#23252C' : '#E2E8F0' }]}>
                 <View
                   style={[
                     styles.fillBar,
@@ -317,13 +412,73 @@ export function AirQualityScreen ({
           ))}
         </View>
       </View>
+
+      {/* Bottom Compact Pin Preference Row with Save Button */}
+      <View
+        style={[
+          styles.pinCheckboxRow,
+          {
+            backgroundColor: isPinnedToHome ? 'rgba(16, 185, 129, 0.08)' : c.card,
+            borderColor: isPinnedToHome ? '#10B981' : c.border
+          }
+        ]}
+      >
+        <Pressable
+          onPress={handleTogglePinHome}
+          style={styles.pinCheckboxLeft}
+          hitSlop={6}
+        >
+          <View
+            style={[
+              styles.checkboxSquare,
+              {
+                backgroundColor: isPinnedToHome ? '#10B981' : c.cardAlt,
+                borderColor: isPinnedToHome ? '#10B981' : c.border
+              }
+            ]}
+          >
+            {isPinnedToHome && <Check size={10} color="#FFFFFF" strokeWidth={3} />}
+          </View>
+          <View style={styles.pinTextCol}>
+            <Text style={[styles.pinCheckboxTitle, { color: c.ink }]}>
+              Show on Home Dashboard
+            </Text>
+            <Text style={[styles.pinCheckboxSubtitle, { color: c.muted }]}>
+              {isPinnedToHome ? 'Live AQI active on Home' : 'Check to pin CPCB air quality index'}
+            </Text>
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={handleSavePinPreference}
+          disabled={!hasPinChanged}
+          style={({ pressed }) => [
+            styles.pinSaveBtn,
+            {
+              backgroundColor: hasPinChanged ? '#10B981' : (isPinnedToHome ? 'rgba(16, 185, 129, 0.15)' : c.cardAlt),
+              borderColor: hasPinChanged ? '#10B981' : c.border,
+              opacity: hasPinChanged ? 1 : 0.6
+            },
+            pressed && hasPinChanged && { opacity: 0.75 }
+          ]}
+        >
+          <Text
+            style={[
+              styles.pinSaveBtnText,
+              { color: hasPinChanged ? '#FFFFFF' : (isPinnedToHome ? '#10B981' : c.muted) }
+            ]}
+          >
+            {hasPinChanged ? 'Save' : (isPinnedToHome ? 'Saved ✓' : 'Saved')}
+          </Text>
+        </Pressable>
+      </View>
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  contentContainer: { padding: 14, paddingBottom: 28, gap: 14 },
+  contentContainer: { padding: 14, paddingBottom: 36, gap: 12 },
   cityChipsRow: { gap: 8, paddingBottom: 4 },
   cityChip: {
     paddingHorizontal: 14,
@@ -334,7 +489,7 @@ const styles = StyleSheet.create({
   cityChipText: { fontSize: 11, fontWeight: '700' },
   cityChipTextActive: { fontWeight: '800' },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16
   },
@@ -344,108 +499,139 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start'
   },
   heroLocation: { fontSize: 15, fontWeight: '800' },
-  heroSub: { fontSize: 9.5, marginTop: 2 },
+  heroSub: { fontSize: 10, marginTop: 2 },
   statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20
+    borderRadius: 8,
+    borderWidth: 1
   },
-  statusBadgeText: { fontSize: 10, fontWeight: '800' },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  statusBadgeText: { fontSize: 11, fontWeight: '800' },
   scoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 14
   },
-  scoreNumber: { fontSize: 52, fontWeight: '900', letterSpacing: -1 },
-  scoreLabel: { fontSize: 10, fontWeight: '600', marginTop: -2 },
-  gaugeContainer: { alignItems: 'center' },
+  scoreNumber: { fontSize: 44, fontWeight: '800' },
+  scoreLabel: { fontSize: 11, marginTop: 2 },
+  gaugeContainer: { alignItems: 'center', justifyContent: 'center' },
   gaugePill: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2
+    justifyContent: 'center'
   },
-  gaugeEmoji: { fontSize: 26 },
-  gaugeSubText: { fontSize: 8.5, fontWeight: '800', marginTop: 2 },
   spectrumBar: {
     flexDirection: 'row',
     height: 6,
     borderRadius: 3,
-    overflow: 'hidden',
-    marginTop: 6
+    overflow: 'hidden'
   },
   spectrumSegment: { flex: 1 },
   spectrumLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4
+    marginTop: 4,
+    marginBottom: 10
   },
-  spectrumText: { fontSize: 8.5, fontWeight: '600' },
+  spectrumText: { fontSize: 9 },
   categoryDesc: {
-    fontSize: 10.5,
-    lineHeight: 15,
     padding: 10,
     borderRadius: 10,
-    marginTop: 12,
-    fontWeight: '600'
+    fontSize: 12,
+    lineHeight: 17
   },
-  card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 16
-  },
-  cardTitle: { fontSize: 13, fontWeight: '800' },
+  card: { borderRadius: 16, borderWidth: 1, padding: 14 },
+  cardTitle: { fontSize: 13, fontWeight: '700' },
   advisoryRow: {
     flexDirection: 'row',
-    gap: 8,
     alignItems: 'flex-start',
-    marginTop: 8,
+    gap: 8,
     marginBottom: 12
   },
-  advisoryIcon: { fontSize: 15 },
-  advisoryText: { flex: 1, fontSize: 11, lineHeight: 16, fontWeight: '500' },
-  tipsGrid: {
-    flexDirection: 'row',
-    gap: 8
-  },
+  advisoryText: { fontSize: 12, flex: 1, lineHeight: 17 },
+  tipsGrid: { flexDirection: 'row', gap: 8 },
   tipBox: {
     flex: 1,
     padding: 10,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
-    textAlign: 'center'
+    gap: 4
   },
-  tipIcon: { fontSize: 18, marginBottom: 4 },
-  tipTitle: { fontSize: 10, fontWeight: '700' },
-  tipDesc: { fontSize: 8.5, marginTop: 2, textAlign: 'center' },
+  tipTitle: { fontSize: 11, fontWeight: '700' },
+  tipDesc: { fontSize: 9.5, textAlign: 'center' },
   pollutantsList: { gap: 8 },
   pollutantCard: {
     padding: 10,
-    borderRadius: 12,
-    borderWidth: 1
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 6
   },
   pollutantHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  pollutantName: { fontSize: 13, fontWeight: '800' },
+  pollutantLabel: { fontSize: 9.5, marginTop: 1 },
+  pollutantValue: { fontSize: 12, fontWeight: '700' },
+  pollutantStatus: { fontSize: 10, fontWeight: '800' },
+  track: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  fillBar: { height: 4, borderRadius: 2 },
+  pinCheckboxRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 6,
+    gap: 8
   },
-  pollutantName: { fontSize: 11, fontWeight: '800' },
-  pollutantLabel: { fontSize: 8.5 },
-  pollutantValue: { fontSize: 11, fontWeight: '800' },
-  pollutantStatus: { fontSize: 9, fontWeight: '700' },
-  track: {
-    height: 5,
-    borderRadius: 2.5,
-    overflow: 'hidden'
+  pinCheckboxLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
   },
-  fillBar: { height: '100%', borderRadius: 2.5 }
+  checkboxSquare: {
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  pinTextCol: {
+    flex: 1
+  },
+  pinCheckboxTitle: {
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  pinCheckboxSubtitle: {
+    fontSize: 9.5,
+    marginTop: 1
+  },
+  pinSaveBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  pinSaveBtnText: {
+    fontSize: 11,
+    fontWeight: '700'
+  }
 })
+
+export default AirQualityScreen

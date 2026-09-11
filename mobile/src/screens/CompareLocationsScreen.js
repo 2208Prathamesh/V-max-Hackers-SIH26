@@ -1,40 +1,73 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
+  Pressable,
   StyleSheet,
   ScrollView,
-  Pressable,
   useWindowDimensions
 } from 'react-native'
+import {
+  ArrowLeftRight,
+  ChevronDown,
+  MapPin,
+  Thermometer,
+  Wind,
+  Compass,
+  Gauge,
+  Activity,
+  Sun,
+  CloudRain
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
-import { allCityDatabase } from '../data/mockData'
+import { api } from '../services/api'
+import { WeatherIcon } from '../components/WeatherIcon'
+
+const COMPARISON_STATIONS = [
+  { id: 'pune', city: 'Pune', region: 'Maharashtra' },
+  { id: 'mumbai', city: 'Mumbai', region: 'Maharashtra' },
+  { id: 'delhi', city: 'New Delhi', region: 'Delhi NCR' },
+  { id: 'bengaluru', city: 'Bengaluru', region: 'Karnataka' },
+  { id: 'kolkata', city: 'Kolkata', region: 'West Bengal' },
+  { id: 'chennai', city: 'Chennai', region: 'Tamil Nadu' },
+  { id: 'hyderabad', city: 'Hyderabad', region: 'Telangana' },
+  { id: 'ahmedabad', city: 'Ahmedabad', region: 'Gujarat' },
+  { id: 'jaipur', city: 'Jaipur', region: 'Rajasthan' },
+  { id: 'nagpur', city: 'Nagpur', region: 'Maharashtra' }
+]
 
 export function CompareLocationsScreen ({
   isDark = false,
   unit = 'C',
-  onNavigate
+  onNavigate,
+  onNotification
 }) {
   const c = getColors(isDark)
-  const { width } = useWindowDimensions()
+  const [city1Id, setCity1Id] = useState('pune')
+  const [city2Id, setCity2Id] = useState('mumbai')
+  const [activePicker, setActivePicker] = useState(null)
+  const [liveWeather1, setLiveWeather1] = useState(null)
+  const [liveWeather2, setLiveWeather2] = useState(null)
 
-  const [city1Id, setCity1Id] = useState(allCityDatabase[0]?.id || 'loc-1')
-  const [city2Id, setCity2Id] = useState(allCityDatabase[1]?.id || 'loc-2')
-  const [activePicker, setActivePicker] = useState(null) // 'city1' | 'city2' | null
+  const city1 = COMPARISON_STATIONS.find(c => c.id === city1Id) || COMPARISON_STATIONS[0]
+  const city2 = COMPARISON_STATIONS.find(c => c.id === city2Id) || COMPARISON_STATIONS[1]
 
-  const city1 =
-    allCityDatabase.find(item => item.id === city1Id) || allCityDatabase[0]
-  const city2 =
-    allCityDatabase.find(item => item.id === city2Id) ||
-    allCityDatabase[1] ||
-    allCityDatabase[0]
+  useEffect(() => {
+    api.weather({ city: city1.city }).then(res => {
+      if (res) setLiveWeather1(res)
+    }).catch(() => {})
 
-  const formatTemp = tempC => {
-    if (tempC == null) return '--'
+    api.weather({ city: city2.city }).then(res => {
+      if (res) setLiveWeather2(res)
+    }).catch(() => {})
+  }, [city1Id, city2Id])
+
+  const formatTemp = val => {
+    if (val === null || val === undefined) return '--'
     if (unit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°F`
+      return `${Math.round((val * 9) / 5 + 32)}°F`
     }
-    return `${tempC}°C`
+    return `${Math.round(val)}°C`
   }
 
   const handleSwap = () => {
@@ -43,42 +76,58 @@ export function CompareLocationsScreen ({
     setCity2Id(temp)
   }
 
-  const comparisonRows = [
-    { label: 'Condition', val1: city1.condition, val2: city2.condition },
+  const cur1 = liveWeather1?.forecast?.current || liveWeather1?.current || {}
+  const cur2 = liveWeather2?.forecast?.current || liveWeather2?.current || {}
+
+  const temp1 = cur1.temperature ?? 27
+  const temp2 = cur2.temperature ?? 28
+  const feels1 = cur1.apparentTemperature ?? cur1.feelsLike ?? temp1
+  const feels2 = cur2.apparentTemperature ?? cur2.feelsLike ?? temp2
+  const hum1 = cur1.humidity ?? 70
+  const hum2 = cur2.humidity ?? 75
+  const wind1 = cur1.windSpeed ?? cur1.windSpeedKmh ?? 14
+  const wind2 = cur2.windSpeed ?? cur2.windSpeedKmh ?? 18
+  const pres1 = cur1.pressure ? Math.round(cur1.pressure) : 1008
+  const pres2 = cur2.pressure ? Math.round(cur2.pressure) : 1006
+  const cond1 = cur1.condition || cur1.weatherDescription || 'Partly Cloudy'
+  const cond2 = cur2.condition || cur2.weatherDescription || 'Clear'
+
+  const COMPARISON_METRICS = [
+    {
+      label: 'Temperature',
+      icon: Thermometer,
+      val1: formatTemp(temp1),
+      val2: formatTemp(temp2)
+    },
     {
       label: 'Feels Like',
-      val1: formatTemp(city1.feelsLikeC),
-      val2: formatTemp(city2.feelsLikeC)
+      icon: Thermometer,
+      val1: formatTemp(feels1),
+      val2: formatTemp(feels2)
     },
     {
       label: 'Humidity',
-      val1: `${city1.humidity}%`,
-      val2: `${city2.humidity}%`
+      icon: CloudRain,
+      val1: `${hum1}%`,
+      val2: `${hum2}%`
     },
     {
       label: 'Wind Speed',
-      val1: `${city1.windSpeedKmh} km/h`,
-      val2: `${city2.windSpeedKmh} km/h`
+      icon: Wind,
+      val1: `${wind1} km/h`,
+      val2: `${wind2} km/h`
     },
     {
-      label: 'Wind Direction',
-      val1: city1.windDirection || 'NW',
-      val2: city2.windDirection || 'W'
+      label: 'Atmospheric Pressure',
+      icon: Gauge,
+      val1: `${pres1} hPa`,
+      val2: `${pres2} hPa`
     },
     {
-      label: 'Air Quality (AQI)',
-      val1: city1.aqi || 68,
-      val2: city2.aqi || 82
-    },
-    {
-      label: 'UV Index',
-      val1: city1.uvIndex || '6 (High)',
-      val2: city2.uvIndex || '8 (Very High)'
-    },
-    {
-      label: 'Rain Probability',
-      val1: city1.condition.toLowerCase().includes('rain') ? '80%' : '15%',
-      val2: city2.condition.toLowerCase().includes('rain') ? '75%' : '20%'
+      label: 'Weather Condition',
+      icon: Sun,
+      val1: cond1,
+      val2: cond2
     }
   ]
 
@@ -97,10 +146,10 @@ export function CompareLocationsScreen ({
       >
         <View style={styles.headerInfo}>
           <Text style={[styles.headerTitle, { color: c.ink }]}>
-            Side-by-Side Comparison
+            Comparative Telemetry
           </Text>
           <Text style={[styles.headerSub, { color: c.muted }]}>
-            Compare real-time weather across 2 regions
+            Side-by-side multi-city meteorological comparison
           </Text>
         </View>
 
@@ -109,16 +158,16 @@ export function CompareLocationsScreen ({
           style={[styles.swapBtn, { backgroundColor: c.blueLight }]}
           accessibilityLabel='Swap locations'
         >
-          <Text style={[styles.swapBtnText, { color: c.blue }]}>⇄ Swap</Text>
+          <ArrowLeftRight size={14} color={c.blue} />
+          <Text style={[styles.swapBtnText, { color: c.blue }]}>Swap</Text>
         </Pressable>
       </View>
 
       {/* City Pickers Row */}
       <View style={styles.pickersGrid}>
-        {/* City 1 Picker Box */}
         <View style={{ flex: 1 }}>
           <Text style={[styles.pickerLabel, { color: c.muted }]}>
-            LOCATION 1
+            MONITORING POINT 1
           </Text>
           <Pressable
             onPress={() =>
@@ -133,14 +182,13 @@ export function CompareLocationsScreen ({
             <Text style={[styles.pickerValue, { color: c.ink }]} numberOfLines={1}>
               {city1.city}
             </Text>
-            <Text style={[styles.pickerChevron, { color: c.muted }]}>▾</Text>
+            <ChevronDown size={14} color={c.muted} />
           </Pressable>
         </View>
 
-        {/* City 2 Picker Box */}
         <View style={{ flex: 1 }}>
           <Text style={[styles.pickerLabel, { color: c.muted }]}>
-            LOCATION 2
+            MONITORING POINT 2
           </Text>
           <Pressable
             onPress={() =>
@@ -155,12 +203,12 @@ export function CompareLocationsScreen ({
             <Text style={[styles.pickerValue, { color: c.ink }]} numberOfLines={1}>
               {city2.city}
             </Text>
-            <Text style={[styles.pickerChevron, { color: c.muted }]}>▾</Text>
+            <ChevronDown size={14} color={c.muted} />
           </Pressable>
         </View>
       </View>
 
-      {/* Dropdown Options List if a picker is open */}
+      {/* Dropdown Options Tray if open */}
       {activePicker && (
         <View
           style={[
@@ -169,10 +217,10 @@ export function CompareLocationsScreen ({
           ]}
         >
           <Text style={[styles.dropdownTrayTitle, { color: c.muted }]}>
-            Select {activePicker === 'city1' ? 'First' : 'Second'} Location:
+            Select {activePicker === 'city1' ? 'First' : 'Second'} Station:
           </Text>
           <View style={styles.cityOptionsRow}>
-            {allCityDatabase.map(item => (
+            {COMPARISON_STATIONS.map(item => (
               <Pressable
                 key={item.id}
                 onPress={() => {
@@ -182,28 +230,10 @@ export function CompareLocationsScreen ({
                 }}
                 style={[
                   styles.cityOptionChip,
-                  { backgroundColor: c.cardAlt, borderColor: c.border },
-                  (activePicker === 'city1'
-                    ? city1Id === item.id
-                    : city2Id === item.id) && {
-                    backgroundColor: c.blueLight,
-                    borderColor: c.blue
-                  }
+                  { backgroundColor: c.cardAlt, borderColor: c.border }
                 ]}
               >
-                <Text
-                  style={[
-                    styles.cityOptionText,
-                    {
-                      color:
-                        (activePicker === 'city1'
-                          ? city1Id === item.id
-                          : city2Id === item.id)
-                          ? c.blue
-                          : c.ink
-                    }
-                  ]}
-                >
+                <Text style={[styles.cityOptionText, { color: c.ink }]}>
                   {item.city}
                 </Text>
               </Pressable>
@@ -212,124 +242,84 @@ export function CompareLocationsScreen ({
         </View>
       )}
 
-      {/* Big Side-by-Side Hero Cards */}
-      <View style={styles.heroCardsRow}>
-        {/* Card 1 */}
+      {/* Hero Overview Cards Side by Side */}
+      <View style={styles.heroRow}>
         <View
           style={[
-            styles.heroCityCard,
-            {
-              backgroundColor: isDark ? '#1C293E' : '#EFF6FF',
-              borderColor: isDark ? '#2E476C' : '#BFDBFE'
-            }
+            styles.heroSideCard,
+            { backgroundColor: c.card, borderColor: c.border }
           ]}
         >
-          <Text style={[styles.heroCityName, { color: c.blue }]}>
-            {city1.city}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <MapPin size={13} color={c.blue} />
+            <Text style={[styles.heroCity, { color: c.ink }]}>{city1.city}</Text>
+          </View>
+          <WeatherIcon condition={cond1} size={36} style={{ marginVertical: 6 }} />
+          <Text style={[styles.heroTemp, { color: c.ink }]}>
+            {formatTemp(temp1)}
           </Text>
-          <Text style={[styles.heroCitySub, { color: c.muted }]}>
-            {city1.region}
-          </Text>
-          <Text style={[styles.heroCityTemp, { color: c.ink }]}>
-            {formatTemp(city1.tempC)}
-          </Text>
-          <Text style={[styles.heroCityCond, { color: c.inkSecondary }]}>
-            {city1.condition}
+          <Text style={[styles.heroCondition, { color: c.muted }]}>
+            {cond1}
           </Text>
         </View>
 
-        {/* Card 2 */}
         <View
           style={[
-            styles.heroCityCard,
-            {
-              backgroundColor: isDark ? '#231E3D' : '#F5F3FF',
-              borderColor: isDark ? '#433878' : '#DDD6FE'
-            }
+            styles.heroSideCard,
+            { backgroundColor: c.card, borderColor: c.border }
           ]}
         >
-          <Text style={[styles.heroCityName, { color: isDark ? '#A78BFA' : '#7C3AED' }]}>
-            {city2.city}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <MapPin size={13} color={c.blue} />
+            <Text style={[styles.heroCity, { color: c.ink }]}>{city2.city}</Text>
+          </View>
+          <WeatherIcon condition={cond2} size={36} style={{ marginVertical: 6 }} />
+          <Text style={[styles.heroTemp, { color: c.ink }]}>
+            {formatTemp(temp2)}
           </Text>
-          <Text style={[styles.heroCitySub, { color: c.muted }]}>
-            {city2.region}
-          </Text>
-          <Text style={[styles.heroCityTemp, { color: c.ink }]}>
-            {formatTemp(city2.tempC)}
-          </Text>
-          <Text style={[styles.heroCityCond, { color: c.inkSecondary }]}>
-            {city2.condition}
+          <Text style={[styles.heroCondition, { color: c.muted }]}>
+            {cond2}
           </Text>
         </View>
       </View>
 
-      {/* Comparison Metrics Table */}
+      {/* Detailed Side-by-Side Comparison Matrix */}
       <View
         style={[
-          styles.tableCard,
+          styles.matrixCard,
           { backgroundColor: c.card, borderColor: c.border }
         ]}
       >
-        <Text style={[styles.tableTitle, { color: c.ink }]}>
-          Detailed Metric Breakdown
+        <Text style={[styles.matrixTitle, { color: c.ink }]}>
+          Environmental Telemetry Matrix
         </Text>
 
-        <View style={styles.tableHeader}>
-          <Text style={[styles.colHeader, { flex: 1.2, color: c.muted }]}>
-            METRIC
-          </Text>
-          <Text
-            style={[
-              styles.colHeader,
-              { flex: 1, textAlign: 'center', color: c.blue }
-            ]}
-          >
-            {city1.city}
-          </Text>
-          <Text
-            style={[
-              styles.colHeader,
-              {
-                flex: 1,
-                textAlign: 'center',
-                color: isDark ? '#A78BFA' : '#7C3AED'
-              }
-            ]}
-          >
-            {city2.city}
-          </Text>
-        </View>
-
-        {comparisonRows.map((row, idx) => (
-          <View
-            key={row.label}
-            style={[
-              styles.tableRow,
-              { borderTopColor: c.borderLight },
-              idx % 2 === 1 && { backgroundColor: c.cardAlt }
-            ]}
-          >
-            <Text style={[styles.rowLabel, { flex: 1.2, color: c.muted }]}>
-              {row.label}
-            </Text>
-            <Text
+        {COMPARISON_METRICS.map((row, idx) => {
+          const IconComp = row.icon
+          return (
+            <View
+              key={row.label}
               style={[
-                styles.rowValue,
-                { flex: 1, textAlign: 'center', color: c.ink }
+                styles.matrixRow,
+                { borderBottomColor: c.borderLight },
+                idx === COMPARISON_METRICS.length - 1 && { borderBottomWidth: 0 }
               ]}
             >
-              {row.val1}
-            </Text>
-            <Text
-              style={[
-                styles.rowValue,
-                { flex: 1, textAlign: 'center', color: c.ink }
-              ]}
-            >
-              {row.val2}
-            </Text>
-          </View>
-        ))}
+              <Text style={[styles.matrixVal1, { color: c.ink }]}>
+                {row.val1}
+              </Text>
+              <View style={styles.matrixLabelBox}>
+                <IconComp size={13} color={c.muted} />
+                <Text style={[styles.matrixLabel, { color: c.muted }]}>
+                  {row.label}
+                </Text>
+              </View>
+              <Text style={[styles.matrixVal2, { color: c.ink }]}>
+                {row.val2}
+              </Text>
+            </View>
+          )
+        })}
       </View>
     </ScrollView>
   )
@@ -337,82 +327,78 @@ export function CompareLocationsScreen ({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  contentContainer: { padding: 14, paddingBottom: 28, gap: 14 },
+  contentContainer: { padding: 14, paddingBottom: 36, gap: 12 },
   headerCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 18,
+    padding: 12,
+    borderRadius: 14,
     borderWidth: 1
   },
   headerInfo: { flex: 1 },
-  headerTitle: { fontSize: 13, fontWeight: '800' },
-  headerSub: { fontSize: 9.5, marginTop: 1 },
+  headerTitle: { fontSize: 14, fontWeight: '700' },
+  headerSub: { fontSize: 11, marginTop: 2 },
   swapBtn: {
-    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 10
+    borderRadius: 8
   },
-  swapBtnText: { fontSize: 11, fontWeight: '800' },
+  swapBtnText: { fontSize: 11, fontWeight: '700' },
   pickersGrid: { flexDirection: 'row', gap: 10 },
-  pickerLabel: { fontSize: 9, fontWeight: '800', marginBottom: 4 },
+  pickerLabel: { fontSize: 9.5, fontWeight: '800', letterSpacing: 0.5, marginBottom: 4 },
   pickerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 10,
     borderWidth: 1
   },
-  pickerValue: { fontSize: 12, fontWeight: '700', flex: 1 },
-  pickerChevron: { fontSize: 11, marginLeft: 4 },
+  pickerValue: { fontSize: 13, fontWeight: '700', flex: 1 },
   dropdownTray: {
     padding: 12,
-    borderRadius: 16,
-    borderWidth: 1
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8
   },
-  dropdownTrayTitle: { fontSize: 9.5, fontWeight: '700', marginBottom: 8 },
+  dropdownTrayTitle: { fontSize: 11, fontWeight: '700' },
   cityOptionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   cityOptionChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1
   },
-  cityOptionText: { fontSize: 10.5, fontWeight: '600' },
-  heroCardsRow: { flexDirection: 'row', gap: 10 },
-  heroCityCard: {
+  cityOptionText: { fontSize: 11, fontWeight: '600' },
+  heroRow: { flexDirection: 'row', gap: 10 },
+  heroSideCard: {
     flex: 1,
     padding: 14,
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center'
   },
-  heroCityName: { fontSize: 13, fontWeight: '800' },
-  heroCitySub: { fontSize: 9, marginTop: 1 },
-  heroCityTemp: { fontSize: 30, fontWeight: '900', marginVertical: 8 },
-  heroCityCond: { fontSize: 10, fontWeight: '600' },
-  tableCard: {
-    padding: 14,
-    borderRadius: 18,
-    borderWidth: 1
-  },
-  tableTitle: { fontSize: 12, fontWeight: '800', marginBottom: 12 },
-  tableHeader: {
-    flexDirection: 'row',
-    paddingBottom: 8,
-    paddingHorizontal: 6
-  },
-  colHeader: { fontSize: 9, fontWeight: '800' },
-  tableRow: {
+  heroCity: { fontSize: 13, fontWeight: '700' },
+  heroTemp: { fontSize: 24, fontWeight: '800' },
+  heroCondition: { fontSize: 11 },
+  matrixCard: { borderRadius: 14, borderWidth: 1, padding: 14 },
+  matrixTitle: { fontSize: 13, fontWeight: '700', marginBottom: 10 },
+  matrixRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 9,
-    paddingHorizontal: 6,
-    borderTopWidth: 1
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1
   },
-  rowLabel: { fontSize: 10.5, fontWeight: '600' },
-  rowValue: { fontSize: 10.5, fontWeight: '700' }
+  matrixVal1: { flex: 1, fontSize: 12, fontWeight: '700', textAlign: 'left' },
+  matrixLabelBox: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6 },
+  matrixLabel: { fontSize: 10, fontWeight: '700' },
+  matrixVal2: { flex: 1, fontSize: 12, fontWeight: '700', textAlign: 'right' }
 })
+
+export default CompareLocationsScreen

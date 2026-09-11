@@ -435,7 +435,7 @@ export const NewsPage = () => {
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn pb-12">
       {/* 1. Header Toolbar: Scope Selector, Search & Refresh */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white dark:bg-[#111C2E] p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs">
         {/* Scope Tabs: All | India | Global */}
         <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/70 shrink-0">
           <button
@@ -519,7 +519,7 @@ export const NewsPage = () => {
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
                 isActive
                   ? 'bg-blue-600 text-white font-bold shadow-xs'
-                  : 'bg-white dark:bg-[#111C2E] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'bg-white dark:bg-[#121316] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-blue-500 dark:text-blue-400'}`} />
@@ -536,7 +536,7 @@ export const NewsPage = () => {
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
             style={{ backgroundImage: `url(${breakingNews.imageUrl})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/80 to-slate-900/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0E] via-[#0B0B0E]/80 to-slate-900/40" />
 
           <div className="relative z-10 p-6 sm:p-8 md:p-10 flex flex-col justify-end min-h-[360px] sm:min-h-[420px] text-white space-y-3">
             {/* Top Badges */}
@@ -628,7 +628,7 @@ export const NewsPage = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="bg-white dark:bg-[#111C2E] rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800/80 space-y-3 animate-pulse">
+              <div key={n} className="bg-white dark:bg-[#121316] rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800/80 space-y-3 animate-pulse">
                 <div className="w-full h-44 rounded-2xl bg-slate-200 dark:bg-slate-800" />
                 <div className="w-1/3 h-4 rounded-md bg-slate-200 dark:bg-slate-800" />
                 <div className="w-full h-6 rounded-md bg-slate-200 dark:bg-slate-800" />
@@ -638,7 +638,7 @@ export const NewsPage = () => {
           </div>
         ) : articles.length === 0 ? (
           /* Empty Search State */
-          <div className="text-center py-16 px-4 bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div className="text-center py-16 px-4 bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
             <Newspaper className="w-12 h-12 text-slate-400 mx-auto opacity-50" />
             <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">
               No weather stories found
@@ -668,7 +668,7 @@ export const NewsPage = () => {
               return (
                 <article
                   key={article.id}
-                  className="bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group"
+                  className="bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group"
                 >
                   {/* Article Thumbnail & Scope Badge */}
                   <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -782,7 +782,7 @@ export const NewsPage = () => {
       </div>
 
       {/* 5. Verified Data Providers & Source Directory */}
-      <div className="p-6 bg-white dark:bg-[#111C2E] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
+      <div className="p-6 bg-white dark:bg-[#121316] rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />

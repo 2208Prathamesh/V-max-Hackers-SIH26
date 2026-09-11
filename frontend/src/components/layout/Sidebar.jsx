@@ -31,7 +31,10 @@ import {
   LayoutDashboard,
   Activity,
   AlertOctagon,
-  Cpu
+  Cpu,
+  Plane,
+  Waves,
+  Droplets
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -79,6 +82,7 @@ const WeatherGPTSidebarLogo = ({ collapsed, roleLabel }) => (
 // ---------------------------------------------------------------------------
 const getNavItems = (role, t, language) => {
   const sopLabel = language === 'mr' ? 'आपत्ती सुरक्षा कार्यप्रणाली' : 'Disaster Safety SOPs'
+  const floodLabel = language === 'mr' ? 'शहरी पूर निर्देशांक' : language === 'hi' ? 'शहरी बाढ़ निर्देशांक' : 'Urban Flood Index'
 
   if (role === 'admin') {
     return [
@@ -86,6 +90,7 @@ const getNavItems = (role, t, language) => {
       { id: 'admin-users', label: 'User Management', icon: Users },
       { id: 'admin-analytics', label: 'Platform Analytics', icon: TrendingUp },
       { id: 'admin-system', label: 'System Health', icon: Server },
+      { id: 'urban-flood', label: floodLabel, icon: Droplets },
       { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
     ]
   }
@@ -98,10 +103,13 @@ const getNavItems = (role, t, language) => {
       { id: 'analytics', label: 'Deep Analytics', icon: BarChart2 },
       { divider: true, sectionLabel: 'Weather Intelligence' },
       { id: 'weather-dashboard', label: 'Weather Dashboard', icon: LayoutDashboard },
+      { id: 'urban-flood', label: floodLabel, icon: Droplets },
       { id: 'weather-map', label: 'Weather Map', icon: Map },
       { id: 'forecast', label: '7-Day Forecast', icon: Calendar },
       { id: 'news', label: 'News', icon: Newspaper },
       { id: 'climate-historical', label: 'Climate & Historical', icon: CloudSun },
+      { id: 'aviation', label: 'Aviation Briefing', icon: Plane },
+      { id: 'marine', label: 'Marine & Fishermen', icon: Waves },
       { id: 'chat', label: 'Weather Chat', icon: MessageSquare },
       { id: 'saved-locations', label: 'Saved Locations', icon: Star },
       { id: 'settings', label: t('settings') || 'Settings', icon: Settings }
@@ -115,6 +123,8 @@ const getNavItems = (role, t, language) => {
       { id: 'advisory', label: t('advisory') || 'Agro Advisory', icon: Sprout },
       { id: 'alerts', label: t('alerts') || 'Alerts', icon: Bell, badge: '3' },
       { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+      { id: 'urban-flood', label: floodLabel, icon: Droplets },
+      { id: 'marine', label: language === 'mr' ? 'सागरी व मच्छीमार' : 'Marine & Fishermen', icon: Waves },
       { id: 'weather-map', label: t('weatherMap') || 'Weather Map', icon: Map },
       { id: 'forecast', label: t('forecast') || '7-Day Forecast', icon: Calendar },
       { id: 'news', label: t('news') || 'News', icon: Newspaper },
@@ -130,6 +140,9 @@ const getNavItems = (role, t, language) => {
     { id: 'chat', label: t('chat') || 'Weather Chat', icon: MessageSquare },
     { id: 'alerts', label: t('alerts') || 'Alerts', icon: Bell, badge: '3' },
     { id: 'disaster-sops', label: sopLabel, icon: ShieldAlert },
+    { id: 'urban-flood', label: floodLabel, icon: Droplets },
+    { id: 'aviation', label: language === 'mr' ? 'विमान वाहतूक हवामान' : 'Aviation Weather', icon: Plane },
+    { id: 'marine', label: language === 'mr' ? 'सागरी व मच्छीमार' : 'Marine & Fishermen', icon: Waves },
     { id: 'weather-map', label: t('weatherMap') || 'Weather Map', icon: Map },
     { id: 'forecast', label: t('forecast') || '7-Day Forecast', icon: Calendar },
     { id: 'news', label: t('news') || 'News', icon: Newspaper },
@@ -243,7 +256,7 @@ export const Sidebar = ({
     <aside
       className={`fixed lg:static top-0 left-0 z-40 h-screen ${
         collapsed ? 'w-64 lg:w-20' : 'w-64'
-      } bg-white dark:bg-[#111C2E] border-r border-slate-100 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 ease-in-out select-none ${
+      } bg-white dark:bg-[#121316] border-r border-slate-200/80 dark:border-slate-800/90 flex flex-col justify-between transition-all duration-300 ease-in-out select-none ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}
     >
@@ -324,7 +337,7 @@ export const Sidebar = ({
                   />
 
                   {item.badge && (
-                    <span className='absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#111C2E]' />
+                    <span className='absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#121316]' />
                   )}
 
                   {/* Floating Tooltip */}

@@ -7,11 +7,26 @@ import {
   Modal,
   ScrollView
 } from 'react-native'
+import {
+  Menu,
+  Globe,
+  Sun,
+  Moon,
+  Bell,
+  ChevronDown,
+  Check,
+  X,
+  User,
+  LogOut,
+  Settings,
+  ShieldAlert
+} from 'lucide-react-native'
 import { getColors } from '../theme/colors'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'Hindi (हिन्दी)' },
+  { code: 'mr', label: 'Marathi (मराठी)' },
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
   { code: 'de', label: 'Deutsch' }
@@ -38,150 +53,173 @@ export function Header ({
       case 'weather-map':
         return {
           title: 'Weather Map',
-          subtitle: 'Explore real-time weather conditions across India'
+          subtitle: 'Live radar, satellite & atmospheric layers'
         }
       case 'chat':
         return {
-          title: 'Chat with WeatherGPT',
-          subtitle: 'Ask anything about weather in natural language'
+          title: 'WeatherGPT AI',
+          subtitle: 'Natural language meteorologist assistant'
         }
       case 'alerts':
         return {
-          title: 'Active Weather Alerts',
-          subtitle: 'Real-time severe warnings & radar bulletins'
+          title: 'Disaster Bulletins',
+          subtitle: 'CAP v1.2 Standard Severe Early Warnings'
         }
       case 'forecast':
         return {
-          title: 'Extended Forecast',
+          title: 'NWP Forecast',
           subtitle: '7-day precision meteorological outlook'
         }
       case 'history':
         return {
-          title: 'Conversation History',
-          subtitle: 'Archive of past weather queries & AI advice'
+          title: 'Query Archive',
+          subtitle: 'Past AI weather discussions & recommendations'
         }
       case 'saved-locations':
         return {
           title: 'Saved Locations',
-          subtitle: 'Live weather updates for your bookmarked places'
+          subtitle: 'Real-time telemetry for pinned regions'
         }
       case 'air-quality':
         return {
           title: 'Air Quality Index',
-          subtitle: 'Live atmospheric sensor readings & pollutant levels'
+          subtitle: 'Live PM2.5, PM10 sensor telemetry'
         }
       case 'compare':
         return {
-          title: 'Compare Locations',
-          subtitle: 'Side-by-side multi-city meteorological comparison'
+          title: 'Compare Cities',
+          subtitle: 'Multi-station meteorological telemetry'
         }
       case 'add-location':
         return {
-          title: 'Add New Location',
-          subtitle: 'Search and bookmark cities across India'
+          title: 'Add Location',
+          subtitle: 'Bookmark stations and monitoring sites'
         }
       case 'alert-details':
         return {
-          title: 'Emergency Alert Bulletin',
-          subtitle: 'Official IMD warning & precautionary guidelines'
+          title: 'Emergency Advisory',
+          subtitle: 'Official disaster authority SOP guidelines'
         }
       case 'premium':
         return {
           title: 'WeatherGPT Pro',
-          subtitle: 'Upgrade for advanced Doppler radar & SMS alerts'
+          subtitle: 'Doppler station feeds & automated SMS broadcast'
         }
       case 'profile':
         return {
-          title: 'User Profile',
-          subtitle: 'Account details, tier & saved preferences'
+          title: 'My Profile',
+          subtitle: 'Disaster responder tier & preferences'
+        }
+      case 'aviation':
+        return {
+          title: 'Aviation METAR',
+          subtitle: 'Aerodrome weather & runway vector crosswinds'
+        }
+      case 'marine':
+        return {
+          title: 'Marine & Coastal',
+          subtitle: 'INCOIS sea state, wave heights & swell alerts'
+        }
+      case 'urban-flood':
+        return {
+          title: 'Urban Flash Flood',
+          subtitle: 'Catchment saturation & road choke-point telemetry'
         }
       case 'settings':
         return {
           title: 'Settings',
-          subtitle: 'Manage preferences, units & account'
+          subtitle: 'Preferences, sensor units & telemetry protocol'
         }
       case 'dashboard':
       default:
         return {
-          title: 'GOOD MORNING, SID',
-          subtitle: 'Your day in the sky'
+          title: 'WeatherGPT',
+          subtitle: 'Precision meteorological intelligence & real-time radar'
         }
     }
   }
 
   const pageInfo = getPageInfo()
-  const currentLangLabel =
-    LANGUAGES.find(l => l.code === language)?.label || 'English'
+  const currentLangObj = LANGUAGES.find(l => l.code === language) || LANGUAGES[0]
 
   return (
     <View
       style={[
         styles.headerRoot,
-        { backgroundColor: c.card, borderBottomColor: c.border }
+        {
+          backgroundColor: isDark ? 'rgba(18, 19, 22, 0.82)' : 'rgba(255, 255, 255, 0.85)',
+          borderBottomColor: c.border
+        }
       ]}
     >
-      {/* Left side: Menu hamburger button + Page Title/Greeting */}
+      {/* Left side: Hamburger menu button + Title */}
       <View style={styles.leftSection}>
         <Pressable
           onPress={onOpenMenu}
           style={({ pressed }) => [
             styles.iconButton,
-            { backgroundColor: c.cardAlt, borderColor: c.border },
+            {
+              backgroundColor: isDark ? 'rgba(24, 26, 32, 0.65)' : 'rgba(241, 243, 245, 0.75)',
+              borderColor: c.border,
+              borderTopColor: c.borderHighlight
+            },
             pressed && styles.buttonPressed
           ]}
-          accessibilityLabel='Open navigation menu'
+          accessibilityLabel='Open navigation drawer'
         >
-          <Text style={[styles.menuIconText, { color: c.ink }]}>☰</Text>
+          <Menu size={20} color={c.ink} strokeWidth={2.2} />
         </Pressable>
 
         <View style={styles.titleWrapper}>
-          {currentScreen === 'dashboard' ? (
-            <>
-              <Text style={[styles.dashboardGreeting, { color: c.blue }]}>
-                {pageInfo.title}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[styles.pageTitle, { color: c.ink }]} numberOfLines={1}>
+              {pageInfo.title}
+            </Text>
+            <View
+              style={[
+                styles.livePulsePill,
+                {
+                  backgroundColor: c.liveGreenBg,
+                  borderColor: 'rgba(16, 185, 129, 0.3)'
+                }
+              ]}
+            >
+              <View style={[styles.liveDot, { backgroundColor: c.liveGreen }]} />
+              <Text style={[styles.liveText, { color: c.liveGreen }]}>
+                LIVE
               </Text>
-              <Text
-                style={[styles.pageTitle, { color: c.ink }]}
-                numberOfLines={1}
-              >
-                {pageInfo.subtitle}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text
-                style={[styles.pageTitle, { color: c.ink }]}
-                numberOfLines={1}
-              >
-                {pageInfo.title}
-              </Text>
-              <Text
-                style={[styles.pageSubtitle, { color: c.muted }]}
-                numberOfLines={1}
-              >
-                {pageInfo.subtitle}
-              </Text>
-            </>
-          )}
+            </View>
+          </View>
+          <Text
+            style={[styles.pageSubtitle, { color: c.muted }]}
+            numberOfLines={1}
+          >
+            {pageInfo.subtitle}
+          </Text>
         </View>
       </View>
 
-      {/* Right side action icons matching UI screenshot */}
+      {/* Right side quick action controls */}
       <View style={styles.rightSection}>
         {/* Language selector button */}
         <Pressable
           onPress={() => setIsLangOpen(!isLangOpen)}
           style={({ pressed }) => [
             styles.langButton,
-            { backgroundColor: c.cardAlt, borderColor: c.border },
+            {
+              backgroundColor: isDark ? 'rgba(24, 26, 32, 0.65)' : 'rgba(241, 243, 245, 0.75)',
+              borderColor: c.border,
+              borderTopColor: c.borderHighlight
+            },
             pressed && styles.buttonPressed
           ]}
+          accessibilityLabel='Change language'
         >
-          <Text style={styles.globeIcon}>🌐</Text>
+          <Globe size={15} color={c.inkSecondary} />
           <Text style={[styles.langText, { color: c.inkSecondary }]}>
-            {language === 'en' ? 'English' : currentLangLabel.split(' ')[0]}
+            {currentLangObj.code.toUpperCase()}
           </Text>
-          <Text style={[styles.chevronText, { color: c.muted }]}>▾</Text>
+          <ChevronDown size={13} color={c.muted} />
         </Pressable>
 
         {/* Theme Toggle Button */}
@@ -189,375 +227,292 @@ export function Header ({
           onPress={onToggleTheme}
           style={({ pressed }) => [
             styles.iconButton,
-            { backgroundColor: c.cardAlt, borderColor: c.border },
+            {
+              backgroundColor: isDark ? 'rgba(24, 26, 32, 0.65)' : 'rgba(241, 243, 245, 0.75)',
+              borderColor: c.border,
+              borderTopColor: c.borderHighlight
+            },
             pressed && styles.buttonPressed
           ]}
-          accessibilityLabel='Toggle Dark / Light Theme'
+          accessibilityLabel='Toggle theme'
         >
-          <Text style={styles.themeIconText}>{isDark ? '☀️' : '🌙'}</Text>
+          {isDark ? (
+            <Sun size={18} color='#F59E0B' />
+          ) : (
+            <Moon size={18} color='#3B82F6' />
+          )}
         </Pressable>
 
-        {/* Notifications Bell Button */}
+        {/* Notifications Bell */}
         <Pressable
-          onPress={() => setIsAlertsOpen(!isAlertsOpen)}
+          onPress={() => {
+            if (onNavigate) onNavigate('alerts')
+          }}
           style={({ pressed }) => [
             styles.iconButton,
-            { backgroundColor: c.cardAlt, borderColor: c.border },
+            {
+              backgroundColor: isDark ? 'rgba(24, 26, 32, 0.65)' : 'rgba(241, 243, 245, 0.75)',
+              borderColor: c.border,
+              borderTopColor: c.borderHighlight
+            },
             pressed && styles.buttonPressed
           ]}
-          accessibilityLabel='Notifications'
+          accessibilityLabel='View alerts'
         >
-          <Text style={[styles.bellIconText, { color: c.inkSecondary }]}>
-            🔔
-          </Text>
+          <Bell size={18} color={c.inkSecondary} />
           {alerts.length > 0 && (
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: c.accentRed }]}>
               <Text style={styles.badgeText}>{alerts.length}</Text>
             </View>
           )}
         </Pressable>
 
-        {/* User Profile Avatar */}
+        {/* Profile Avatar Button */}
         <Pressable
-          onPress={() => setIsProfileOpen(!isProfileOpen)}
+          onPress={() => setIsProfileOpen(true)}
           style={({ pressed }) => [
             styles.avatarButton,
+            {
+              backgroundColor: isDark ? 'rgba(24, 26, 32, 0.65)' : 'rgba(241, 243, 245, 0.75)',
+              borderColor: c.border,
+              borderTopColor: c.borderHighlight
+            },
             pressed && styles.buttonPressed
           ]}
-          accessibilityLabel='Profile Menu'
+          accessibilityLabel='User Profile'
         >
-          <Text style={styles.avatarText}>SP</Text>
+          <View style={[styles.avatarInner, { backgroundColor: c.blue }]}>
+            <Text style={styles.avatarInitials}>WG</Text>
+          </View>
         </Pressable>
       </View>
 
-      {/* Language Modal / Dropdown */}
-      {isLangOpen && (
-        <Modal
-          transparent
-          animationType='fade'
-          visible={isLangOpen}
-          onRequestClose={() => setIsLangOpen(false)}
+      {/* Language Selection Modal */}
+      <Modal
+        transparent
+        animationType='fade'
+        visible={isLangOpen}
+        onRequestClose={() => setIsLangOpen(false)}
+      >
+        <Pressable
+          style={styles.modalScrim}
+          onPress={() => setIsLangOpen(false)}
         >
-          <Pressable
-            style={styles.modalScrim}
-            onPress={() => setIsLangOpen(false)}
+          <View
+            style={[
+              styles.dropdownCard,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
           >
-            <View
-              style={[
-                styles.dropdownCard,
-                styles.langDropdown,
-                { backgroundColor: c.card, borderColor: c.border }
-              ]}
-            >
+            <View style={styles.modalHeader}>
               <Text style={[styles.dropdownHeader, { color: c.muted }]}>
                 SELECT LANGUAGE
               </Text>
-              {LANGUAGES.map(lang => (
-                <Pressable
-                  key={lang.code}
-                  onPress={() => {
-                    onSelectLanguage && onSelectLanguage(lang.code)
-                    setIsLangOpen(false)
-                  }}
-                  style={({ pressed }) => [
-                    styles.dropdownItem,
-                    language === lang.code && { backgroundColor: c.blueLight },
-                    pressed && styles.buttonPressed
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      { color: language === lang.code ? c.blue : c.ink }
-                    ]}
-                  >
-                    {lang.label}
-                  </Text>
-                  {language === lang.code && (
-                    <Text style={{ color: c.blue, fontWeight: '700' }}>✓</Text>
-                  )}
-                </Pressable>
-              ))}
+              <Pressable onPress={() => setIsLangOpen(false)} hitSlop={10}>
+                <X size={16} color={c.muted} />
+              </Pressable>
             </View>
-          </Pressable>
-        </Modal>
-      )}
-
-      {/* Quick Alerts Dropdown Modal */}
-      {isAlertsOpen && (
-        <Modal
-          transparent
-          animationType='fade'
-          visible={isAlertsOpen}
-          onRequestClose={() => setIsAlertsOpen(false)}
-        >
-          <Pressable
-            style={styles.modalScrim}
-            onPress={() => setIsAlertsOpen(false)}
-          >
-            <View
-              style={[
-                styles.dropdownCard,
-                styles.alertsDropdown,
-                { backgroundColor: c.card, borderColor: c.border }
-              ]}
-            >
-              <View style={styles.alertsModalHeader}>
-                <Text style={[styles.alertsModalTitle, { color: c.ink }]}>
-                  Active Alerts ({alerts.length})
-                </Text>
-                <Pressable
-                  onPress={() => {
-                    setIsAlertsOpen(false)
-                    onNavigate && onNavigate('alerts')
-                  }}
-                >
-                  <Text style={[styles.viewAllLink, { color: c.blue }]}>
-                    View all
-                  </Text>
-                </Pressable>
-              </View>
-              <ScrollView style={{ maxHeight: 220 }}>
-                {alerts.map(alt => (
+            <ScrollView style={{ maxHeight: 280 }}>
+              {LANGUAGES.map(lang => {
+                const isSelected = language === lang.code
+                return (
                   <Pressable
-                    key={alt.id}
+                    key={lang.code}
                     onPress={() => {
-                      setIsAlertsOpen(false)
-                      onNavigate && onNavigate('alerts')
+                      onSelectLanguage && onSelectLanguage(lang.code)
+                      setIsLangOpen(false)
                     }}
-                    style={[
-                      styles.alertSummaryItem,
-                      { borderBottomColor: c.borderLight }
+                    style={({ pressed }) => [
+                      styles.langOption,
+                      isSelected && { backgroundColor: c.blueLight },
+                      pressed && styles.buttonPressed
                     ]}
                   >
-                    <View
-                      style={[styles.alertDot, { backgroundColor: alt.color }]}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[styles.alertSummaryTitle, { color: c.ink }]}
-                        numberOfLines={1}
-                      >
-                        {alt.title}
-                      </Text>
-                      <Text
-                        style={[styles.alertSummarySub, { color: c.muted }]}
-                      >
-                        {alt.location}
-                      </Text>
-                    </View>
+                    <Text
+                      style={[
+                        styles.langOptionText,
+                        { color: isSelected ? c.blue : c.ink },
+                        isSelected && { fontWeight: '700' }
+                      ]}
+                    >
+                      {lang.label}
+                    </Text>
+                    {isSelected && <Check size={16} color={c.blue} />}
                   </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          </Pressable>
-        </Modal>
-      )}
+                )
+              })}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
 
-      {/* Profile Menu Dropdown Modal */}
-      {isProfileOpen && (
-        <Modal
-          transparent
-          animationType='fade'
-          visible={isProfileOpen}
-          onRequestClose={() => setIsProfileOpen(false)}
+      {/* Profile Quick Menu Modal */}
+      <Modal
+        transparent
+        animationType='fade'
+        visible={isProfileOpen}
+        onRequestClose={() => setIsProfileOpen(false)}
+      >
+        <Pressable
+          style={styles.modalScrim}
+          onPress={() => setIsProfileOpen(false)}
         >
-          <Pressable
-            style={styles.modalScrim}
-            onPress={() => setIsProfileOpen(false)}
+          <View
+            style={[
+              styles.dropdownCard,
+              { backgroundColor: c.card, borderColor: c.border }
+            ]}
           >
-            <View
-              style={[
-                styles.dropdownCard,
-                styles.profileDropdown,
-                { backgroundColor: c.card, borderColor: c.border }
-              ]}
-            >
-              <View
-                style={[
-                  styles.profileHeader,
-                  { borderBottomColor: c.borderLight }
-                ]}
-              >
+            <View style={styles.profileHeader}>
+              <View style={[styles.avatarBig, { backgroundColor: c.blue }]}>
+                <Text style={styles.avatarBigText}>WG</Text>
+              </View>
+              <View style={{ flex: 1 }}>
                 <Text style={[styles.profileName, { color: c.ink }]}>
-                  Sid Patil
+                  Disaster Operations
                 </Text>
                 <Text style={[styles.profileEmail, { color: c.muted }]}>
-                  sidpatil@gmail.com
+                  command@weathergpt.gov.in
                 </Text>
               </View>
-
-              <Pressable
-                onPress={() => {
-                  setIsProfileOpen(false)
-                  onNavigate && onNavigate('profile')
-                }}
-                style={styles.dropdownItem}
-              >
-                <Text style={[styles.dropdownItemText, { color: c.ink }]}>
-                  👤 My Profile
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  setIsProfileOpen(false)
-                  onNavigate && onNavigate('premium')
-                }}
-                style={styles.dropdownItem}
-              >
-                <Text style={[styles.dropdownItemText, { color: '#F59E0B', fontWeight: '700' }]}>
-                  👑 Upgrade to Pro
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  setIsProfileOpen(false)
-                  onNavigate && onNavigate('settings')
-                }}
-                style={styles.dropdownItem}
-              >
-                <Text style={[styles.dropdownItemText, { color: c.ink }]}>
-                  ⚙️ Account Settings
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  setIsProfileOpen(false)
-                  onToggleTheme && onToggleTheme()
-                }}
-                style={styles.dropdownItem}
-              >
-                <Text style={[styles.dropdownItemText, { color: c.ink }]}>
-                  {isDark ? '☀️  Light Theme' : '🌙  Dark Theme'}
-                </Text>
-              </Pressable>
-
-              <View
-                style={[styles.divider, { backgroundColor: c.borderLight }]}
-              />
-
-              <Pressable
-                onPress={() => {
-                  setIsProfileOpen(false)
-                  onLogout && onLogout()
-                }}
-                style={styles.dropdownItem}
-              >
-                <Text
-                  style={[
-                    styles.dropdownItemText,
-                    { color: '#EF4444', fontWeight: '700' }
-                  ]}
-                >
-                  🚪 Sign Out
-                </Text>
-              </Pressable>
             </View>
-          </Pressable>
-        </Modal>
-      )}
+
+            <View style={[styles.menuDivider, { backgroundColor: c.borderLight }]} />
+
+            <Pressable
+              onPress={() => {
+                setIsProfileOpen(false)
+                if (onNavigate) onNavigate('profile')
+              }}
+              style={styles.menuItem}
+            >
+              <User size={18} color={c.inkSecondary} />
+              <Text style={[styles.menuItemText, { color: c.ink }]}>
+                Responder Profile & Tier
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setIsProfileOpen(false)
+                if (onNavigate) onNavigate('settings')
+              }}
+              style={styles.menuItem}
+            >
+              <Settings size={18} color={c.inkSecondary} />
+              <Text style={[styles.menuItemText, { color: c.ink }]}>
+                System Settings
+              </Text>
+            </Pressable>
+
+            <View style={[styles.menuDivider, { backgroundColor: c.borderLight }]} />
+
+            <Pressable
+              onPress={() => {
+                setIsProfileOpen(false)
+                if (onLogout) onLogout()
+              }}
+              style={styles.menuItem}
+            >
+              <LogOut size={18} color={c.accentRed} />
+              <Text style={[styles.menuItemText, { color: c.accentRed }]}>
+                Sign Out
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   headerRoot: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    zIndex: 10
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    zIndex: 50
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    flex: 1
+    flex: 1,
+    marginRight: 10
   },
   iconButton: {
     width: 38,
     height: 38,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative'
+    borderWidth: 1
   },
   buttonPressed: {
-    opacity: 0.75
-  },
-  menuIconText: {
-    fontSize: 18,
-    fontWeight: '800'
+    opacity: 0.7
   },
   titleWrapper: {
-    flex: 1,
-    justifyContent: 'center'
-  },
-  dashboardGreeting: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 1.1,
-    marginBottom: 2
+    marginLeft: 12,
+    flex: 1
   },
   pageTitle: {
-    fontSize: 17,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: -0.2
+  },
+  livePulsePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 999,
+    borderWidth: 1
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3
+  },
+  liveText: {
+    fontSize: 9,
     fontWeight: '800',
-    letterSpacing: -0.4
+    letterSpacing: 0.5
   },
   pageSubtitle: {
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 11,
     marginTop: 1
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7
+    gap: 8
   },
   langButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 11,
+    height: 38,
+    borderRadius: 10,
     borderWidth: 1
-  },
-  globeIcon: {
-    fontSize: 12
   },
   langText: {
     fontSize: 11,
-    fontWeight: '600'
-  },
-  chevronText: {
-    fontSize: 10,
-    marginLeft: 1
-  },
-  themeIconText: {
-    fontSize: 15
-  },
-  bellIconText: {
-    fontSize: 15
+    fontWeight: '700'
   },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#EF4444',
-    width: 17,
-    height: 17,
-    borderRadius: 9,
+    top: -3,
+    right: -3,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF'
+    paddingHorizontal: 3
   },
   badgeText: {
     color: '#FFFFFF',
@@ -565,122 +520,110 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   avatarButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#2563EB',
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2
+    padding: 2
   },
-  avatarText: {
+  avatarInner: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  avatarInitials: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800'
   },
   modalScrim: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-    paddingTop: 65,
-    paddingRight: 16
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
   },
   dropdownCard: {
+    width: '100%',
+    maxWidth: 340,
     borderRadius: 16,
     borderWidth: 1,
-    padding: 8,
+    padding: 16,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8
+    shadowOffset: { width: 0, height: 6 }
   },
-  langDropdown: {
-    width: 180
-  },
-  alertsDropdown: {
-    width: 270
-  },
-  profileDropdown: {
-    width: 210
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12
   },
   dropdownHeader: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 0.8,
-    paddingHorizontal: 8,
-    paddingVertical: 4
+    letterSpacing: 0.8
   },
-  dropdownItem: {
+  langOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    borderRadius: 10
-  },
-  dropdownItemText: {
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  alertsModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF2F6',
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     marginBottom: 4
   },
-  alertsModalTitle: {
-    fontSize: 12,
-    fontWeight: '800'
-  },
-  viewAllLink: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  alertSummaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1
-  },
-  alertDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4
-  },
-  alertSummaryTitle: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  alertSummarySub: {
-    fontSize: 9
+  langOptionText: {
+    fontSize: 14
   },
   profileHeader: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    marginBottom: 4
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14
   },
-  profileName: {
-    fontSize: 13,
+  avatarBig: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  avatarBigText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '800'
   },
-  profileEmail: {
-    fontSize: 10
+  profileName: {
+    fontSize: 14,
+    fontWeight: '700'
   },
-  divider: {
+  profileEmail: {
+    fontSize: 11,
+    marginTop: 2
+  },
+  menuDivider: {
     height: 1,
-    marginVertical: 4
+    marginVertical: 8
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8
+  },
+  menuItemText: {
+    fontSize: 13,
+    fontWeight: '600'
   }
 })
+
+export default Header

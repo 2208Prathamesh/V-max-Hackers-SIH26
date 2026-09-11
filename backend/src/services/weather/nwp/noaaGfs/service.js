@@ -1,6 +1,6 @@
 import { GribMessage } from '@mattnucc/gribberish'
 import { getGFSMessages } from './client.js'
-import { normalizeGFS } from './normalizer.js'
+import { normalizeGFS, getValue } from './normalizer.js'
 
 function parseMessage (buffer, name) {
   try {
@@ -119,7 +119,7 @@ function buildDailyForecast (hourly) {
   }))
 }
 
-export async function getGFSWeather (latitude, longitude, days = 7) {
+export async function getGFSWeather (latitude, longitude, days = 2) {
   if (typeof latitude !== 'number' || typeof longitude !== 'number')
     throw new Error('Latitude and longitude must be numbers')
   if (latitude < -90 || latitude > 90)
@@ -127,43 +127,68 @@ export async function getGFSWeather (latitude, longitude, days = 7) {
   if (longitude < -180 || longitude > 180)
     throw new Error('Longitude must be between -180 and 180')
 
-  const { date, cycle, getBuffer, steps } = await getGFSMessages({ days })
+  // Cap native GRIB ingestion horizon to max 48h (2 days) to avoid out-of-memory panics
+  // from downloading and decompressing hundreds of global GRIB slices in a single request.
+  const cappedDays = Math.min(Math.max(Number(days) || 1, 1), 2)
+  const { date, cycle, getBuffer, steps } = await getGFSMessages({ days: cappedDays })
   const hourly = []
   let previousAccumulatedPrecipitation = null
   let gridLocation = null
 
   for (const step of steps) {
     try {
+      // Parse variables sequentially to ensure only 1 GribMessage exists in memory at any instant.
+      const tempBuf = await getBuffer(step, 'temperature')
+      let msgTemp = parseMessage(tempBuf, 'temperature')
+      const timestamp = msgTemp ? buildTimestamp(msgTemp) : null
+      const tempVal = getValue(msgTemp, { latitude, longitude })
+      msgTemp = null
+
+      const humBuf = await getBuffer(step, 'humidity')
+      let msgHum = parseMessage(humBuf, 'humidity')
+      const humVal = getValue(msgHum, { latitude, longitude })
+      msgHum = null
+
+      const dpBuf = await getBuffer(step, 'dewPoint')
+      let msgDp = parseMessage(dpBuf, 'dewPoint')
+      const dpVal = getValue(msgDp, { latitude, longitude })
+      msgDp = null
+
+      const uBuf = await getBuffer(step, 'uWind')
+      let msgU = parseMessage(uBuf, 'uWind')
+      const uVal = getValue(msgU, { latitude, longitude })
+      msgU = null
+
+      const vBuf = await getBuffer(step, 'vWind')
+      let msgV = parseMessage(vBuf, 'vWind')
+      const vVal = getValue(msgV, { latitude, longitude })
+      msgV = null
+
+      const pBuf = await getBuffer(step, 'pressure')
+      let msgP = parseMessage(pBuf, 'pressure')
+      const pVal = getValue(msgP, { latitude, longitude })
+      msgP = null
+
+      const prBuf = await getBuffer(step, 'precipitation')
+      let msgPr = prBuf ? parseMessage(prBuf, 'precipitation') : null
+      const prVal = getValue(msgPr, { latitude, longitude })
+      msgPr = null
+
       const parsed = {
-        temperature: parseMessage(
-          await getBuffer(step, 'temperature'),
-          'temperature'
-        ),
-        humidity: parseMessage(await getBuffer(step, 'humidity'), 'humidity'),
-        dewPoint: parseMessage(await getBuffer(step, 'dewPoint'), 'dewPoint'),
-        uWind: parseMessage(await getBuffer(step, 'uWind'), 'uWind'),
-        vWind: parseMessage(await getBuffer(step, 'vWind'), 'vWind'),
-        pressure: parseMessage(await getBuffer(step, 'pressure'), 'pressure'),
-        precipitation: parseMessage(
-          await getBuffer(step, 'precipitation'),
-          'precipitation'
-        )
+        temperature: tempVal,
+        humidity: humVal,
+        dewPoint: dpVal,
+        uWind: uVal,
+        vWind: vVal,
+        pressure: pVal,
+        precipitation: prVal
       }
-      const timestamp = buildTimestamp(parsed.temperature)
+
       const normalized = normalizeGFS(
         parsed,
         { latitude, longitude },
         timestamp
       )
-
-      // Unpin intermediate decoded message references immediately
-      parsed.temperature = null
-      parsed.humidity = null
-      parsed.dewPoint = null
-      parsed.uWind = null
-      parsed.vWind = null
-      parsed.pressure = null
-      parsed.precipitation = null
 
       gridLocation = gridLocation || normalized.location
       const accumulated = normalized.forecast.precipitation

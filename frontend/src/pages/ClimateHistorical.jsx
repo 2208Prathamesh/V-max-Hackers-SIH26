@@ -286,7 +286,7 @@ export default function ClimateHistorical () {
       {/* =========================================================================
           TOP BANNER: Title, Coordinates & Fast Synchronize Indicator
           ========================================================================= */}
-      <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+      <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
           <div className='flex items-start gap-3.5'>
             <div className='w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md'>
@@ -377,7 +377,7 @@ export default function ClimateHistorical () {
       {/* =========================================================================
           INTERACTIVE FILTERS BAR: Location, Data Type, Time Range, Aggregation
           ========================================================================= */}
-      <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm'>
+      <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-sm'>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
           {/* 1. Location Selector Filter */}
           <div className='relative' data-dropdown='location'>
@@ -396,7 +396,7 @@ export default function ClimateHistorical () {
             </button>
 
             {openDropdown === 'location' && (
-              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1 max-h-56 overflow-y-auto'>
+              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1 max-h-56 overflow-y-auto'>
                 {savedLocations.map(loc => (
                   <button
                     key={loc.id || loc.city}
@@ -445,7 +445,7 @@ export default function ClimateHistorical () {
             </button>
 
             {openDropdown === 'dataType' && (
-              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1'>
+              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1'>
                 {[
                   { id: 'all', label: 'All Parameters' },
                   { id: 'temperature', label: 'Temperature Only' },
@@ -495,7 +495,7 @@ export default function ClimateHistorical () {
             </button>
 
             {openDropdown === 'timeRange' && (
-              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1'>
+              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1'>
                 {[
                   { id: '20', label: '20-Year Archive (2004–2024)' },
                   { id: '10', label: '10-Year Horizon (2014–2024)' },
@@ -544,7 +544,7 @@ export default function ClimateHistorical () {
             </button>
 
             {openDropdown === 'aggregation' && (
-              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#151F32] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1'>
+              <div className='absolute z-30 top-full mt-1.5 left-0 right-0 bg-white dark:bg-[#121316] border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-xl space-y-1'>
                 {[
                   { id: 'monthly', label: 'Monthly Climatology' },
                   { id: 'seasonal', label: 'Seasonal Aggregation' },
@@ -580,7 +580,7 @@ export default function ClimateHistorical () {
           {/* Main Temperature & Rainfall Chart Grid */}
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
             {/* Left Main Chart (Span 8): Monthly Temperature / Rainfall */}
-            <div className='lg:col-span-8 bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+            <div className='lg:col-span-8 bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
               <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
                 <div>
                   <h2 className='text-base sm:text-lg font-black text-slate-900 dark:text-white'>
@@ -615,7 +615,7 @@ export default function ClimateHistorical () {
                       <YAxis yAxisId='rain' orientation='right' unit='mm' tick={{ fill: isDark ? '#94a3b8' : '#475569', fontSize: 11 }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                          backgroundColor: isDark ? '#121316' : '#ffffff',
                           borderColor: isDark ? '#334155' : '#e2e8f0',
                           borderRadius: '12px',
                           fontSize: '12px'
@@ -639,7 +639,7 @@ export default function ClimateHistorical () {
                       <YAxis domain={['dataMin - 3', 'dataMax + 3']} unit='°C' tick={{ fill: isDark ? '#94a3b8' : '#475569', fontSize: 11 }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                          backgroundColor: isDark ? '#121316' : '#ffffff',
                           borderColor: isDark ? '#334155' : '#e2e8f0',
                           borderRadius: '12px',
                           fontSize: '12px'
@@ -655,7 +655,7 @@ export default function ClimateHistorical () {
             </div>
 
             {/* Right Summary Insights (Span 4) */}
-            <div className='lg:col-span-4 bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+            <div className='lg:col-span-4 bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
               <div className='flex items-center justify-between'>
                 <h3 className='text-base font-bold text-slate-900 dark:text-white'>
                   Climatic Normal Insights
@@ -711,7 +711,7 @@ export default function ClimateHistorical () {
           </div>
 
           {/* Monthly Rainfall Distribution Bar Graph */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
               <div>
                 <h3 className='text-base font-bold text-slate-900 dark:text-white'>
@@ -743,7 +743,7 @@ export default function ClimateHistorical () {
                   <YAxis yAxisId='days' orientation='right' unit='d' tick={{ fill: isDark ? '#94a3b8' : '#475569', fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      backgroundColor: isDark ? '#121316' : '#ffffff',
                       borderColor: isDark ? '#334155' : '#e2e8f0',
                       borderRadius: '12px',
                       fontSize: '12px'
@@ -764,7 +764,7 @@ export default function ClimateHistorical () {
       {activeTab === 'trends' && (
         <div className='space-y-6'>
           {/* 20-Year Temperature Shift & Warming Trend */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
               <div>
                 <h3 className='text-base sm:text-lg font-black text-slate-900 dark:text-white'>
@@ -803,7 +803,7 @@ export default function ClimateHistorical () {
                   <YAxis domain={['dataMin - 1', 'dataMax + 1']} unit='°C' tick={{ fill: isDark ? '#94a3b8' : '#475569', fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      backgroundColor: isDark ? '#121316' : '#ffffff',
                       borderColor: isDark ? '#334155' : '#e2e8f0',
                       borderRadius: '12px',
                       fontSize: '12px'
@@ -817,7 +817,7 @@ export default function ClimateHistorical () {
           </div>
 
           {/* 20-Year Annual Rainfall Progression */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div>
               <h3 className='text-base font-bold text-slate-900 dark:text-white'>
                 Annual Precipitation Progression ({timeRangeFilter} Years)
@@ -835,7 +835,7 @@ export default function ClimateHistorical () {
                   <YAxis unit='mm' tick={{ fill: isDark ? '#94a3b8' : '#475569', fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      backgroundColor: isDark ? '#121316' : '#ffffff',
                       borderColor: isDark ? '#334155' : '#e2e8f0',
                       borderRadius: '12px',
                       fontSize: '12px'
@@ -856,7 +856,7 @@ export default function ClimateHistorical () {
         <div className='space-y-6'>
           {/* Decadal Shift Comparison Deck */}
           {decadalComparison && (
-            <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+            <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
               <div>
                 <h3 className='text-base sm:text-lg font-black text-slate-900 dark:text-white'>
                   Decadal Shift Analysis: {decadalComparison.decade1Label} vs {decadalComparison.decade2Label}
@@ -927,7 +927,7 @@ export default function ClimateHistorical () {
           )}
 
           {/* Regional Climate Benchmarks: Active City vs Indian Climate Zones */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div>
               <h3 className='text-base font-bold text-slate-900 dark:text-white'>
                 Regional Climate Benchmark Comparison
@@ -981,7 +981,7 @@ export default function ClimateHistorical () {
       {activeTab === 'extremes' && (
         <div className='space-y-6'>
           {/* Extreme Events Bar Chart */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
               <div>
                 <h3 className='text-base sm:text-lg font-black text-slate-900 dark:text-white'>
@@ -1012,7 +1012,7 @@ export default function ClimateHistorical () {
                   <YAxis unit=' d' tick={{ fill: isDark ? '#94a3b8' : '#475569', fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      backgroundColor: isDark ? '#121316' : '#ffffff',
                       borderColor: isDark ? '#334155' : '#e2e8f0',
                       borderRadius: '12px',
                       fontSize: '12px'
@@ -1026,7 +1026,7 @@ export default function ClimateHistorical () {
           </div>
 
           {/* All-Time Historical Records for Selected Location */}
-          <div className='bg-white dark:bg-[#111C2E] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
+          <div className='bg-white dark:bg-[#121316] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4'>
             <div>
               <h3 className='text-base font-bold text-slate-900 dark:text-white'>
                 Historical Climatological Records (2005–2024 Reanalysis)

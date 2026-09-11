@@ -804,7 +804,7 @@ export const DisasterSopPage = () => {
       {/* =========================================================================
           1. CLEAN PROFESSIONAL HEADER & DIRECT NAVIGATION
           ========================================================================= */}
-      <div className="bg-white dark:bg-[#151F32] p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#121316] p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <button
@@ -852,7 +852,7 @@ export const DisasterSopPage = () => {
       {/* =========================================================================
           2. EMERGENCY RESPONDER HELPLINES DIRECT DIAL TRAY
           ========================================================================= */}
-      <div className="bg-white dark:bg-[#151F32] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-3">
+      <div className="bg-white dark:bg-[#121316] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
           <div className="flex items-center gap-2">
             <PhoneCall className="w-4 h-4 text-rose-500" />
@@ -900,7 +900,7 @@ export const DisasterSopPage = () => {
               className={`px-3.5 py-2 rounded-2xl text-xs font-black transition flex items-center gap-2 cursor-pointer border ${
                 isActive
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md'
-                  : 'bg-white dark:bg-[#151F32] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'bg-white dark:bg-[#121316] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-yellow-400 dark:text-blue-600' : c.accentColor}`} />
@@ -915,7 +915,7 @@ export const DisasterSopPage = () => {
           ========================================================================= */}
       <div className="space-y-6">
         {/* Category Header Card */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#151F32] border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-4">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#121316] border border-slate-200/90 dark:border-slate-800/90 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3.5">
               <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${activeCategory.themeColor} text-white flex items-center justify-center shadow-sm shrink-0`}>
@@ -967,7 +967,7 @@ export const DisasterSopPage = () => {
         {/* 3-Column Structured Operational Action Phases */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Phase 1: Preparation & Early Action */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-[#151F32] border border-blue-200/90 dark:border-blue-900/60 shadow-xs space-y-3">
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#121316] border border-blue-200/90 dark:border-blue-900/60 shadow-xs space-y-3">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 text-xs font-black flex items-center justify-center shrink-0">
                 1
@@ -991,7 +991,7 @@ export const DisasterSopPage = () => {
           </div>
 
           {/* Phase 2: During the Disaster (Active Life-Saving Protocol) */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-[#151F32] border border-emerald-200/90 dark:border-emerald-900/60 shadow-xs space-y-3 ring-1 ring-emerald-500/20">
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#121316] border border-emerald-200/90 dark:border-emerald-900/60 shadow-xs space-y-3 ring-1 ring-emerald-500/20">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 text-xs font-black flex items-center justify-center shrink-0">
                 2
@@ -1015,7 +1015,7 @@ export const DisasterSopPage = () => {
           </div>
 
           {/* Phase 3: Post-Disaster Health, Salvage & PMFBY Relief Claims */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-[#151F32] border border-purple-200/90 dark:border-purple-900/60 shadow-xs space-y-3">
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#121316] border border-purple-200/90 dark:border-purple-900/60 shadow-xs space-y-3">
             <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <span className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 text-xs font-black flex items-center justify-center shrink-0">
                 3
@@ -1050,7 +1050,7 @@ export const DisasterSopPage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-rose-950 dark:text-rose-200">
             {(isMr ? activeCategory.phases.donts.mr : activeCategory.phases.donts.en).map((dont, idx) => (
-              <div key={idx} className="p-3 rounded-2xl bg-white dark:bg-[#151F32] border border-rose-200/80 dark:border-rose-900/40 flex items-start gap-2.5 shadow-2xs">
+              <div key={idx} className="p-3 rounded-2xl bg-white dark:bg-[#121316] border border-rose-200/80 dark:border-rose-900/40 flex items-start gap-2.5 shadow-2xs">
                 <span className="w-4 h-4 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-600 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
                   ✕
                 </span>

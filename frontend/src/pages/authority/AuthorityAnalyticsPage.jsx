@@ -195,7 +195,7 @@ export const AuthorityAnalyticsPage = () => {
   return (
     <div className="space-y-6 animate-fadeIn pb-12 select-none">
       {/* Header & Date Range Filter */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -250,7 +250,7 @@ export const AuthorityAnalyticsPage = () => {
 
       {/* 4 True Weather Authority KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-red-200/80 dark:border-red-900/30 shadow-sm flex items-center gap-4">
+        <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-red-200/80 dark:border-red-900/30 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-red-500/15 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-6 h-6" />
           </div>
@@ -267,7 +267,7 @@ export const AuthorityAnalyticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-blue-200/80 dark:border-blue-900/30 shadow-sm flex items-center gap-4">
+        <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-blue-200/80 dark:border-blue-900/30 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-blue-500/15 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
             <Gauge className="w-6 h-6" />
           </div>
@@ -281,7 +281,7 @@ export const AuthorityAnalyticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-emerald-200/80 dark:border-emerald-900/30 shadow-sm flex items-center gap-4">
+        <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-emerald-200/80 dark:border-emerald-900/30 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
@@ -295,7 +295,7 @@ export const AuthorityAnalyticsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-cyan-200/80 dark:border-cyan-900/30 shadow-sm flex items-center gap-4">
+        <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-cyan-200/80 dark:border-cyan-900/30 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
             <CloudRain className="w-6 h-6" />
           </div>
@@ -317,7 +317,7 @@ export const AuthorityAnalyticsPage = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'models'
               ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-[#111C2E] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+              : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
           }`}
         >
           <Sliders className="w-4 h-4" />
@@ -329,7 +329,7 @@ export const AuthorityAnalyticsPage = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'rainfall'
               ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-[#111C2E] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+              : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
           }`}
         >
           <CloudRain className="w-4 h-4" />
@@ -341,7 +341,7 @@ export const AuthorityAnalyticsPage = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'convective'
               ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-[#111C2E] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+              : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
           }`}
         >
           <Zap className="w-4 h-4" />
@@ -353,7 +353,7 @@ export const AuthorityAnalyticsPage = () => {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'network'
               ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white dark:bg-[#111C2E] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+              : 'bg-white dark:bg-[#121316] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
           }`}
         >
           <Radio className="w-4 h-4" />
@@ -367,7 +367,7 @@ export const AuthorityAnalyticsPage = () => {
       {activeTab === 'models' && (
         <div className="space-y-6">
           {/* Model Comparison Table */}
-          <div className="bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -471,7 +471,7 @@ export const AuthorityAnalyticsPage = () => {
         <div className="space-y-6">
           {/* Statewide Cumulative Departure Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+            <div className="lg:col-span-7 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -516,7 +516,7 @@ export const AuthorityAnalyticsPage = () => {
             </div>
 
             {/* Daily Hyetograph Curve */}
-            <div className="lg:col-span-5 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="lg:col-span-5 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -591,7 +591,7 @@ export const AuthorityAnalyticsPage = () => {
           </div>
 
           {/* Precipitation Intensity Bands */}
-          <div className="bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
               Precipitation Event Intensity Classification (IMD Criteria)
             </h2>
@@ -632,7 +632,7 @@ export const AuthorityAnalyticsPage = () => {
         <div className="space-y-6">
           {/* Contingency Matrix & Warning Skill */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-6 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="lg:col-span-6 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   IMD Severe Weather Warning 2x2 Contingency Matrix
@@ -699,7 +699,7 @@ export const AuthorityAnalyticsPage = () => {
             </div>
 
             {/* Sounding Diagnostics */}
-            <div className="lg:col-span-6 bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="lg:col-span-6 bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Atmospheric Radiosonde & Convective Sounding Indices
@@ -754,7 +754,7 @@ export const AuthorityAnalyticsPage = () => {
         <div className="space-y-6">
           {/* Telemetry Sensor Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
+            <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Automatic Weather Stations</span>
                 <span className="text-xs font-bold text-emerald-500">{sensor.awsStations.reportingPct}</span>
@@ -765,7 +765,7 @@ export const AuthorityAnalyticsPage = () => {
               <p className="text-[11px] text-slate-400">Cadence: {sensor.awsStations.latency}</p>
             </div>
 
-            <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
+            <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Automatic Rain Gauges (ARG)</span>
                 <span className="text-xs font-bold text-emerald-500">{sensor.argRainGauges.reportingPct}</span>
@@ -776,7 +776,7 @@ export const AuthorityAnalyticsPage = () => {
               <p className="text-[11px] text-slate-400">Reporting Interval: {sensor.argRainGauges.latency}</p>
             </div>
 
-            <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
+            <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Doppler Weather Radars</span>
                 <span className="text-xs font-bold text-blue-500">4 Active</span>
@@ -787,7 +787,7 @@ export const AuthorityAnalyticsPage = () => {
               <p className="text-[11px] text-slate-400">Mumbai Colaba, Veravali, Goa, Nagpur</p>
             </div>
 
-            <div className="bg-white dark:bg-[#111C2E] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
+            <div className="bg-white dark:bg-[#121316] p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Satellite Remote Sensing</span>
                 <span className="text-xs font-bold text-emerald-500">Rapid Scan</span>
@@ -800,7 +800,7 @@ export const AuthorityAnalyticsPage = () => {
           </div>
 
           {/* District Meteorological Table */}
-          <div className="bg-white dark:bg-[#111C2E] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-[#121316] p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">

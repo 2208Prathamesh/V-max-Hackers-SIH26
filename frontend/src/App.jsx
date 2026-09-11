@@ -23,6 +23,9 @@ const ForecastPage = lazy(() => import('./pages/ForecastPage').then(m => ({ defa
 const AdvisoryPage = lazy(() => import('./pages/AdvisoryPage').then(m => ({ default: m.AdvisoryPage })))
 const NewsPage = lazy(() => import('./pages/NewsPage').then(m => ({ default: m.NewsPage })))
 const DisasterSopPage = lazy(() => import('./pages/DisasterSopPage').then(m => ({ default: m.DisasterSopPage })))
+const AviationPage = lazy(() => import('./pages/AviationPage').then(m => ({ default: m.AviationPage || m.default })))
+const MarinePage = lazy(() => import('./pages/MarinePage').then(m => ({ default: m.MarinePage || m.default })))
+const UrbanFloodPage = lazy(() => import('./pages/UrbanFloodPage').then(m => ({ default: m.UrbanFloodPage || m.default })))
 
 // Authority pages
 const AuthorityDashboardPage = lazy(() => import('./pages/authority/AuthorityDashboardPage').then(m => ({ default: m.AuthorityDashboardPage })))
@@ -111,6 +114,12 @@ const AppContent = () => {
           return <AdminAnalyticsPage />
         case 'admin-system':
           return <AdminSystemPage />
+        case 'aviation':
+          return <AviationPage />
+        case 'marine':
+          return <MarinePage />
+        case 'urban-flood':
+          return <UrbanFloodPage />
         case 'settings':
           return <SettingsPage />
         case 'dashboard':
@@ -149,6 +158,12 @@ const AppContent = () => {
           return <ClimateHistorical />
         case 'saved-locations':
           return <SavedLocationsPage />
+        case 'aviation':
+          return <AviationPage />
+        case 'marine':
+          return <MarinePage />
+        case 'urban-flood':
+          return <UrbanFloodPage />
         case 'chat':
           return <ChatPage />
         case 'disaster-sops':
@@ -186,6 +201,12 @@ const AppContent = () => {
           return <ClimateHistorical />
         case 'saved-locations':
           return <SavedLocationsPage />
+        case 'aviation':
+          return <AviationPage />
+        case 'marine':
+          return <MarinePage />
+        case 'urban-flood':
+          return <UrbanFloodPage />
         case 'settings':
           return <SettingsPage />
         case 'dashboard':
@@ -215,6 +236,12 @@ const AppContent = () => {
         return <ClimateHistorical />
       case 'saved-locations':
         return <SavedLocationsPage />
+      case 'aviation':
+        return <AviationPage />
+      case 'marine':
+        return <MarinePage />
+      case 'urban-flood':
+        return <UrbanFloodPage />
       case 'settings':
         return <SettingsPage />
       case 'dashboard':

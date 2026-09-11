@@ -408,7 +408,7 @@ export const CreateAdvisoryModal = ({ isOpen, onClose, onAlertCreated, onCreated
     >
       <div
         onClick={e => e.stopPropagation()}
-        className='w-full max-w-xl bg-white dark:bg-[#111C2E] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-scaleUp'
+        className='w-full max-w-xl bg-white dark:bg-[#121316] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-scaleUp'
       >
         {/* Modal Header (Fixed at top of modal, shrink-0) */}
         <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 shrink-0'>

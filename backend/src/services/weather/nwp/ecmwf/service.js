@@ -1,7 +1,7 @@
 import { getECMWFMessages } from './client.js'
 import { GribMessage, GribMessageFactory } from '@mattnucc/gribberish'
 
-import { normalizeECMWF } from './normalizer.js'
+import { normalizeECMWF, getValue } from './normalizer.js'
 
 function parseMessage (buffer, param) {
   try {
@@ -146,40 +146,61 @@ export async function getECMWFWeather (latitude, longitude, days = 7) {
   if (longitude < -180 || longitude > 180) {
     throw new Error('Longitude must be between -180 and 180')
   }
-  const { date, cycle, getBuffer, steps } = await getECMWFMessages({ days })
+  const cappedDays = Math.min(Math.max(Number(days) || 1, 1), 1)
+  const { date, cycle, getBuffer, steps } = await getECMWFMessages({ days: cappedDays })
   const hourly = []
   let previousAccumulatedPrecipitation = null
   let gridLocation = null
   for (const step of steps) {
     try {
-      const tpBuffer = await getBuffer(step, 'tp')
-      let msg2t = parseMessage(await getBuffer(step, '2t'), '2t')
-      let msg2d = parseMessage(await getBuffer(step, '2d'), '2d')
-      let msg10u = parseMessage(await getBuffer(step, '10u'), '10u')
-      let msg10v = parseMessage(await getBuffer(step, '10v'), '10v')
-      let msgMsl = parseMessage(await getBuffer(step, 'msl'), 'msl')
-      let msgTp = tpBuffer ? parseMessage(tpBuffer, 'tp') : null
+      // 1. Temperature (2t)
+      const buf2t = await getBuffer(step, '2t')
+      let msg2t = parseMessage(buf2t, '2t')
+      const val2t = getValue(msg2t, { latitude, longitude })
+      msg2t = null
+
+      // 2. Dew Point (2d)
+      const buf2d = await getBuffer(step, '2d')
+      let msg2d = parseMessage(buf2d, '2d')
+      const val2d = getValue(msg2d, { latitude, longitude })
+      msg2d = null
+
+      // 3. U-Wind (10u)
+      const buf10u = await getBuffer(step, '10u')
+      let msg10u = parseMessage(buf10u, '10u')
+      const val10u = getValue(msg10u, { latitude, longitude })
+      msg10u = null
+
+      // 4. V-Wind (10v)
+      const buf10v = await getBuffer(step, '10v')
+      let msg10v = parseMessage(buf10v, '10v')
+      const val10v = getValue(msg10v, { latitude, longitude })
+      msg10v = null
+
+      // 5. Pressure (msl)
+      const bufMsl = await getBuffer(step, 'msl')
+      let msgMsl = parseMessage(bufMsl, 'msl')
+      const valMsl = getValue(msgMsl, { latitude, longitude })
+      msgMsl = null
+
+      // 6. Precipitation (tp)
+      const bufTp = await getBuffer(step, 'tp')
+      let msgTp = bufTp ? parseMessage(bufTp, 'tp') : null
+      const valTp = msgTp ? getValue(msgTp, { latitude, longitude }) : null
+      msgTp = null
 
       const normalized = normalizeECMWF(
         {
-          temperature: msg2t,
-          dewPoint: msg2d,
-          uWind: msg10u,
-          vWind: msg10v,
-          pressure: msgMsl,
-          precipitation: msgTp,
+          temperature: val2t,
+          dewPoint: val2d,
+          uWind: val10u,
+          vWind: val10v,
+          pressure: valMsl,
+          precipitation: valTp,
           timestamp: buildTimestamp(date, cycle, step)
         },
         { latitude, longitude }
       )
-
-      // Unpin intermediate decoded message references immediately
-      msg2t = null
-      msg2d = null
-      msg10u = null
-      msg10v = null
-      msgMsl = null
-      msgTp = null
 
       gridLocation = gridLocation || normalized.location
       const accumulated = normalized.forecast.precipitation
@@ -200,8 +221,8 @@ export async function getECMWFWeather (latitude, longitude, days = 7) {
       console.error(`ECMWF parsing failed for step ${step}: ${err.message}`)
       // Continue to next step if one fails
     } finally {
-      // Yield with setImmediate between forecast steps to permit GC and keep memory bounded
-      await new Promise(resolve => setImmediate(resolve))
+      // Yield with brief pause to permit V8 and OS native heap reclamation
+      await new Promise(resolve => setTimeout(resolve, 20))
     }
   }
   const nwpSemantics = buildNwpSemantics(hourly)
