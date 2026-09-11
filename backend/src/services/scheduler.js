@@ -10,6 +10,32 @@ const Scheduler = {
     console.log('📅 Initializing Background Scheduler...');
     this.scheduleAlertSync();
     this.scheduleNewsSync();
+    this.scheduleKeepAlive();
+  },
+
+  /**
+   * Gentle heartbeat self-ping to prevent Render / cloud host from sleeping.
+   * Runs every 14 minutes (Render inactivity timeout is 15 minutes).
+   */
+  scheduleKeepAlive() {
+    const targetUrl = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_ALIVE_URL;
+    if (!targetUrl) return;
+
+    cron.schedule('*/14 * * * *', async () => {
+      try {
+        const pingEndpoint = `${targetUrl.replace(/\/$/, '')}/api/health`;
+        const res = await fetch(pingEndpoint, {
+          headers: { 'User-Agent': 'WeatherGPT-KeepAlive/1.0' }
+        });
+        if (res.ok) {
+          console.log('💓 [KeepAlive] Cloud heartbeat ping acknowledged.');
+        }
+      } catch (err) {
+        console.warn('⚠️ [KeepAlive] Heartbeat notice:', err.message);
+      }
+    });
+
+    console.log('🔔 Scheduled: Cloud Service Keep-Alive Heartbeat (every 14 minutes)');
   },
 
   /**
